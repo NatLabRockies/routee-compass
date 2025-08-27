@@ -13,7 +13,7 @@ use crate::collection::error::OvertureMapsCollectionError;
 /// to OvertureMaps label with constant time complexity
 ///
 /// ```
-/// use crate::bambam_overturemaps::collection::TaxonomyModel;
+/// use crate::bambam_omf::collection::TaxonomyModel;
 /// use std::collections::HashMap;
 ///
 /// let tree_nodes: Vec<(String, Option<String>)> = vec![(String::from("restaurant"), Some(String::from("eat_and_drink"))),
