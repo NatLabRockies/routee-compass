@@ -12,11 +12,8 @@ keywords = [
     "nrel",
     "access-model",
     "accessibility",
-    "routing",
-    "reachability",
-    "transit",
     "multimodal",
-    "routee",
+    "transit",
 ]
 categories = ["command-line-utilities", "science", "science::geo"]
 
