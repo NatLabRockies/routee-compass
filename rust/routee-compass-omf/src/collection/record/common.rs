@@ -9,12 +9,11 @@ pub fn deserialize_geometry<'de, D>(deserializer: D) -> Result<Option<Geometry>,
 where
     D: Deserializer<'de>,
 {
-    let hex_str: String = Option::deserialize(deserializer)?.ok_or(D::Error::custom(
-        String::from("Could not deserialize hex string"),
-    ))?;
-    let wkb_bytes: Vec<u8> = hex::decode(&hex_str)
-        .map_err(|e| D::Error::custom(format!("Could not decode wkb: {e}")))?;
-    Ok(Wkb(&wkb_bytes).to_geo().ok())
+    // Assumption that this data is binary and not string
+    Option::<Vec<u8>>::deserialize(deserializer)?
+        .map(|v| Wkb(v).to_geo())
+        .transpose()
+        .map_err(|e| D::Error::custom(format!("Could not decode wkb: {e}")))
 }
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -1,6 +1,8 @@
 pub enum OvertureRecordType {
     Places,
     Buildings,
+    Segment,
+    Connector,
 }
 
 impl OvertureRecordType {
@@ -11,6 +13,12 @@ impl OvertureRecordType {
             }
             OvertureRecordType::Buildings => {
                 format!("release/{release_str}/theme=buildings/type=building/").to_owned()
+            }
+            OvertureRecordType::Segment => {
+                format!("release/{release_str}/theme=transportation/type=segment/").to_owned()
+            }
+            OvertureRecordType::Connector => {
+                format!("release/{release_str}/theme=transportation/type=connector/").to_owned()
             }
         }
     }
