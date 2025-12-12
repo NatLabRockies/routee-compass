@@ -137,7 +137,9 @@ impl OvertureMapsCollector {
             let reader = ParquetObjectReader::new(self.obj_store.clone(), meta.location)
                 .with_runtime(io_runtime.handle().clone());
             let builder = runtime
-                .block_on(ParquetRecordBatchStreamBuilder::new_with_options(reader, opts))
+                .block_on(ParquetRecordBatchStreamBuilder::new_with_options(
+                    reader, opts,
+                ))
                 .map_err(|e| OvertureMapsCollectionError::ArrowReaderError { source: e })?;
 
             // Implement the required query filters

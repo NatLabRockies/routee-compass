@@ -75,7 +75,7 @@ struct SegmentAccessRestrictionWhenVehicle {
     dimension: Option<String>,
     comparison: Option<String>,
     value: Option<f64>,
-    unit: Option<String>
+    unit: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
