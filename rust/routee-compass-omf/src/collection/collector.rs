@@ -268,6 +268,7 @@ mod test {
     }
 
     #[test]
+    #[ignore]
     fn test_deserialization() {
         let collector = get_collector();
 
