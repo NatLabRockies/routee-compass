@@ -1,9 +1,15 @@
 use geo::Geometry;
 use serde::{Deserialize, Serialize};
 
+use crate::collection::{OvertureMapsCollectionError, OvertureRecord};
+
 use super::deserialize_geometry;
 use super::{OvertureMapsBbox, OvertureMapsNames, OvertureMapsSource};
 
+/// Represents a transportation segment record in the Overture Maps schema.
+/// This struct contains information about a segment of transportation infrastructure,
+/// such as roads or railways, including geometry, metadata, access restrictions,
+/// and other attributes relevant to routing and mapping.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TransportationSegmentRecord {
     id: Option<String>,
@@ -15,7 +21,7 @@ pub struct TransportationSegmentRecord {
     subtype: Option<String>,
     class: Option<String>,
     names: Option<OvertureMapsNames>,
-    connectors: Option<Vec<ConnectorList>>,
+    connectors: Option<Vec<ConnectorReference>>,
     routes: Option<Vec<SegmentRoute>>,
     subclass_rules: Option<Vec<SegmentValueBetween<String>>>,
     access_restrictions: Option<Vec<SegmentAccessRestriction>>,
@@ -30,8 +36,21 @@ pub struct TransportationSegmentRecord {
     rail_flags: Option<Vec<SegmentValueBetween<Vec<String>>>>,
 }
 
+impl TryFrom<OvertureRecord> for TransportationSegmentRecord {
+    type Error = OvertureMapsCollectionError;
+
+    fn try_from(value: OvertureRecord) -> Result<Self, Self::Error> {
+        match value {
+            OvertureRecord::Segment(record) => Ok(record),
+            _ => Err(OvertureMapsCollectionError::DeserializeTypeError(format!(
+                "Cannot transform record {value:#?} into TransportationSegmentRecord"
+            ))),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
-struct ConnectorList {
+struct ConnectorReference {
     connector_id: String,
     at: f64,
 }

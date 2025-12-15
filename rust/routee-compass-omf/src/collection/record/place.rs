@@ -8,7 +8,6 @@ use crate::collection::OvertureMapsCollectionError;
 
 /// OvertureMaps Places record schema according to schema of example parquet
 /// The schema online does not mention some of the fields are nullable
-#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PlacesRecord {
     #[serde(deserialize_with = "deserialize_geometry")]

@@ -5,9 +5,7 @@ use super::{deserialize_geometry, OvertureRecord};
 use super::{OvertureMapsBbox, OvertureMapsNames, OvertureMapsSource};
 use crate::collection::OvertureMapsCollectionError;
 
-#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize)]
-// #[serde(deny_unknown_fields)]
 pub struct BuildingsRecord {
     id: Option<String>,
     #[serde(deserialize_with = "deserialize_geometry")]

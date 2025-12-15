@@ -184,7 +184,7 @@ impl OvertureMapsCollector {
             .collect::<Result<Vec<RecordBatch>, _>>()
             .map_err(|e| OvertureMapsCollectionError::RecordBatchRetrievalError { source: e })?;
 
-        // Deserialize batches into recor types
+        // Deserialize batches into record types
         let records: Vec<Vec<OvertureRecord>> = match record_type {
             OvertureRecordType::Places => record_batches
                 .par_iter()
