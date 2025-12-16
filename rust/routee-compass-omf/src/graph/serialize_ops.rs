@@ -1,11 +1,10 @@
-use geo::Geometry;
 use itertools::Itertools;
-use routee_compass_core::model::network::{Edge, EdgeId, EdgeListId, Vertex, VertexId};
+use routee_compass_core::model::network::Vertex;
 use std::collections::HashMap;
 
 use crate::{
     collection::{
-        OvertureMapsCollectionError, OvertureRecord, TransportationConnectorRecord,
+        OvertureMapsCollectionError, TransportationConnectorRecord,
         TransportationSegmentRecord,
     },
     graph::segment_split::SegmentSplit,

@@ -33,15 +33,13 @@ impl SegmentSplit {
                 // Asumming `missing` is not valid in this case
                 let src_id = vectorized_graph.vertex_lookup.get(connector_id_src).ok_or(
                     OvertureMapsCollectionError::InvalidSegmentConnectors(format!(
-                        "segment references unknown connector {}",
-                        connector_id_src
+                        "segment references unknown connector {connector_id_src}"
                     )),
                 )?;
 
                 let dst_id = vectorized_graph.vertex_lookup.get(connector_id_dst).ok_or(
                     OvertureMapsCollectionError::InvalidSegmentConnectors(format!(
-                        "segment references unknown connector {}",
-                        connector_id_dst
+                        "segment references unknown connector {connector_id_dst}"
                     )),
                 )?;
 

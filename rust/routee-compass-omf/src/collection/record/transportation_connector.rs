@@ -48,8 +48,7 @@ impl TransportationConnectorRecord {
         let (x, y) = match geometry {
             Geometry::Point(point) => Ok(point.x_y()),
             _ => Err(OvertureMapsCollectionError::SerializationError(format!(
-                "Incorrect geometry in ConnectorRecord: {:?}",
-                geometry
+                "Incorrect geometry in ConnectorRecord: {geometry:?}"
             ))),
         }?;
 

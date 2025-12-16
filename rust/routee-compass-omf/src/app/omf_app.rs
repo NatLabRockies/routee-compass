@@ -1,7 +1,6 @@
 use std::path::Path;
 
 use clap::{Parser, Subcommand};
-use object_store::aws::AmazonS3;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -30,7 +29,7 @@ pub enum OmfOperation {
 impl OmfOperation {
     pub fn run(self) -> Result<(), OvertureMapsCollectionError> {
         match self {
-            OmfOperation::Download {} => {
+            OmfOperation::Download => {
                 let collector =
                     OvertureMapsCollectorConfig::new(ObjectStoreSource::AmazonS3, 128).build()?;
                 let release = ReleaseVersion::Latest;

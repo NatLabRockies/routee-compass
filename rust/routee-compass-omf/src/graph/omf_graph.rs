@@ -51,10 +51,10 @@ impl OmfGraphVectorized {
     pub fn add_vertex(&mut self, x: f32, y: f32) -> usize {
         let current_vertex_id = self.vertices.len();
         // Should we just use UUID?
-        let new_name = format!("new-{}", current_vertex_id);
+        let new_name = format!("new-{current_vertex_id}");
         self.vertex_lookup.insert(new_name, current_vertex_id);
         self.vertices
-            .push(Vertex::new(current_vertex_id, x as f32, y as f32));
+            .push(Vertex::new(current_vertex_id, x, y));
 
         current_vertex_id
     }
@@ -90,8 +90,7 @@ impl OmfGraphVectorized {
                 let vertex_ser = VertexSerializable::from(*vertex);
                 writer.serialize(vertex_ser).map_err(|e| {
                     OvertureMapsCollectionError::CsvWriteError(format!(
-                        "Failed to write to vertices-compass.csv.gz: {}",
-                        e
+                        "Failed to write to vertices-compass.csv.gz: {e}"
                     ))
                 })?;
             }
@@ -113,8 +112,7 @@ impl OmfGraphVectorized {
                 };
                 writer.serialize(edge).map_err(|e| {
                     OvertureMapsCollectionError::CsvWriteError(format!(
-                        "Failed to write to edges-compass.csv.gz: {}",
-                        e
+                        "Failed to write to edges-compass.csv.gz: {e}"
                     ))
                 })?;
             }

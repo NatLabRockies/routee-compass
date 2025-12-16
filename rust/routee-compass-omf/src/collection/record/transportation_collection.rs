@@ -28,8 +28,7 @@ impl TransportationCollection {
                     Ok(transportation_connector_record)
                 }
                 _ => Err(OvertureMapsCollectionError::DeserializeTypeError(format!(
-                    "expected connector type, got {:?}",
-                    record
+                    "expected connector type, got {record:?}"
                 ))),
             })
             .collect::<Result<Vec<TransportationConnectorRecord>, OvertureMapsCollectionError>>()?;
@@ -46,15 +45,14 @@ impl TransportationCollection {
                     Ok(transportation_connector_record)
                 }
                 _ => Err(OvertureMapsCollectionError::DeserializeTypeError(format!(
-                    "expected segment type, got {:?}",
-                    record
+                    "expected segment type, got {record:?}"
                 ))),
             })
             .collect::<Result<Vec<TransportationSegmentRecord>, OvertureMapsCollectionError>>()?;
 
         Ok(Self {
-            connectors: connectors,
-            segments: segments,
+            connectors,
+            segments,
         })
     }
 }

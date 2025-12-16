@@ -54,15 +54,12 @@ impl TransportationSegmentRecord {
         let geometry =
             self.geometry
                 .as_ref()
-                .ok_or(OvertureMapsCollectionError::InvalidGeometry(format!(
-                    "empty geometry"
-                )))?;
+                .ok_or(OvertureMapsCollectionError::InvalidGeometry("empty geometry".to_string()))?;
 
         match geometry {
             Geometry::LineString(line_string) => Ok(Haversine.length(line_string) * at),
             _ => Err(OvertureMapsCollectionError::InvalidGeometry(format!(
-                "geometry was not a linestring {:?}",
-                geometry
+                "geometry was not a linestring {geometry:?}"
             ))),
         }
     }
