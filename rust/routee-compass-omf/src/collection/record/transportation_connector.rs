@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 /// identifier, geometry, bounding box, version, and data sources.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TransportationConnectorRecord {
-    id: Option<String>,
+    pub id: String,
     #[serde(deserialize_with = "deserialize_geometry")]
     geometry: Option<Geometry>,
     bbox: OvertureMapsBbox,

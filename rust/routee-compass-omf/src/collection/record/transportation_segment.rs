@@ -12,7 +12,7 @@ use super::{OvertureMapsBbox, OvertureMapsNames, OvertureMapsSource};
 /// and other attributes relevant to routing and mapping.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TransportationSegmentRecord {
-    id: Option<String>,
+    id: String,
     #[serde(deserialize_with = "deserialize_geometry")]
     geometry: Option<Geometry>,
     bbox: OvertureMapsBbox,
@@ -21,7 +21,7 @@ pub struct TransportationSegmentRecord {
     subtype: Option<String>,
     class: Option<String>,
     names: Option<OvertureMapsNames>,
-    connectors: Option<Vec<ConnectorReference>>,
+    pub connectors: Option<Vec<ConnectorReference>>,
     routes: Option<Vec<SegmentRoute>>,
     subclass_rules: Option<Vec<SegmentValueBetween<String>>>,
     access_restrictions: Option<Vec<SegmentAccessRestriction>>,
@@ -50,7 +50,7 @@ impl TryFrom<OvertureRecord> for TransportationSegmentRecord {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct ConnectorReference {
+pub struct ConnectorReference {
     connector_id: String,
     at: f64,
 }
