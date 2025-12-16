@@ -53,8 +53,7 @@ impl OmfGraphVectorized {
         // Should we just use UUID?
         let new_name = format!("new-{current_vertex_id}");
         self.vertex_lookup.insert(new_name, current_vertex_id);
-        self.vertices
-            .push(Vertex::new(current_vertex_id, x, y));
+        self.vertices.push(Vertex::new(current_vertex_id, x, y));
 
         current_vertex_id
     }

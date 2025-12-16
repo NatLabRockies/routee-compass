@@ -4,8 +4,7 @@ use std::collections::HashMap;
 
 use crate::{
     collection::{
-        OvertureMapsCollectionError, TransportationConnectorRecord,
-        TransportationSegmentRecord,
+        OvertureMapsCollectionError, TransportationConnectorRecord, TransportationSegmentRecord,
     },
     graph::segment_split::SegmentSplit,
 };
