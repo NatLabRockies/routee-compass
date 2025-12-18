@@ -23,3 +23,14 @@ impl OvertureRecordType {
         }
     }
 }
+
+impl std::fmt::Display for OvertureRecordType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            OvertureRecordType::Places => write!(f, "Places"),
+            OvertureRecordType::Buildings => write!(f, "Buildings"),
+            OvertureRecordType::Segment => write!(f, "Segment"),
+            OvertureRecordType::Connector => write!(f, "Connector"),
+        }
+    }
+}
