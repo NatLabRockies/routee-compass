@@ -116,8 +116,22 @@ impl OmfGraphVectorized {
                 })?;
             }
         }
+        // Explicitly flush the writers to ensure all data is written
+        if let Some(ref mut writer) = vertex_writer {
+            writer.flush().map_err(|e| {
+                OvertureMapsCollectionError::CsvWriteError(format!(
+                    "Failed to flush vertices-compass.csv.gz: {e}"
+                ))
+            })?;
+        }
+        if let Some(ref mut writer) = edge_writer {
+            writer.flush().map_err(|e| {
+                OvertureMapsCollectionError::CsvWriteError(format!(
+                    "Failed to flush edges-compass.csv.gz: {e}"
+                ))
+            })?;
+        }
         Ok(())
-    }
 }
 
 /// helper function to build a filewriter for writing either .csv.gz or
