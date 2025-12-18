@@ -3,7 +3,7 @@ use std::{collections::HashMap, fs::File, path::Path};
 use csv::QuoteStyle;
 use flate2::{write::GzEncoder, Compression};
 use kdam::tqdm;
-use routee_compass_core::model::network::{Edge, EdgeConfig, EdgeId, Vertex};
+use routee_compass_core::model::network::{Edge, EdgeConfig, Vertex};
 
 use super::serialize_ops::get_connectors_mapping;
 use crate::{
@@ -132,6 +132,7 @@ impl OmfGraphVectorized {
             })?;
         }
         Ok(())
+    }
 }
 
 /// helper function to build a filewriter for writing either .csv.gz or
