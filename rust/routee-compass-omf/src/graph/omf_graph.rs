@@ -101,10 +101,10 @@ impl OmfGraphVectorized {
             total = self.edges.len(),
             desc = "write edges dataset"
         );
-        for (edge_id, row) in e_iter {
+        for (_edge_id, row) in e_iter {
             if let Some(ref mut writer) = edge_writer {
                 let edge = EdgeConfig {
-                    edge_id: EdgeId(edge_id),
+                    edge_id: row.edge_id,
                     src_vertex_id: row.src_vertex_id,
                     dst_vertex_id: row.dst_vertex_id,
                     distance: row.distance.get::<uom::si::length::meter>(),
