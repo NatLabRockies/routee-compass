@@ -41,8 +41,8 @@ impl TransportationCollection {
             )?
             .into_iter()
             .map(|record| match record {
-                OvertureRecord::Segment(transportation_connector_record) => {
-                    Ok(transportation_connector_record)
+                OvertureRecord::Segment(transportation_segment_record) => {
+                    Ok(transportation_segment_record)
                 }
                 _ => Err(OvertureMapsCollectionError::DeserializeTypeError(format!(
                     "expected segment type, got {record:?}"
