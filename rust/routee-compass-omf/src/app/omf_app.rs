@@ -22,7 +22,7 @@ pub struct OmfApp {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Subcommand)]
 pub enum OmfOperation {
-    /// download all of the GTFS archives
+    /// download all of the OMF transportation data
     Download,
 }
 
