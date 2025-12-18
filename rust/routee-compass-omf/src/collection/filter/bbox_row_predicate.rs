@@ -56,7 +56,7 @@ impl ArrowPredicate for BboxRowPredicate {
 
 /// helper function to get a column by name from a struct array and return it as
 /// the expected type.
-fn get_column<'a, 'b, T>(col: &'a str, struct_array: &'b StructArray) -> Result<&'b T, ArrowError>
+fn get_column<'b, T>(col: &str, struct_array: &'b StructArray) -> Result<&'b T, ArrowError>
 where
     T: 'static,
 {
