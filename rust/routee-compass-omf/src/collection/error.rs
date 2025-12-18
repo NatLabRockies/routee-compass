@@ -30,7 +30,7 @@ pub enum OvertureMapsCollectionError {
     GroupMappingError(String),
     #[error("Processing records into opportunities failed: {0}")]
     ProcessingError(String),
-    #[error("Serializing record into compass format failed failed: {0}")]
+    #[error("Serializing record into compass format failed: {0}")]
     SerializationError(String),
     #[error("Segment connectors vector is invalid or not specified: {0}")]
     InvalidSegmentConnectors(String),
