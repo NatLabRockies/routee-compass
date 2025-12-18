@@ -184,6 +184,7 @@ impl OvertureMapsCollector {
             .collect::<Result<Vec<RecordBatch>, _>>()
             .map_err(|e| OvertureMapsCollectionError::RecordBatchRetrievalError { source: e })?;
 
+        let start_deserialization = Instant::now();
         let records: Vec<OvertureRecord> = record_batches
             .par_iter()
             .map(|batch| match record_type {
@@ -203,10 +204,7 @@ impl OvertureMapsCollector {
             .flatten()
             .collect_vec();
 
-        log::info!("Deserialization time {:?}", start_collection.elapsed());
-
-        // Flatten the collection
-        // let flatten_records = records.into_iter().flatten().collect();
+        log::info!("Deserialization time {:?}", start_deserialization.elapsed());
         log::info!("Total time {:?}", start_collection.elapsed());
         Ok(records)
     }
