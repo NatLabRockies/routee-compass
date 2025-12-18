@@ -45,10 +45,12 @@ impl SegmentSplit {
 
                 // create this edge, push onto edges
                 if at_dst < at_src {
-                    return Err(OvertureMapsCollectionError::InvalidSegmentConnectors(format!(
-                        "ConnectorSplit: at_dst ({}) < at_src ({}) for connectors {} -> {}",
-                        at_dst, at_src, connector_id_src, connector_id_dst
-                    )));
+                    return Err(OvertureMapsCollectionError::InvalidSegmentConnectors(
+                        format!(
+                            "ConnectorSplit: at_dst ({}) < at_src ({}) for connectors {} -> {}",
+                            at_dst, at_src, connector_id_src, connector_id_dst
+                        ),
+                    ));
                 }
                 let distance =
                     segment.get_distance_at(*at_dst)? - segment.get_distance_at(*at_src)?;
