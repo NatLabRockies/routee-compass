@@ -1,4 +1,4 @@
-use geo::Geometry;
+use geo::{Geometry, Haversine, Length};
 use serde::{Deserialize, Serialize};
 
 use crate::collection::{OvertureMapsCollectionError, OvertureRecord};
@@ -12,16 +12,16 @@ use super::{OvertureMapsBbox, OvertureMapsNames, OvertureMapsSource};
 /// and other attributes relevant to routing and mapping.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TransportationSegmentRecord {
-    id: Option<String>,
+    pub id: String,
     #[serde(deserialize_with = "deserialize_geometry")]
-    geometry: Option<Geometry>,
+    pub geometry: Option<Geometry>,
     bbox: OvertureMapsBbox,
     version: i32,
     sources: Option<Vec<Option<OvertureMapsSource>>>,
     subtype: Option<String>,
     class: Option<String>,
     names: Option<OvertureMapsNames>,
-    connectors: Option<Vec<ConnectorReference>>,
+    pub connectors: Option<Vec<ConnectorReference>>,
     routes: Option<Vec<SegmentRoute>>,
     subclass_rules: Option<Vec<SegmentValueBetween<String>>>,
     access_restrictions: Option<Vec<SegmentAccessRestriction>>,
@@ -49,10 +49,28 @@ impl TryFrom<OvertureRecord> for TransportationSegmentRecord {
     }
 }
 
+impl TransportationSegmentRecord {
+    pub fn get_distance_at(&self, at: f64) -> Result<f64, OvertureMapsCollectionError> {
+        let geometry =
+            self.geometry
+                .as_ref()
+                .ok_or(OvertureMapsCollectionError::InvalidGeometry(
+                    "empty geometry".to_string(),
+                ))?;
+
+        match geometry {
+            Geometry::LineString(line_string) => Ok(Haversine.length(line_string) * at),
+            _ => Err(OvertureMapsCollectionError::InvalidGeometry(format!(
+                "geometry was not a linestring {geometry:?}"
+            ))),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
-struct ConnectorReference {
-    connector_id: String,
-    at: f64,
+pub struct ConnectorReference {
+    pub connector_id: String,
+    pub at: f64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

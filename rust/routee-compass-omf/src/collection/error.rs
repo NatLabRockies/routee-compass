@@ -30,4 +30,12 @@ pub enum OvertureMapsCollectionError {
     GroupMappingError(String),
     #[error("Processing records into opportunities failed: {0}")]
     ProcessingError(String),
+    #[error("Serializing record into compass format failed: {0}")]
+    SerializationError(String),
+    #[error("Segment connectors vector is invalid or not specified: {0}")]
+    InvalidSegmentConnectors(String),
+    #[error("Invalid or empty geometry: {0}")]
+    InvalidGeometry(String),
+    #[error("Error writing to csv: {0}")]
+    CsvWriteError(String),
 }

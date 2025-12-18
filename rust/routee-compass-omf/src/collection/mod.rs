@@ -16,6 +16,9 @@ pub use filter::Bbox;
 pub use filter::RowFilter;
 pub use filter::RowFilterConfig;
 pub use object_source::ObjectStoreSource;
-pub use record::{BuildingsRecord, OvertureRecord, OvertureRecordType, PlacesRecord};
+pub use record::{
+    BuildingsRecord, OvertureRecord, OvertureRecordType, PlacesRecord, TransportationCollection,
+    TransportationConnectorRecord, TransportationSegmentRecord,
+};
 pub use taxonomy::{TaxonomyModel, TaxonomyModelBuilder};
 pub use version::ReleaseVersion;
