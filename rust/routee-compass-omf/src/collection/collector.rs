@@ -237,7 +237,7 @@ impl OvertureMapsCollector {
             ReleaseVersion::Latest => self.get_latest_release()?,
             other => String::from(other),
         };
-        log::info!("Collecting OvertureMaps records from release {release_str}");
+        log::info!("Collecting OvertureMaps {record_type} records from release {release_str}");
         let path = Path::from(record_type.format_url(release_str));
         self.collect_from_path(path, record_type, row_filter_config)
     }
