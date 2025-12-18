@@ -1,13 +1,13 @@
 use arrow::array::RecordBatch;
 use chrono::NaiveDate;
 use futures::stream::{self, StreamExt};
+use itertools::Itertools;
 use object_store::{path::Path, ListResult, ObjectMeta, ObjectStore};
 use parquet::arrow::arrow_reader::ArrowPredicate;
 use parquet::arrow::arrow_reader::ArrowReaderOptions;
 use parquet::arrow::async_reader::ParquetObjectReader;
 use parquet::arrow::async_reader::ParquetRecordBatchStreamBuilder;
 use rayon::prelude::*;
-use serde::de::DeserializeOwned;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -184,47 +184,29 @@ impl OvertureMapsCollector {
             .collect::<Result<Vec<RecordBatch>, _>>()
             .map_err(|e| OvertureMapsCollectionError::RecordBatchRetrievalError { source: e })?;
 
-        // Deserialize batches into record types
-        let records: Vec<Vec<OvertureRecord>> = match record_type {
-            OvertureRecordType::Places => record_batches
-                .par_iter()
-                .map(deserialize_batch::<PlacesRecord>)
-                .map(|records_result| {
-                    records_result
-                        .map(|records| records.into_iter().map(OvertureRecord::Places).collect())
-                })
-                .collect::<Result<Vec<_>, OvertureMapsCollectionError>>()?,
-            OvertureRecordType::Buildings => record_batches
-                .par_iter()
-                .map(deserialize_batch::<BuildingsRecord>)
-                .map(|records_result| {
-                    records_result
-                        .map(|records| records.into_iter().map(OvertureRecord::Buildings).collect())
-                })
-                .collect::<Result<Vec<_>, OvertureMapsCollectionError>>()?,
-            OvertureRecordType::Segment => record_batches
-                .par_iter()
-                .map(deserialize_batch::<TransportationSegmentRecord>)
-                .map(|records_result| {
-                    records_result
-                        .map(|records| records.into_iter().map(OvertureRecord::Segment).collect())
-                })
-                .collect::<Result<Vec<_>, OvertureMapsCollectionError>>()?,
-            OvertureRecordType::Connector => record_batches
-                .par_iter()
-                .map(deserialize_batch::<TransportationConnectorRecord>)
-                .map(|records_result| {
-                    records_result
-                        .map(|records| records.into_iter().map(OvertureRecord::Connector).collect())
-                })
-                .collect::<Result<Vec<_>, OvertureMapsCollectionError>>()?,
-        };
-        log::info!("Deserialization time {:?}", start_collection.elapsed());
+        let start_deserialization = Instant::now();
+        let records: Vec<OvertureRecord> = record_batches
+            .par_iter()
+            .map(|batch| match record_type {
+                OvertureRecordType::Places => record_type.process_batch::<PlacesRecord>(batch),
+                OvertureRecordType::Buildings => {
+                    record_type.process_batch::<BuildingsRecord>(batch)
+                }
+                OvertureRecordType::Segment => {
+                    record_type.process_batch::<TransportationSegmentRecord>(batch)
+                }
+                OvertureRecordType::Connector => {
+                    record_type.process_batch::<TransportationConnectorRecord>(batch)
+                }
+            })
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .flatten()
+            .collect_vec();
 
-        // Flatten the collection
-        let flatten_records = records.into_iter().flatten().collect();
+        log::info!("Deserialization time {:?}", start_deserialization.elapsed());
         log::info!("Total time {:?}", start_collection.elapsed());
-        Ok(flatten_records)
+        Ok(records)
     }
 
     pub fn collect_from_release(
@@ -237,19 +219,10 @@ impl OvertureMapsCollector {
             ReleaseVersion::Latest => self.get_latest_release()?,
             other => String::from(other),
         };
-        log::info!("Collecting OvertureMaps records from release {release_str}");
+        log::info!("Collecting OvertureMaps {record_type} records from release {release_str}");
         let path = Path::from(record_type.format_url(release_str));
         self.collect_from_path(path, record_type, row_filter_config)
     }
-}
-
-/// Deserialize recordBatch into type T
-fn deserialize_batch<T>(record_batch: &RecordBatch) -> Result<Vec<T>, OvertureMapsCollectionError>
-where
-    T: DeserializeOwned,
-{
-    serde_arrow::from_record_batch(record_batch)
-        .map_err(|e| OvertureMapsCollectionError::DeserializeError(format!("Serde error: {e}")))
 }
 
 #[cfg(test)]
