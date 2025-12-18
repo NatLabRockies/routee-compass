@@ -11,7 +11,7 @@ use crate::{
     graph::OmfGraphVectorized,
 };
 
-/// command line tool for batch downloading and summarizing of GTFS archives
+/// Command line tool for batch downloading and summarizing of OMF (Overture Maps Foundation) data
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
