@@ -10,7 +10,7 @@ use crate::{
 };
 
 pub fn get_connectors_mapping(
-    connectors: &Vec<TransportationConnectorRecord>,
+    connectors: &[TransportationConnectorRecord],
 ) -> Result<(Vec<Vertex>, HashMap<String, usize>), OvertureMapsCollectionError> {
     let vertices = connectors
         .iter()
