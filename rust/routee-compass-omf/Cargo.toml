@@ -1,6 +1,6 @@
 [package]
 name = "bambam-omf"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 license = "BSD-3-Clause"
 exclude = ["test", "**/.DS_Store", "target/"]
