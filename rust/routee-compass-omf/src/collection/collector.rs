@@ -1,17 +1,18 @@
 use arrow::array::RecordBatch;
-use arrow::json::writer::JsonArray;
-use arrow::json::WriterBuilder;
 use chrono::NaiveDate;
 use futures::stream::{self, StreamExt};
+use itertools::Itertools;
 use object_store::{path::Path, ListResult, ObjectMeta, ObjectStore};
 use parquet::arrow::arrow_reader::ArrowPredicate;
+use parquet::arrow::arrow_reader::ArrowReaderOptions;
 use parquet::arrow::async_reader::ParquetObjectReader;
 use parquet::arrow::async_reader::ParquetRecordBatchStreamBuilder;
 use rayon::prelude::*;
-use serde::de::DeserializeOwned;
 use std::sync::Arc;
 use std::time::Instant;
 
+use crate::collection::record::TransportationConnectorRecord;
+use crate::collection::record::TransportationSegmentRecord;
 use crate::collection::BuildingsRecord;
 use crate::collection::PlacesRecord;
 
@@ -132,10 +133,13 @@ impl OvertureMapsCollector {
             log::debug!("File Name: {}, Size: {}", meta.location, meta.size);
 
             // Parquet objects in charge of processing the incoming stream
+            let opts = ArrowReaderOptions::new().with_page_index(true);
             let reader = ParquetObjectReader::new(self.obj_store.clone(), meta.location)
                 .with_runtime(io_runtime.handle().clone());
             let builder = runtime
-                .block_on(ParquetRecordBatchStreamBuilder::new(reader))
+                .block_on(ParquetRecordBatchStreamBuilder::new_with_options(
+                    reader, opts,
+                ))
                 .map_err(|e| OvertureMapsCollectionError::ArrowReaderError { source: e })?;
 
             // Implement the required query filters
@@ -180,31 +184,29 @@ impl OvertureMapsCollector {
             .collect::<Result<Vec<RecordBatch>, _>>()
             .map_err(|e| OvertureMapsCollectionError::RecordBatchRetrievalError { source: e })?;
 
-        // Deserialize batches into recor types
-        let records: Vec<Vec<OvertureRecord>> = match record_type {
-            OvertureRecordType::Places => record_batches
-                .into_par_iter()
-                .map(deserialize_batch::<PlacesRecord>)
-                .map(|records_result| {
-                    records_result
-                        .map(|records| records.into_iter().map(OvertureRecord::Places).collect())
-                })
-                .collect::<Result<Vec<_>, OvertureMapsCollectionError>>()?,
-            OvertureRecordType::Buildings => record_batches
-                .into_par_iter()
-                .map(deserialize_batch::<BuildingsRecord>)
-                .map(|records_result| {
-                    records_result
-                        .map(|records| records.into_iter().map(OvertureRecord::Buildings).collect())
-                })
-                .collect::<Result<Vec<_>, OvertureMapsCollectionError>>()?,
-        };
-        log::info!("Deserialization time {:?}", start_collection.elapsed());
+        let start_deserialization = Instant::now();
+        let records: Vec<OvertureRecord> = record_batches
+            .par_iter()
+            .map(|batch| match record_type {
+                OvertureRecordType::Places => record_type.process_batch::<PlacesRecord>(batch),
+                OvertureRecordType::Buildings => {
+                    record_type.process_batch::<BuildingsRecord>(batch)
+                }
+                OvertureRecordType::Segment => {
+                    record_type.process_batch::<TransportationSegmentRecord>(batch)
+                }
+                OvertureRecordType::Connector => {
+                    record_type.process_batch::<TransportationConnectorRecord>(batch)
+                }
+            })
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .flatten()
+            .collect_vec();
 
-        // Flatten the collection
-        let flatten_records = records.into_iter().flatten().collect();
+        log::info!("Deserialization time {:?}", start_deserialization.elapsed());
         log::info!("Total time {:?}", start_collection.elapsed());
-        Ok(flatten_records)
+        Ok(records)
     }
 
     pub fn collect_from_release(
@@ -217,33 +219,75 @@ impl OvertureMapsCollector {
             ReleaseVersion::Latest => self.get_latest_release()?,
             other => String::from(other),
         };
-        log::info!("Collecting OvertureMaps records from release {release_str}");
+        log::info!("Collecting OvertureMaps {record_type} records from release {release_str}");
         let path = Path::from(record_type.format_url(release_str));
         self.collect_from_path(path, record_type, row_filter_config)
     }
 }
 
-/// Deserialize recordBatch into type T
-fn deserialize_batch<T>(record_batch: RecordBatch) -> Result<Vec<T>, OvertureMapsCollectionError>
-where
-    T: DeserializeOwned,
-{
-    // Arrow custom builder
-    let builder = WriterBuilder::new().with_explicit_nulls(true);
+#[cfg(test)]
+mod test {
+    use crate::collection::{
+        ObjectStoreSource, OvertureMapsCollector, OvertureMapsCollectorConfig, OvertureRecord,
+        OvertureRecordType, ReleaseVersion, RowFilterConfig,
+    };
+    use chrono::NaiveDate;
+    use std::str::FromStr;
 
-    // Write the record batch out as json bytes
-    let buf = Vec::new();
-    let mut writer = builder.build::<_, JsonArray>(buf);
-    writer
-        .write(&record_batch)
-        .map_err(|e| OvertureMapsCollectionError::DeserializeError(e.to_string()))?;
-    writer
-        .finish()
-        .map_err(|e| OvertureMapsCollectionError::DeserializeError(e.to_string()))?;
-    let json_data = writer.into_inner();
+    fn get_collector() -> OvertureMapsCollector {
+        OvertureMapsCollectorConfig::new(ObjectStoreSource::AmazonS3, 512)
+            .build()
+            .unwrap()
+    }
 
-    // Parse the string using serde_json
-    let deserialized_rows: Vec<T> = serde_json::from_slice(json_data.as_slice())
-        .map_err(|e| OvertureMapsCollectionError::DeserializeError(format!("Serde error: {e}")))?;
-    Ok(deserialized_rows)
+    #[test]
+    #[ignore]
+    fn test_deserialization() {
+        let collector = get_collector();
+
+        // Roughly Golden, CO
+        let row_filter = RowFilterConfig::Bbox {
+            xmin: -105.254,
+            xmax: -105.197,
+            ymin: 39.733,
+            ymax: 39.784,
+        };
+
+        // Connectors
+        let connector_records = collector
+            .collect_from_release(
+                ReleaseVersion::Monthly {
+                    datetime: NaiveDate::from_str("2025-11-19").unwrap(),
+                    version: Some(0),
+                },
+                &OvertureRecordType::Connector,
+                Some(row_filter.clone()),
+            )
+            .unwrap();
+
+        println!("Records Length: {}", connector_records.len());
+
+        assert_eq!(connector_records.len(), 6401);
+        assert!(matches!(
+            connector_records[0],
+            OvertureRecord::Connector(..)
+        ));
+
+        // Segment
+        let segment_records = collector
+            .collect_from_release(
+                ReleaseVersion::Monthly {
+                    datetime: NaiveDate::from_str("2025-11-19").unwrap(),
+                    version: Some(0),
+                },
+                &OvertureRecordType::Segment,
+                Some(row_filter),
+            )
+            .unwrap();
+
+        println!("Records Length: {}", segment_records.len());
+
+        assert_eq!(segment_records.len(), 3804);
+        assert!(matches!(segment_records[0], OvertureRecord::Segment(..)));
+    }
 }
