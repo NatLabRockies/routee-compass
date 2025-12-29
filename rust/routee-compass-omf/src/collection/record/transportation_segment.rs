@@ -1,4 +1,4 @@
-use geo::{Geometry, Haversine, Length};
+use geo::{Coord, Geometry, Haversine, InterpolatableLine, Length, LineString};
 use serde::{Deserialize, Serialize};
 
 use crate::collection::{OvertureMapsCollectionError, OvertureRecord};
@@ -12,9 +12,10 @@ use super::{OvertureMapsBbox, OvertureMapsNames, OvertureMapsSource};
 /// and other attributes relevant to routing and mapping.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TransportationSegmentRecord {
+    /// GERS identifier for this segment record
     pub id: String,
     #[serde(deserialize_with = "deserialize_geometry")]
-    pub geometry: Option<Geometry>,
+    pub geometry: Option<Geometry<f32>>,
     bbox: OvertureMapsBbox,
     version: i32,
     sources: Option<Vec<Option<OvertureMapsSource>>>,
@@ -50,19 +51,41 @@ impl TryFrom<OvertureRecord> for TransportationSegmentRecord {
 }
 
 impl TransportationSegmentRecord {
-    pub fn get_distance_at(&self, at: f64) -> Result<f64, OvertureMapsCollectionError> {
-        let geometry =
-            self.geometry
-                .as_ref()
-                .ok_or(OvertureMapsCollectionError::InvalidGeometry(
-                    "empty geometry".to_string(),
-                ))?;
-
+    pub fn get_linestring(&self) -> Result<&LineString<f32>, OvertureMapsCollectionError> {
+        let geometry = self.geometry.as_ref().ok_or_else(|| {
+            OvertureMapsCollectionError::InvalidGeometry("empty geometry".to_string())
+        })?;
         match geometry {
-            Geometry::LineString(line_string) => Ok(Haversine.length(line_string) * at),
+            Geometry::LineString(line_string) => Ok(line_string),
             _ => Err(OvertureMapsCollectionError::InvalidGeometry(format!(
                 "geometry was not a linestring {geometry:?}"
             ))),
+        }
+    }
+
+    pub fn get_distance_at(&self, at: f64) -> Result<f32, OvertureMapsCollectionError> {
+        if !(0.0..=1.0).contains(&at) {
+            return Err(OvertureMapsCollectionError::InvalidLinearReference(at));
+        }
+        let linestring = self.get_linestring()?;
+        Ok(Haversine.length(linestring) * at as f32)
+    }
+
+    /// gets a coordinate from this linestring at some linear reference.
+    pub fn get_coord_at(&self, at: f64) -> Result<Coord<f32>, OvertureMapsCollectionError> {
+        if !(0.0..=1.0).contains(&at) {
+            return Err(OvertureMapsCollectionError::InvalidLinearReference(at));
+        }
+        let linestring = self.get_linestring()?;
+        match linestring.point_at_ratio_from_start(&Haversine, at as f32) {
+            Some(pt) => Ok(pt.0),
+            None => {
+                let msg = format!(
+                    "unexpected error getting point for segment {} at {at}",
+                    self.id
+                );
+                Err(OvertureMapsCollectionError::InternalError(msg))
+            }
         }
     }
 }

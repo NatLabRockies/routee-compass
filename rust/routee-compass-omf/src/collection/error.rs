@@ -34,8 +34,12 @@ pub enum OvertureMapsCollectionError {
     SerializationError(String),
     #[error("Segment connectors vector is invalid or not specified: {0}")]
     InvalidSegmentConnectors(String),
+    #[error("linear reference {0} must be in range [0, 1]")]
+    InvalidLinearReference(f64),
     #[error("Invalid or empty geometry: {0}")]
     InvalidGeometry(String),
     #[error("Error writing to csv: {0}")]
     CsvWriteError(String),
+    #[error("{0}")]
+    InternalError(String),
 }
