@@ -11,7 +11,7 @@ use crate::collection::OvertureMapsCollectionError;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PlacesRecord {
     #[serde(deserialize_with = "deserialize_geometry")]
-    geometry: Option<Geometry>,
+    geometry: Option<Geometry<f32>>,
     categories: Option<OvertureMapsPlacesCategories>,
     id: Option<String>,
     bbox: OvertureMapsBbox,
@@ -63,7 +63,7 @@ impl PlacesRecord {
         }
     }
 
-    pub fn get_geometry(&self) -> Option<Geometry> {
+    pub fn get_geometry(&self) -> Option<Geometry<f32>> {
         self.geometry.clone()
     }
 }

@@ -9,7 +9,7 @@ use crate::collection::OvertureMapsCollectionError;
 pub struct BuildingsRecord {
     id: Option<String>,
     #[serde(deserialize_with = "deserialize_geometry")]
-    geometry: Option<Geometry>,
+    geometry: Option<Geometry<f32>>,
     bbox: OvertureMapsBbox,
     version: i32,
     sources: Option<Vec<Option<OvertureMapsSource>>>,
@@ -38,7 +38,7 @@ impl BuildingsRecord {
         self.class.clone()
     }
 
-    pub fn get_geometry(&self) -> Option<Geometry> {
+    pub fn get_geometry(&self) -> Option<Geometry<f32>> {
         self.geometry.clone()
     }
 }
