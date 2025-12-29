@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use clap::{Parser, Subcommand};
+use routee_compass_core::model::network::EdgeListId;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -23,13 +24,18 @@ pub struct OmfApp {
 #[derive(Debug, Clone, Serialize, Deserialize, Subcommand)]
 pub enum OmfOperation {
     /// download all of the OMF transportation data
-    Download,
+    Download {
+        /// location on disk to write output files. if not provided,
+        /// use the current working directory.
+        #[arg(short, long)]
+        output_directory: Option<String>,
+    },
 }
 
 impl OmfOperation {
-    pub fn run(self) -> Result<(), OvertureMapsCollectionError> {
+    pub fn run(&self) -> Result<(), OvertureMapsCollectionError> {
         match self {
-            OmfOperation::Download => {
+            OmfOperation::Download { output_directory } => {
                 let collector =
                     OvertureMapsCollectorConfig::new(ObjectStoreSource::AmazonS3, 128).build()?;
                 let release = ReleaseVersion::Latest;
@@ -45,8 +51,12 @@ impl OmfOperation {
                     release,
                     Some(row_filter_config),
                 )?;
-                let vectorized_graph = OmfGraphVectorized::try_from_collection(collection, 0)?;
-                vectorized_graph.write_compass(Path::new("./"), true)?;
+                let vectorized_graph = OmfGraphVectorized::new(collection, EdgeListId(0))?;
+                let output_path = match output_directory {
+                    Some(o) => Path::new(o),
+                    None => Path::new(""),
+                };
+                vectorized_graph.write_compass(output_path, true)?;
 
                 Ok(())
             }

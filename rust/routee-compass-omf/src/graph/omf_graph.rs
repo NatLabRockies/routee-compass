@@ -3,17 +3,17 @@ use std::{collections::HashMap, fs::File, path::Path};
 use csv::QuoteStyle;
 use flate2::{write::GzEncoder, Compression};
 use kdam::tqdm;
-use routee_compass_core::model::network::{Edge, EdgeConfig, Vertex};
+use routee_compass_core::model::network::{Edge, EdgeConfig, EdgeListId, Vertex};
 
-use super::serialize_ops::get_connectors_mapping;
+use super::serialize_ops as ops;
 use crate::{
     collection::{OvertureMapsCollectionError, TransportationCollection},
-    graph::{serialize_ops::get_connector_splits, vertex_serializable::VertexSerializable},
+    graph::{segment_ops, vertex_serializable::VertexSerializable},
 };
 
 #[derive(Debug)]
 pub struct OmfGraphVectorized {
-    pub edge_list_id: usize,
+    pub edge_list_id: EdgeListId,
     pub vertices: Vec<Vertex>,
     pub edges: Vec<Edge>,
     /// for each OMF ID, the vertex index
@@ -21,43 +21,54 @@ pub struct OmfGraphVectorized {
 }
 
 impl OmfGraphVectorized {
-    pub fn try_from_collection(
+    /// create a vectorized graph dataset from a [TransportationCollection]
+    pub fn new(
         collection: TransportationCollection,
-        edge_list_id: usize,
+        edge_list_id: EdgeListId,
     ) -> Result<Self, OvertureMapsCollectionError> {
         // Process initial set of connectors
-        let (vertices, vertex_mapping) = get_connectors_mapping(&collection.connectors)?;
+        let (mut vertices, mut vertex_lookup) =
+            ops::create_vertices_and_lookup(&collection.connectors)?;
+        let segment_lookup = ops::create_segment_lookup(&collection.segments);
 
-        // Initialize result
-        let mut result = Self {
+        // the splits are locations in each segment record where we want to define a vertex
+        // which may not yet exist on the graph
+        let splits = ops::find_splits(
+            &collection.segments,
+            segment_ops::process_simple_connector_splits,
+        )?;
+
+        // depending on the split method, we may need to create additional vertices at locations
+        // which are not OvertureMaps-defined connector types.
+        ops::extend_vertices(
+            &splits,
+            &collection.segments,
+            &segment_lookup,
+            &mut vertices,
+            &mut vertex_lookup,
+        )?;
+
+        // create all edges based on the above split points using all vertices.
+        let edges = ops::create_edges(
+            &collection.segments,
+            &segment_lookup,
+            &splits,
+            &vertices,
+            &vertex_lookup,
+            edge_list_id,
+        )?;
+
+        let result = Self {
             edge_list_id,
             vertices,
-            edges: vec![],
-            vertex_lookup: vertex_mapping,
+            edges,
+            vertex_lookup,
         };
-
-        // Process segments
-        for segment in collection.segments.iter() {
-            // Compute all the splits
-            // Here is where we would define and run additional splits
-            get_connector_splits(segment)?
-                .iter()
-                .try_for_each(|split| split.split(&mut result, segment))?;
-        }
 
         Ok(result)
     }
 
-    pub fn add_vertex(&mut self, x: f32, y: f32) -> usize {
-        let current_vertex_id = self.vertices.len();
-        // Should we just use UUID?
-        let new_name = format!("new-{current_vertex_id}");
-        self.vertex_lookup.insert(new_name, current_vertex_id);
-        self.vertices.push(Vertex::new(current_vertex_id, x, y));
-
-        current_vertex_id
-    }
-
+    /// write the graph to disk in vectorized Compass format.
     pub fn write_compass(
         &self,
         output_directory: &Path,
@@ -80,11 +91,11 @@ impl OmfGraphVectorized {
 
         // Write vertices
         let v_iter = tqdm!(
-            self.vertices.iter().enumerate(),
+            self.vertices.iter(),
             total = self.vertices.len(),
             desc = "write vertex dataset"
         );
-        for (_, vertex) in v_iter {
+        for vertex in v_iter {
             if let Some(ref mut writer) = vertex_writer {
                 let vertex_ser = VertexSerializable::from(*vertex);
                 writer.serialize(vertex_ser).map_err(|e| {
@@ -94,14 +105,15 @@ impl OmfGraphVectorized {
                 })?;
             }
         }
+        eprintln!();
 
         // Write Edges
         let e_iter = tqdm!(
-            self.edges.iter().enumerate(),
+            self.edges.iter(),
             total = self.edges.len(),
             desc = "write edges dataset"
         );
-        for (_edge_id, row) in e_iter {
+        for row in e_iter {
             if let Some(ref mut writer) = edge_writer {
                 let edge = EdgeConfig {
                     edge_id: row.edge_id,
@@ -116,6 +128,8 @@ impl OmfGraphVectorized {
                 })?;
             }
         }
+        eprintln!();
+
         // Explicitly flush the writers to ensure all data is written
         if let Some(ref mut writer) = vertex_writer {
             writer.flush().map_err(|e| {
