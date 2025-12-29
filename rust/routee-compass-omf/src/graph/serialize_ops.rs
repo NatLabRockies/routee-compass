@@ -114,7 +114,8 @@ pub fn extend_vertices(
         let _ = vertex_lookup.insert(vertex_uuid, vertex_id);
     }
     eprintln!(); // end progress bar
-    todo!()
+
+    Ok(())
 }
 
 /// helper function to collect any [ConnectorInSegment] values that represent currently missing Vertices in the graph.
