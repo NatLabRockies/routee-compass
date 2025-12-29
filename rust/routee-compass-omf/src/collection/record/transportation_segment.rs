@@ -18,25 +18,25 @@ pub struct TransportationSegmentRecord {
     pub id: String,
     #[serde(deserialize_with = "deserialize_geometry")]
     pub geometry: Option<Geometry<f32>>,
-    bbox: OvertureMapsBbox,
-    subtype: Option<SegmentSubtype>,
-    class: Option<SegmentClass>,
-    subclass: Option<SegmentSubclass>,
-    version: i32,
-    sources: Option<Vec<Option<OvertureMapsSource>>>,
-    names: Option<OvertureMapsNames>,
+    pub bbox: OvertureMapsBbox,
+    pub subtype: Option<SegmentSubtype>,
+    pub class: Option<SegmentClass>,
+    pub subclass: Option<SegmentSubclass>,
+    pub version: i32,
+    pub sources: Option<Vec<Option<OvertureMapsSource>>>,
+    pub names: Option<OvertureMapsNames>,
     pub connectors: Option<Vec<ConnectorReference>>,
-    routes: Option<Vec<SegmentRoute>>,
-    subclass_rules: Option<Vec<SegmentValueBetween<SegmentSubclass>>>,
-    access_restrictions: Option<Vec<SegmentAccessRestriction>>,
-    level_rules: Option<Vec<SegmentValueBetween<i32>>>,
-    destinations: Option<Vec<SegmentDestination>>,
-    prohibited_transitions: Option<Vec<SegmentProhibitedTransitions>>,
-    road_surface: Option<Vec<SegmentValueBetween<SegmentRoadSurfaceType>>>,
-    road_flags: Option<Vec<SegmentValueBetween<Vec<SegmentRoadFlags>>>>,
-    speed_limits: Option<Vec<SegmentSpeedLimit>>,
-    width_rules: Option<Vec<SegmentValueBetween<f64>>>,
-    rail_flags: Option<Vec<SegmentValueBetween<Vec<SegmentRailFlags>>>>,
+    pub routes: Option<Vec<SegmentRoute>>,
+    pub subclass_rules: Option<Vec<SegmentValueBetween<SegmentSubclass>>>,
+    pub access_restrictions: Option<Vec<SegmentAccessRestriction>>,
+    pub level_rules: Option<Vec<SegmentValueBetween<i32>>>,
+    pub destinations: Option<Vec<SegmentDestination>>,
+    pub prohibited_transitions: Option<Vec<SegmentProhibitedTransitions>>,
+    pub road_surface: Option<Vec<SegmentValueBetween<SegmentRoadSurfaceType>>>,
+    pub road_flags: Option<Vec<SegmentValueBetween<Vec<SegmentRoadFlags>>>>,
+    pub speed_limits: Option<Vec<SegmentSpeedLimit>>,
+    pub width_rules: Option<Vec<SegmentValueBetween<f64>>>,
+    pub rail_flags: Option<Vec<SegmentValueBetween<Vec<SegmentRailFlags>>>>,
 }
 
 impl TryFrom<OvertureRecord> for TransportationSegmentRecord {
@@ -311,43 +311,71 @@ pub struct ConnectorReference {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct SegmentRoute {
-    name: Option<String>,
-    network: Option<String>,
+pub struct SegmentRoute {
+    pub name: Option<String>,
+    pub network: Option<String>,
     #[serde(rename = "ref")]
-    reference: Option<String>,
-    symbol: Option<String>,
-    wikidata: Option<String>,
-    between: Option<Vec<f64>>,
+    pub reference: Option<String>,
+    pub symbol: Option<String>,
+    pub wikidata: Option<String>,
+    pub between: Option<Vec<f64>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct SegmentValueBetween<T> {
-    value: Option<T>,
-    between: Option<Vec<f64>>,
+pub struct SegmentValueBetween<T> {
+    pub value: Option<T>,
+    pub between: Option<Vec<f64>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct SegmentAccessRestriction {
-    access_type: Option<SegmentAccessType>,
-    when: Option<SegmentAccessRestrictionWhen>,
-    vehicle: Option<String>,
+pub struct SegmentAccessRestriction {
+    pub access_type: SegmentAccessType,
+    pub when: Option<SegmentAccessRestrictionWhen>,
+    pub vehicle: Option<String>,
+}
+
+impl SegmentAccessRestriction {
+    pub fn contains_mode(&self, mode: &SegmentMode) -> bool {
+        self.when
+            .as_ref()
+            .map(|w| w.mode.as_ref())
+            .flatten()
+            .map(|m| m.contains(mode))
+            .unwrap_or_default()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct SegmentAccessRestrictionWhen {
-    /// time when restriction is active, as defined via OSM opening hours
+pub struct SegmentAccessRestrictionWhen {
+    /// Time span or time spans during which something is open or active, specified
+    /// in the OSM opening hours specification:
     /// see <https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification>
-    during: Option<String>,
-    heading: Option<SegmentHeading>,
-    using: Option<Vec<SegmentUsing>>,
-    recognized: Option<Vec<SegmentRecognized>>,
-    mode: Option<Vec<SegmentMode>>,
-    vehicle: Option<Vec<SegmentAccessRestrictionWhenVehicle>>,
+    pub during: Option<String>,
+    /// Enumerates possible travel headings along segment geometry.
+    pub heading: Option<SegmentHeading>,
+    /// Reason why a person or entity travelling on the transportation network is
+    /// using a particular location.
+    pub using: Option<Vec<SegmentUsing>>,
+    /// Status of the person or entity travelling as recognized by authorities
+    /// controlling the particular location
+    pub recognized: Option<Vec<SegmentRecognized>>,
+    /// Enumerates possible travel modes. Some modes represent groups of modes.
+    pub mode: Option<Vec<SegmentMode>>,
+    /// Vehicle attributes for which the rule applies
+    pub vehicle: Option<Vec<SegmentAccessRestrictionWhenVehicle>>,
+}
+
+impl SegmentAccessRestrictionWhen {
+    pub fn contains_mode(&self, mode: &SegmentMode) -> bool {
+        self.mode
+            .as_ref()
+            .map(|m| m.contains(mode))
+            .unwrap_or_default()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct SegmentAccessRestrictionWhenVehicle {
+pub struct SegmentAccessRestrictionWhenVehicle {
     dimension: SegmentVehicleDimension,
     comparison: SegmentVehicleComparator,
     value: f64,
@@ -355,7 +383,7 @@ struct SegmentAccessRestrictionWhenVehicle {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct SegmentDestination {
+pub struct SegmentDestination {
     labels: Option<Vec<SegmentDestinationLabel>>,
     symbols: Option<Vec<String>>,
     from_connector_id: Option<String>,
@@ -366,19 +394,19 @@ struct SegmentDestination {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct SegmentDestinationLabel {
+pub struct SegmentDestinationLabel {
     value: Option<String>,
     #[serde(rename = "type")]
     type_str: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct SegmentDestinationWhen {
+pub struct SegmentDestinationWhen {
     heading: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct SegmentProhibitedTransitions {
+pub struct SegmentProhibitedTransitions {
     sequence: Option<Vec<SegmentProhibitedTransitionsSequence>>,
     final_heading: Option<SegmentHeading>,
     when: Option<SegmentAccessRestrictionWhen>,
@@ -386,13 +414,13 @@ struct SegmentProhibitedTransitions {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct SegmentProhibitedTransitionsSequence {
+pub struct SegmentProhibitedTransitionsSequence {
     connector: Option<String>,
     segment: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct SegmentSpeedLimit {
+pub struct SegmentSpeedLimit {
     min_speed: Option<SpeedLimitWithUnit>,
     max_speed: Option<SpeedLimitWithUnit>,
     is_max_speed_variable: Option<bool>,
@@ -401,7 +429,7 @@ struct SegmentSpeedLimit {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct SpeedLimitWithUnit {
+pub struct SpeedLimitWithUnit {
     value: i32,
     unit: SegmentSpeedUnit,
 }

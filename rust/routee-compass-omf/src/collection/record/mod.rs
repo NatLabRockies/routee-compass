@@ -13,7 +13,13 @@ pub use place::PlacesRecord;
 pub use record_type::OvertureRecordType;
 pub use transportation_collection::TransportationCollection;
 pub use transportation_connector::TransportationConnectorRecord;
-pub use transportation_segment::TransportationSegmentRecord;
+pub use transportation_segment::{
+    SegmentAccessType, SegmentClass, SegmentHeading, SegmentImperialWeightUnit, SegmentLengthUnit,
+    SegmentMetricWeightUnit, SegmentMode, SegmentRailFlags, SegmentRecognized, SegmentRoadFlags,
+    SegmentRoadSurfaceType, SegmentSpeedUnit, SegmentSubclass, SegmentSubtype, SegmentUnit,
+    SegmentUsing, SegmentVehicleComparator, SegmentVehicleDimension, SegmentWeightUnit,
+    TransportationSegmentRecord,
+};
 
 // Common structs and functions for many record types
 use common::deserialize_geometry;
