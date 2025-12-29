@@ -338,8 +338,7 @@ impl SegmentAccessRestriction {
     pub fn contains_mode(&self, mode: &SegmentMode) -> bool {
         self.when
             .as_ref()
-            .map(|w| w.mode.as_ref())
-            .flatten()
+            .and_then(|w| w.mode.as_ref())
             .map(|m| m.contains(mode))
             .unwrap_or_default()
     }

@@ -14,10 +14,7 @@ pub use record_type::OvertureRecordType;
 pub use transportation_collection::TransportationCollection;
 pub use transportation_connector::TransportationConnectorRecord;
 pub use transportation_segment::{
-    SegmentAccessType, SegmentClass, SegmentHeading, SegmentImperialWeightUnit, SegmentLengthUnit,
-    SegmentMetricWeightUnit, SegmentMode, SegmentRailFlags, SegmentRecognized, SegmentRoadFlags,
-    SegmentRoadSurfaceType, SegmentSpeedUnit, SegmentSubclass, SegmentSubtype, SegmentUnit,
-    SegmentUsing, SegmentVehicleComparator, SegmentVehicleDimension, SegmentWeightUnit,
+    SegmentAccessType, SegmentClass, SegmentMode, SegmentSubclass, SegmentSubtype,
     TransportationSegmentRecord,
 };
 
