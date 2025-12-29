@@ -10,31 +10,33 @@ use super::{OvertureMapsBbox, OvertureMapsNames, OvertureMapsSource};
 /// This struct contains information about a segment of transportation infrastructure,
 /// such as roads or railways, including geometry, metadata, access restrictions,
 /// and other attributes relevant to routing and mapping.
-#[derive(Debug, Serialize, Deserialize)]
+///
+/// see <https://docs.overturemaps.org/schema/reference/transportation/segment/>
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TransportationSegmentRecord {
     /// GERS identifier for this segment record
     pub id: String,
     #[serde(deserialize_with = "deserialize_geometry")]
     pub geometry: Option<Geometry<f32>>,
     bbox: OvertureMapsBbox,
+    subtype: Option<SegmentSubtype>,
+    class: Option<SegmentClass>,
+    subclass: Option<SegmentSubclass>,
     version: i32,
     sources: Option<Vec<Option<OvertureMapsSource>>>,
-    subtype: Option<String>,
-    class: Option<String>,
     names: Option<OvertureMapsNames>,
     pub connectors: Option<Vec<ConnectorReference>>,
     routes: Option<Vec<SegmentRoute>>,
-    subclass_rules: Option<Vec<SegmentValueBetween<String>>>,
+    subclass_rules: Option<Vec<SegmentValueBetween<SegmentSubclass>>>,
     access_restrictions: Option<Vec<SegmentAccessRestriction>>,
     level_rules: Option<Vec<SegmentValueBetween<i32>>>,
     destinations: Option<Vec<SegmentDestination>>,
     prohibited_transitions: Option<Vec<SegmentProhibitedTransitions>>,
-    road_surface: Option<Vec<SegmentValueBetween<String>>>,
-    road_flags: Option<Vec<SegmentValueBetween<Vec<String>>>>,
+    road_surface: Option<Vec<SegmentValueBetween<SegmentRoadSurfaceType>>>,
+    road_flags: Option<Vec<SegmentValueBetween<Vec<SegmentRoadFlags>>>>,
     speed_limits: Option<Vec<SegmentSpeedLimit>>,
     width_rules: Option<Vec<SegmentValueBetween<f64>>>,
-    subclass: Option<String>,
-    rail_flags: Option<Vec<SegmentValueBetween<Vec<String>>>>,
+    rail_flags: Option<Vec<SegmentValueBetween<Vec<SegmentRailFlags>>>>,
 }
 
 impl TryFrom<OvertureRecord> for TransportationSegmentRecord {
@@ -90,13 +92,225 @@ impl TransportationSegmentRecord {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentSubtype {
+    Road,
+    Railway,
+    Waterway,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentClass {
+    Motorway,
+    Primary,
+    Secondary,
+    Tertiary,
+    Residential,
+    LivingStreet,
+    Trunk,
+    Unclassified,
+    Service,
+    Pedestrian,
+    Footway,
+    Steps,
+    Path,
+    Track,
+    Cycleway,
+    Bridleway,
+    Unknown,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentSubclass {
+    Link,
+    Sidewalk,
+    Crosswalk,
+    ParkingAisle,
+    Driveway,
+    Alley,
+    CycleCrossing,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentAccessType {
+    Allowed,
+    Denied,
+    Designated,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentRoadSurfaceType {
+    Unknown,
+    Paved,
+    Unpaved,
+    Gravel,
+    Dirt,
+    PavingStones,
+    Metal,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentHeading {
+    Forward,
+    Backward,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentRoadFlags {
+    IsBridge,
+    IsLink,
+    IsTunnel,
+    IsUnderConstruction,
+    IsAbandoned,
+    IsCovered,
+    IsIndoor,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentRailFlags {
+    IsBridge,
+    IsTunnel,
+    IsUnderConstruction,
+    IsAbandoned,
+    IsCovered,
+    IsPassenger,
+    IsFreight,
+    IsDisused,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentUsing {
+    AsCustomer,
+    AtDestination,
+    ToDeliver,
+    ToFarm,
+    ForForestry,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentRecognized {
+    AsPermitted,
+    AsPrivate,
+    AsDisabled,
+    AsEmployee,
+    AsStudent,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentMode {
+    Vehicle,
+    MotorVehicle,
+    Car,
+    Truck,
+    Motorcycle,
+    Foot,
+    Bicycle,
+    Bus,
+    Hgv,
+    Hov,
+    Emergency,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentVehicleDimension {
+    AxleCount,
+    Height,
+    Length,
+    Weight,
+    Width,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentVehicleComparator {
+    GreaterThan,
+    GreaterThanEqual,
+    Equal,
+    LessThan,
+    LessThanEqual,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum SegmentUnit {
+    Length(SegmentLengthUnit),
+    Weight(SegmentWeightUnit),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum SegmentLengthUnit {
+    #[serde(rename = "in")]
+    Inches,
+    #[serde(rename = "ft")]
+    Feet,
+    #[serde(rename = "yd")]
+    Yard,
+    #[serde(rename = "mi")]
+    Mile,
+    #[serde(rename = "cm")]
+    Centimeter,
+    #[serde(rename = "m")]
+    Meter,
+    #[serde(rename = "km")]
+    Kilometer,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum SegmentWeightUnit {
+    Imperial(SegmentImperialWeightUnit),
+    Metric(SegmentMetricWeightUnit),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentImperialWeightUnit {
+    #[serde(rename = "oz")]
+    Ounce,
+    #[serde(rename = "lb")]
+    Pound,
+    #[serde(rename = "st")]
+    Stone,
+    #[serde(rename = "lt")]
+    LongTon,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentMetricWeightUnit {
+    #[serde(rename = "g")]
+    Gram,
+    #[serde(rename = "kg")]
+    Kilogram,
+    #[serde(rename = "t")]
+    MetricTon,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum SegmentSpeedUnit {
+    #[serde(rename = "km/h")]
+    Kmh,
+    #[serde(rename = "mph")]
+    Mph,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ConnectorReference {
     pub connector_id: String,
     pub at: f64,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct SegmentRoute {
     name: Option<String>,
     network: Option<String>,
@@ -107,38 +321,40 @@ struct SegmentRoute {
     between: Option<Vec<f64>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct SegmentValueBetween<T> {
     value: Option<T>,
     between: Option<Vec<f64>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct SegmentAccessRestriction {
-    access_type: Option<String>,
+    access_type: Option<SegmentAccessType>,
     when: Option<SegmentAccessRestrictionWhen>,
     vehicle: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct SegmentAccessRestrictionWhen {
+    /// time when restriction is active, as defined via OSM opening hours
+    /// see <https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification>
     during: Option<String>,
-    heading: Option<String>,
-    using: Option<Vec<String>>,
-    recognized: Option<Vec<String>>,
-    mode: Option<Vec<String>>,
+    heading: Option<SegmentHeading>,
+    using: Option<Vec<SegmentUsing>>,
+    recognized: Option<Vec<SegmentRecognized>>,
+    mode: Option<Vec<SegmentMode>>,
     vehicle: Option<Vec<SegmentAccessRestrictionWhenVehicle>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct SegmentAccessRestrictionWhenVehicle {
-    dimension: Option<String>,
-    comparison: Option<String>,
-    value: Option<f64>,
-    unit: Option<String>,
+    dimension: SegmentVehicleDimension,
+    comparison: SegmentVehicleComparator,
+    value: f64,
+    unit: Option<SegmentUnit>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct SegmentDestination {
     labels: Option<Vec<SegmentDestinationLabel>>,
     symbols: Option<Vec<String>>,
@@ -146,46 +362,46 @@ struct SegmentDestination {
     to_segment_id: Option<String>,
     to_connector_id: Option<String>,
     when: Option<SegmentDestinationWhen>,
-    final_heading: Option<String>,
+    final_heading: Option<SegmentHeading>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct SegmentDestinationLabel {
     value: Option<String>,
     #[serde(rename = "type")]
     type_str: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct SegmentDestinationWhen {
     heading: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct SegmentProhibitedTransitions {
     sequence: Option<Vec<SegmentProhibitedTransitionsSequence>>,
-    final_heading: Option<String>,
+    final_heading: Option<SegmentHeading>,
     when: Option<SegmentAccessRestrictionWhen>,
     between: Option<Vec<f64>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct SegmentProhibitedTransitionsSequence {
     connector: Option<String>,
     segment: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct SegmentSpeedLimit {
-    min_speed: Option<SegmentValueUnit<i32>>,
-    max_speed: Option<SegmentValueUnit<i32>>,
+    min_speed: Option<SpeedLimitWithUnit>,
+    max_speed: Option<SpeedLimitWithUnit>,
     is_max_speed_variable: Option<bool>,
     when: Option<SegmentAccessRestrictionWhen>,
     between: Option<Vec<f64>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct SegmentValueUnit<T> {
-    value: Option<T>,
-    unit: Option<String>,
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct SpeedLimitWithUnit {
+    value: i32,
+    unit: SegmentSpeedUnit,
 }
