@@ -18,7 +18,10 @@ pub enum SegmentSplit {
 }
 
 impl SegmentSplit {
-    /// identifies any locations where additional coordinates are needed
+    /// identifies any locations where additional coordinates are needed.
+
+    /// when creating any missing connectors, call [ConnectorInSegment::new_without_connector_id]
+    /// which generates a new connector_id based on the segment_id and linear referencing position.
     pub fn missing_connectors(&self) -> Vec<ConnectorInSegment> {
         match self {
             SegmentSplit::SimpleConnectorSplit { .. } => vec![],
