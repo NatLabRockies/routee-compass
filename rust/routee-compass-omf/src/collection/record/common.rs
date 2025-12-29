@@ -16,13 +16,13 @@ where
     Option::<Vec<u8>>::deserialize(deserializer)?
         .map(|v| {
             let g = Wkb(v).to_geo()?;
-            let x = g.try_map_coords(|geo::Coord { x, y }| {
+            
+            g.try_map_coords(|geo::Coord { x, y }| {
                 Ok(geo::Coord {
                     x: x as f32,
                     y: y as f32,
                 })
-            });
-            x
+            })
         })
         .transpose()
         .map_err(|e: GeozeroError| D::Error::custom(format!("Could not decode wkb: {e}")))

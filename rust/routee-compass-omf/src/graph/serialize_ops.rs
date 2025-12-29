@@ -94,7 +94,7 @@ pub fn extend_vertices(
         .collect_vec();
     eprintln!(); // end progress bar
 
-    if missing_connectors.len() == 0 {
+    if missing_connectors.is_empty() {
         log::info!("all connectors accounted for");
         return Ok(());
     }

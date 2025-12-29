@@ -52,6 +52,6 @@ impl TransportationConnectorRecord {
             ))),
         }?;
 
-        Ok(Vertex::new(idx, x as f32, y as f32))
+        Ok(Vertex::new(idx, x, y))
     }
 }

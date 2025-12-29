@@ -64,7 +64,7 @@ impl TransportationSegmentRecord {
     }
 
     pub fn get_distance_at(&self, at: f64) -> Result<f32, OvertureMapsCollectionError> {
-        if at < 0.0 || 1.0 < at {
+        if !(0.0..=1.0).contains(&at) {
             return Err(OvertureMapsCollectionError::InvalidLinearReference(at));
         }
         let linestring = self.get_linestring()?;
@@ -73,7 +73,7 @@ impl TransportationSegmentRecord {
 
     /// gets a coordinate from this linestring at some linear reference.
     pub fn get_coord_at(&self, at: f64) -> Result<Coord<f32>, OvertureMapsCollectionError> {
-        if at < 0.0 || 1.0 < at {
+        if !(0.0..=1.0).contains(&at) {
             return Err(OvertureMapsCollectionError::InvalidLinearReference(at));
         }
         let linestring = self.get_linestring()?;
