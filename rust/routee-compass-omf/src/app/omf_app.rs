@@ -23,10 +23,20 @@ pub enum OmfOperation {
         /// into mode-specific edge lists.
         #[arg(short, long)]
         configuration_file: String,
+
         /// location on disk to write output files. if not provided,
         /// use the current working directory.
         #[arg(short, long)]
         output_directory: Option<String>,
+
+        /// use a stored raw data export from a previous run of OmfOperation::Network
+        /// which is a JSON file containing a TransportationCollection.
+        #[arg(short, long)]
+        local_source: Option<String>,
+
+        /// write the raw OMF dataset as a JSON blob to the output directory.
+        #[arg(short, long)]
+        store_raw: bool,
     },
 }
 
@@ -36,6 +46,8 @@ impl OmfOperation {
             OmfOperation::Network {
                 configuration_file,
                 output_directory,
+                local_source,
+                store_raw,
             } => {
                 let filepath = Path::new(configuration_file);
                 let config = Config::builder()
@@ -57,7 +69,8 @@ impl OmfOperation {
                     Some(out) => Path::new(out),
                     None => Path::new(""),
                 };
-                crate::app::network::run(&network_config, outdir)
+                let local = local_source.as_ref().map(|l| Path::new(l));
+                crate::app::network::run(&network_config, outdir, local, *store_raw)
             }
         }
     }
