@@ -33,12 +33,18 @@ pub fn run(
 
     let collection =
         TransportationCollection::try_from_collector(collector, release, Some(row_filter_config))?;
-    let vectorized_graph = OmfGraphVectorized::new(collection, EdgeListId(0))?;
+
+    let edge_list_id = EdgeListId(0);
+    let vectorized_graph = OmfGraphVectorized::new(collection, edge_list_id)?;
     let output_path = match output_directory {
         Some(o) => Path::new(o),
         None => Path::new(""),
     };
     vectorized_graph.write_compass(output_path, true)?;
+
+    // for (index, edge_list) in configuration.iter().enumerate() {
+
+    // }
 
     Ok(())
 }
