@@ -14,11 +14,13 @@ pub struct TransportationConnectorRecord {
     pub id: String,
     #[serde(
         deserialize_with = "deserialize_geometry",
-        serialize_with = "serialize_geometry"
+        serialize_with = "serialize_geometry",
+        skip_serializing_if = "Option::is_none"
     )]
     geometry: Option<Geometry<f32>>,
     bbox: OvertureMapsBbox,
     version: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
     sources: Option<Vec<Option<OvertureMapsSource>>>,
 }
 

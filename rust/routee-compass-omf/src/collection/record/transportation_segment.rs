@@ -18,10 +18,10 @@ pub struct TransportationSegmentRecord {
     /// GERS identifier for this segment record
     pub id: String,
     #[serde(
+        skip_serializing_if = "Option::is_none",
         deserialize_with = "deserialize_geometry",
         serialize_with = "serialize_geometry"
     )]
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub geometry: Option<Geometry<f32>>,
     pub bbox: OvertureMapsBbox,
     #[serde(skip_serializing_if = "Option::is_none")]
