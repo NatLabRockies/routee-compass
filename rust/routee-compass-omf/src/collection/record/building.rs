@@ -1,14 +1,14 @@
 use geo::Geometry;
 use serde::{Deserialize, Serialize};
 
-use super::{deserialize_geometry, OvertureRecord};
+use super::{geometry_wkb_codec, OvertureRecord};
 use super::{OvertureMapsBbox, OvertureMapsNames, OvertureMapsSource};
 use crate::collection::OvertureMapsCollectionError;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BuildingsRecord {
     id: Option<String>,
-    #[serde(deserialize_with = "deserialize_geometry")]
+    #[serde(with = "geometry_wkb_codec")]
     geometry: Option<Geometry<f32>>,
     bbox: OvertureMapsBbox,
     version: i32,

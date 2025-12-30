@@ -23,6 +23,7 @@ pub enum TravelModeFilter {
     #[serde(rename = "class")]
     MatchesClasses {
         classes: HashSet<SegmentClass>,
+        behavior: MatchBehavior,
         ignore_unset: bool,
     },
     /// filter a row based on a class with additional subclass(es). fails if not a match,
@@ -30,6 +31,7 @@ pub enum TravelModeFilter {
     #[serde(rename = "class_with_subclasses")]
     MatchesClassesWithSubclasses {
         classes: HashMap<SegmentClass, Vec<SegmentSubclass>>,
+        behavior: MatchBehavior,
         ignore_unset: bool,
     },
 
@@ -42,6 +44,27 @@ pub enum TravelModeFilter {
     ///   - "during", and "vehicle" modifiers are ignored.
     #[serde(rename = "access_mode")]
     MatchesModeAccess { modes: Vec<SegmentMode> },
+}
+
+/// behavior on finding a match - are we including or excluding?
+///
+/// # Example
+///   - we want to include "Pedestrian" on walk-mode trips
+///   - we want to exclude "Pedestrian" on drive-mode trips
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum MatchBehavior {
+    Include,
+    Exclude,
+}
+
+impl MatchBehavior {
+    pub fn apply(&self, result: bool) -> bool {
+        match self {
+            MatchBehavior::Include => result,
+            MatchBehavior::Exclude => !result,
+        }
+    }
 }
 
 /// helper struct used when processing [MatchesModeAccess] travel mode filters.
@@ -130,23 +153,25 @@ impl TravelModeFilter {
 
             TravelModeFilter::MatchesClasses {
                 classes,
-                ignore_unset: ignore_missing,
+                behavior,
+                ignore_unset,
             } => segment
                 .class
                 .as_ref()
-                .map(|c| classes.contains(c))
-                .unwrap_or(*ignore_missing),
+                .map(|c| behavior.apply(classes.contains(c)))
+                .unwrap_or(*ignore_unset),
 
             TravelModeFilter::MatchesClassesWithSubclasses {
                 classes,
-                ignore_unset: ignore_missing,
+                behavior,
+                ignore_unset,
             } => match (segment.class.as_ref(), segment.subclass.as_ref()) {
-                (Some(cl), None) => classes.contains_key(cl),
+                (Some(cl), None) => behavior.apply(classes.contains_key(cl)),
                 (Some(cl), Some(sc)) => match classes.get(cl) {
-                    None => *ignore_missing,
-                    Some(subclasses) => subclasses.contains(sc),
+                    None => *ignore_unset,
+                    Some(subclasses) => behavior.apply(subclasses.contains(sc)),
                 },
-                _ => *ignore_missing,
+                _ => *ignore_unset,
             },
 
             TravelModeFilter::MatchesModeAccess { modes } => {

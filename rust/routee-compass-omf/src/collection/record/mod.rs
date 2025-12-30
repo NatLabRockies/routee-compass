@@ -22,4 +22,4 @@ pub use transportation_segment::{
 use common::OvertureMapsBbox;
 use common::OvertureMapsNames;
 use common::OvertureMapsSource;
-use common::{deserialize_geometry, serialize_geometry};
+pub mod geometry_wkb_codec;

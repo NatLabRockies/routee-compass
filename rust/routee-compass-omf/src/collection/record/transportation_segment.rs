@@ -2,10 +2,8 @@ use geo::{Coord, Geometry, Haversine, InterpolatableLine, Length, LineString};
 use opening_hours_syntax::rules::OpeningHoursExpression;
 use serde::{Deserialize, Serialize};
 
+use super::{geometry_wkb_codec, OvertureMapsBbox, OvertureMapsNames, OvertureMapsSource};
 use crate::collection::{OvertureMapsCollectionError, OvertureRecord};
-
-use super::{deserialize_geometry, serialize_geometry};
-use super::{OvertureMapsBbox, OvertureMapsNames, OvertureMapsSource};
 
 /// Represents a transportation segment record in the Overture Maps schema.
 /// This struct contains information about a segment of transportation infrastructure,
@@ -17,11 +15,7 @@ use super::{OvertureMapsBbox, OvertureMapsNames, OvertureMapsSource};
 pub struct TransportationSegmentRecord {
     /// GERS identifier for this segment record
     pub id: String,
-    #[serde(
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "deserialize_geometry",
-        serialize_with = "serialize_geometry"
-    )]
+    #[serde(skip_serializing_if = "Option::is_none", with = "geometry_wkb_codec")]
     pub geometry: Option<Geometry<f32>>,
     pub bbox: OvertureMapsBbox,
     #[serde(skip_serializing_if = "Option::is_none")]
