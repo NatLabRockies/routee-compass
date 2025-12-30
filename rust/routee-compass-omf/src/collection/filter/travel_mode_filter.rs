@@ -13,11 +13,11 @@ use crate::collection::{
 /// configures a predicate for testing whether a Segment belongs to a specific travel mode
 /// [{ type = "subtype", value = "road"}]
 #[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(tag = "type", content = "value")]
+#[serde(tag = "type")]
 pub enum TravelModeFilter {
     /// filter a row based on its subtype. fails if not a match or value is not set.
     #[serde(rename = "subtype")]
-    MatchesSubtype(SegmentSubtype),
+    MatchesSubtype { subtype: SegmentSubtype },
     /// filter a row based on a class. fails if not a match, and optionally, if 'class'
     /// is unset on the row data.
     #[serde(rename = "class")]
@@ -81,14 +81,11 @@ impl ModeAccessAccumulator {
     /// updates the accumulator with an additional restriction
     pub fn add_restriction(&mut self, r: &SegmentAccessRestriction) {
         // unpack values from the restriction relevant to this travel mode
-        let has_mode = r
-            .when
-            .as_ref()
-            .and_then(|x| {
-                x.mode
-                    .as_ref()
-                    .map(|modes| modes.iter().any(|m| self.modes.contains(m)))
-            });
+        let has_mode = r.when.as_ref().and_then(|x| {
+            x.mode
+                .as_ref()
+                .map(|modes| modes.iter().any(|m| self.modes.contains(m)))
+        });
         let heading = r.when.as_ref().and_then(|x| x.heading.clone());
         let mods = r
             .when
@@ -125,7 +122,7 @@ impl TravelModeFilter {
     /// returns false if there is no match.
     pub fn matches_filter(&self, segment: &TransportationSegmentRecord) -> bool {
         match self {
-            TravelModeFilter::MatchesSubtype(subtype) => segment
+            TravelModeFilter::MatchesSubtype { subtype } => segment
                 .subtype
                 .as_ref()
                 .map(|s| s == subtype)
@@ -174,7 +171,7 @@ impl TravelModeFilter {
     fn ordering_value(&self) -> u64 {
         use TravelModeFilter as T;
         match self {
-            T::MatchesSubtype(..) => 0,
+            T::MatchesSubtype { .. } => 0,
             T::MatchesClasses { .. } => 1,
             T::MatchesClassesWithSubclasses { .. } => 1,
             T::MatchesModeAccess { .. } => 2,
