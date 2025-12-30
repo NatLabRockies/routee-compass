@@ -307,7 +307,9 @@ pub enum SegmentVehicleComparator {
     LessThanEqual,
 }
 
+/// units in vehicle restrictions which may be length or weight units.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(untagged)]
 pub enum SegmentUnit {
     Length(SegmentLengthUnit),
     Weight(SegmentWeightUnit),
@@ -332,6 +334,7 @@ pub enum SegmentLengthUnit {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(untagged)]
 pub enum SegmentWeightUnit {
     Imperial(SegmentImperialWeightUnit),
     Metric(SegmentMetricWeightUnit),
