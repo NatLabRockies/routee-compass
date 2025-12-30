@@ -1,5 +1,5 @@
 use super::Bbox;
-use crate::collection::TaxonomyModelBuilder;
+use crate::{app::CliBoundingBox, collection::TaxonomyModelBuilder};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -35,6 +35,17 @@ impl From<HashMap<String, Vec<String>>> for RowFilterConfig {
 impl From<Bbox> for RowFilterConfig {
     fn from(value: Bbox) -> Self {
         RowFilterConfig::Bbox {
+            xmin: value.xmin,
+            xmax: value.xmax,
+            ymin: value.ymin,
+            ymax: value.ymax,
+        }
+    }
+}
+
+impl From<&CliBoundingBox> for RowFilterConfig {
+    fn from(value: &CliBoundingBox) -> Self {
+        Self::Bbox {
             xmin: value.xmin,
             xmax: value.xmax,
             ymin: value.ymin,
