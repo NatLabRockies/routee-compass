@@ -29,6 +29,7 @@ routee-compass-powertrain = { workspace = true }
 arrow = { workspace = true }
 chrono = { workspace = true }
 clap = { workspace = true }
+config = { workspace = true }
 csv = { workspace = true }
 env_logger = { workspace = true }
 flate2 = { workspace = true }

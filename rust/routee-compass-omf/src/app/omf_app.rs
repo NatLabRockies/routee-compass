@@ -1,16 +1,10 @@
 use std::path::Path;
 
 use clap::{Parser, Subcommand};
-use routee_compass_core::model::network::EdgeListId;
+use config::{Config, File};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    collection::{
-        ObjectStoreSource, OvertureMapsCollectionError, OvertureMapsCollectorConfig,
-        ReleaseVersion, RowFilterConfig, TransportationCollection,
-    },
-    graph::OmfGraphVectorized,
-};
+use crate::{app::network::NetworkEdgeListConfiguration, collection::OvertureMapsCollectionError};
 
 /// Command line tool for batch downloading and summarizing of OMF (Overture Maps Foundation) data
 #[derive(Parser)]
@@ -24,7 +18,11 @@ pub struct OmfApp {
 #[derive(Debug, Clone, Serialize, Deserialize, Subcommand)]
 pub enum OmfOperation {
     /// download all of the OMF transportation data
-    Download {
+    Network {
+        /// configuration file defining how the network is imported and separated
+        /// into mode-specific edge lists.
+        #[arg(short, long)]
+        configuration_file: String,
         /// location on disk to write output files. if not provided,
         /// use the current working directory.
         #[arg(short, long)]
@@ -35,30 +33,28 @@ pub enum OmfOperation {
 impl OmfOperation {
     pub fn run(&self) -> Result<(), OvertureMapsCollectionError> {
         match self {
-            OmfOperation::Download { output_directory } => {
-                let collector =
-                    OvertureMapsCollectorConfig::new(ObjectStoreSource::AmazonS3, 128).build()?;
-                let release = ReleaseVersion::Latest;
-                let row_filter_config = RowFilterConfig::Bbox {
-                    xmin: -105.254,
-                    xmax: -105.197,
-                    ymin: 39.733,
-                    ymax: 39.784,
-                };
-
-                let collection = TransportationCollection::try_from_collector(
-                    collector,
-                    release,
-                    Some(row_filter_config),
-                )?;
-                let vectorized_graph = OmfGraphVectorized::new(collection, EdgeListId(0))?;
-                let output_path = match output_directory {
-                    Some(o) => Path::new(o),
-                    None => Path::new(""),
-                };
-                vectorized_graph.write_compass(output_path, true)?;
-
-                Ok(())
+            OmfOperation::Network {
+                configuration_file,
+                output_directory,
+            } => {
+                let filepath = Path::new(configuration_file);
+                let config = Config::builder()
+                    .add_source(File::from(filepath))
+                    .build()
+                    .map_err(|e| {
+                        let msg = format!("file '{configuration_file}' produced error: {e}");
+                        OvertureMapsCollectionError::InvalidUserInput(msg)
+                    })?;
+                let network_config = config
+                    .get::<Vec<NetworkEdgeListConfiguration>>("edge_lists")
+                    .map_err(|e| {
+                        let msg = format!(
+                            "error reading 'edge_lists' key in '{configuration_file}': {e}"
+                        );
+                        OvertureMapsCollectionError::InvalidUserInput(msg)
+                    })?;
+                let outdir = output_directory.as_ref().map(|s| s.as_str());
+                crate::app::network::run(&network_config, outdir)
             }
         }
     }

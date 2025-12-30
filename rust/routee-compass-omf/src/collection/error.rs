@@ -2,6 +2,8 @@ use parquet::errors::ParquetError;
 
 #[derive(thiserror::Error, Debug)]
 pub enum OvertureMapsCollectionError {
+    #[error("Invalid input: {0}")]
+    InvalidUserInput(String),
     #[error("Failed to connect to S3 Bucket: {0}")]
     ConnectionError(String),
     #[error("Failed to acquire Metadata: {0}")]
