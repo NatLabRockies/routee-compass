@@ -1,7 +1,5 @@
 use std::path::Path;
 
-use clap::{Parser, Subcommand};
-use config::{Config, File};
 use routee_compass_core::model::network::EdgeListId;
 use serde::{Deserialize, Serialize};
 
