@@ -1,6 +1,5 @@
 use std::path::Path;
 
-use routee_compass_core::model::network::EdgeListId;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -13,14 +12,14 @@ use crate::{
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NetworkEdgeListConfiguration {
-    mode: String,
-    filter: Vec<TravelModeFilter>,
+    pub mode: String,
+    pub filter: Vec<TravelModeFilter>,
 }
 
 /// runs an OMF network import using the provided configuration.
 pub fn run(
     configuration: &[NetworkEdgeListConfiguration],
-    output_directory: Option<&str>,
+    output_directory: &Path,
 ) -> Result<(), OvertureMapsCollectionError> {
     let collector = OvertureMapsCollectorConfig::new(ObjectStoreSource::AmazonS3, 128).build()?;
     let release = ReleaseVersion::Latest;
@@ -34,17 +33,8 @@ pub fn run(
     let collection =
         TransportationCollection::try_from_collector(collector, release, Some(row_filter_config))?;
 
-    let edge_list_id = EdgeListId(0);
-    let vectorized_graph = OmfGraphVectorized::new(collection, edge_list_id)?;
-    let output_path = match output_directory {
-        Some(o) => Path::new(o),
-        None => Path::new(""),
-    };
-    vectorized_graph.write_compass(output_path, true)?;
-
-    // for (index, edge_list) in configuration.iter().enumerate() {
-
-    // }
+    let vectorized_graph = OmfGraphVectorized::new(&collection, &configuration)?;
+    vectorized_graph.write_compass(output_directory, true)?;
 
     Ok(())
 }

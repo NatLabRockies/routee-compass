@@ -14,8 +14,8 @@ pub use record_type::OvertureRecordType;
 pub use transportation_collection::TransportationCollection;
 pub use transportation_connector::TransportationConnectorRecord;
 pub use transportation_segment::{
-    SegmentAccessType, SegmentClass, SegmentMode, SegmentSubclass, SegmentSubtype,
-    TransportationSegmentRecord,
+    SegmentAccessRestriction, SegmentAccessType, SegmentClass, SegmentHeading, SegmentMode,
+    SegmentSubclass, SegmentSubtype, TransportationSegmentRecord,
 };
 
 // Common structs and functions for many record types

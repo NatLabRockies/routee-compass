@@ -37,7 +37,7 @@ impl SegmentSplit {
         &self,
         edge_id: EdgeId,
         edge_list_id: EdgeListId,
-        segments: &[TransportationSegmentRecord],
+        segments: &[&TransportationSegmentRecord],
         segment_lookup: &HashMap<String, usize>,
         _vertices: &[Vertex],
         vertex_lookup: &HashMap<String, usize>,

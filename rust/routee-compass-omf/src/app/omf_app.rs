@@ -53,7 +53,10 @@ impl OmfOperation {
                         );
                         OvertureMapsCollectionError::InvalidUserInput(msg)
                     })?;
-                let outdir = output_directory.as_ref().map(|s| s.as_str());
+                let outdir = match output_directory {
+                    Some(out) => Path::new(out),
+                    None => Path::new(""),
+                };
                 crate::app::network::run(&network_config, outdir)
             }
         }

@@ -2,12 +2,12 @@ use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    collection::{
-        record::{SegmentAccessType, SegmentClass, SegmentMode, SegmentSubclass, SegmentSubtype},
-        TransportationSegmentRecord,
+use crate::collection::{
+    record::{
+        SegmentAccessRestriction, SegmentAccessType, SegmentClass, SegmentHeading, SegmentMode,
+        SegmentSubclass, SegmentSubtype,
     },
-    graph::SegmentSplit,
+    TransportationSegmentRecord,
 };
 
 /// configures a predicate for testing whether a Segment belongs to a specific travel mode
@@ -33,26 +33,98 @@ pub enum TravelModeFilter {
         ignore_unset: bool,
     },
 
-    /// filter a row based on the [SegmentMode]. if there is no blanket access
-    /// restriction or the the [SegmentAccessType] is not "Denied" then accept the row,
-    /// or, optionally, only when explicitly matching "Allowed" or "Designated".
-    MatchesModeAccess {
-        mode: SegmentMode,
-        must_allow: Option<bool>,
-        must_designate: Option<bool>,
-    },
+    /// filter a row based on the [SegmentMode].
+    ///
+    /// # Other Modifiers
+    ///   - if "heading" is present, it must be "forward"
+    ///   - if "using" or "recognized" modifiers are present, returns false
+    ///     - these imply some special user type, we want to ignore any of these for now
+    ///   - "during", and "vehicle" modifiers are ignored.
+    #[serde(rename = "access_mode")]
+    MatchesModeAccess { modes: Vec<SegmentMode> },
+}
 
-    Combined(Vec<Box<TravelModeFilter>>),
+/// helper struct used when processing [MatchesModeAccess] travel mode filters.
+#[derive(Clone, Debug)]
+struct ModeAccessAccumulator {
+    pub modes: Vec<SegmentMode>,
+    pub blanket_denial: bool,
+    pub mode_denial: bool,
+    pub mode_allowed: bool,
+}
+
+impl ModeAccessAccumulator {
+    pub fn new(modes: &[SegmentMode]) -> Self {
+        Self {
+            modes: modes.iter().cloned().collect(),
+            blanket_denial: false,
+            mode_denial: false,
+            mode_allowed: true,
+        }
+    }
+
+    /// whether the restrictions recorded by this accumulator imply
+    /// that the mode is supported on this segment.
+    pub fn supports_mode(&self) -> bool {
+        return match (self.blanket_denial, self.mode_denial, self.mode_allowed) {
+            // blanket denial with exception
+            (true, false, true) => true,
+            // mode disallowed explicitly
+            (_, true, _) => false,
+            // mode disallowed implicitly
+            (_, _, false) => false,
+            // mode allowed implicitly
+            _ => true,
+        };
+    }
+
+    /// updates the accumulator with an additional restriction
+    pub fn add_restriction(&mut self, r: &SegmentAccessRestriction) {
+        // unpack values from the restriction relevant to this travel mode
+        let has_mode = r
+            .when
+            .as_ref()
+            .map(|x| {
+                x.mode
+                    .as_ref()
+                    .map(|modes| modes.iter().any(|m| self.modes.contains(m)))
+            })
+            .flatten();
+        let heading = r.when.as_ref().map(|x| x.heading.clone()).flatten();
+        let mods = r
+            .when
+            .as_ref()
+            .map(|x| x.recognized.is_some() || x.using.is_some());
+
+        // match on cases that require a state update
+        use SegmentAccessType as SAT;
+        use SegmentHeading as SH;
+        match (&r.access_type, has_mode, heading, mods) {
+            (SAT::Denied, None, None, None) => {
+                self.blanket_denial = true;
+            }
+            (SAT::Denied, Some(true), None | Some(SH::Forward), _) => {
+                self.mode_denial = true;
+                self.mode_allowed = false;
+            }
+            (SAT::Allowed | SAT::Designated, Some(true), None | Some(SH::Forward), None) => {
+                self.mode_allowed = true;
+            }
+            (SAT::Allowed | SAT::Designated, Some(true), None | Some(SH::Forward), Some(true)) => {
+                // currently not supporting the handling of "using" or "recognized"
+                // modifications indicating this mode is only supported for a subset
+                // of the population.
+                self.mode_allowed = false;
+            }
+            _ => {}
+        }
+    }
 }
 
 impl TravelModeFilter {
-    /// test whether a given row and split combination match a travel mode filter.
+    /// test whether a given row matches a travel mode filter.
     /// returns false if there is no match.
-    pub fn matches_filter(
-        &self,
-        segment: &TransportationSegmentRecord,
-        split: &SegmentSplit,
-    ) -> bool {
+    pub fn matches_filter(&self, segment: &TransportationSegmentRecord) -> bool {
         match self {
             TravelModeFilter::MatchesSubtype(subtype) => segment
                 .subtype
@@ -81,48 +153,24 @@ impl TravelModeFilter {
                 _ => *ignore_missing,
             },
 
-            TravelModeFilter::MatchesModeAccess {
-                mode,
-                must_allow,
-                must_designate,
-            } => {
+            TravelModeFilter::MatchesModeAccess { modes } => {
                 let restrictions = segment
                     .access_restrictions
                     .as_ref()
                     .map(|rs| rs.iter())
                     .unwrap_or_default();
 
-                for restriction in restrictions.into_iter() {
-                    match (&restriction.access_type, must_allow, must_designate) {
-                        // Confirm our mode is allowed when 'must_allow' is true
-                        (SegmentAccessType::Allowed, Some(true), _) => {
-                            if !restriction.contains_mode(mode) {
-                                return false;
-                            }
-                        }
-                        // Confirm our mode is designated when 'must_designate' is true
-                        (SegmentAccessType::Designated, _, Some(true)) => {
-                            if !restriction.contains_mode(mode) {
-                                return false;
-                            }
-                        }
-                        // Confirm our mode is NOT denied
-                        (SegmentAccessType::Denied, _, _) => todo!(),
-                        _ => {
-                            if restriction.contains_mode(mode) {
-                                return false;
-                            }
-                        }
-                    }
+                let mut acc = ModeAccessAccumulator::new(modes);
+                for r in restrictions {
+                    acc.add_restriction(r);
                 }
-                true
+                acc.supports_mode()
             }
-            TravelModeFilter::Combined(travel_mode_filters) => todo!(),
         }
     }
 
-    /// number indicating what order this filter should appear in a sorted list when building a combined instance.
-    /// used internally when building a combined instance.
+    /// number indicating what order this filter should appear in a sorted list.
+    /// used internally to optimize performance.
     /// higher priority matching conditions (i.e. ones we want to test first) should have lower values.
     fn ordering_value(&self) -> u64 {
         use TravelModeFilter as T;
@@ -131,7 +179,6 @@ impl TravelModeFilter {
             T::MatchesClasses { .. } => 1,
             T::MatchesClassesWithSubclasses { .. } => 1,
             T::MatchesModeAccess { .. } => 2,
-            T::Combined(..) => 999,
         }
     }
 }
@@ -145,5 +192,13 @@ impl PartialEq for TravelModeFilter {
 impl PartialOrd for TravelModeFilter {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.ordering_value().cmp(&other.ordering_value()))
+    }
+}
+
+impl Eq for TravelModeFilter {}
+
+impl Ord for TravelModeFilter {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.ordering_value().cmp(&other.ordering_value())
     }
 }
