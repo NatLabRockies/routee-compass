@@ -19,7 +19,7 @@ pub use transportation_segment::{
 };
 
 // Common structs and functions for many record types
-use common::deserialize_geometry;
 use common::OvertureMapsBbox;
 use common::OvertureMapsNames;
 use common::OvertureMapsSource;
+use common::{deserialize_geometry, serialize_geometry};

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::collection::{OvertureMapsCollectionError, OvertureRecord};
 
-use super::deserialize_geometry;
+use super::{deserialize_geometry, serialize_geometry};
 use super::{OvertureMapsBbox, OvertureMapsNames, OvertureMapsSource};
 
 /// Represents a transportation segment record in the Overture Maps schema.
@@ -17,7 +17,10 @@ use super::{OvertureMapsBbox, OvertureMapsNames, OvertureMapsSource};
 pub struct TransportationSegmentRecord {
     /// GERS identifier for this segment record
     pub id: String,
-    #[serde(deserialize_with = "deserialize_geometry")]
+    #[serde(
+        deserialize_with = "deserialize_geometry",
+        serialize_with = "serialize_geometry"
+    )]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub geometry: Option<Geometry<f32>>,
     pub bbox: OvertureMapsBbox,

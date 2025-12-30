@@ -1,5 +1,6 @@
 use geo::Geometry;
 use geo::MapCoords;
+use geo::TryConvert;
 use geozero::error::GeozeroError;
 use geozero::{wkb::Wkb, ToGeo};
 use serde::de::Deserializer;
@@ -26,6 +27,37 @@ where
         })
         .transpose()
         .map_err(|e: GeozeroError| D::Error::custom(format!("Could not decode wkb: {e}")))
+}
+
+pub fn serialize_geometry<S>(t: &Option<Geometry<f32>>, s: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    match t {
+        None => s.serialize_none(),
+        Some(g) => {
+            let mut out_bytes = vec![];
+            let geom: Geometry<f64> = g.try_convert().map_err(|e| {
+                serde::ser::Error::custom(format!(
+                    "unable to convert geometry from f32 to f64: {e}"
+                ))
+            })?;
+            let write_options = wkb::writer::WriteOptions {
+                endianness: wkb::Endianness::BigEndian,
+            };
+            wkb::writer::write_geometry(&mut out_bytes, &geom, &write_options).map_err(|e| {
+                serde::ser::Error::custom(format!("failed to write geometry as WKB: {e}"))
+            })?;
+
+            // let wkb_str = out_bytes
+            //     .iter()
+            //     .map(|b| format!("{b:02X?}"))
+            //     .collect::<Vec<String>>()
+            //     .join("");
+
+            s.serialize_bytes(&out_bytes)
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
