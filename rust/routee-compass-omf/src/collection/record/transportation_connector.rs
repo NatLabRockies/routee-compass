@@ -12,11 +12,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransportationConnectorRecord {
     pub id: String,
-    #[serde(with = "geometry_wkb_codec", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        with = "geometry_wkb_codec",
+        skip_serializing_if = "Option::is_none",
+        default
+    )]
     geometry: Option<Geometry<f32>>,
     bbox: OvertureMapsBbox,
     version: i32,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     sources: Option<Vec<Option<OvertureMapsSource>>>,
 }
 

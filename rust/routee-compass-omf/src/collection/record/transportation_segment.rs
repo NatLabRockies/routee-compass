@@ -15,43 +15,47 @@ use crate::collection::{OvertureMapsCollectionError, OvertureRecord};
 pub struct TransportationSegmentRecord {
     /// GERS identifier for this segment record
     pub id: String,
-    #[serde(skip_serializing_if = "Option::is_none", with = "geometry_wkb_codec")]
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        default,
+        with = "geometry_wkb_codec"
+    )]
     pub geometry: Option<Geometry<f32>>,
     pub bbox: OvertureMapsBbox,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub subtype: Option<SegmentSubtype>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub class: Option<SegmentClass>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub subclass: Option<SegmentSubclass>,
     pub version: i32,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub sources: Option<Vec<Option<OvertureMapsSource>>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub names: Option<OvertureMapsNames>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub connectors: Option<Vec<ConnectorReference>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub routes: Option<Vec<SegmentRoute>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub subclass_rules: Option<Vec<SegmentValueBetween<SegmentSubclass>>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub access_restrictions: Option<Vec<SegmentAccessRestriction>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub level_rules: Option<Vec<SegmentValueBetween<i32>>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub destinations: Option<Vec<SegmentDestination>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub prohibited_transitions: Option<Vec<SegmentProhibitedTransitions>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub road_surface: Option<Vec<SegmentValueBetween<SegmentRoadSurfaceType>>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub road_flags: Option<Vec<SegmentValueBetween<Vec<SegmentRoadFlags>>>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub speed_limits: Option<Vec<SegmentSpeedLimit>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub width_rules: Option<Vec<SegmentValueBetween<f64>>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub rail_flags: Option<Vec<SegmentValueBetween<Vec<SegmentRailFlags>>>>,
 }
 
@@ -395,34 +399,34 @@ pub struct ConnectorReference {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SegmentRoute {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub network: Option<String>,
-    #[serde(rename = "ref", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ref", skip_serializing_if = "Option::is_none", default)]
     pub reference: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub symbol: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub wikidata: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub between: Option<Vec<f64>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SegmentValueBetween<T> {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default = "default_none")]
     pub value: Option<T>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub between: Option<Vec<f64>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SegmentAccessRestriction {
     pub access_type: SegmentAccessType,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub when: Option<SegmentAccessRestrictionWhen>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub vehicle: Option<String>,
 }
 
@@ -436,29 +440,37 @@ impl SegmentAccessRestriction {
     }
 }
 
+fn default_none<T>() -> Option<T> {
+    None
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SegmentAccessRestrictionWhen {
     /// Time span or time spans during which something is open or active, specified
     /// in the OSM opening hours specification:
     /// see <https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification>
-    #[serde(with = "opening_hours_codec", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        with = "opening_hours_codec",
+        skip_serializing_if = "Option::is_none",
+        default = "default_none"
+    )]
     pub during: Option<OpeningHoursExpression>,
     /// Enumerates possible travel headings along segment geometry.
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub heading: Option<SegmentHeading>,
     /// Reason why a person or entity travelling on the transportation network is
     /// using a particular location.
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub using: Option<Vec<SegmentUsing>>,
     /// Status of the person or entity travelling as recognized by authorities
     /// controlling the particular location
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub recognized: Option<Vec<SegmentRecognized>>,
     /// Enumerates possible travel modes. Some modes represent groups of modes.
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub mode: Option<Vec<SegmentMode>>,
     /// Vehicle attributes for which the rule applies
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub vehicle: Option<Vec<SegmentAccessRestrictionWhenVehicle>>,
 }
 
@@ -503,73 +515,73 @@ pub struct SegmentAccessRestrictionWhenVehicle {
     dimension: SegmentVehicleDimension,
     comparison: SegmentVehicleComparator,
     value: f64,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     unit: Option<SegmentUnit>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SegmentDestination {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     labels: Option<Vec<SegmentDestinationLabel>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     symbols: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     from_connector_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     to_segment_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     to_connector_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     when: Option<SegmentDestinationWhen>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     final_heading: Option<SegmentHeading>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SegmentDestinationLabel {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     value: Option<String>,
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none", default)]
     type_str: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SegmentDestinationWhen {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     heading: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SegmentProhibitedTransitions {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     sequence: Option<Vec<SegmentProhibitedTransitionsSequence>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     final_heading: Option<SegmentHeading>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     when: Option<SegmentAccessRestrictionWhen>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     between: Option<Vec<f64>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SegmentProhibitedTransitionsSequence {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     connector: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     segment: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SegmentSpeedLimit {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     min_speed: Option<SpeedLimitWithUnit>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     max_speed: Option<SpeedLimitWithUnit>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     is_max_speed_variable: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     when: Option<SegmentAccessRestrictionWhen>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     between: Option<Vec<f64>>,
 }
 

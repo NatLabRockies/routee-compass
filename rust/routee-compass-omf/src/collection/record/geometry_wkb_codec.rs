@@ -2,28 +2,42 @@ use geo::{Geometry, MapCoords, TryConvert};
 use geozero::{error::GeozeroError, wkb::Wkb, ToGeo};
 use serde::{Deserialize, Deserializer};
 
+// Deserialize into an enum that can handle both Vec<u8> and String
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum BytesOrString {
+    Bytes(Vec<u8>),
+    String(String),
+}
+
+impl std::fmt::Display for BytesOrString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BytesOrString::Bytes(items) => write!(f, "{items:?}"),
+            BytesOrString::String(s) => write!(f, "{s}"),
+        }
+    }
+}
+
 /// deserialize geometries from WKB strings
 pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Geometry<f32>>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    // Deserialize into an enum that can handle both Vec<u8> and String
-    #[derive(Deserialize)]
-    #[serde(untagged)]
-    enum BytesOrString {
-        Bytes(Vec<u8>),
-        String(String),
-    }
-
     let data = Option::<BytesOrString>::deserialize(deserializer)?;
 
     data.map(|v| {
-        let bytes = match v {
-            BytesOrString::Bytes(b) => b,
-            BytesOrString::String(s) => s.into_bytes(),
+        let bytes = match &v {
+            BytesOrString::Bytes(b) => b.clone(),
+            BytesOrString::String(s) => hex::decode(&s).map_err(|e| {
+                serde::de::Error::custom(format!("failure converting hex wkb string to bytes: {e}"))
+            })?,
         };
 
-        let g = Wkb(bytes).to_geo()?;
+        let g = Wkb(bytes).to_geo().map_err(|e| {
+            let msg = format!("unable to parse bytes '{v}' as WKB: {e}");
+            serde::de::Error::custom(msg)
+        })?;
 
         g.try_map_coords(|geo::Coord { x, y }| {
             Ok(geo::Coord {
@@ -31,9 +45,11 @@ where
                 y: y as f32,
             })
         })
+        .map_err(|e: GeozeroError| {
+            serde::de::Error::custom(format!("Could not map coordinates for geometry {g:?}: {e}"))
+        })
     })
     .transpose()
-    .map_err(|e: GeozeroError| serde::de::Error::custom(format!("Could not decode wkb: {e}")))
 }
 
 pub fn serialize<S>(t: &Option<Geometry<f32>>, s: S) -> Result<S::Ok, S::Error>
