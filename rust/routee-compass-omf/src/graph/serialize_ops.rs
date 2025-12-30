@@ -63,7 +63,7 @@ pub fn find_splits(
 ) -> Result<Vec<SegmentSplit>, OvertureMapsCollectionError> {
     let result = segments
         .par_iter()
-        .map(|s| split_op(*s))
+        .map(|s| split_op(s))
         .collect::<Result<Vec<Vec<SegmentSplit>>, OvertureMapsCollectionError>>()?
         .into_iter()
         .flatten()

@@ -56,7 +56,7 @@ struct ModeAccessAccumulator {
 impl ModeAccessAccumulator {
     pub fn new(modes: &[SegmentMode]) -> Self {
         Self {
-            modes: modes.iter().cloned().collect(),
+            modes: modes.to_vec(),
             blanket_denial: false,
             mode_denial: false,
             mode_allowed: true,
@@ -66,7 +66,7 @@ impl ModeAccessAccumulator {
     /// whether the restrictions recorded by this accumulator imply
     /// that the mode is supported on this segment.
     pub fn supports_mode(&self) -> bool {
-        return match (self.blanket_denial, self.mode_denial, self.mode_allowed) {
+        match (self.blanket_denial, self.mode_denial, self.mode_allowed) {
             // blanket denial with exception
             (true, false, true) => true,
             // mode disallowed explicitly
@@ -75,7 +75,7 @@ impl ModeAccessAccumulator {
             (_, _, false) => false,
             // mode allowed implicitly
             _ => true,
-        };
+        }
     }
 
     /// updates the accumulator with an additional restriction
@@ -84,13 +84,12 @@ impl ModeAccessAccumulator {
         let has_mode = r
             .when
             .as_ref()
-            .map(|x| {
+            .and_then(|x| {
                 x.mode
                     .as_ref()
                     .map(|modes| modes.iter().any(|m| self.modes.contains(m)))
-            })
-            .flatten();
-        let heading = r.when.as_ref().map(|x| x.heading.clone()).flatten();
+            });
+        let heading = r.when.as_ref().and_then(|x| x.heading.clone());
         let mods = r
             .when
             .as_ref()

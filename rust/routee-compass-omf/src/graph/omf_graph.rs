@@ -48,7 +48,7 @@ impl OmfGraphVectorized {
             let segments: Vec<&TransportationSegmentRecord> = collection
                 .segments
                 .par_iter()
-                .filter(|r| edge_list_config.filter.iter().all(|f| f.matches_filter(*r)))
+                .filter(|r| edge_list_config.filter.iter().all(|f| f.matches_filter(r)))
                 .collect();
             let segment_lookup = ops::create_segment_lookup(&segments);
 

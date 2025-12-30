@@ -33,7 +33,7 @@ pub fn run(
     let collection =
         TransportationCollection::try_from_collector(collector, release, Some(row_filter_config))?;
 
-    let vectorized_graph = OmfGraphVectorized::new(&collection, &configuration)?;
+    let vectorized_graph = OmfGraphVectorized::new(&collection, configuration)?;
     vectorized_graph.write_compass(output_directory, true)?;
 
     Ok(())
