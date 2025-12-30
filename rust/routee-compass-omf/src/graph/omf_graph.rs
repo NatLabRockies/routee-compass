@@ -10,9 +10,11 @@ use crate::{
 };
 use csv::QuoteStyle;
 use flate2::{write::GzEncoder, Compression};
+use geo::LineString;
 use kdam::tqdm;
 use rayon::prelude::*;
 use routee_compass_core::model::network::{EdgeConfig, EdgeList, EdgeListId, Vertex};
+use wkt::ToWkt;
 
 pub struct OmfGraphVectorized {
     pub vertices: Vec<Vertex>,
@@ -24,7 +26,7 @@ pub struct OmfGraphVectorized {
 
 pub struct OmfEdgeList {
     pub edges: EdgeList,
-    // pub geometries: Vec<LineString<f32>>
+    pub geometries: Vec<LineString<f32>>,
 }
 
 impl OmfGraphVectorized {
@@ -75,8 +77,10 @@ impl OmfGraphVectorized {
                 &vertex_lookup,
                 edge_list_id,
             )?;
+            let geometries = ops::create_geometries(&segments, &segment_lookup, &splits)?;
             let edge_list = OmfEdgeList {
                 edges: EdgeList(edges.into_boxed_slice()),
+                geometries: geometries,
             };
             edge_lists.push(edge_list);
         }
@@ -161,6 +165,13 @@ impl OmfGraphVectorized {
                 QuoteStyle::Necessary,
                 overwrite,
             );
+            let mut geometries_writer = create_writer(
+                &mode_dir,
+                "edges-geometries-enumerated.txt.gz",
+                false,
+                QuoteStyle::Never,
+                overwrite,
+            );
 
             // Write Edges
             let e_iter = tqdm!(
@@ -190,6 +201,35 @@ impl OmfGraphVectorized {
                 writer.flush().map_err(|e| {
                     OvertureMapsCollectionError::CsvWriteError(format!(
                         "Failed to flush edges-compass.csv.gz: {e}"
+                    ))
+                })?;
+            }
+
+            // Write geometries
+            let g_iter = tqdm!(
+                edge_list.geometries.iter(),
+                total = edge_list.geometries.len(),
+                desc = "edges",
+                position = 1
+            );
+            for row in g_iter {
+                if let Some(ref mut writer) = geometries_writer {
+                    writer
+                    .serialize(row.to_wkt().to_string())
+                    .map_err(|e| {
+                        OvertureMapsCollectionError::CsvWriteError(format!(
+                            "Failed to write to geometry file edges-geometries-enumerated.txt.gz: {}",
+                            e
+                        ))
+                    })?;
+                }
+            }
+            eprintln!();
+
+            if let Some(ref mut writer) = geometries_writer {
+                writer.flush().map_err(|e| {
+                    OvertureMapsCollectionError::CsvWriteError(format!(
+                        "Failed to flush edges-geometries-enumerated.txt.gz: {e}"
                     ))
                 })?;
             }
