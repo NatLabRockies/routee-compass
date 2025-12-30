@@ -41,6 +41,7 @@ kdam = { workspace = true }
 log = { workspace = true }
 object_store = { workspace = true }
 parquet = { workspace = true }
+opening-hours-syntax = { workspace = true }
 ordered-float = { workspace = true }
 rayon = { workspace = true }
 reqwest = { workspace = true }

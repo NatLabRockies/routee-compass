@@ -1,4 +1,5 @@
 use geo::{Coord, Geometry, Haversine, InterpolatableLine, Length, LineString};
+use opening_hours_syntax::rules::OpeningHoursExpression;
 use serde::{Deserialize, Serialize};
 
 use crate::collection::{OvertureMapsCollectionError, OvertureRecord};
@@ -349,7 +350,8 @@ pub struct SegmentAccessRestrictionWhen {
     /// Time span or time spans during which something is open or active, specified
     /// in the OSM opening hours specification:
     /// see <https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification>
-    pub during: Option<String>,
+    #[serde(with = "opening_hours_codec")]
+    pub during: Option<OpeningHoursExpression>,
     /// Enumerates possible travel headings along segment geometry.
     pub heading: Option<SegmentHeading>,
     /// Reason why a person or entity travelling on the transportation network is
@@ -362,6 +364,33 @@ pub struct SegmentAccessRestrictionWhen {
     pub mode: Option<Vec<SegmentMode>>,
     /// Vehicle attributes for which the rule applies
     pub vehicle: Option<Vec<SegmentAccessRestrictionWhenVehicle>>,
+}
+
+mod opening_hours_codec {
+    use opening_hours_syntax::rules::OpeningHoursExpression;
+    use serde::Deserialize;
+
+    pub fn serialize<S>(t: &Option<OpeningHoursExpression>, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match t {
+            Some(expr) => s.serialize_str(&expr.to_string()),
+            None => s.serialize_none(),
+        }
+    }
+    pub fn deserialize<'de, D>(d: D) -> Result<Option<OpeningHoursExpression>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s: Option<&str> = Option::deserialize(d)?;
+        match s {
+            Some(text) => opening_hours_syntax::parse(text)
+                .map(Some)
+                .map_err(serde::de::Error::custom),
+            None => Ok(None),
+        }
+    }
 }
 
 impl SegmentAccessRestrictionWhen {
