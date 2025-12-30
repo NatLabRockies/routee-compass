@@ -69,7 +69,7 @@ impl OmfOperation {
                     Some(out) => Path::new(out),
                     None => Path::new(""),
                 };
-                let local = local_source.as_ref().map(|l| Path::new(l));
+                let local = local_source.as_ref().map(Path::new);
                 crate::app::network::run(&network_config, outdir, local, *store_raw)
             }
         }
