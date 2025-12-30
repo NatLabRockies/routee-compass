@@ -49,13 +49,13 @@ where
                 serde::ser::Error::custom(format!("failed to write geometry as WKB: {e}"))
             })?;
 
-            // let wkb_str = out_bytes
-            //     .iter()
-            //     .map(|b| format!("{b:02X?}"))
-            //     .collect::<Vec<String>>()
-            //     .join("");
+            let wkb_str = out_bytes
+                .iter()
+                .map(|b| format!("{b:02X?}"))
+                .collect::<Vec<String>>()
+                .join("");
 
-            s.serialize_bytes(&out_bytes)
+            s.serialize_str(&wkb_str)
         }
     }
 }
