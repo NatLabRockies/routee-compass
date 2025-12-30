@@ -97,11 +97,11 @@ impl TransportationSegmentRecord {
 #[serde(rename_all = "snake_case")]
 pub enum SegmentSubtype {
     Road,
-    Railway,
-    Waterway,
+    Rail,
+    Water,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Serialize, Debug, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "snake_case")]
 pub enum SegmentClass {
     Motorway,
@@ -121,6 +121,37 @@ pub enum SegmentClass {
     Cycleway,
     Bridleway,
     Unknown,
+    #[serde(untagged)]
+    Custom(String),
+}
+
+impl<'de> Deserialize<'de> for SegmentClass {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Ok(match s.as_str() {
+            "motorway" => Self::Motorway,
+            "primary" => Self::Primary,
+            "secondary" => Self::Secondary,
+            "tertiary" => Self::Tertiary,
+            "residential" => Self::Residential,
+            "living_street" => Self::LivingStreet,
+            "trunk" => Self::Trunk,
+            "unclassified" => Self::Unclassified,
+            "service" => Self::Service,
+            "pedestrian" => Self::Pedestrian,
+            "footway" => Self::Footway,
+            "steps" => Self::Steps,
+            "path" => Self::Path,
+            "track" => Self::Track,
+            "cycleway" => Self::Cycleway,
+            "bridleway" => Self::Bridleway,
+            "unknown" => Self::Unknown,
+            _ => Self::Custom(s),
+        })
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
