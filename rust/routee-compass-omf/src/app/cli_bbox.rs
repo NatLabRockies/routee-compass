@@ -20,12 +20,22 @@ pub fn parse_bbox(s: &str) -> Result<CliBoundingBox, String> {
     let ymin = parse_lat(parts[2])?;
     let ymax = parse_lat(parts[3])?;
 
-    Ok(CliBoundingBox {
-        xmin,
-        xmax,
-        ymin,
-        ymax,
-    })
+    if !(xmin < xmax) {
+        Err(format!(
+            "bbox: xmin must be less than xmax, but found [{xmin},{xmax}]"
+        ))
+    } else if !(ymin < ymax) {
+        Err(format!(
+            "bbox: ymin must be less than ymax, but found [{ymin},{ymax}]"
+        ))
+    } else {
+        Ok(CliBoundingBox {
+            xmin,
+            xmax,
+            ymin,
+            ymax,
+        })
+    }
 }
 
 impl std::fmt::Display for CliBoundingBox {
