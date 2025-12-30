@@ -10,3 +10,4 @@ mod travel_mode_filter;
 pub use bbox::Bbox;
 pub use row_filter::RowFilter;
 pub use row_filter_config::RowFilterConfig;
+pub use travel_mode_filter::TravelModeFilter;
