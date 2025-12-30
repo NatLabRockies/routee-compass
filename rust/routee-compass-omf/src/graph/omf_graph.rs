@@ -157,6 +157,15 @@ impl OmfGraphVectorized {
         );
         for (edge_list, edge_list_config) in edge_list_iter {
             let mode_dir = output_directory.join(&edge_list_config.mode);
+            if !mode_dir.is_dir() {
+                std::fs::create_dir_all(&mode_dir).map_err(|e| {
+                    let msg = format!(
+                        "error building edge list output directory '{}': {e}",
+                        &mode_dir.to_str().unwrap_or_default()
+                    );
+                    OvertureMapsCollectionError::InvalidUserInput(msg)
+                })?;
+            }
 
             let mut edge_writer = create_writer(
                 &mode_dir,
