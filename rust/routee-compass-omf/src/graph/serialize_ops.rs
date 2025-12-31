@@ -185,8 +185,6 @@ pub fn create_geometries(
     splits: &[SegmentSplit],
 ) -> Result<Vec<LineString<f32>>, OvertureMapsCollectionError> {
     splits
-        .iter()
-        .collect_vec()
         .par_iter()
         .map(|split| split.create_geometry_from_split(segments, segment_lookup))
         .collect::<Result<Vec<LineString<f32>>, OvertureMapsCollectionError>>()
