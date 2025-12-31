@@ -80,7 +80,7 @@ impl OmfGraphVectorized {
             let geometries = ops::create_geometries(&segments, &segment_lookup, &splits)?;
             let edge_list = OmfEdgeList {
                 edges: EdgeList(edges.into_boxed_slice()),
-                geometries: geometries,
+                geometries,
             };
             edge_lists.push(edge_list);
         }
@@ -211,8 +211,7 @@ impl OmfGraphVectorized {
                     .serialize(row.to_wkt().to_string())
                     .map_err(|e| {
                         OvertureMapsCollectionError::CsvWriteError(format!(
-                            "Failed to write to geometry file edges-geometries-enumerated.txt.gz: {}",
-                            e
+                            "Failed to write to geometry file edges-geometries-enumerated.txt.gz: {e}"
                         ))
                     })?;
                 }
