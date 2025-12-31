@@ -202,7 +202,7 @@ impl OmfGraphVectorized {
             let g_iter = tqdm!(
                 edge_list.geometries.iter(),
                 total = edge_list.geometries.len(),
-                desc = "edges",
+                desc = "geometries",
                 position = 1
             );
             for row in g_iter {
