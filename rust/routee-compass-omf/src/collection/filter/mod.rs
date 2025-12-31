@@ -5,7 +5,9 @@ mod non_empty_class_row_predicate;
 mod row_filter;
 mod row_filter_config;
 mod taxonomy_filter_predicate;
+mod travel_mode_filter;
 
 pub use bbox::Bbox;
 pub use row_filter::RowFilter;
 pub use row_filter_config::RowFilterConfig;
+pub use travel_mode_filter::TravelModeFilter;

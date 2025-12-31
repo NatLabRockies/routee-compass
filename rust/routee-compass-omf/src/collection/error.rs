@@ -1,7 +1,11 @@
+use std::path::PathBuf;
+
 use parquet::errors::ParquetError;
 
 #[derive(thiserror::Error, Debug)]
 pub enum OvertureMapsCollectionError {
+    #[error("Invalid input: {0}")]
+    InvalidUserInput(String),
     #[error("Failed to connect to S3 Bucket: {0}")]
     ConnectionError(String),
     #[error("Failed to acquire Metadata: {0}")]
@@ -40,6 +44,10 @@ pub enum OvertureMapsCollectionError {
     InvalidGeometry(String),
     #[error("Error writing to csv: {0}")]
     CsvWriteError(String),
+    #[error("Error reading from '{path}': {message}")]
+    ReadError { path: PathBuf, message: String },
+    #[error("Error writing to '{path}': {message}")]
+    WriteError { path: PathBuf, message: String },
     #[error("{0}")]
     InternalError(String),
 }

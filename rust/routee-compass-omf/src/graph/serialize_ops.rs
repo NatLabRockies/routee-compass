@@ -4,7 +4,7 @@ use kdam::{tqdm, Bar, BarExt};
 use rayon::prelude::*;
 use routee_compass_core::model::network::{Edge, EdgeId, EdgeListId, Vertex};
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     sync::{Arc, Mutex},
 };
 
@@ -16,17 +16,26 @@ use crate::{
 };
 
 /// serializes the Connector records into Vertices and creates a GERS id -> index mapping.
-/// the vertex creation is parallelized.
+/// optionally filter to a 'keep list' of Connector ids. the vertex creation is parallelized.
 pub fn create_vertices_and_lookup(
     connectors: &[TransportationConnectorRecord],
+    keep_list: Option<&HashSet<&String>>,
 ) -> Result<(Vec<Vertex>, HashMap<String, usize>), OvertureMapsCollectionError> {
-    let vertices = connectors
+    let keep_connectors = match keep_list {
+        Some(keep) => connectors
+            .iter()
+            .filter(|c| keep.contains(&c.id))
+            .collect_vec(),
+        None => connectors.iter().collect_vec(),
+    };
+
+    let vertices = keep_connectors
         .par_iter()
         .enumerate()
         .map(|(idx, c)| c.try_to_vertex(idx))
         .collect::<Result<Vec<Vertex>, OvertureMapsCollectionError>>()?;
 
-    let mapping: HashMap<String, usize> = connectors
+    let mapping: HashMap<String, usize> = keep_connectors
         .iter()
         .enumerate()
         .map(|(idx, c)| (c.id.clone(), idx))
@@ -36,7 +45,7 @@ pub fn create_vertices_and_lookup(
 }
 
 /// builds a lookup function from segment id to segment index
-pub fn create_segment_lookup(segments: &[TransportationSegmentRecord]) -> HashMap<String, usize> {
+pub fn create_segment_lookup(segments: &[&TransportationSegmentRecord]) -> HashMap<String, usize> {
     segments
         .iter()
         .enumerate()
@@ -47,14 +56,14 @@ pub fn create_segment_lookup(segments: &[TransportationSegmentRecord]) -> HashMa
 /// collects all splits from all segment records, used to create edges.
 /// the application of split ops is parallelized over the segment records.
 pub fn find_splits(
-    segments: &[TransportationSegmentRecord],
+    segments: &[&TransportationSegmentRecord],
     split_op: fn(
         &TransportationSegmentRecord,
     ) -> Result<Vec<SegmentSplit>, OvertureMapsCollectionError>,
 ) -> Result<Vec<SegmentSplit>, OvertureMapsCollectionError> {
     let result = segments
         .par_iter()
-        .map(split_op)
+        .map(|s| split_op(s))
         .collect::<Result<Vec<Vec<SegmentSplit>>, OvertureMapsCollectionError>>()?
         .into_iter()
         .flatten()
@@ -66,7 +75,7 @@ pub fn find_splits(
 /// them to the collections of vertex data.
 pub fn extend_vertices(
     splits: &[SegmentSplit],
-    segments: &[TransportationSegmentRecord],
+    segments: &[&TransportationSegmentRecord],
     segment_lookup: &HashMap<String, usize>,
     vertices: &mut Vec<Vertex>,
     vertex_lookup: &mut HashMap<String, usize>,
@@ -121,7 +130,7 @@ pub fn extend_vertices(
 /// helper function to collect any [ConnectorInSegment] values that represent currently missing Vertices in the graph.
 fn connectors_from_split(
     split: &SegmentSplit,
-    segments: &[TransportationSegmentRecord],
+    segments: &[&TransportationSegmentRecord],
     segment_lookup: &HashMap<String, usize>,
 ) -> Result<Vec<(ConnectorInSegment, Coord<f32>)>, OvertureMapsCollectionError> {
     split.missing_connectors().into_iter().map(|c| {
@@ -145,7 +154,7 @@ fn connectors_from_split(
 /// # Invariants
 /// the complete list of vertices (from connectors) should exist at this point.
 pub fn create_edges(
-    segments: &[TransportationSegmentRecord],
+    segments: &[&TransportationSegmentRecord],
     segment_lookup: &HashMap<String, usize>,
     splits: &[SegmentSplit],
     vertices: &[Vertex],

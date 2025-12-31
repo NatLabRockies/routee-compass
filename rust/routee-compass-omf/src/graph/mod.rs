@@ -7,3 +7,4 @@ mod vertex_serializable;
 pub mod segment_ops;
 pub use connector_in_segment::ConnectorInSegment;
 pub use omf_graph::OmfGraphVectorized;
+pub use segment_split::SegmentSplit;

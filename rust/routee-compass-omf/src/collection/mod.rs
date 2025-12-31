@@ -1,13 +1,13 @@
 mod collector;
 mod collector_config;
 mod error;
-mod filter;
 mod object_source;
 mod record;
 mod taxonomy;
 mod version;
 
 pub mod constants;
+pub mod filter;
 
 pub use collector::OvertureMapsCollector;
 pub use collector_config::OvertureMapsCollectorConfig;

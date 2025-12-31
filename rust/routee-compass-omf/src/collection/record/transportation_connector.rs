@@ -1,6 +1,6 @@
 use crate::collection::{OvertureMapsCollectionError, OvertureRecord};
 
-use super::deserialize_geometry;
+use super::geometry_wkb_codec;
 use super::{OvertureMapsBbox, OvertureMapsSource};
 use geo::Geometry;
 use routee_compass_core::model::network::Vertex;
@@ -9,13 +9,18 @@ use serde::{Deserialize, Serialize};
 /// Represents a transportation connector record as defined in the Overture Maps Foundation schema.
 /// This struct contains the fields describing a transportation connector, including its unique
 /// identifier, geometry, bounding box, version, and data sources.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransportationConnectorRecord {
     pub id: String,
-    #[serde(deserialize_with = "deserialize_geometry")]
+    #[serde(
+        with = "geometry_wkb_codec",
+        skip_serializing_if = "Option::is_none",
+        default
+    )]
     geometry: Option<Geometry<f32>>,
     bbox: OvertureMapsBbox,
     version: i32,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     sources: Option<Vec<Option<OvertureMapsSource>>>,
 }
 
