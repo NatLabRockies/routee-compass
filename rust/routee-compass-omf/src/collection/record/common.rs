@@ -1,32 +1,5 @@
-use geo::Geometry;
-use geo::MapCoords;
-use geozero::error::GeozeroError;
-use geozero::{wkb::Wkb, ToGeo};
-use serde::de::Deserializer;
-use serde::de::Error;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-pub fn deserialize_geometry<'de, D>(deserializer: D) -> Result<Option<Geometry<f32>>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    // Assumption that this data is binary and not string.
-    // convert here at the boundary of the program into f32 values.
-    Option::<Vec<u8>>::deserialize(deserializer)?
-        .map(|v| {
-            let g = Wkb(v).to_geo()?;
-
-            g.try_map_coords(|geo::Coord { x, y }| {
-                Ok(geo::Coord {
-                    x: x as f32,
-                    y: y as f32,
-                })
-            })
-        })
-        .transpose()
-        .map_err(|e: GeozeroError| D::Error::custom(format!("Could not decode wkb: {e}")))
-}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct OvertureMapsBbox {

@@ -9,6 +9,7 @@ use crate::{
         OvertureMapsCollectorConfig, ReleaseVersion, TransportationCollection,
     },
     graph::OmfGraphVectorized,
+    util,
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -31,6 +32,7 @@ pub fn run(
     }?;
 
     if write_json {
+        util::fs::create_dirs(output_directory)?;
         collection.to_json(output_directory)?;
     }
 

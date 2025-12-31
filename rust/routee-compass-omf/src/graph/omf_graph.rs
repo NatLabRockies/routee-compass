@@ -106,15 +106,7 @@ impl OmfGraphVectorized {
             OvertureMapsCollectionError::InternalError(format!("progress bar error: {e}"))
         })?;
         // create output directory if missing
-        if !output_directory.is_dir() {
-            std::fs::create_dir_all(output_directory).map_err(|e| {
-                let msg = format!(
-                    "error building output directory '{}': {e}",
-                    output_directory.to_str().unwrap_or_default()
-                );
-                OvertureMapsCollectionError::InvalidUserInput(msg)
-            })?;
-        }
+        crate::util::fs::create_dirs(output_directory)?;
 
         // write vertices
         let mut vertex_writer = create_writer(
@@ -157,15 +149,7 @@ impl OmfGraphVectorized {
         );
         for (edge_list, edge_list_config) in edge_list_iter {
             let mode_dir = output_directory.join(&edge_list_config.mode);
-            if !mode_dir.is_dir() {
-                std::fs::create_dir_all(&mode_dir).map_err(|e| {
-                    let msg = format!(
-                        "error building edge list output directory '{}': {e}",
-                        &mode_dir.to_str().unwrap_or_default()
-                    );
-                    OvertureMapsCollectionError::InvalidUserInput(msg)
-                })?;
-            }
+            crate::util::fs::create_dirs(&mode_dir)?;
 
             let mut edge_writer = create_writer(
                 &mode_dir,

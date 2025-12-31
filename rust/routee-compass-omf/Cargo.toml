@@ -53,3 +53,4 @@ thiserror = { workspace = true }
 tokio = { workspace = true }
 uom = { workspace = true }
 wkt = { workspace = true }
+wkb = { workspace = true }
