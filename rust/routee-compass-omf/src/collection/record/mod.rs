@@ -15,7 +15,8 @@ pub use transportation_collection::TransportationCollection;
 pub use transportation_connector::TransportationConnectorRecord;
 pub use transportation_segment::{
     SegmentAccessRestriction, SegmentAccessType, SegmentClass, SegmentHeading, SegmentMode,
-    SegmentSubclass, SegmentSubtype, TransportationSegmentRecord,
+    SegmentSpeedLimit, SegmentSpeedUnit, SegmentSubclass, SegmentSubtype,
+    TransportationSegmentRecord,
 };
 
 // Common structs and functions for many record types

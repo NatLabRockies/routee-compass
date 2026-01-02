@@ -27,6 +27,7 @@ pub struct OmfGraphVectorized {
 pub struct OmfEdgeList {
     pub edges: EdgeList,
     pub geometries: Vec<LineString<f32>>,
+    pub speeds: Vec<f64>
 }
 
 impl OmfGraphVectorized {
@@ -78,9 +79,11 @@ impl OmfGraphVectorized {
                 edge_list_id,
             )?;
             let geometries = ops::create_geometries(&segments, &segment_lookup, &splits)?;
+            let speeds = ops::create_speeds(&segments, &segment_lookup, &splits)?;
             let edge_list = OmfEdgeList {
                 edges: EdgeList(edges.into_boxed_slice()),
                 geometries,
+                speeds
             };
             edge_lists.push(edge_list);
         }
@@ -165,6 +168,13 @@ impl OmfGraphVectorized {
                 QuoteStyle::Never,
                 overwrite,
             );
+            let mut speeds_writer = create_writer(
+                &mode_dir,
+                "edges-speeds-enumerated.txt.gz",
+                false,
+                QuoteStyle::Never,
+                overwrite,
+            );
 
             // Write Edges
             let e_iter = tqdm!(
@@ -222,6 +232,31 @@ impl OmfGraphVectorized {
                 writer.flush().map_err(|e| {
                     OvertureMapsCollectionError::CsvWriteError(format!(
                         "Failed to flush edges-geometries-enumerated.txt.gz: {e}"
+                    ))
+                })?;
+            }
+            // Write geometries
+            let s_iter = tqdm!(
+                edge_list.speeds.iter(),
+                total = edge_list.edges.len(),
+                desc = "speeds",
+                position = 1
+            );
+            for row in s_iter {
+                if let Some(ref mut writer) = speeds_writer {
+                    writer.serialize(row).map_err(|e| {
+                        OvertureMapsCollectionError::CsvWriteError(format!(
+                            "Failed to write to edges-speeds-enumerated.txt.gz: {e}"
+                        ))
+                    })?;
+                }
+            }
+            eprintln!();
+
+            if let Some(ref mut writer) = speeds_writer {
+                writer.flush().map_err(|e| {
+                    OvertureMapsCollectionError::CsvWriteError(format!(
+                        "Failed to flush edges-speeds-enumerated.txt.gz: {e}"
                     ))
                 })?;
             }

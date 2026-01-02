@@ -4,7 +4,7 @@ use geo::{Haversine, Length, LineString};
 use routee_compass_core::model::network::{Edge, EdgeId, EdgeListId, Vertex, VertexId};
 
 use crate::{
-    collection::{OvertureMapsCollectionError, TransportationSegmentRecord},
+    collection::{OvertureMapsCollectionError, SegmentSpeedLimit, TransportationSegmentRecord},
     graph::connector_in_segment::ConnectorInSegment,
 };
 
@@ -160,6 +160,91 @@ impl SegmentSplit {
                 out_coords.push(segment.get_coord_at(dst.linear_reference.0)?);
 
                 Ok(LineString::new(out_coords))
+            }
+        }
+    }
+
+    pub fn get_split_speed(
+        &self,
+        segments: &[&TransportationSegmentRecord],
+        segment_lookup: &HashMap<String, usize>,
+    ) -> Result<f64, OvertureMapsCollectionError> {
+        use OvertureMapsCollectionError as E;
+
+        match self {
+            SegmentSplit::SimpleConnectorSplit { src, dst } => {
+                let segment_id = &src.segment_id;
+                let segment_idx = segment_lookup.get(segment_id).ok_or_else(|| {
+                    let msg = format!("missing lookup entry for segment {segment_id}");
+                    E::InvalidSegmentConnectors(msg)
+                })?;
+                let segment = segments.get(*segment_idx).ok_or_else(|| {
+                    let msg = format!(
+                        "missing lookup entry for segment {segment_id} with index {segment_idx}"
+                    );
+                    E::InvalidSegmentConnectors(msg)
+                })?;
+
+                let speed_limits = segment.speed_limits.as_ref().ok_or(E::MissingAttribute(
+                    "expected non-empty `speed_limits`".to_string(),
+                ))?;
+
+                // Filter speed limits based on linear reference
+                let filter_vec = speed_limits
+                    .iter()
+                    .map(|limit| {
+                        limit.check_between_intersection(
+                            src.linear_reference.0,
+                            dst.linear_reference.0,
+                        )
+                    })
+                    .collect::<Result<Vec<Option<bool>>, E>>()?
+                    .iter()
+                    .map(|maybe_bool| maybe_bool.unwrap_or(false))
+                    .collect::<Vec<bool>>();
+
+                // Use filter_vec to filter
+                let clean_speed_limits: Vec<SegmentSpeedLimit> = speed_limits
+                    .iter()
+                    .zip(filter_vec)
+                    .filter(|(_, filter)| *filter)
+                    .map(|(speed_limit, _)| speed_limit)
+                    .cloned()
+                    .collect();
+
+                // Compute the intersecting portion of each limit
+                // e.g. if limit is [0.5, 0.8] and segment is defined as [0.45, 0.6] then this value is .6 - .5 = 0.1
+                let start = src.linear_reference.0;
+                let end = dst.linear_reference.0;
+                let intersecting_portions: Vec<f64> = clean_speed_limits
+                    .iter()
+                    .map(|speed_limit| speed_limit.get_linear_reference_portion(start, end))
+                    .collect::<Result<_, E>>()?;
+
+                // Compute mph max speeds weighted by intersecting_length / total_intersecting_length
+                let total_intersecting_length: f64 = intersecting_portions.iter().sum();
+
+                let weighted_mph = clean_speed_limits
+                    .iter()
+                    .zip(intersecting_portions)
+                    .map(|(speed_limit, portion)| {
+                        let weight = portion / total_intersecting_length;
+
+                        let max_speed = speed_limit.get_max_speed().ok_or(
+                            OvertureMapsCollectionError::InternalError(format!(
+                                "Expected a value for `max_speed`: {:?}",
+                                speed_limit
+                            )),
+                        )?;
+
+                        Ok(max_speed
+                            .to_uom_value()
+                            .get::<uom::si::velocity::mile_per_hour>()
+                            * weight)
+                    })
+                    .collect::<Result<Vec<f64>, E>>()?;
+
+                Ok(weighted_mph.iter().sum())
             }
         }
     }

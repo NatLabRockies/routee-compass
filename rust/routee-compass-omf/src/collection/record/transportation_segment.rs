@@ -1,6 +1,8 @@
 use geo::{Coord, Geometry, Haversine, InterpolatableLine, Length, LineString};
 use opening_hours_syntax::rules::OpeningHoursExpression;
+use routee_compass_core::model::unit::SpeedUnit;
 use serde::{Deserialize, Serialize};
+use uom::si::f64::Velocity;
 
 use super::{geometry_wkb_codec, OvertureMapsBbox, OvertureMapsNames, OvertureMapsSource};
 use crate::collection::{OvertureMapsCollectionError, OvertureRecord};
@@ -391,6 +393,15 @@ pub enum SegmentSpeedUnit {
     Mph,
 }
 
+impl SegmentSpeedUnit {
+    pub fn to_uom(&self, value: f64) -> Velocity {
+        match self {
+            SegmentSpeedUnit::Kmh => SpeedUnit::KPH.to_uom(value),
+            SegmentSpeedUnit::Mph => SpeedUnit::MPH.to_uom(value),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ConnectorReference {
     pub connector_id: String,
@@ -585,8 +596,68 @@ pub struct SegmentSpeedLimit {
     between: Option<Vec<f64>>,
 }
 
+impl SegmentSpeedLimit {
+    /// used to filter limits based on linear reference segment
+    pub fn check_between_intersection(
+        &self,
+        start: f64,
+        end: f64,
+    ) -> Result<Option<bool>, OvertureMapsCollectionError> {
+        self.between
+            .as_ref()
+            .map(|b_vector| {
+                let [low, high] = b_vector.as_slice() else {
+                    return Err(OvertureMapsCollectionError::InvalidBetweenVector(
+                        "Between vector has length != 2".to_string(),
+                    ));
+                };
+                Ok(start < *high && end > *low)
+            })
+            .transpose()
+    }
+
+    pub fn get_max_speed(&self) -> Option<SpeedLimitWithUnit> {
+        self.max_speed.clone()
+    }
+
+    /// given a sub-segment linear reference (start, end), compute the total overlapping portion
+    pub fn get_linear_reference_portion(
+        &self,
+        start: f64,
+        end: f64,
+    ) -> Result<f64, OvertureMapsCollectionError> {
+        let b_vector =
+            self.between
+                .as_ref()
+                .ok_or(OvertureMapsCollectionError::InvalidBetweenVector(format!(
+                    "`between` field was None"
+                )))?;
+
+        let [low, high] = b_vector.as_slice() else {
+            return Err(OvertureMapsCollectionError::InvalidBetweenVector(
+                "Between vector has length != 2".to_string(),
+            ));
+        };
+
+        if high < low {
+            return Err(OvertureMapsCollectionError::InvalidBetweenVector(format!(
+                "`high` is lower than `low`: [{}, {}]",
+                low, high
+            )));
+        }
+
+        Ok(high.min(end) - low.max(start))
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SpeedLimitWithUnit {
     value: i32,
     unit: SegmentSpeedUnit,
+}
+
+impl SpeedLimitWithUnit {
+    pub fn to_uom_value(&self) -> Velocity {
+        self.unit.to_uom(self.value as f64)
+    }
 }
