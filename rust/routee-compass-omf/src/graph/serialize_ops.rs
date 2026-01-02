@@ -1,4 +1,4 @@
-use geo::Coord;
+use geo::{Coord, LineString};
 use itertools::Itertools;
 use kdam::{tqdm, Bar, BarExt};
 use rayon::prelude::*;
@@ -177,4 +177,15 @@ pub fn create_edges(
             )
         })
         .collect::<Result<Vec<Edge>, OvertureMapsCollectionError>>()
+}
+
+pub fn create_geometries(
+    segments: &[&TransportationSegmentRecord],
+    segment_lookup: &HashMap<String, usize>,
+    splits: &[SegmentSplit],
+) -> Result<Vec<LineString<f32>>, OvertureMapsCollectionError> {
+    splits
+        .par_iter()
+        .map(|split| split.create_geometry_from_split(segments, segment_lookup))
+        .collect::<Result<Vec<LineString<f32>>, OvertureMapsCollectionError>>()
 }

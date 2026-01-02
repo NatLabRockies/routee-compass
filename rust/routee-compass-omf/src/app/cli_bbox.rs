@@ -11,7 +11,7 @@ pub struct CliBoundingBox {
 pub fn parse_bbox(s: &str) -> Result<CliBoundingBox, String> {
     let parts: Vec<&str> = s.split(',').collect();
     if parts.len() != 4 {
-        return Err(format!("expected format: xmin,xmax,ymin,ymax, got: {}", s));
+        return Err(format!("expected format: xmin,xmax,ymin,ymax, got: {s}"));
     }
 
     let xmin = parse_lon(parts[0])?;

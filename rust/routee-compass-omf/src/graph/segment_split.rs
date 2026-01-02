@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
+use geo::{Haversine, Length, LineString};
 use routee_compass_core::model::network::{Edge, EdgeId, EdgeListId, Vertex, VertexId};
-use uom::si::f64::Length;
 
 use crate::{
     collection::{OvertureMapsCollectionError, TransportationSegmentRecord},
@@ -102,10 +102,64 @@ impl SegmentSplit {
                     edge_id,
                     src_vertex_id: VertexId(*src_id),
                     dst_vertex_id: VertexId(*dst_id),
-                    distance: Length::new::<uom::si::length::meter>(distance as f64),
+                    distance: uom::si::f64::Length::new::<uom::si::length::meter>(distance as f64),
                 };
 
                 Ok(edge)
+            }
+        }
+    }
+
+    pub fn create_geometry_from_split(
+        &self,
+        segments: &[&TransportationSegmentRecord],
+        segment_lookup: &HashMap<String, usize>,
+    ) -> Result<LineString<f32>, OvertureMapsCollectionError> {
+        use OvertureMapsCollectionError as E;
+
+        match self {
+            SegmentSplit::SimpleConnectorSplit { src, dst } => {
+                let segment_id = &src.segment_id;
+                let segment_idx = segment_lookup.get(segment_id).ok_or_else(|| {
+                    let msg = format!("missing lookup entry for segment {segment_id}");
+                    E::InvalidSegmentConnectors(msg)
+                })?;
+                let segment = segments.get(*segment_idx).ok_or_else(|| {
+                    let msg = format!(
+                        "missing lookup entry for segment {segment_id} with index {segment_idx}"
+                    );
+                    E::InvalidSegmentConnectors(msg)
+                })?;
+
+                let distance_to_src = segment.get_distance_at(src.linear_reference.0)?;
+                let distance_to_dst = segment.get_distance_at(dst.linear_reference.0)?;
+                let segment_geometry = segment.get_linestring()?;
+
+                let mut out_coords = vec![];
+
+                // Add the initial point
+                out_coords.push(segment.get_coord_at(src.linear_reference.0)?);
+
+                // Check all points to see if we need to add them
+                let mut total_distance = 0.;
+                for line in segment_geometry.lines() {
+                    let line_distance = Haversine.length(&line);
+                    total_distance += line_distance;
+
+                    if total_distance <= distance_to_src {
+                        continue;
+                    }
+                    if total_distance >= distance_to_dst {
+                        break;
+                    }
+
+                    out_coords.push(line.end);
+                }
+
+                // Add final point
+                out_coords.push(segment.get_coord_at(dst.linear_reference.0)?);
+
+                Ok(LineString::new(out_coords))
             }
         }
     }
