@@ -4,7 +4,7 @@ use geo::{Haversine, Length, LineString};
 use routee_compass_core::model::network::{Edge, EdgeId, EdgeListId, Vertex, VertexId};
 
 use crate::{
-    collection::{OvertureMapsCollectionError, SegmentSpeedLimit, TransportationSegmentRecord},
+    collection::{OvertureMapsCollectionError, TransportationSegmentRecord},
     graph::connector_in_segment::ConnectorInSegment,
 };
 
@@ -168,7 +168,7 @@ impl SegmentSplit {
         &self,
         segments: &[&TransportationSegmentRecord],
         segment_lookup: &HashMap<String, usize>,
-    ) -> Result<f64, OvertureMapsCollectionError> {
+    ) -> Result<Option<f64>, OvertureMapsCollectionError> {
         use OvertureMapsCollectionError as E;
 
         match self {
@@ -185,38 +185,16 @@ impl SegmentSplit {
                     E::InvalidSegmentConnectors(msg)
                 })?;
 
-                let speed_limits = segment.speed_limits.as_ref().ok_or(E::MissingAttribute(
-                    "expected non-empty `speed_limits`".to_string(),
-                ))?;
-
-                // Filter speed limits based on linear reference
-                let filter_vec = speed_limits
-                    .iter()
-                    .map(|limit| {
-                        limit.check_between_intersection(
-                            src.linear_reference.0,
-                            dst.linear_reference.0,
-                        )
-                    })
-                    .collect::<Result<Vec<Option<bool>>, E>>()?
-                    .iter()
-                    .map(|maybe_bool| maybe_bool.unwrap_or(false))
-                    .collect::<Vec<bool>>();
-
-                // Use filter_vec to filter
-                let clean_speed_limits: Vec<SegmentSpeedLimit> = speed_limits
-                    .iter()
-                    .zip(filter_vec)
-                    .filter(|(_, filter)| *filter)
-                    .map(|(speed_limit, _)| speed_limit)
-                    .cloned()
-                    .collect();
+                let speed_limits = match segment.speed_limits.as_ref() {
+                    Some(limits) => limits,
+                    None => return Ok(None),
+                };
 
                 // Compute the intersecting portion of each limit
                 // e.g. if limit is [0.5, 0.8] and segment is defined as [0.45, 0.6] then this value is .6 - .5 = 0.1
                 let start = src.linear_reference.0;
                 let end = dst.linear_reference.0;
-                let intersecting_portions: Vec<f64> = clean_speed_limits
+                let intersecting_portions: Vec<f64> = speed_limits
                     .iter()
                     .map(|speed_limit| speed_limit.get_linear_reference_portion(start, end))
                     .collect::<Result<_, E>>()?;
@@ -224,7 +202,11 @@ impl SegmentSplit {
                 // Compute mph max speeds weighted by intersecting_length / total_intersecting_length
                 let total_intersecting_length: f64 = intersecting_portions.iter().sum();
 
-                let weighted_mph = clean_speed_limits
+                if total_intersecting_length < 1e-6{
+                    return Ok(None);
+                }
+
+                let weighted_mph = speed_limits
                     .iter()
                     .zip(intersecting_portions)
                     .map(|(speed_limit, portion)| {
@@ -244,7 +226,7 @@ impl SegmentSplit {
                     })
                     .collect::<Result<Vec<f64>, E>>()?;
 
-                Ok(weighted_mph.iter().sum())
+                Ok(Some(weighted_mph.iter().sum()))
             }
         }
     }

@@ -27,7 +27,7 @@ pub struct OmfGraphVectorized {
 pub struct OmfEdgeList {
     pub edges: EdgeList,
     pub geometries: Vec<LineString<f32>>,
-    pub speeds: Vec<f64>
+    pub speeds: Vec<f64>,
 }
 
 impl OmfGraphVectorized {
@@ -79,11 +79,18 @@ impl OmfGraphVectorized {
                 edge_list_id,
             )?;
             let geometries = ops::create_geometries(&segments, &segment_lookup, &splits)?;
-            let speeds = ops::create_speeds(&segments, &segment_lookup, &splits)?;
+            let speeds = ops::create_speeds(&segments, &segment_lookup, &splits)?
+                .into_iter()
+                .map(|opt| match opt {
+                    Some(v) => v,
+                    None => -1.,
+                })
+                .collect::<Vec<f64>>();
+
             let edge_list = OmfEdgeList {
                 edges: EdgeList(edges.into_boxed_slice()),
                 geometries,
-                speeds
+                speeds,
             };
             edge_lists.push(edge_list);
         }
@@ -235,7 +242,7 @@ impl OmfGraphVectorized {
                     ))
                 })?;
             }
-            // Write geometries
+            // Write speeds
             let s_iter = tqdm!(
                 edge_list.speeds.iter(),
                 total = edge_list.edges.len(),

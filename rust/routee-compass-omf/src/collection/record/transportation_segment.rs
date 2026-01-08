@@ -602,18 +602,19 @@ impl SegmentSpeedLimit {
         &self,
         start: f64,
         end: f64,
-    ) -> Result<Option<bool>, OvertureMapsCollectionError> {
-        self.between
-            .as_ref()
-            .map(|b_vector| {
+    ) -> Result<bool, OvertureMapsCollectionError> {
+        match self.between.as_ref() {
+            Some(b_vector) => {
                 let [low, high] = b_vector.as_slice() else {
                     return Err(OvertureMapsCollectionError::InvalidBetweenVector(
                         "Between vector has length != 2".to_string(),
                     ));
                 };
+
                 Ok(start < *high && end > *low)
-            })
-            .transpose()
+            }
+            None => Ok(true),
+        }
     }
 
     pub fn get_max_speed(&self) -> Option<SpeedLimitWithUnit> {
@@ -626,27 +627,25 @@ impl SegmentSpeedLimit {
         start: f64,
         end: f64,
     ) -> Result<f64, OvertureMapsCollectionError> {
-        let b_vector =
-            self.between
-                .as_ref()
-                .ok_or(OvertureMapsCollectionError::InvalidBetweenVector(format!(
-                    "`between` field was None"
-                )))?;
+        match self.between.as_ref() {
+            Some(b_vector) => {
+                let [low, high] = b_vector.as_slice() else {
+                    return Err(OvertureMapsCollectionError::InvalidBetweenVector(
+                        "Between vector has length != 2".to_string(),
+                    ));
+                };
 
-        let [low, high] = b_vector.as_slice() else {
-            return Err(OvertureMapsCollectionError::InvalidBetweenVector(
-                "Between vector has length != 2".to_string(),
-            ));
-        };
+                if high < low {
+                    return Err(OvertureMapsCollectionError::InvalidBetweenVector(format!(
+                        "`high` is lower than `low`: [{}, {}]",
+                        low, high
+                    )));
+                }
 
-        if high < low {
-            return Err(OvertureMapsCollectionError::InvalidBetweenVector(format!(
-                "`high` is lower than `low`: [{}, {}]",
-                low, high
-            )));
+                Ok((high.min(end) - low.max(start)).max(0.))
+            }
+            None => Ok(end - start),
         }
-
-        Ok(high.min(end) - low.max(start))
     }
 }
 

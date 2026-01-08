@@ -194,9 +194,9 @@ pub fn create_speeds(
     segments: &[&TransportationSegmentRecord],
     segment_lookup: &HashMap<String, usize>,
     splits: &[SegmentSplit],
-) -> Result<Vec<f64>, OvertureMapsCollectionError> {
+) -> Result<Vec<Option<f64>>, OvertureMapsCollectionError> {
     splits
         .par_iter()
         .map(|split| split.get_split_speed(segments, segment_lookup))
-        .collect::<Result<Vec<f64>, OvertureMapsCollectionError>>()
+        .collect::<Result<Vec<Option<f64>>, OvertureMapsCollectionError>>()
 }
