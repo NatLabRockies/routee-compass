@@ -6,8 +6,8 @@ use serde::{Deserialize, Deserializer};
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum BytesOrString {
-    Bytes(Vec<u8>),
-    String(String),
+    String(String), // The order here was important
+    Bytes(serde_bytes::ByteBuf),
 }
 
 impl std::fmt::Display for BytesOrString {
@@ -28,7 +28,7 @@ where
 
     data.map(|v| {
         let bytes = match &v {
-            BytesOrString::Bytes(b) => b.clone(),
+            BytesOrString::Bytes(b) => b.clone().into_vec(),
             BytesOrString::String(s) => hex::decode(s).map_err(|e| {
                 serde::de::Error::custom(format!("failure converting hex wkb string to bytes: {e}"))
             })?,
