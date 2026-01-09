@@ -4,7 +4,9 @@ use geo::{Haversine, Length, LineString};
 use routee_compass_core::model::network::{Edge, EdgeId, EdgeListId, Vertex, VertexId};
 
 use crate::{
-    collection::{OvertureMapsCollectionError, TransportationSegmentRecord},
+    collection::{
+        record::SegmentHeading, OvertureMapsCollectionError, TransportationSegmentRecord,
+    },
     graph::connector_in_segment::ConnectorInSegment,
 };
 
@@ -14,10 +16,21 @@ pub enum SegmentSplit {
     SimpleConnectorSplit {
         src: ConnectorInSegment,
         dst: ConnectorInSegment,
+        heading: SegmentHeading,
     },
 }
 
 impl SegmentSplit {
+    /// constructs a new simple segment split based purely on the linear references between
+    /// connectors along with any heading information relevant to the active travel mode.
+    pub fn new_simple(
+        src: ConnectorInSegment,
+        dst: ConnectorInSegment,
+        heading: SegmentHeading,
+    ) -> Self {
+        Self::SimpleConnectorSplit { src, dst, heading }
+    }
+
     /// identifies any locations where additional coordinates are needed.
 
     /// when creating any missing connectors, call [ConnectorInSegment::new_without_connector_id]
@@ -44,7 +57,7 @@ impl SegmentSplit {
     ) -> Result<Edge, OvertureMapsCollectionError> {
         use OvertureMapsCollectionError as E;
         match self {
-            SegmentSplit::SimpleConnectorSplit { src, dst } => {
+            SegmentSplit::SimpleConnectorSplit { src, dst, heading } => {
                 // get the shared segment id for src + dst
                 let segment_id = if src.segment_id != dst.segment_id {
                     let msg = format!(
@@ -73,6 +86,11 @@ impl SegmentSplit {
                             "segment references unknown connector {}",
                             dst.connector_id
                         )))?;
+                // reverse src/dst if heading is backward
+                let (src_vertex_id, dst_vertex_id) = match heading {
+                    SegmentHeading::Forward => (VertexId(*src_id), VertexId(*dst_id)),
+                    SegmentHeading::Backward => (VertexId(*dst_id), VertexId(*src_id)),
+                };
 
                 // create this edge, push onto edges
                 if dst.linear_reference < src.linear_reference {
@@ -96,13 +114,16 @@ impl SegmentSplit {
                 })?;
                 let dst_distance = segment.get_distance_at(dst.linear_reference.0)?;
                 let src_distance = segment.get_distance_at(src.linear_reference.0)?;
-                let distance = dst_distance - src_distance;
+                let distance_f32 = dst_distance - src_distance;
+                let distance =
+                    uom::si::f64::Length::new::<uom::si::length::meter>(distance_f32 as f64);
+
                 let edge = Edge {
                     edge_list_id,
                     edge_id,
-                    src_vertex_id: VertexId(*src_id),
-                    dst_vertex_id: VertexId(*dst_id),
-                    distance: uom::si::f64::Length::new::<uom::si::length::meter>(distance as f64),
+                    src_vertex_id,
+                    dst_vertex_id,
+                    distance,
                 };
 
                 Ok(edge)
@@ -118,7 +139,7 @@ impl SegmentSplit {
         use OvertureMapsCollectionError as E;
 
         match self {
-            SegmentSplit::SimpleConnectorSplit { src, dst } => {
+            SegmentSplit::SimpleConnectorSplit { src, dst, heading } => {
                 let segment_id = &src.segment_id;
                 let segment_idx = segment_lookup.get(segment_id).ok_or_else(|| {
                     let msg = format!("missing lookup entry for segment {segment_id}");
@@ -159,6 +180,10 @@ impl SegmentSplit {
                 // Add final point
                 out_coords.push(segment.get_coord_at(dst.linear_reference.0)?);
 
+                // reverse coordinate sequence if heading is backward
+                if *heading == SegmentHeading::Backward {
+                    out_coords.reverse();
+                }
                 Ok(LineString::new(out_coords))
             }
         }

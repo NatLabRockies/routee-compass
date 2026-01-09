@@ -19,6 +19,9 @@ pub fn process_simple_connector_splits(
         .iter()
         .tuple_windows()
         .map(|(src, dst)| {
+            // todo: we are currently incorporating heading. whether we reverse src/dst here for backward headings
+            // or within SegmentSplit (current solution), we still need to figure out what the heading is from the
+            // "destinations" key.
             let src = ConnectorInSegment::new(segment.id.clone(), src.connector_id.clone(), src.at);
             let dst = ConnectorInSegment::new(segment.id.clone(), dst.connector_id.clone(), dst.at);
             SegmentSplit::SimpleConnectorSplit { src, dst }
