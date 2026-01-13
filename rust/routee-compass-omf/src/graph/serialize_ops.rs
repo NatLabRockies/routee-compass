@@ -213,13 +213,13 @@ pub fn create_classes(
         .collect::<Result<Vec<SegmentFullType>, OvertureMapsCollectionError>>()
 }
 
-pub fn create_speed_by_class_lookup(
+pub fn create_speed_by_class_lookup<'a>(
     initial_speeds: &[Option<f64>],
     segments: &[&TransportationSegmentRecord],
     segment_lookup: &HashMap<String, usize>,
     splits: &[SegmentSplit],
-    classes: &[String],
-) -> Result<HashMap<String, f64>, OvertureMapsCollectionError> {
+    classes: &'a [SegmentFullType],
+) -> Result<HashMap<&'a SegmentFullType, f64>, OvertureMapsCollectionError> {
     let split_lenghts = splits
         .iter()
         .map(|split| {
@@ -229,7 +229,7 @@ pub fn create_speed_by_class_lookup(
         })
         .collect::<Result<Vec<f64>, OvertureMapsCollectionError>>()?;
 
-    let mut speed_sum_lookup: HashMap<&String, (f64, f64)> = HashMap::new();
+    let mut speed_sum_lookup: HashMap<&SegmentFullType, (f64, f64)> = HashMap::new();
 
     for ((class, w), speed) in classes.iter().zip(split_lenghts).zip(initial_speeds) {
         let Some(x) = speed else { continue }; // skip missing speeds
@@ -241,16 +241,16 @@ pub fn create_speed_by_class_lookup(
 
     Ok(speed_sum_lookup
         .into_iter()
-        .filter_map(|(k, (wx, w))| (w != 0.0).then(|| (k.clone(), wx / w)))
-        .collect::<HashMap<String, f64>>())
+        .filter_map(|(k, (wx, w))| (w != 0.0).then(|| (k, wx / w)))
+        .collect::<HashMap<&SegmentFullType, f64>>())
 }
 
 pub fn get_global_average_speed(
     initial_speeds: &[Option<f64>],
     segments: &[&TransportationSegmentRecord],
     segment_lookup: &HashMap<String, usize>,
-    splits: &[SegmentSplit],) -> Result<f64, OvertureMapsCollectionError> {
-    
+    splits: &[SegmentSplit],
+) -> Result<f64, OvertureMapsCollectionError> {
     let split_lenghts = splits
         .iter()
         .map(|split| {
@@ -269,10 +269,12 @@ pub fn get_global_average_speed(
         weighted_sum += length * speed;
     }
 
-    if total_length < 1e-6{
-        return Err(OvertureMapsCollectionError::InternalError(format!("internal division by zero when computing average speed: {:?}", initial_speeds)))
+    if total_length < 1e-6 {
+        return Err(OvertureMapsCollectionError::InternalError(format!(
+            "internal division by zero when computing average speed: {:?}",
+            initial_speeds
+        )));
     }
 
     Ok(weighted_sum / total_length)
-
 }

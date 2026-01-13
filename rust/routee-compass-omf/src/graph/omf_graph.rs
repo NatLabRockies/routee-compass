@@ -30,7 +30,7 @@ pub struct OmfEdgeList {
     pub geometries: Vec<LineString<f32>>,
     pub classes: Vec<SegmentFullType>,
     pub speeds: Vec<f64>,
-    pub class_speed_lookup: HashMap<String, f64>,
+    pub speed_lookup: HashMap<String, f64>,
 }
 
 impl OmfGraphVectorized {
@@ -84,28 +84,24 @@ impl OmfGraphVectorized {
             let geometries = ops::create_geometries(&segments, &segment_lookup, &splits)?;
 
             let classes = ops::create_classes(&segments, &segment_lookup, &splits)?;
-            let str_classes = classes
-                .par_iter()
-                .map(|c| c.as_str())
-                .collect::<Vec<String>>();
 
             let speeds = ops::create_speeds(&segments, &segment_lookup, &splits)?;
-            let mut speed_lookup = ops::create_speed_by_class_lookup(
+            let speed_lookup = ops::create_speed_by_class_lookup(
                 &speeds,
                 &segments,
                 &segment_lookup,
                 &splits,
-                &str_classes,
+                &classes,
             )?;
 
             // insert global speed value for reference
-            let global_speed = ops::get_global_average_speed(&speeds, &segments, &segment_lookup, &splits)?;
-            speed_lookup.insert(String::from("_global_"), global_speed);
+            let global_speed =
+                ops::get_global_average_speed(&speeds, &segments, &segment_lookup, &splits)?;
 
             // match speeds according to classes
             let speeds = speeds
                 .into_par_iter()
-                .zip(&str_classes)
+                .zip(&classes)
                 .map(|(opt_speed, class)| match opt_speed {
                     Some(speed) => Some(speed),
                     None => speed_lookup.get(class).copied(),
@@ -117,12 +113,19 @@ impl OmfGraphVectorized {
                 })
                 .collect::<Vec<f64>>();
 
+            // transform speed lookup into owned string
+            let mut speed_lookup = speed_lookup
+                .iter()
+                .map(|(&k, v)| (k.as_str(), *v))
+                .collect::<HashMap<String, f64>>();
+            speed_lookup.insert(String::from("_global_"), global_speed);
+
             let edge_list = OmfEdgeList {
                 edges: EdgeList(edges.into_boxed_slice()),
                 geometries,
                 classes,
                 speeds,
-                class_speed_lookup: speed_lookup,
+                speed_lookup,
             };
             edge_lists.push(edge_list);
         }
@@ -343,8 +346,8 @@ impl OmfGraphVectorized {
 
             // Write classes-speed mapping
             let c_iter = tqdm!(
-                edge_list.class_speed_lookup.iter(),
-                total = edge_list.class_speed_lookup.len(),
+                edge_list.speed_lookup.iter(),
+                total = edge_list.speed_lookup.len(),
                 desc = "classes-speed-mapping",
                 position = 1
             );
