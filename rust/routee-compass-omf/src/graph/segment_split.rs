@@ -191,7 +191,7 @@ impl SegmentSplit {
                         let weight = portion / total_intersecting_length;
 
                         let max_speed = speed_limit.get_max_speed().ok_or(E::InternalError(
-                            format!("Expected a value for `max_speed`: {:?}", speed_limit),
+                            format!("Expected a value for `max_speed`: {speed_limit:?}"),
                         ))?;
 
                         Ok(max_speed

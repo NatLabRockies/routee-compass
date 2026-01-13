@@ -241,7 +241,7 @@ pub fn create_speed_by_class_lookup<'a>(
 
     Ok(speed_sum_lookup
         .into_iter()
-        .filter_map(|(k, (wx, w))| (w != 0.0).then(|| (k, wx / w)))
+        .filter(|&(k, (wx, w))| (w != 0.0)).map(|(k, (wx, w))| (k, wx / w))
         .collect::<HashMap<&SegmentFullType, f64>>())
 }
 
@@ -271,8 +271,7 @@ pub fn get_global_average_speed(
 
     if total_length < 1e-6 {
         return Err(OvertureMapsCollectionError::InternalError(format!(
-            "internal division by zero when computing average speed: {:?}",
-            initial_speeds
+            "internal division by zero when computing average speed: {initial_speeds:?}"
         )));
     }
 

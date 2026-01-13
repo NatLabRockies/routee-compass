@@ -120,12 +120,10 @@ impl TransportationSegmentRecord {
 
         Ok(SegmentFullType(
             self.subtype.clone().ok_or(E::MissingAttribute(format!(
-                "`subtype` not found in segment: {:?}",
-                self
+                "`subtype` not found in segment: {self:?}"
             )))?,
             self.class.clone().ok_or(E::MissingAttribute(format!(
-                "`class` not found in segment: {:?}",
-                self
+                "`class` not found in segment: {self:?}"
             )))?,
             self.subclass.clone(),
         ))
@@ -534,8 +532,7 @@ impl<T: Debug> SegmentValueBetween<T> {
             self.between
                 .as_ref()
                 .ok_or(OvertureMapsCollectionError::InvalidBetweenVector(format!(
-                    "`between` vector is empty: {:?}",
-                    self
+                    "`between` vector is empty: {self:?}"
                 )))?;
         let (low, high) = validate_between_vector(b_vector)?;
 
@@ -756,9 +753,9 @@ impl SpeedLimitWithUnit {
     }
 }
 
-fn validate_between_vector<'a>(
-    b_vector: &'a Vec<f64>,
-) -> Result<(&'a f64, &'a f64), OvertureMapsCollectionError> {
+fn validate_between_vector(
+    b_vector: &Vec<f64>,
+) -> Result<(&f64, &f64), OvertureMapsCollectionError> {
     let [low, high] = b_vector.as_slice() else {
         return Err(OvertureMapsCollectionError::InvalidBetweenVector(
             "Between vector has length != 2".to_string(),
@@ -767,8 +764,7 @@ fn validate_between_vector<'a>(
 
     if high < low {
         return Err(OvertureMapsCollectionError::InvalidBetweenVector(format!(
-            "`high` is lower than `low`: [{}, {}]",
-            low, high
+            "`high` is lower than `low`: [{low}, {high}]"
         )));
     }
 
