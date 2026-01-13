@@ -15,11 +15,6 @@ pub fn process_simple_connector_splits(
     when: Option<&SegmentAccessRestrictionWhen>,
 ) -> Result<Vec<SegmentSplit>, OvertureMapsCollectionError> {
     let headings = get_headings(segment, when)?;
-    if headings.len() == 1 {
-        let seg_json = serde_json::to_string_pretty(segment).unwrap_or_default();
-        let when_json = serde_json::to_string_pretty(&when.as_ref()).unwrap_or_default();
-        log::debug!("segment + 'when' argument produced one-way:\n {seg_json}\n {when_json}");
-    }
     let result = segment
         .connectors
         .as_ref()
