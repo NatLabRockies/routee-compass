@@ -7,9 +7,9 @@ use serde_bytes;
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum BytesOrString {
+    String(String),
     #[serde(with = "serde_bytes")]
     Bytes(Vec<u8>),
-    String(String),
 }
 
 impl std::fmt::Display for BytesOrString {
