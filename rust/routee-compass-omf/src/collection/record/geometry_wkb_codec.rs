@@ -1,11 +1,13 @@
 use geo::{Geometry, MapCoords, TryConvert};
 use geozero::{error::GeozeroError, wkb::Wkb, ToGeo};
 use serde::{Deserialize, Deserializer};
+use serde_bytes;
 
 // Deserialize into an enum that can handle both Vec<u8> and String
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum BytesOrString {
+    #[serde(with = "serde_bytes")]
     Bytes(Vec<u8>),
     String(String),
 }
