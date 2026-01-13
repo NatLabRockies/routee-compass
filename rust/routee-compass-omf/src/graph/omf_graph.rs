@@ -4,7 +4,8 @@ use super::serialize_ops as ops;
 use crate::{
     app::network::NetworkEdgeListConfiguration,
     collection::{
-        OvertureMapsCollectionError, TransportationCollection, TransportationSegmentRecord,
+        OvertureMapsCollectionError, SegmentFullType, TransportationCollection,
+        TransportationSegmentRecord,
     },
     graph::{segment_ops, vertex_serializable::VertexSerializable},
 };
@@ -27,7 +28,9 @@ pub struct OmfGraphVectorized {
 pub struct OmfEdgeList {
     pub edges: EdgeList,
     pub geometries: Vec<LineString<f32>>,
+    pub classes: Vec<SegmentFullType>,
     pub speeds: Vec<f64>,
+    pub class_speed_lookup: HashMap<String, f64>,
 }
 
 impl OmfGraphVectorized {
@@ -79,18 +82,47 @@ impl OmfGraphVectorized {
                 edge_list_id,
             )?;
             let geometries = ops::create_geometries(&segments, &segment_lookup, &splits)?;
-            let speeds = ops::create_speeds(&segments, &segment_lookup, &splits)?
-                .into_iter()
+
+            let classes = ops::create_classes(&segments, &segment_lookup, &splits)?;
+            let str_classes = classes
+                .par_iter()
+                .map(|c| c.as_str())
+                .collect::<Vec<String>>();
+
+            let speeds = ops::create_speeds(&segments, &segment_lookup, &splits)?;
+            let mut speed_lookup = ops::create_speed_by_class_lookup(
+                &speeds,
+                &segments,
+                &segment_lookup,
+                &splits,
+                &str_classes,
+            )?;
+
+            // insert global speed value for reference
+            let global_speed = ops::get_global_average_speed(&speeds, &segments, &segment_lookup, &splits)?;
+            speed_lookup.insert(String::from("_global_"), global_speed);
+
+            // match speeds according to classes
+            let speeds = speeds
+                .into_par_iter()
+                .zip(&str_classes)
+                .map(|(opt_speed, class)| match opt_speed {
+                    Some(speed) => Some(speed),
+                    None => speed_lookup.get(class).copied(),
+                })
+                // Fix the None with -1 for now
                 .map(|opt| match opt {
                     Some(v) => v,
-                    None => -1.,
+                    None => global_speed,
                 })
                 .collect::<Vec<f64>>();
 
             let edge_list = OmfEdgeList {
                 edges: EdgeList(edges.into_boxed_slice()),
                 geometries,
+                classes,
                 speeds,
+                class_speed_lookup: speed_lookup,
             };
             edge_lists.push(edge_list);
         }
@@ -175,11 +207,25 @@ impl OmfGraphVectorized {
                 QuoteStyle::Never,
                 overwrite,
             );
-            let mut speeds_writer = create_writer(
+            let mut classes_writer = create_writer(
                 &mode_dir,
-                "edges-speeds-enumerated.txt.gz",
+                "edges-classes-enumerated.txt.gz",
                 false,
                 QuoteStyle::Never,
+                overwrite,
+            );
+            let mut speeds_writer = create_writer(
+                &mode_dir,
+                "edges-speeds-mph-enumerated.txt.gz",
+                false,
+                QuoteStyle::Never,
+                overwrite,
+            );
+            let mut speeds_mapping_writer = create_writer(
+                &mode_dir,
+                "edges-classes-speed-mapping.csv.gz",
+                true,
+                QuoteStyle::Necessary,
                 overwrite,
             );
 
@@ -242,6 +288,7 @@ impl OmfGraphVectorized {
                     ))
                 })?;
             }
+
             // Write speeds
             let s_iter = tqdm!(
                 edge_list.speeds.iter(),
@@ -253,7 +300,7 @@ impl OmfGraphVectorized {
                 if let Some(ref mut writer) = speeds_writer {
                     writer.serialize(row).map_err(|e| {
                         OvertureMapsCollectionError::CsvWriteError(format!(
-                            "Failed to write to edges-speeds-enumerated.txt.gz: {e}"
+                            "Failed to write to edges-speeds-mph-enumerated.txt.gz: {e}"
                         ))
                     })?;
                 }
@@ -263,7 +310,59 @@ impl OmfGraphVectorized {
             if let Some(ref mut writer) = speeds_writer {
                 writer.flush().map_err(|e| {
                     OvertureMapsCollectionError::CsvWriteError(format!(
-                        "Failed to flush edges-speeds-enumerated.txt.gz: {e}"
+                        "Failed to flush edges-speeds-mph-enumerated.txt.gz: {e}"
+                    ))
+                })?;
+            }
+
+            // Write classes
+            let c_iter = tqdm!(
+                edge_list.classes.iter(),
+                total = edge_list.classes.len(),
+                desc = "classes",
+                position = 1
+            );
+            for row in c_iter {
+                if let Some(ref mut writer) = classes_writer {
+                    writer.serialize(row.as_str()).map_err(|e| {
+                        OvertureMapsCollectionError::CsvWriteError(format!(
+                            "Failed to write to geometry file edges-classes-enumerated.txt.gz: {e}"
+                        ))
+                    })?;
+                }
+            }
+            eprintln!();
+
+            if let Some(ref mut writer) = classes_writer {
+                writer.flush().map_err(|e| {
+                    OvertureMapsCollectionError::CsvWriteError(format!(
+                        "Failed to flush edges-classes-enumerated.txt.gz: {e}"
+                    ))
+                })?;
+            }
+
+            // Write classes-speed mapping
+            let c_iter = tqdm!(
+                edge_list.class_speed_lookup.iter(),
+                total = edge_list.class_speed_lookup.len(),
+                desc = "classes-speed-mapping",
+                position = 1
+            );
+            for row in c_iter {
+                if let Some(ref mut writer) = speeds_mapping_writer {
+                    writer.serialize(row).map_err(|e| {
+                        OvertureMapsCollectionError::CsvWriteError(format!(
+                            "Failed to write to geometry file edges-classes-speed-mapping.csv.gz: {e}"
+                        ))
+                    })?;
+                }
+            }
+            eprintln!();
+
+            if let Some(ref mut writer) = speeds_mapping_writer {
+                writer.flush().map_err(|e| {
+                    OvertureMapsCollectionError::CsvWriteError(format!(
+                        "Failed to flush edges-classes-speed-mapping.csv.gz: {e}"
                     ))
                 })?;
             }

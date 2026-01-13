@@ -4,7 +4,7 @@ use geo::{Haversine, Length, LineString};
 use routee_compass_core::model::network::{Edge, EdgeId, EdgeListId, Vertex, VertexId};
 
 use crate::{
-    collection::{OvertureMapsCollectionError, TransportationSegmentRecord},
+    collection::{OvertureMapsCollectionError, SegmentFullType, TransportationSegmentRecord},
     graph::connector_in_segment::ConnectorInSegment,
 };
 
@@ -115,22 +115,10 @@ impl SegmentSplit {
         segments: &[&TransportationSegmentRecord],
         segment_lookup: &HashMap<String, usize>,
     ) -> Result<LineString<f32>, OvertureMapsCollectionError> {
-        use OvertureMapsCollectionError as E;
+        let segment = self.get_segment(segments, segment_lookup)?;
 
         match self {
             SegmentSplit::SimpleConnectorSplit { src, dst } => {
-                let segment_id = &src.segment_id;
-                let segment_idx = segment_lookup.get(segment_id).ok_or_else(|| {
-                    let msg = format!("missing lookup entry for segment {segment_id}");
-                    E::InvalidSegmentConnectors(msg)
-                })?;
-                let segment = segments.get(*segment_idx).ok_or_else(|| {
-                    let msg = format!(
-                        "missing lookup entry for segment {segment_id} with index {segment_idx}"
-                    );
-                    E::InvalidSegmentConnectors(msg)
-                })?;
-
                 let distance_to_src = segment.get_distance_at(src.linear_reference.0)?;
                 let distance_to_dst = segment.get_distance_at(dst.linear_reference.0)?;
                 let segment_geometry = segment.get_linestring()?;
@@ -171,20 +159,10 @@ impl SegmentSplit {
     ) -> Result<Option<f64>, OvertureMapsCollectionError> {
         use OvertureMapsCollectionError as E;
 
+        let segment = self.get_segment(segments, segment_lookup)?;
+
         match self {
             SegmentSplit::SimpleConnectorSplit { src, dst } => {
-                let segment_id = &src.segment_id;
-                let segment_idx = segment_lookup.get(segment_id).ok_or_else(|| {
-                    let msg = format!("missing lookup entry for segment {segment_id}");
-                    E::InvalidSegmentConnectors(msg)
-                })?;
-                let segment = segments.get(*segment_idx).ok_or_else(|| {
-                    let msg = format!(
-                        "missing lookup entry for segment {segment_id} with index {segment_idx}"
-                    );
-                    E::InvalidSegmentConnectors(msg)
-                })?;
-
                 let speed_limits = match segment.speed_limits.as_ref() {
                     Some(limits) => limits,
                     None => return Ok(None),
@@ -202,7 +180,7 @@ impl SegmentSplit {
                 // Compute mph max speeds weighted by intersecting_length / total_intersecting_length
                 let total_intersecting_length: f64 = intersecting_portions.iter().sum();
 
-                if total_intersecting_length < 1e-6{
+                if total_intersecting_length < 1e-6 {
                     return Ok(None);
                 }
 
@@ -212,12 +190,9 @@ impl SegmentSplit {
                     .map(|(speed_limit, portion)| {
                         let weight = portion / total_intersecting_length;
 
-                        let max_speed = speed_limit.get_max_speed().ok_or(
-                            OvertureMapsCollectionError::InternalError(format!(
-                                "Expected a value for `max_speed`: {:?}",
-                                speed_limit
-                            )),
-                        )?;
+                        let max_speed = speed_limit.get_max_speed().ok_or(E::InternalError(
+                            format!("Expected a value for `max_speed`: {:?}", speed_limit),
+                        ))?;
 
                         Ok(max_speed
                             .to_uom_value()
@@ -227,6 +202,88 @@ impl SegmentSplit {
                     .collect::<Result<Vec<f64>, E>>()?;
 
                 Ok(Some(weighted_mph.iter().sum()))
+            }
+        }
+    }
+
+    pub fn get_split_class(
+        &self,
+        segments: &[&TransportationSegmentRecord],
+        segment_lookup: &HashMap<String, usize>,
+    ) -> Result<SegmentFullType, OvertureMapsCollectionError> {
+        // Initial testing suggests that either subclass is not null OR there are rules
+        // specific for linear references
+
+        let segment = self.get_segment(segments, segment_lookup)?;
+        match self {
+            SegmentSplit::SimpleConnectorSplit { src, dst } => {
+                let start = src.linear_reference.0;
+                let end = dst.linear_reference.0;
+
+                let segment_class = segment.get_routing_class()?;
+
+                if segment_class.has_subclass() {
+                    return Ok(segment_class);
+                };
+
+                // This ignores errors in `between_intersects` coming from invalid between values
+                let opt_first_matching_sublcass =
+                    segment.subclass_rules.as_ref().and_then(|rules| {
+                        rules
+                            .iter()
+                            .find_map(|rule| match rule.between_intersects(start, end) {
+                                Ok(true) => Some(rule),
+                                _ => None,
+                            })
+                    });
+
+                // Get value from inside
+                let subclass = opt_first_matching_sublcass
+                    .and_then(|value_between| value_between.value.clone());
+
+                // If found, return
+                match subclass {
+                    Some(value) => Ok(segment_class.with_subclass(value)),
+                    None => Ok(segment_class),
+                }
+            }
+        }
+    }
+
+    pub fn get_split_length(
+        &self,
+        segments: &[&TransportationSegmentRecord],
+        segment_lookup: &HashMap<String, usize>,
+    ) -> Result<f32, OvertureMapsCollectionError> {
+        let segment = self.get_segment(segments, segment_lookup)?;
+        match self {
+            SegmentSplit::SimpleConnectorSplit { src, dst } => {
+                let start = src.linear_reference.0;
+                let end = dst.linear_reference.0;
+                Ok(segment.get_distance_at(end)? - segment.get_distance_at(start)?)
+            }
+        }
+    }
+
+    fn get_segment<'a>(
+        &self,
+        segments: &'a [&TransportationSegmentRecord],
+        segment_lookup: &HashMap<String, usize>,
+    ) -> Result<&'a TransportationSegmentRecord, OvertureMapsCollectionError> {
+        use OvertureMapsCollectionError as E;
+        match self {
+            SegmentSplit::SimpleConnectorSplit { src, .. } => {
+                let segment_id = &src.segment_id;
+                let segment_idx = segment_lookup.get(segment_id).ok_or_else(|| {
+                    let msg = format!("missing lookup entry for segment {segment_id}");
+                    E::InvalidSegmentConnectors(msg)
+                })?;
+                Ok(*segments.get(*segment_idx).ok_or_else(|| {
+                    let msg = format!(
+                        "missing lookup entry for segment {segment_id} with index {segment_idx}"
+                    );
+                    E::InvalidSegmentConnectors(msg)
+                })?)
             }
         }
     }

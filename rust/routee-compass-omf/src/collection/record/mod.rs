@@ -14,8 +14,8 @@ pub use record_type::OvertureRecordType;
 pub use transportation_collection::TransportationCollection;
 pub use transportation_connector::TransportationConnectorRecord;
 pub use transportation_segment::{
-    SegmentAccessRestriction, SegmentAccessType, SegmentClass, SegmentHeading, SegmentMode,
-    SegmentSpeedLimit, SegmentSpeedUnit, SegmentSubclass, SegmentSubtype,
+    SegmentAccessRestriction, SegmentAccessType, SegmentClass, SegmentFullType, SegmentHeading,
+    SegmentMode, SegmentSpeedLimit, SegmentSpeedUnit, SegmentSubclass, SegmentSubtype,
     TransportationSegmentRecord,
 };
 
