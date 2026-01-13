@@ -52,7 +52,7 @@ pub fn get_headings(
 
     // Collect valid headings based on access restrictions
     let mut valid_headings = Vec::new();
-    let when_heading = when.map(|w| w.heading.clone()).flatten();
+    let when_heading = when.and_then(|w| w.heading.clone());
     let (test_fwd, test_bwd) = match when_heading {
         None => (true, true),
         Some(SegmentHeading::Forward) => (true, false),
