@@ -152,7 +152,7 @@ fn restriction_applies_to(
         // broadly (without mode/using/recognized constraints), or have no when clause at all.
         // This represents "what's allowed by default without specific conditions"
         restriction_when.is_none()
-            || restriction_when.map_or(false, |rw| {
+            || restriction_when.is_some_and(|rw| {
                 // A restriction with specific conditions (mode, using, recognized) doesn't
                 // apply to the "default" case
                 rw.mode.is_none() && rw.using.is_none() && rw.recognized.is_none()
