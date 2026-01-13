@@ -710,4 +710,257 @@ mod tests {
             vehicle: None,
         }
     }
+
+    #[test]
+    fn test_general_denial_blocks_both_directions() {
+        // Test: A denial with no heading specified should block both directions
+        let segment = create_test_segment(Some(vec![SegmentAccessRestriction {
+            access_type: SegmentAccessType::Denied,
+            when: Some(SegmentAccessRestrictionWhen {
+                during: None,
+                heading: None, // No heading = applies to all
+                using: None,
+                recognized: None,
+                mode: None,
+                vehicle: None,
+            }),
+            vehicle: None,
+        }]));
+
+        let result = get_headings(&segment, None).unwrap();
+        assert_eq!(
+            result.len(),
+            0,
+            "General denial should block both directions"
+        );
+    }
+
+    #[test]
+    fn test_general_allowance_overrides_general_denial() {
+        // Test: A general allowance (no heading) should override a general denial (no heading)
+        // for a specific mode
+        let segment = create_test_segment(Some(vec![
+            // General denial for all
+            SegmentAccessRestriction {
+                access_type: SegmentAccessType::Denied,
+                when: Some(SegmentAccessRestrictionWhen {
+                    during: None,
+                    heading: None,
+                    using: None,
+                    recognized: None,
+                    mode: None,
+                    vehicle: None,
+                }),
+                vehicle: None,
+            },
+            // General allowance for bicycles (no heading specified)
+            SegmentAccessRestriction {
+                access_type: SegmentAccessType::Allowed,
+                when: Some(SegmentAccessRestrictionWhen {
+                    during: None,
+                    heading: None,
+                    using: None,
+                    recognized: None,
+                    mode: Some(vec![SegmentMode::Bicycle]),
+                    vehicle: None,
+                }),
+                vehicle: None,
+            },
+        ]));
+
+        // Query with bicycle mode - should be allowed in both directions
+        let when_fwd = create_when(
+            SegmentHeading::Forward,
+            Some(vec![SegmentMode::Bicycle]),
+            None,
+            None,
+        );
+        let result_fwd = get_headings(&segment, Some(&when_fwd)).unwrap();
+        assert_eq!(result_fwd, vec![SegmentHeading::Forward]);
+
+        let when_bwd = create_when(
+            SegmentHeading::Backward,
+            Some(vec![SegmentMode::Bicycle]),
+            None,
+            None,
+        );
+        let result_bwd = get_headings(&segment, Some(&when_bwd)).unwrap();
+        assert_eq!(result_bwd, vec![SegmentHeading::Backward]);
+    }
+
+    #[test]
+    fn test_heading_specific_allowance_without_denial() {
+        // Test: A heading-specific allowance without any denial should allow that heading
+        // (and the other heading should default to allowed since no denial)
+        let segment = create_test_segment(Some(vec![SegmentAccessRestriction {
+            access_type: SegmentAccessType::Allowed,
+            when: Some(SegmentAccessRestrictionWhen {
+                during: None,
+                heading: Some(SegmentHeading::Forward),
+                using: None,
+                recognized: None,
+                mode: Some(vec![SegmentMode::Bicycle]),
+                vehicle: None,
+            }),
+            vehicle: None,
+        }]));
+
+        // Query with bicycle forward - should be allowed (explicit allowance)
+        let when_fwd = create_when(
+            SegmentHeading::Forward,
+            Some(vec![SegmentMode::Bicycle]),
+            None,
+            None,
+        );
+        let result_fwd = get_headings(&segment, Some(&when_fwd)).unwrap();
+        assert_eq!(result_fwd, vec![SegmentHeading::Forward]);
+
+        // Query with bicycle backward - should also be allowed (no denial, defaults to allowed)
+        let when_bwd = create_when(
+            SegmentHeading::Backward,
+            Some(vec![SegmentMode::Bicycle]),
+            None,
+            None,
+        );
+        let result_bwd = get_headings(&segment, Some(&when_bwd)).unwrap();
+        assert_eq!(result_bwd, vec![SegmentHeading::Backward]);
+    }
+
+    #[test]
+    fn test_restrictions_exist_but_none_apply() {
+        // Test: Restrictions exist but none apply to the query (different mode)
+        // Should default to allowed
+        let segment = create_test_segment(Some(vec![create_restriction_heading_mode(
+            SegmentAccessType::Denied,
+            SegmentHeading::Forward,
+            vec![SegmentMode::Car],
+        )]));
+
+        // Query with Bicycle - the Car denial shouldn't apply
+        let when_bicycle = create_when(
+            SegmentHeading::Forward,
+            Some(vec![SegmentMode::Bicycle]),
+            None,
+            None,
+        );
+        let result = get_headings(&segment, Some(&when_bicycle)).unwrap();
+        assert_eq!(
+            result,
+            vec![SegmentHeading::Forward],
+            "Denial for Car shouldn't affect Bicycle"
+        );
+    }
+
+    #[test]
+    fn test_heading_specific_allowance_overrides_general_denial() {
+        // Test: A heading-specific allowance should override a general (non-heading) denial
+        let segment = create_test_segment(Some(vec![
+            // General denial (no heading)
+            SegmentAccessRestriction {
+                access_type: SegmentAccessType::Denied,
+                when: Some(SegmentAccessRestrictionWhen {
+                    during: None,
+                    heading: None,
+                    using: None,
+                    recognized: None,
+                    mode: None,
+                    vehicle: None,
+                }),
+                vehicle: None,
+            },
+            // Heading-specific allowance for forward + bicycle
+            SegmentAccessRestriction {
+                access_type: SegmentAccessType::Allowed,
+                when: Some(SegmentAccessRestrictionWhen {
+                    during: None,
+                    heading: Some(SegmentHeading::Forward),
+                    using: None,
+                    recognized: None,
+                    mode: Some(vec![SegmentMode::Bicycle]),
+                    vehicle: None,
+                }),
+                vehicle: None,
+            },
+        ]));
+
+        // Forward bicycle should be allowed (heading-specific allowance)
+        let when_fwd = create_when(
+            SegmentHeading::Forward,
+            Some(vec![SegmentMode::Bicycle]),
+            None,
+            None,
+        );
+        let result_fwd = get_headings(&segment, Some(&when_fwd)).unwrap();
+        assert_eq!(result_fwd, vec![SegmentHeading::Forward]);
+
+        // Backward bicycle should be denied (general denial, no allowance)
+        let when_bwd = create_when(
+            SegmentHeading::Backward,
+            Some(vec![SegmentMode::Bicycle]),
+            None,
+            None,
+        );
+        let result_bwd = get_headings(&segment, Some(&when_bwd)).unwrap();
+        assert_eq!(result_bwd.len(), 0);
+    }
+
+    #[test]
+    fn test_general_denial_with_heading_specific_denial_same_heading() {
+        // Test: Both general denial and heading-specific denial for same heading
+        // The heading-specific denial takes priority, requires heading-specific allowance
+        let segment = create_test_segment(Some(vec![
+            // General denial
+            SegmentAccessRestriction {
+                access_type: SegmentAccessType::Denied,
+                when: Some(SegmentAccessRestrictionWhen {
+                    during: None,
+                    heading: None,
+                    using: None,
+                    recognized: None,
+                    mode: None,
+                    vehicle: None,
+                }),
+                vehicle: None,
+            },
+            // Heading-specific denial for forward
+            create_restriction_heading_only(SegmentAccessType::Denied, SegmentHeading::Forward),
+            // General allowance for bicycle (should NOT override heading-specific denial)
+            SegmentAccessRestriction {
+                access_type: SegmentAccessType::Allowed,
+                when: Some(SegmentAccessRestrictionWhen {
+                    during: None,
+                    heading: None,
+                    using: None,
+                    recognized: None,
+                    mode: Some(vec![SegmentMode::Bicycle]),
+                    vehicle: None,
+                }),
+                vehicle: None,
+            },
+        ]));
+
+        // Forward bicycle - general allowance should NOT override heading-specific denial
+        let when_fwd = create_when(
+            SegmentHeading::Forward,
+            Some(vec![SegmentMode::Bicycle]),
+            None,
+            None,
+        );
+        let result_fwd = get_headings(&segment, Some(&when_fwd)).unwrap();
+        assert_eq!(
+            result_fwd.len(),
+            0,
+            "General allowance should not override heading-specific denial"
+        );
+
+        // Backward bicycle - only general denial, general allowance should override
+        let when_bwd = create_when(
+            SegmentHeading::Backward,
+            Some(vec![SegmentMode::Bicycle]),
+            None,
+            None,
+        );
+        let result_bwd = get_headings(&segment, Some(&when_bwd)).unwrap();
+        assert_eq!(result_bwd, vec![SegmentHeading::Backward]);
+    }
 }
