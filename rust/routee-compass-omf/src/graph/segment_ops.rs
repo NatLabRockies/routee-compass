@@ -15,6 +15,11 @@ pub fn process_simple_connector_splits(
     when: Option<&SegmentAccessRestrictionWhen>,
 ) -> Result<Vec<SegmentSplit>, OvertureMapsCollectionError> {
     let headings = get_headings(segment, when)?;
+    if headings.len() == 1 {
+        let seg_json = serde_json::to_string_pretty(segment).unwrap_or_default();
+        let when_json = serde_json::to_string_pretty(&when.as_ref()).unwrap_or_default();
+        log::debug!("segment + 'when' argument produced one-way:\n {seg_json}\n {when_json}");
+    }
     let result = segment
         .connectors
         .as_ref()
@@ -36,6 +41,8 @@ pub fn process_simple_connector_splits(
     Ok(result)
 }
 
+/// determines the headings over a segment that are supported. optionally matched to some
+/// set of user-provided restrictions.
 pub fn get_headings(
     segment: &TransportationSegmentRecord,
     when: Option<&SegmentAccessRestrictionWhen>,
@@ -43,21 +50,27 @@ pub fn get_headings(
     // If both when and access_restrictions are None/empty, return both headings
     let access_restrictions = segment.access_restrictions.as_ref();
 
-    if when.is_none() && (access_restrictions.is_none() || access_restrictions.unwrap().is_empty())
-    {
+    let no_restrictions = access_restrictions.map(|r| r.is_empty()).unwrap_or(true);
+    if when.is_none() && (access_restrictions.is_none() || no_restrictions) {
         return Ok(vec![SegmentHeading::Forward, SegmentHeading::Backward]);
     }
 
     // Collect valid headings based on access restrictions
     let mut valid_headings = Vec::new();
+    let when_heading = when.map(|w| w.heading.clone()).flatten();
+    let (test_fwd, test_bwd) = match when_heading {
+        None => (true, true),
+        Some(SegmentHeading::Forward) => (true, false),
+        Some(SegmentHeading::Backward) => (false, true),
+    };
 
     // Check Forward heading
-    if is_heading_valid(SegmentHeading::Forward, when, access_restrictions) {
+    if test_fwd && is_heading_valid(SegmentHeading::Forward, when, access_restrictions) {
         valid_headings.push(SegmentHeading::Forward);
     }
 
     // Check Backward heading
-    if is_heading_valid(SegmentHeading::Backward, when, access_restrictions) {
+    if test_bwd && is_heading_valid(SegmentHeading::Backward, when, access_restrictions) {
         valid_headings.push(SegmentHeading::Backward);
     }
 
@@ -169,6 +182,8 @@ fn restriction_applies_to(
 /// # Arguments
 /// * `when` - Query conditions (e.g., "Car mode")
 /// * `segment_restrictions` - Restriction conditions (e.g., "Car and Bicycle modes" or None for all modes)
+///
+/// Note: Heading compatibility is handled by `restriction_applies_to`, not here.
 fn when_is_compatible(
     when: &SegmentAccessRestrictionWhen,
     segment_restrictions: Option<&SegmentAccessRestrictionWhen>,
@@ -178,20 +193,11 @@ fn when_is_compatible(
         return true;
     };
 
-    // Check heading compatibility
-    if let Some(when_heading) = &when.heading {
-        if let Some(restriction_heading) = &restrictions.heading {
-            if restriction_heading != when_heading {
-                return false;
-            }
-        }
-        // If restriction has no heading, it applies to all headings - compatible
-    }
-
     // compatibility checks
     // in the following blocks, for a given restriction:
     //   - if the restriction is not defined on the segment (None), we continue
     //   - if the restriction IS defined (Some), the "when" query must match it
+    // headings are NOT tested here as they have already been tested in get_headings
 
     // Check mode compatibility
     if let Some(restriction_modes) = &restrictions.mode {
@@ -254,6 +260,7 @@ mod tests {
     #[test]
     fn test_segment_with_empty_access_restrictions_both_headings() {
         // Test: A segment with empty access restrictions should produce both headings
+        // when the user passes no constraints.
         let segment = create_test_segment(Some(vec![]));
         let result = get_headings(&segment, None).unwrap();
 
@@ -265,6 +272,7 @@ mod tests {
     #[test]
     fn test_segment_with_forward_only_restriction() {
         // Test: A segment with backward denied should only produce Forward heading
+        // when the user passes no constraints.
         let segment = create_test_segment(Some(vec![create_restriction_heading_only(
             SegmentAccessType::Denied,
             SegmentHeading::Backward,
@@ -272,13 +280,13 @@ mod tests {
 
         let result = get_headings(&segment, None).unwrap();
 
-        assert_eq!(result.len(), 1);
-        assert_eq!(result[0], SegmentHeading::Forward);
+        assert_eq!(result, vec![SegmentHeading::Forward]);
     }
 
     #[test]
     fn test_segment_with_backward_only_restriction() {
         // Test: A segment with forward denied should only produce Backward heading
+        // when the user passes no constraints.
         let segment = create_test_segment(Some(vec![create_restriction_heading_only(
             SegmentAccessType::Denied,
             SegmentHeading::Forward,
@@ -286,8 +294,7 @@ mod tests {
 
         let result = get_headings(&segment, None).unwrap();
 
-        assert_eq!(result.len(), 1);
-        assert_eq!(result[0], SegmentHeading::Backward);
+        assert_eq!(result, vec![SegmentHeading::Backward]);
     }
 
     #[test]
@@ -309,15 +316,13 @@ mod tests {
         );
         let result = get_headings(&segment, Some(&when)).unwrap();
 
-        assert_eq!(result.len(), 2); // Forward allowed for Car, Backward unrestricted
-        assert!(result.contains(&SegmentHeading::Forward));
-        assert!(result.contains(&SegmentHeading::Backward));
+        assert_eq!(result, vec![SegmentHeading::Forward]);
     }
 
     #[test]
     fn test_segment_with_mode_restriction_not_matching_when() {
         // Test: Denied all for forward + Allowed only Car
-        // Query with Bicycle should deny Forward
+        // Query with Forward, Bicycle should deny both forward and backward
         let segment = create_test_segment(Some(create_denied_all_allowed_specific(
             SegmentHeading::Forward,
             Some(vec![SegmentMode::Car]),
@@ -333,8 +338,7 @@ mod tests {
         );
         let result = get_headings(&segment, Some(&when)).unwrap();
 
-        assert_eq!(result.len(), 1); // Only Backward valid
-        assert!(result.contains(&SegmentHeading::Backward));
+        assert_eq!(result.len(), 0);
     }
 
     #[test]
@@ -355,9 +359,7 @@ mod tests {
         );
         let result = get_headings(&segment, Some(&when)).unwrap();
 
-        assert_eq!(result.len(), 2); // Forward allowed with all conditions met, Backward unrestricted
-        assert!(result.contains(&SegmentHeading::Forward));
-        assert!(result.contains(&SegmentHeading::Backward));
+        assert_eq!(result, vec![SegmentHeading::Forward]); // Forward allowed with all conditions met
     }
 
     #[test]
@@ -371,10 +373,9 @@ mod tests {
             None,
         )));
 
-        // Query without when - should match the Denied restriction
+        // Query without when - should match the Denied restriction, accept any valid heading
         let result_no_when = get_headings(&segment, None).unwrap();
-        assert_eq!(result_no_when.len(), 1); // Only Backward is valid
-        assert!(result_no_when.contains(&SegmentHeading::Backward));
+        assert_eq!(result_no_when, vec![SegmentHeading::Backward]); // Only Backward is valid
 
         // Query with Car mode - should match the Allowed restriction
         let when_car = create_when(
@@ -384,9 +385,7 @@ mod tests {
             None,
         );
         let result_car = get_headings(&segment, Some(&when_car)).unwrap();
-        assert_eq!(result_car.len(), 2); // Forward allowed for cars, Backward has no restrictions
-        assert!(result_car.contains(&SegmentHeading::Forward));
-        assert!(result_car.contains(&SegmentHeading::Backward));
+        assert_eq!(result_car, vec![SegmentHeading::Forward]);
 
         // Query with Bicycle mode - should be denied
         let when_bicycle = create_when(
@@ -396,8 +395,7 @@ mod tests {
             None,
         );
         let result_bicycle = get_headings(&segment, Some(&when_bicycle)).unwrap();
-        assert_eq!(result_bicycle.len(), 1); // Only Backward
-        assert!(result_bicycle.contains(&SegmentHeading::Backward));
+        assert_eq!(result_bicycle.len(), 0);
     }
 
     #[test]
@@ -439,9 +437,7 @@ mod tests {
             None,
         );
         let result = get_headings(&segment, Some(&when_car)).unwrap();
-        assert_eq!(result.len(), 2);
-        assert!(result.contains(&SegmentHeading::Forward));
-        assert!(result.contains(&SegmentHeading::Backward));
+        assert_eq!(result, vec![SegmentHeading::Forward]);
     }
 
     #[test]
@@ -459,20 +455,66 @@ mod tests {
     }
 
     #[test]
+    fn test_blanket_backward_denial_with_designated_mode_access_implied_forward() {
+        // test case from OMF data, a segment with
+        //   - blanket denial for heading backward
+        //   - opts in designated HGV travel, no heading specified
+        // when
+        //   - heading forward with motor_vehicle, car, truck, motorcycle: reject
+        //   - heading backward with "": reject
+        //   - heading forward with HGV: accept
+        let segment = create_test_segment(Some(vec![
+            create_restriction_heading_only(SegmentAccessType::Denied, SegmentHeading::Backward),
+            create_restriction_mode(SegmentAccessType::Designated, vec![SegmentMode::Hgv]),
+        ]));
+
+        let mode = vec![
+            SegmentMode::MotorVehicle,
+            SegmentMode::Car,
+            SegmentMode::Truck,
+            SegmentMode::Motorcycle,
+        ];
+
+        // forward has no blanket denial, only optional designation, so we accept
+        let when1 = create_when(SegmentHeading::Forward, Some(mode.clone()), None, None);
+        let result1 = get_headings(&segment, Some(&when1)).unwrap();
+        assert_eq!(result1.len(), 1);
+
+        // blanket backward denial on a backward-oriented when query -> empty result
+        let when2 = create_when(SegmentHeading::Backward, Some(mode.clone()), None, None);
+        let result2 = get_headings(&segment, Some(&when2)).unwrap();
+        assert_eq!(result2.len(), 0);
+    }
+
+    #[test]
     fn test_designated_treated_as_allowed() {
-        // Test: Designated access type should be treated like Allowed
-        let segment = create_test_segment(Some(vec![SegmentAccessRestriction {
-            access_type: SegmentAccessType::Designated,
-            when: Some(SegmentAccessRestrictionWhen {
-                during: None,
-                heading: Some(SegmentHeading::Forward),
-                using: None,
-                recognized: None,
-                mode: Some(vec![SegmentMode::Bicycle]),
+        // Test: Blanket denial with Designated mode access type: should be treated like Allowed
+        let segment = create_test_segment(Some(vec![
+            SegmentAccessRestriction {
+                access_type: SegmentAccessType::Denied,
+                when: Some(SegmentAccessRestrictionWhen {
+                    during: None,
+                    heading: Some(SegmentHeading::Forward),
+                    using: None,
+                    recognized: None,
+                    mode: None,
+                    vehicle: None,
+                }),
                 vehicle: None,
-            }),
-            vehicle: None,
-        }]));
+            },
+            SegmentAccessRestriction {
+                access_type: SegmentAccessType::Designated,
+                when: Some(SegmentAccessRestrictionWhen {
+                    during: None,
+                    heading: Some(SegmentHeading::Forward),
+                    using: None,
+                    recognized: None,
+                    mode: Some(vec![SegmentMode::Bicycle]),
+                    vehicle: None,
+                }),
+                vehicle: None,
+            },
+        ]));
 
         let when_bicycle = create_when(
             SegmentHeading::Forward,
@@ -481,9 +523,8 @@ mod tests {
             None,
         );
         let result = get_headings(&segment, Some(&when_bicycle)).unwrap();
-        assert_eq!(result.len(), 2);
-        assert!(result.contains(&SegmentHeading::Forward));
-        assert!(result.contains(&SegmentHeading::Backward));
+
+        assert_eq!(result, vec![SegmentHeading::Forward]);
     }
 
     #[test]
@@ -546,6 +587,45 @@ mod tests {
                 using: None,
                 recognized: None,
                 mode: None,
+                vehicle: None,
+            }),
+            vehicle: None,
+        }
+    }
+
+    /// Helper to create a simple access restriction with only mode constraint
+    fn create_restriction_mode(
+        access_type: SegmentAccessType,
+        modes: Vec<SegmentMode>,
+    ) -> SegmentAccessRestriction {
+        SegmentAccessRestriction {
+            access_type,
+            when: Some(SegmentAccessRestrictionWhen {
+                during: None,
+                heading: None,
+                using: None,
+                recognized: None,
+                mode: Some(modes),
+                vehicle: None,
+            }),
+            vehicle: None,
+        }
+    }
+
+    /// Helper to create a simple access restriction with heading + modes constraint
+    fn create_restriction_heading_mode(
+        access_type: SegmentAccessType,
+        heading: SegmentHeading,
+        modes: Vec<SegmentMode>,
+    ) -> SegmentAccessRestriction {
+        SegmentAccessRestriction {
+            access_type,
+            when: Some(SegmentAccessRestrictionWhen {
+                during: None,
+                heading: Some(heading),
+                using: None,
+                recognized: None,
+                mode: Some(modes),
                 vehicle: None,
             }),
             vehicle: None,

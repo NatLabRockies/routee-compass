@@ -4,8 +4,8 @@ use super::serialize_ops as ops;
 use crate::{
     app::network::NetworkEdgeListConfiguration,
     collection::{
-        OvertureMapsCollectionError, SegmentAccessRestrictionWhen, TransportationCollection,
-        TransportationSegmentRecord,
+        record::SegmentHeading, OvertureMapsCollectionError, SegmentAccessRestrictionWhen,
+        TransportationCollection, TransportationSegmentRecord,
     },
     graph::{segment_ops, vertex_serializable::VertexSerializable},
 };
@@ -48,7 +48,6 @@ impl OmfGraphVectorized {
             // create arguments for segment processing into edges
             let mut filter = edge_list_config.filter.clone();
             filter.sort(); // sort for performance
-            let when: SegmentAccessRestrictionWhen = edge_list_config.into();
 
             // filter to the segments that match our travel mode filter(s)
             let segments: Vec<&TransportationSegmentRecord> = collection
@@ -59,12 +58,20 @@ impl OmfGraphVectorized {
             let segment_lookup = ops::create_segment_lookup(&segments);
 
             // the splits are locations in each segment record where we want to define a vertex
-            // which may not yet exist on the graph
-            let splits = ops::find_splits(
-                &segments,
-                Some(&when),
-                segment_ops::process_simple_connector_splits,
-            )?;
+            // which may not yet exist on the graph. this is where we begin to impose directivity
+            // in our records.
+            let mut splits = vec![];
+            for heading in [SegmentHeading::Forward, SegmentHeading::Backward] {
+                let mut when: SegmentAccessRestrictionWhen = edge_list_config.into();
+                when.heading = Some(heading);
+
+                let directed_splits = ops::find_splits(
+                    &segments,
+                    Some(&when),
+                    segment_ops::process_simple_connector_splits,
+                )?;
+                splits.extend(directed_splits);
+            }
 
             // depending on the split method, we may need to create additional vertices at locations
             // which are not OvertureMaps-defined connector types.

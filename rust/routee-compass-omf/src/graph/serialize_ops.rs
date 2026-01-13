@@ -55,7 +55,8 @@ pub fn create_segment_lookup(segments: &[&TransportationSegmentRecord]) -> HashM
 }
 
 /// collects all splits from all segment records, used to create edges.
-/// the application of split ops is parallelized over the segment records.
+/// the application of split ops is parallelized over the segment records, as splits are
+/// not ordered.
 pub fn find_splits(
     segments: &[&TransportationSegmentRecord],
     when: Option<&SegmentAccessRestrictionWhen>,
