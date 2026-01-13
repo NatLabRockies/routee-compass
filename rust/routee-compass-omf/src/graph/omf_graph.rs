@@ -4,7 +4,8 @@ use super::serialize_ops as ops;
 use crate::{
     app::network::NetworkEdgeListConfiguration,
     collection::{
-        OvertureMapsCollectionError, TransportationCollection, TransportationSegmentRecord,
+        OvertureMapsCollectionError, SegmentAccessRestrictionWhen, TransportationCollection,
+        TransportationSegmentRecord,
     },
     graph::{segment_ops, vertex_serializable::VertexSerializable},
 };
@@ -43,8 +44,11 @@ impl OmfGraphVectorized {
         let mut edge_lists: Vec<OmfEdgeList> = vec![];
         for (index, edge_list_config) in configuration.iter().enumerate() {
             let edge_list_id = EdgeListId(index);
+
+            // create arguments for segment processing into edges
             let mut filter = edge_list_config.filter.clone();
             filter.sort(); // sort for performance
+            let when: SegmentAccessRestrictionWhen = edge_list_config.into();
 
             // filter to the segments that match our travel mode filter(s)
             let segments: Vec<&TransportationSegmentRecord> = collection
@@ -56,7 +60,11 @@ impl OmfGraphVectorized {
 
             // the splits are locations in each segment record where we want to define a vertex
             // which may not yet exist on the graph
-            let splits = ops::find_splits(&segments, segment_ops::process_simple_connector_splits)?;
+            let splits = ops::find_splits(
+                &segments,
+                Some(&when),
+                segment_ops::process_simple_connector_splits,
+            )?;
 
             // depending on the split method, we may need to create additional vertices at locations
             // which are not OvertureMaps-defined connector types.

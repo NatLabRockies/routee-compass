@@ -14,12 +14,13 @@ pub use record_type::OvertureRecordType;
 pub use transportation_collection::TransportationCollection;
 pub use transportation_connector::TransportationConnectorRecord;
 pub use transportation_segment::{
-    SegmentAccessRestriction, SegmentAccessType, SegmentClass, SegmentHeading, SegmentMode,
-    SegmentSubclass, SegmentSubtype, TransportationSegmentRecord,
+    SegmentAccessRestriction, SegmentAccessRestrictionWhen, SegmentAccessType, SegmentClass,
+    SegmentDestination, SegmentHeading, SegmentMode, SegmentRecognized, SegmentSubclass,
+    SegmentSubtype, SegmentUsing, TransportationSegmentRecord,
 };
 
 // Common structs and functions for many record types
-use common::OvertureMapsBbox;
-use common::OvertureMapsNames;
-use common::OvertureMapsSource;
+pub use common::OvertureMapsBbox;
+pub use common::OvertureMapsNames;
+pub use common::OvertureMapsSource;
 pub mod geometry_wkb_codec;
