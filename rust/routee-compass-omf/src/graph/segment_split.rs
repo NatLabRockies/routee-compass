@@ -111,7 +111,7 @@ impl SegmentSplit {
     }
 
     /// extracts the LineString geometry corresponding to this split based on linear reference.
-    /// All of the points of the original LineString that line strictly inside the `src` and `dst` 
+    /// All of the points of the original LineString that line strictly inside the `src` and `dst`
     /// are considered, and new ones are created at the beginning and end if necessary.
     pub fn create_geometry_from_split(
         &self,
@@ -154,7 +154,6 @@ impl SegmentSplit {
             }
         }
     }
-
 
     /// returns the average `max_speed` of this split according to the speed limits
     /// that match linear reference. Each element in the matching set is averaged
@@ -213,7 +212,6 @@ impl SegmentSplit {
         }
     }
 
-
     /// return a fully-qualified segment type for this split based on the segment type-class pair
     /// and the `subclass_rules` attached to it
     pub fn get_split_segment_full_type(
@@ -239,12 +237,12 @@ impl SegmentSplit {
                 // This ignores errors in `check_open_intersection` coming from invalid between values
                 let opt_first_matching_sublcass =
                     segment.subclass_rules.as_ref().and_then(|rules| {
-                        rules
-                            .iter()
-                            .find_map(|rule| match rule.check_open_intersection(start, end) {
+                        rules.iter().find_map(|rule| {
+                            match rule.check_open_intersection(start, end) {
                                 Ok(true) => Some(rule),
                                 _ => None,
-                            })
+                            }
+                        })
                     });
 
                 // Get value from inside
@@ -275,7 +273,6 @@ impl SegmentSplit {
             }
         }
     }
-
 
     /// get a reference to the segment that contains this split
     fn get_segment<'a>(
