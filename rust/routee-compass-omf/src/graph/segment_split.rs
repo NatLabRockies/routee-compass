@@ -231,7 +231,7 @@ impl SegmentSplit {
                     segment.subclass_rules.as_ref().and_then(|rules| {
                         rules
                             .iter()
-                            .find_map(|rule| match rule.between_intersects(start, end) {
+                            .find_map(|rule| match rule.check_open_intersection(start, end) {
                                 Ok(true) => Some(rule),
                                 _ => None,
                             })

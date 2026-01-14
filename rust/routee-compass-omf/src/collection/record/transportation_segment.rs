@@ -524,7 +524,7 @@ pub struct SegmentValueBetween<T> {
 }
 
 impl<T: Debug> SegmentValueBetween<T> {
-    pub fn between_intersects(
+    pub fn check_open_intersection(
         &self,
         start: f64,
         end: f64,
