@@ -694,20 +694,69 @@ pub struct SegmentProhibitedTransitionsSequence {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SegmentSpeedLimit {
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    min_speed: Option<SpeedLimitWithUnit>,
+    pub min_speed: Option<SpeedLimitWithUnit>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    max_speed: Option<SpeedLimitWithUnit>,
+    pub max_speed: Option<SpeedLimitWithUnit>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    is_max_speed_variable: Option<bool>,
+    pub is_max_speed_variable: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    when: Option<SegmentAccessRestrictionWhen>,
+    pub when: Option<SegmentAccessRestrictionWhen>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    between: Option<Vec<f64>>,
+    pub between: Option<Vec<f64>>,
 }
 
 impl SegmentSpeedLimit {
-    /// used to filter limits based on linear reference segment
-    pub fn check_between_intersection(
+    /// Used to filter limits based on a linear reference segment.
+    /// Returns `true` if the open interval `(between[0], between[1])`
+    /// overlaps with the open interval `(start, end)`.
+    ///
+    /// # Examples
+    ///
+    /// Basic overlap:
+    /// ```
+    /// # use bambam_omf::collection::SegmentSpeedLimit;
+    ///
+    /// let limit = SegmentSpeedLimit {
+    ///     min_speed: None,
+    ///     max_speed: None,
+    ///     is_max_speed_variable: None,
+    ///     when: None,
+    ///     between: Some(vec![10.0, 20.0]),
+    /// };
+    ///
+    /// // (15, 25) overlaps with (10, 20)
+    /// assert!(limit.check_open_intersection(15.0, 25.0).unwrap());
+    /// ```
+    ///
+    /// No overlap:
+    /// ```
+    /// # use bambam_omf::collection::SegmentSpeedLimit;
+    /// # let limit = SegmentSpeedLimit {
+    /// #    min_speed: None,
+    /// #    max_speed: None,
+    /// #    is_max_speed_variable: None,
+    /// #    when: None,
+    /// #    between: Some(vec![10.0, 20.0]),
+    /// # };
+    /// 
+    /// // (20, 30) does not overlap with open interval (10, 20)
+    /// assert!(!limit.check_open_intersection(20.0, 30.0).unwrap());
+    /// ```
+    ///
+    /// No `between` restriction means always applicable:
+    /// ```
+    /// # use bambam_omf::collection::SegmentSpeedLimit;
+    /// let limit = SegmentSpeedLimit {
+    ///     min_speed: None,
+    ///     max_speed: None,
+    ///     is_max_speed_variable: None,
+    ///     when: None,
+    ///     between: None,
+    /// };
+    ///
+    /// assert!(limit.check_open_intersection(100.0, 200.0).unwrap());
+    /// ```
+    pub fn check_open_intersection(
         &self,
         start: f64,
         end: f64,
