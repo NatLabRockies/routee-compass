@@ -19,6 +19,14 @@ pub struct CliArgs {
     /// Format of JSON queries file, if regular JSON or newline-delimited JSON
     #[arg(short, long)]
     pub newline_delimited: bool,
+
+    /// Override parallelism setting from config file
+    #[arg(short, long)]
+    pub parallelism: Option<usize>,
+
+    /// Override output filename from config file
+    #[arg(short, long, value_name = "FILE")]
+    pub output_file: Option<String>,
 }
 
 impl CliArgs {
