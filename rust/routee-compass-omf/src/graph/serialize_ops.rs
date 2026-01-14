@@ -202,18 +202,18 @@ pub fn create_speeds(
         .collect::<Result<Vec<Option<f64>>, OvertureMapsCollectionError>>()
 }
 
-pub fn create_classes(
+pub fn create_segment_full_types(
     segments: &[&TransportationSegmentRecord],
     segment_lookup: &HashMap<String, usize>,
     splits: &[SegmentSplit],
 ) -> Result<Vec<SegmentFullType>, OvertureMapsCollectionError> {
     splits
         .par_iter()
-        .map(|split| split.get_split_class(segments, segment_lookup))
+        .map(|split| split.get_split_segment_full_type(segments, segment_lookup))
         .collect::<Result<Vec<SegmentFullType>, OvertureMapsCollectionError>>()
 }
 
-pub fn create_speed_by_class_lookup<'a>(
+pub fn create_speed_by_segment_type_lookup<'a>(
     initial_speeds: &[Option<f64>],
     segments: &[&TransportationSegmentRecord],
     segment_lookup: &HashMap<String, usize>,
@@ -241,7 +241,7 @@ pub fn create_speed_by_class_lookup<'a>(
 
     Ok(speed_sum_lookup
         .into_iter()
-        .filter(|&(k, (wx, w))| (w != 0.0)).map(|(k, (wx, w))| (k, wx / w))
+        .filter(|&(_k, (_wx, w))| (w != 0.0)).map(|(k, (wx, w))| (k, wx / w))
         .collect::<HashMap<&SegmentFullType, f64>>())
 }
 

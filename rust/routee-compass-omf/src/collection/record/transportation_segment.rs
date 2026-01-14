@@ -115,7 +115,7 @@ impl TransportationSegmentRecord {
         }
     }
 
-    pub fn get_routing_class(&self) -> Result<SegmentFullType, OvertureMapsCollectionError> {
+    pub fn get_segment_full_type(&self) -> Result<SegmentFullType, OvertureMapsCollectionError> {
         use OvertureMapsCollectionError as E;
 
         Ok(SegmentFullType(
@@ -257,6 +257,7 @@ impl fmt::Display for SegmentSubclass {
     }
 }
 
+/// Fully qualified segment type including type, class and subclass. E.g. road-service-driveway
 #[derive(Eq, PartialEq, Hash)]
 pub struct SegmentFullType(SegmentSubtype, SegmentClass, Option<SegmentSubclass>);
 

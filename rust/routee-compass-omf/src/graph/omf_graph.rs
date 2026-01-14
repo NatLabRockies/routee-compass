@@ -83,10 +83,10 @@ impl OmfGraphVectorized {
             )?;
             let geometries = ops::create_geometries(&segments, &segment_lookup, &splits)?;
 
-            let classes = ops::create_classes(&segments, &segment_lookup, &splits)?;
+            let classes = ops::create_segment_full_types(&segments, &segment_lookup, &splits)?;
 
             let speeds = ops::create_speeds(&segments, &segment_lookup, &splits)?;
-            let speed_lookup = ops::create_speed_by_class_lookup(
+            let speed_lookup = ops::create_speed_by_segment_type_lookup(
                 &speeds,
                 &segments,
                 &segment_lookup,

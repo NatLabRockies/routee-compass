@@ -206,7 +206,7 @@ impl SegmentSplit {
         }
     }
 
-    pub fn get_split_class(
+    pub fn get_split_segment_full_type(
         &self,
         segments: &[&TransportationSegmentRecord],
         segment_lookup: &HashMap<String, usize>,
@@ -220,7 +220,7 @@ impl SegmentSplit {
                 let start = src.linear_reference.0;
                 let end = dst.linear_reference.0;
 
-                let segment_class = segment.get_routing_class()?;
+                let segment_class = segment.get_segment_full_type()?;
 
                 if segment_class.has_subclass() {
                     return Ok(segment_class);
