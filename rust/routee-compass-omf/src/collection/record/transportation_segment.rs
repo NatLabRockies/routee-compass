@@ -524,6 +524,29 @@ pub struct SegmentValueBetween<T> {
 }
 
 impl<T: Debug> SegmentValueBetween<T> {
+
+    /// Used to filter limits based on a linear reference segment.
+    /// Returns `true` if the open interval `(between[0], between[1])`
+    /// overlaps with the open interval `(start, end)`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use bambam_omf::collection::SegmentSpeedLimit;
+    ///
+    /// let limit = SegmentSpeedLimit {
+    ///     min_speed: None,
+    ///     max_speed: None,
+    ///     is_max_speed_variable: None,
+    ///     when: None,
+    ///     between: Some(vec![10.0, 20.0]),
+    /// };
+    ///
+    /// // (15, 25) overlaps with (10, 20)
+    /// assert!(limit.check_open_intersection(15.0, 25.0).unwrap());
+    /// // (20, 30) does not overlap with open interval (10, 20)
+    /// assert!(!limit.check_open_intersection(20.0, 30.0).unwrap());
+    /// ```
     pub fn check_open_intersection(
         &self,
         start: f64,
