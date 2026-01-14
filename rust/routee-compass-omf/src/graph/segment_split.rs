@@ -110,6 +110,9 @@ impl SegmentSplit {
         }
     }
 
+    /// extracts the LineString geometry corresponding to this split based on linear reference.
+    /// All of the points of the original LineString that line strictly inside the `src` and `dst` 
+    /// are considered, and new ones are created at the beginning and end if necessary.
     pub fn create_geometry_from_split(
         &self,
         segments: &[&TransportationSegmentRecord],
@@ -152,6 +155,10 @@ impl SegmentSplit {
         }
     }
 
+
+    /// returns the average `max_speed` of this split according to the speed limits
+    /// that match linear reference. Each element in the matching set is averaged
+    /// based on relative length.
     pub fn get_split_speed(
         &self,
         segments: &[&TransportationSegmentRecord],
@@ -206,6 +213,9 @@ impl SegmentSplit {
         }
     }
 
+
+    /// return a fully-qualified segment type for this split based on the segment type-class pair
+    /// and the `subclass_rules` attached to it
     pub fn get_split_segment_full_type(
         &self,
         segments: &[&TransportationSegmentRecord],
@@ -226,7 +236,7 @@ impl SegmentSplit {
                     return Ok(segment_class);
                 };
 
-                // This ignores errors in `between_intersects` coming from invalid between values
+                // This ignores errors in `check_open_intersection` coming from invalid between values
                 let opt_first_matching_sublcass =
                     segment.subclass_rules.as_ref().and_then(|rules| {
                         rules
@@ -250,6 +260,7 @@ impl SegmentSplit {
         }
     }
 
+    /// get Haversine distance along the LineString of the segment between start and end of the split
     pub fn get_split_length(
         &self,
         segments: &[&TransportationSegmentRecord],
@@ -265,6 +276,8 @@ impl SegmentSplit {
         }
     }
 
+
+    /// get a reference to the segment that contains this split
     fn get_segment<'a>(
         &self,
         segments: &'a [&TransportationSegmentRecord],

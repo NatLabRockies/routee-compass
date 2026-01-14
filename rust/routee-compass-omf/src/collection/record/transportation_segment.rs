@@ -826,6 +826,9 @@ impl SpeedLimitWithUnit {
     }
 }
 
+/// This function takes a [`Vec<f64>`]` and returns `a` and `b` if and only
+/// if the vector has exactly two elements and the second one is higher than the
+/// first one. Otherwise it returns an error.
 fn validate_between_vector(
     b_vector: &Vec<f64>,
 ) -> Result<(&f64, &f64), OvertureMapsCollectionError> {
