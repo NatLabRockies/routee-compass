@@ -89,7 +89,7 @@ impl TransportationSegmentRecord {
         }
     }
 
-    pub fn get_distance_at(&self, at: f64) -> Result<f32, OvertureMapsCollectionError> {
+    pub fn get_distance_at_meters(&self, at: f64) -> Result<f32, OvertureMapsCollectionError> {
         if !(0.0..=1.0).contains(&at) {
             return Err(OvertureMapsCollectionError::InvalidLinearReference(at));
         }

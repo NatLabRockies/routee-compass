@@ -94,8 +94,8 @@ impl SegmentSplit {
                     );
                     E::InvalidSegmentConnectors(msg)
                 })?;
-                let dst_distance = segment.get_distance_at(dst.linear_reference.0)?;
-                let src_distance = segment.get_distance_at(src.linear_reference.0)?;
+                let dst_distance = segment.get_distance_at_meters(dst.linear_reference.0)?;
+                let src_distance = segment.get_distance_at_meters(src.linear_reference.0)?;
                 let distance = dst_distance - src_distance;
                 let edge = Edge {
                     edge_list_id,
@@ -122,8 +122,8 @@ impl SegmentSplit {
 
         match self {
             SegmentSplit::SimpleConnectorSplit { src, dst } => {
-                let distance_to_src = segment.get_distance_at(src.linear_reference.0)?;
-                let distance_to_dst = segment.get_distance_at(dst.linear_reference.0)?;
+                let distance_to_src = segment.get_distance_at_meters(src.linear_reference.0)?;
+                let distance_to_dst = segment.get_distance_at_meters(dst.linear_reference.0)?;
                 let segment_geometry = segment.get_linestring()?;
 
                 let mut out_coords = vec![];
@@ -261,7 +261,7 @@ impl SegmentSplit {
     }
 
     /// get Haversine distance along the LineString of the segment between start and end of the split
-    pub fn get_split_length(
+    pub fn get_split_length_meters(
         &self,
         segments: &[&TransportationSegmentRecord],
         segment_lookup: &HashMap<String, usize>,
@@ -271,7 +271,7 @@ impl SegmentSplit {
             SegmentSplit::SimpleConnectorSplit { src, dst } => {
                 let start = src.linear_reference.0;
                 let end = dst.linear_reference.0;
-                Ok(segment.get_distance_at(end)? - segment.get_distance_at(start)?)
+                Ok(segment.get_distance_at_meters(end)? - segment.get_distance_at_meters(start)?)
             }
         }
     }

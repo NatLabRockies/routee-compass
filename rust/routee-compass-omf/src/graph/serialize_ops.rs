@@ -224,7 +224,7 @@ pub fn create_speed_by_segment_type_lookup<'a>(
         .iter()
         .map(|split| {
             split
-                .get_split_length(segments, segment_lookup)
+                .get_split_length_meters(segments, segment_lookup)
                 .map(|v_f32| v_f32 as f64)
         })
         .collect::<Result<Vec<f64>, OvertureMapsCollectionError>>()?;
@@ -255,7 +255,7 @@ pub fn get_global_average_speed(
         .iter()
         .map(|split| {
             split
-                .get_split_length(segments, segment_lookup)
+                .get_split_length_meters(segments, segment_lookup)
                 .map(|v_f32| v_f32 as f64)
         })
         .collect::<Result<Vec<f64>, OvertureMapsCollectionError>>()?;
