@@ -2,7 +2,7 @@
 
 use crate::{
     collection::{
-        record::{SegmentAccessRestriction, SegmentAccessType, SegmentHeading},
+        record::{SegmentAccessRestriction, SegmentHeading},
         OvertureMapsCollectionError, SegmentAccessRestrictionWhen, TransportationSegmentRecord,
     },
     graph::{segment_split::SegmentSplit, ConnectorInSegment},
