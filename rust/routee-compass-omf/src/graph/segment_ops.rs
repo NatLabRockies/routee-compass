@@ -69,17 +69,6 @@ pub fn get_headings(
         valid_headings.push(SegmentHeading::Backward);
     }
 
-    if let Some(true) = access_restrictions.map(|rs| {
-        rs.iter()
-            .any(|r| r.access_type == SegmentAccessType::Denied)
-    }) {
-        if !valid_headings.is_empty() {
-            let gers_id = &segment.id;
-            let when_str = serde_json::to_string_pretty(&when.as_ref()).unwrap_or_default();
-            log::debug!("segment {gers_id} with test_fwd={test_fwd}, test_bwd={test_bwd} overcame denial for query:\n{when_str}");
-        }
-    }
-
     Ok(valid_headings)
 }
 
