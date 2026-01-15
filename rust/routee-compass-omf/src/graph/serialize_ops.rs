@@ -241,7 +241,7 @@ pub fn create_speed_by_segment_type_lookup<'a>(
 
     Ok(speed_sum_lookup
         .into_iter()
-        .filter(|&(_k, (_wx, w))| (w != 0.0))
+        .filter(|&(_k, (_wx, w))| w != 0.0)
         .map(|(k, (wx, w))| (k, wx / w))
         .collect::<HashMap<&SegmentFullType, f64>>())
 }
