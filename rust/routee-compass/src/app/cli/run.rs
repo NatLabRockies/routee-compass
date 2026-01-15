@@ -6,7 +6,7 @@ use crate::app::compass::{
     CompassApp, CompassAppError, CompassBuilderInventory, CompassJsonExtensions,
 };
 use itertools::{Either, Itertools};
-use log::{debug, error, info};
+use log::{debug, error, info, warn};
 use serde_json::{json, Value};
 use std::io::BufRead;
 use std::time::Instant;
@@ -43,7 +43,7 @@ pub fn command_line_runner(
 
     // Apply CLI overrides to config
     if let Some(parallelism) = args.parallelism {
-        log::info!(
+        info!(
             "Overriding parallelism from config with CLI value: {}",
             parallelism
         );
@@ -51,7 +51,7 @@ pub fn command_line_runner(
     }
 
     if let Some(ref output_file) = args.output_file {
-        log::info!(
+        info!(
             "Overriding output file from config with CLI value: {}",
             output_file
         );
@@ -59,13 +59,11 @@ pub fn command_line_runner(
         if let Some(ref mut response_policy) = config.system.response_output_policy {
             apply_output_file_override(response_policy, output_file)?;
         } else {
-            log::warn!(
-                "No response_output_policy in config; output_file override will have no effect"
-            );
+            warn!("No response_output_policy in config; output_file override will have no effect");
         }
     }
 
-    log::info!(
+    info!(
         "Loaded the following Compass configuration:\n{}",
         config.to_pretty_string()?
     );
@@ -78,14 +76,14 @@ pub fn command_line_runner(
     };
 
     let load_duration = load_start.elapsed();
-    info!(
+    debug!(
         "TIMING: phase=load_app duration_ms={} duration_secs={:.3}",
         load_duration.as_millis(),
         load_duration.as_secs_f64()
     );
 
     // read user file containing JSON query/queries
-    log::info!("reading queries from {}", &args.query_file);
+    info!("reading queries from {}", &args.query_file);
     let query_file = File::open(args.query_file.clone()).map_err(|_e| {
         CompassAppError::BuildFailure(format!("Could not find query file {}", args.query_file))
     })?;
@@ -106,14 +104,14 @@ pub fn command_line_runner(
     };
 
     let run_duration = run_start.elapsed();
-    info!(
+    debug!(
         "TIMING: phase=run_queries duration_ms={} duration_secs={:.3}",
         run_duration.as_millis(),
         run_duration.as_secs_f64()
     );
 
     let total_duration = load_start.elapsed();
-    info!(
+    debug!(
         "TIMING: phase=total duration_ms={} duration_secs={:.3}",
         total_duration.as_millis(),
         total_duration.as_secs_f64()
@@ -153,14 +151,13 @@ fn run_newline_json(
     let iterator = reader.lines();
     let chunksize = chunksize_option.unwrap_or(usize::MAX);
     let chunks = iterator.chunks(chunksize);
-    log::info!("reading {chunksize} queries at-a-time from newline-delimited JSON file");
+    info!("reading {chunksize} queries at-a-time from newline-delimited JSON file");
 
     for (iteration, chunk) in chunks.into_iter().enumerate() {
         let chunk_start = Instant::now();
         debug!("executing batch {}", iteration + 1);
 
         // parse JSON output
-        let parse_start = Instant::now();
         let (mut chunk_queries, errors): (Vec<Value>, Vec<CompassAppError>) =
             chunk.enumerate().partition_map(|(idx, row)| match row {
                 Ok(string) => match serde_json::from_str(&string) {
@@ -173,35 +170,10 @@ fn run_newline_json(
                     "failed to parse query row due to: {e}"
                 ))),
             });
-        let parse_duration = parse_start.elapsed();
-        let num_queries = chunk_queries.len();
-
-        debug!(
-            "TIMING: phase=parse_chunk chunk={} num_queries={} duration_ms={}",
-            iteration,
-            num_queries,
-            parse_duration.as_millis()
-        );
-
         // run Compass on this chunk of queries
-        let process_start = Instant::now();
         for result in compass_app.run(&mut chunk_queries, run_config)?.iter() {
             log_error(result)
         }
-        let process_duration = process_start.elapsed();
-
-        info!(
-            "TIMING: phase=process_chunk chunk={} num_queries={} duration_ms={} duration_secs={:.3} queries_per_sec={:.2}",
-            iteration,
-            num_queries,
-            process_duration.as_millis(),
-            process_duration.as_secs_f64(),
-            if process_duration.as_secs_f64() > 0.0 {
-                num_queries as f64 / process_duration.as_secs_f64()
-            } else {
-                0.0
-            }
-        );
 
         // report JSON parsing errors
         for error in errors {
@@ -211,13 +183,6 @@ fn run_newline_json(
             });
             log_error(&error_json)
         }
-
-        let chunk_total = chunk_start.elapsed();
-        debug!(
-            "TIMING: phase=total_chunk chunk={} duration_ms={}",
-            iteration,
-            chunk_total.as_millis()
-        );
     }
 
     Ok(())
@@ -450,5 +415,122 @@ mod tests {
 
         // Should succeed when only one File policy exists
         assert!(apply_output_file_override(&mut policy_single, "new.json").is_ok());
+    }
+
+    #[test]
+    fn test_apply_output_file_override_none_policy() {
+        let mut policy = ResponseOutputPolicy::None;
+
+        // Should succeed with no effect on None policy
+        assert!(apply_output_file_override(&mut policy, "new.json").is_ok());
+        assert!(apply_output_file_override(&mut policy, "new.csv").is_ok());
+        assert!(apply_output_file_override(&mut policy, "any_file.txt").is_ok());
+
+        // Verify policy is still None
+        assert!(matches!(policy, ResponseOutputPolicy::None));
+    }
+
+    #[test]
+    fn test_count_file_policies_empty() {
+        let policies: Vec<Box<ResponseOutputPolicy>> = vec![];
+        assert_eq!(count_file_policies(&policies), 0);
+    }
+
+    #[test]
+    fn test_count_file_policies_single_file() {
+        let policies = vec![Box::new(ResponseOutputPolicy::File {
+            filename: "test.json".to_string(),
+            format: ResponseOutputFormat::Json {
+                newline_delimited: false,
+            },
+            file_flush_rate: None,
+            write_mode: None,
+        })];
+        assert_eq!(count_file_policies(&policies), 1);
+    }
+
+    #[test]
+    fn test_count_file_policies_multiple_files() {
+        let policies = vec![
+            Box::new(ResponseOutputPolicy::File {
+                filename: "test1.json".to_string(),
+                format: ResponseOutputFormat::Json {
+                    newline_delimited: false,
+                },
+                file_flush_rate: None,
+                write_mode: None,
+            }),
+            Box::new(ResponseOutputPolicy::File {
+                filename: "test2.csv".to_string(),
+                format: ResponseOutputFormat::Csv {
+                    mapping: OrderedHashMap::new(),
+                    sorted: false,
+                },
+                file_flush_rate: None,
+                write_mode: None,
+            }),
+        ];
+        assert_eq!(count_file_policies(&policies), 2);
+    }
+
+    #[test]
+    fn test_count_file_policies_none() {
+        let policies = vec![Box::new(ResponseOutputPolicy::None)];
+        assert_eq!(count_file_policies(&policies), 0);
+    }
+
+    #[test]
+    fn test_count_file_policies_mixed() {
+        let policies = vec![
+            Box::new(ResponseOutputPolicy::File {
+                filename: "test.json".to_string(),
+                format: ResponseOutputFormat::Json {
+                    newline_delimited: false,
+                },
+                file_flush_rate: None,
+                write_mode: None,
+            }),
+            Box::new(ResponseOutputPolicy::None),
+            Box::new(ResponseOutputPolicy::File {
+                filename: "test.csv".to_string(),
+                format: ResponseOutputFormat::Csv {
+                    mapping: OrderedHashMap::new(),
+                    sorted: false,
+                },
+                file_flush_rate: None,
+                write_mode: None,
+            }),
+        ];
+        assert_eq!(count_file_policies(&policies), 2);
+    }
+
+    #[test]
+    fn test_count_file_policies_nested_combined() {
+        let policies = vec![
+            Box::new(ResponseOutputPolicy::File {
+                filename: "test1.json".to_string(),
+                format: ResponseOutputFormat::Json {
+                    newline_delimited: false,
+                },
+                file_flush_rate: None,
+                write_mode: None,
+            }),
+            Box::new(ResponseOutputPolicy::Combined {
+                policies: vec![
+                    Box::new(ResponseOutputPolicy::File {
+                        filename: "test2.csv".to_string(),
+                        format: ResponseOutputFormat::Csv {
+                            mapping: OrderedHashMap::new(),
+                            sorted: false,
+                        },
+                        file_flush_rate: None,
+                        write_mode: None,
+                    }),
+                    Box::new(ResponseOutputPolicy::None),
+                ],
+            }),
+        ];
+        // Should count 2 files: test1.json and test2.csv
+        assert_eq!(count_file_policies(&policies), 2);
     }
 }
