@@ -26,13 +26,18 @@ where
     }
 }
 
-pub fn serialize_into_csv<T: Serialize>(
-    iterable: &[T],
+pub fn serialize_into_csv<I>(
+    iterable: I,
     filename: &str,
     output_directory: &Path,
     overwrite: bool,
     desc: &str,
-) -> Result<(), OvertureMapsCollectionError> {
+) -> Result<(), OvertureMapsCollectionError>
+where
+    I: IntoIterator,
+    I::IntoIter: ExactSizeIterator,
+    I::Item: Serialize,
+{
     let mut writer: Option<csv::Writer<GzEncoder<File>>> = create_writer(
         output_directory,
         filename,
@@ -40,10 +45,11 @@ pub fn serialize_into_csv<T: Serialize>(
         QuoteStyle::Necessary,
         overwrite,
     );
-    let iter = tqdm!(iterable.iter(), total = iterable.len(), desc = desc);
-    for element in iter {
+    let iter = iterable.into_iter();
+    let total = iter.len();
+    let bar_iter = tqdm!(iter, total = total, desc = desc);
+    for element in bar_iter {
         if let Some(ref mut writer) = writer {
-            // let vertex_ser = VertexSerializable::from(*vertex);
             writer.serialize(element).map_err(|e| {
                 OvertureMapsCollectionError::CsvWriteError(format!(
                     "Failed to write to {filename}: {e}"
@@ -61,13 +67,18 @@ pub fn serialize_into_csv<T: Serialize>(
     Ok(())
 }
 
-pub fn serialize_into_enumerated_txt<T: Serialize>(
-    iterable: &[T],
+pub fn serialize_into_enumerated_txt<I>(
+    iterable: I,
     filename: &str,
     output_directory: &Path,
     overwrite: bool,
     desc: &str,
-) -> Result<(), OvertureMapsCollectionError> {
+) -> Result<(), OvertureMapsCollectionError>
+where
+    I: IntoIterator,
+    I::IntoIter: ExactSizeIterator,
+    I::Item: Serialize,
+{
     let mut writer: Option<csv::Writer<GzEncoder<File>>> = create_writer(
         output_directory,
         filename,
@@ -75,10 +86,11 @@ pub fn serialize_into_enumerated_txt<T: Serialize>(
         QuoteStyle::Never,
         overwrite,
     );
-    let iter = tqdm!(iterable.iter(), total = iterable.len(), desc = desc);
-    for element in iter {
+    let iter = iterable.into_iter();
+    let total = iter.len();
+    let bar_iter = tqdm!(iter, total = total, desc = desc);
+    for element in bar_iter {
         if let Some(ref mut writer) = writer {
-            // let vertex_ser = VertexSerializable::from(*vertex);
             writer.serialize(element).map_err(|e| {
                 OvertureMapsCollectionError::CsvWriteError(format!(
                     "Failed to write to {filename}: {e}"

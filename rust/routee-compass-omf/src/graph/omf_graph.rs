@@ -10,7 +10,6 @@ use crate::{
     graph::{segment_ops, vertex_serializable::VertexSerializable},
 };
 use geo::LineString;
-use itertools::Itertools;
 use kdam::tqdm;
 use rayon::prelude::*;
 use routee_compass_core::model::network::{EdgeConfig, EdgeList, EdgeListId, Vertex};
@@ -180,11 +179,7 @@ impl OmfGraphVectorized {
 
         // write vertices
         serialize_into_csv(
-            &self
-                .vertices
-                .iter()
-                .map(|v| VertexSerializable::from(*v))
-                .collect::<Vec<VertexSerializable>>(),
+            self.vertices.iter().map(|v| VertexSerializable::from(*v)),
             COMPASS_VERTEX_FILENAME,
             output_directory,
             overwrite,
@@ -205,17 +200,12 @@ impl OmfGraphVectorized {
 
             // Write Edges
             serialize_into_csv(
-                &edge_list
-                    .edges
-                    .0
-                    .iter()
-                    .map(|row| EdgeConfig {
-                        edge_id: row.edge_id,
-                        src_vertex_id: row.src_vertex_id,
-                        dst_vertex_id: row.dst_vertex_id,
-                        distance: row.distance.get::<uom::si::length::meter>(),
-                    })
-                    .collect::<Vec<EdgeConfig>>(),
+                edge_list.edges.0.iter().map(|row| EdgeConfig {
+                    edge_id: row.edge_id,
+                    src_vertex_id: row.src_vertex_id,
+                    dst_vertex_id: row.dst_vertex_id,
+                    distance: row.distance.get::<uom::si::length::meter>(),
+                }),
                 COMPASS_EDGES_FILENAME,
                 &mode_dir,
                 overwrite,
@@ -224,11 +214,10 @@ impl OmfGraphVectorized {
 
             // Write geometries
             serialize_into_enumerated_txt(
-                &edge_list
+                edge_list
                     .geometries
                     .iter()
-                    .map(|row| row.to_wkt().to_string())
-                    .collect::<Vec<String>>(),
+                    .map(|row| row.to_wkt().to_string()),
                 GEOMETRIES_FILENAME,
                 &mode_dir,
                 overwrite,
@@ -246,20 +235,19 @@ impl OmfGraphVectorized {
 
             // Write classes
             serialize_into_enumerated_txt(
-                &edge_list
+                edge_list
                     .classes
                     .iter()
-                    .map(|class| class.as_str())
-                    .collect::<Vec<String>>(),
+                    .map(|class| class.as_str()),
                 CLASSES_FILENAME,
                 &mode_dir,
                 overwrite,
                 "write classes",
             )?;
-            
+
             // Write speed_mapping
             serialize_into_csv(
-                &edge_list.speed_lookup.iter().collect_vec(),
+                edge_list.speed_lookup.iter(),
                 SPEED_MAPPING_FILENAME,
                 &mode_dir,
                 overwrite,
