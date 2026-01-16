@@ -31,7 +31,7 @@ where
 
     data.map(|v| {
         let bytes = match &v {
-            BytesOrString::Bytes(b) => b.clone(),
+            BytesOrString::Bytes(b) => b.clone().into_vec(),
             BytesOrString::String(s) => hex::decode(s).map_err(|e| {
                 serde::de::Error::custom(format!("failure converting hex wkb string to bytes: {e}"))
             })?,

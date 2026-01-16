@@ -48,6 +48,10 @@ pub enum OvertureMapsCollectionError {
     ReadError { path: PathBuf, message: String },
     #[error("Error writing to '{path}': {message}")]
     WriteError { path: PathBuf, message: String },
+    #[error("Invalid `between` vector: {0}")]
+    InvalidBetweenVector(String),
+    #[error("Required attribute is None: {0}")]
+    MissingAttribute(String),
     #[error("{0}")]
     InternalError(String),
 }

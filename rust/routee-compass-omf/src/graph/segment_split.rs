@@ -1,11 +1,13 @@
 use std::collections::HashMap;
 
 use geo::{Haversine, Length, LineString};
+use itertools::Itertools;
 use routee_compass_core::model::network::{Edge, EdgeId, EdgeListId, Vertex, VertexId};
 
 use crate::{
     collection::{
-        record::SegmentHeading, OvertureMapsCollectionError, TransportationSegmentRecord,
+        record::SegmentHeading, OvertureMapsCollectionError, SegmentFullType,
+        TransportationSegmentRecord,
     },
     graph::connector_in_segment::ConnectorInSegment,
 };
@@ -112,12 +114,11 @@ impl SegmentSplit {
                     );
                     E::InvalidSegmentConnectors(msg)
                 })?;
-                let dst_distance = segment.get_distance_at(dst.linear_reference.0)?;
-                let src_distance = segment.get_distance_at(src.linear_reference.0)?;
+                let dst_distance = segment.get_distance_at_meters(dst.linear_reference.0)?;
+                let src_distance = segment.get_distance_at_meters(src.linear_reference.0)?;
                 let distance_f32 = dst_distance - src_distance;
                 let distance =
-                    uom::si::f64::Length::new::<uom::si::length::meter>(distance_f32 as f64);
-
+                    uom::si::length::Length::new::<uom::si::length::meter>(distance_f32 as f64);
                 let edge = Edge {
                     edge_list_id,
                     edge_id,
@@ -131,12 +132,17 @@ impl SegmentSplit {
         }
     }
 
+    /// extracts the LineString geometry corresponding to this split based on linear reference.
+    /// All of the points of the original LineString that line strictly inside the `src` and `dst`
+    /// are considered, and new ones are created at the beginning and end if necessary.
     pub fn create_geometry_from_split(
         &self,
         segments: &[&TransportationSegmentRecord],
         segment_lookup: &HashMap<String, usize>,
     ) -> Result<LineString<f32>, OvertureMapsCollectionError> {
         use OvertureMapsCollectionError as E;
+
+        // let segment = self.get_segment(segments, segment_lookup)?;
 
         match self {
             SegmentSplit::SimpleConnectorSplit { src, dst, heading } => {
@@ -152,8 +158,8 @@ impl SegmentSplit {
                     E::InvalidSegmentConnectors(msg)
                 })?;
 
-                let distance_to_src = segment.get_distance_at(src.linear_reference.0)?;
-                let distance_to_dst = segment.get_distance_at(dst.linear_reference.0)?;
+                let distance_to_src = segment.get_distance_at_meters(src.linear_reference.0)?;
+                let distance_to_dst = segment.get_distance_at_meters(dst.linear_reference.0)?;
                 let segment_geometry = segment.get_linestring()?;
 
                 let mut out_coords = vec![];
@@ -185,6 +191,162 @@ impl SegmentSplit {
                     out_coords.reverse();
                 }
                 Ok(LineString::new(out_coords))
+            }
+        }
+    }
+
+    /// returns the average `max_speed` of this split according to the speed limits
+    /// that match linear reference. Each element in the matching set is averaged
+    /// based on relative length.
+    pub fn get_split_speed(
+        &self,
+        segments: &[&TransportationSegmentRecord],
+        segment_lookup: &HashMap<String, usize>,
+    ) -> Result<Option<f64>, OvertureMapsCollectionError> {
+        use OvertureMapsCollectionError as E;
+
+        let segment = self.get_segment(segments, segment_lookup)?;
+
+        match self {
+            SegmentSplit::SimpleConnectorSplit { src, dst, heading } => {
+                let speed_limits = match segment.speed_limits.as_ref() {
+                    Some(limits) => limits,
+                    None => return Ok(None),
+                };
+
+                // retain speed limits with no heading or with a matching heading
+                let speed_limits_with_heading = speed_limits
+                    .iter()
+                    .filter_map(|s| match s.when.as_ref() {
+                        Some(access) => match access.heading.as_ref() {
+                            None => Some(s),
+                            Some(h) if h == heading => Some(s),
+                            _ => None,
+                        },
+                        None => None,
+                    })
+                    .collect_vec();
+
+                // Compute the intersecting portion of each limit
+                // e.g. if limit is [0.5, 0.8] and segment is defined as [0.45, 0.6] then this value is .6 - .5 = 0.1
+                let start = src.linear_reference.0;
+                let end = dst.linear_reference.0;
+                let intersecting_portions: Vec<f64> = speed_limits_with_heading
+                    .iter()
+                    .map(|speed_limit| speed_limit.get_linear_reference_portion(start, end))
+                    .collect::<Result<_, E>>()?;
+
+                // Compute mph max speeds weighted by intersecting_length / total_intersecting_length
+                let total_intersecting_length: f64 = intersecting_portions.iter().sum();
+
+                if total_intersecting_length < 1e-6 {
+                    return Ok(None);
+                }
+
+                let weighted_mph = speed_limits_with_heading
+                    .iter()
+                    .zip(intersecting_portions)
+                    .map(|(speed_limit, portion)| {
+                        let weight = portion / total_intersecting_length;
+
+                        let max_speed = speed_limit.get_max_speed().ok_or(E::InternalError(
+                            format!("Expected a value for `max_speed`: {speed_limit:?}"),
+                        ))?;
+
+                        Ok(max_speed
+                            .to_uom_value()
+                            .get::<uom::si::velocity::mile_per_hour>()
+                            * weight)
+                    })
+                    .collect::<Result<Vec<f64>, E>>()?;
+
+                Ok(Some(weighted_mph.iter().sum()))
+            }
+        }
+    }
+
+    /// return a fully-qualified segment type for this split based on the segment type-class pair
+    /// and the `subclass_rules` attached to it
+    pub fn get_split_segment_full_type(
+        &self,
+        segments: &[&TransportationSegmentRecord],
+        segment_lookup: &HashMap<String, usize>,
+    ) -> Result<SegmentFullType, OvertureMapsCollectionError> {
+        // Initial testing suggests that either subclass is not null OR there are rules
+        // specific for linear references
+
+        let segment = self.get_segment(segments, segment_lookup)?;
+        match self {
+            SegmentSplit::SimpleConnectorSplit { src, dst, .. } => {
+                let start = src.linear_reference.0;
+                let end = dst.linear_reference.0;
+
+                let segment_class = segment.get_segment_full_type()?;
+
+                if segment_class.has_subclass() {
+                    return Ok(segment_class);
+                };
+
+                // This ignores errors in `check_open_intersection` coming from invalid between values
+                let opt_first_matching_sublcass =
+                    segment.subclass_rules.as_ref().and_then(|rules| {
+                        rules.iter().find_map(|rule| {
+                            match rule.check_open_intersection(start, end) {
+                                Ok(true) => Some(rule),
+                                _ => None,
+                            }
+                        })
+                    });
+
+                // Get value from inside
+                let subclass = opt_first_matching_sublcass
+                    .and_then(|value_between| value_between.value.clone());
+
+                // If found, return
+                match subclass {
+                    Some(value) => Ok(segment_class.with_subclass(value)),
+                    None => Ok(segment_class),
+                }
+            }
+        }
+    }
+
+    /// get Haversine distance along the LineString of the segment between start and end of the split
+    pub fn get_split_length_meters(
+        &self,
+        segments: &[&TransportationSegmentRecord],
+        segment_lookup: &HashMap<String, usize>,
+    ) -> Result<f32, OvertureMapsCollectionError> {
+        let segment = self.get_segment(segments, segment_lookup)?;
+        match self {
+            SegmentSplit::SimpleConnectorSplit { src, dst, .. } => {
+                let start = src.linear_reference.0;
+                let end = dst.linear_reference.0;
+                Ok(segment.get_distance_at_meters(end)? - segment.get_distance_at_meters(start)?)
+            }
+        }
+    }
+
+    /// get a reference to the segment that contains this split
+    fn get_segment<'a>(
+        &self,
+        segments: &'a [&TransportationSegmentRecord],
+        segment_lookup: &HashMap<String, usize>,
+    ) -> Result<&'a TransportationSegmentRecord, OvertureMapsCollectionError> {
+        use OvertureMapsCollectionError as E;
+        match self {
+            SegmentSplit::SimpleConnectorSplit { src, .. } => {
+                let segment_id = &src.segment_id;
+                let segment_idx = segment_lookup.get(segment_id).ok_or_else(|| {
+                    let msg = format!("missing lookup entry for segment {segment_id}");
+                    E::InvalidSegmentConnectors(msg)
+                })?;
+                Ok(*segments.get(*segment_idx).ok_or_else(|| {
+                    let msg = format!(
+                        "missing lookup entry for segment {segment_id} with index {segment_idx}"
+                    );
+                    E::InvalidSegmentConnectors(msg)
+                })?)
             }
         }
     }

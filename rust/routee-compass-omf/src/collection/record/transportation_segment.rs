@@ -1,6 +1,10 @@
+use std::fmt::{self, Debug};
+
 use geo::{Coord, Geometry, Haversine, InterpolatableLine, Length, LineString};
 use opening_hours_syntax::rules::OpeningHoursExpression;
+use routee_compass_core::model::unit::SpeedUnit;
 use serde::{Deserialize, Serialize};
+use uom::si::f64::Velocity;
 
 use super::{geometry_wkb_codec, OvertureMapsBbox, OvertureMapsNames, OvertureMapsSource};
 use crate::collection::{OvertureMapsCollectionError, OvertureRecord};
@@ -85,7 +89,7 @@ impl TransportationSegmentRecord {
         }
     }
 
-    pub fn get_distance_at(&self, at: f64) -> Result<f32, OvertureMapsCollectionError> {
+    pub fn get_distance_at_meters(&self, at: f64) -> Result<f32, OvertureMapsCollectionError> {
         if !(0.0..=1.0).contains(&at) {
             return Err(OvertureMapsCollectionError::InvalidLinearReference(at));
         }
@@ -110,6 +114,22 @@ impl TransportationSegmentRecord {
             }
         }
     }
+
+    pub fn get_segment_full_type(&self) -> Result<SegmentFullType, OvertureMapsCollectionError> {
+        use OvertureMapsCollectionError as E;
+
+        Ok(SegmentFullType(
+            self.subtype.clone().ok_or(E::MissingAttribute(format!(
+                "`subtype` not found in segment: {self:?}"
+            )))?,
+            self.class.clone().ok_or(E::MissingAttribute(format!(
+                "`class` not found in segment: {self:?}"
+            )))?,
+            self.subclass.clone(),
+        ))
+    }
+
+    // pub fn first_matching_subclass
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
@@ -118,6 +138,17 @@ pub enum SegmentSubtype {
     Road,
     Rail,
     Water,
+}
+
+impl fmt::Display for SegmentSubtype {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            SegmentSubtype::Road => "road",
+            SegmentSubtype::Rail => "rail",
+            SegmentSubtype::Water => "water",
+        };
+        f.write_str(s)
+    }
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq, Eq, Hash)]
@@ -142,6 +173,32 @@ pub enum SegmentClass {
     Unknown,
     #[serde(untagged)]
     Custom(String),
+}
+
+impl fmt::Display for SegmentClass {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            SegmentClass::Motorway => "motorway",
+            SegmentClass::Primary => "primary",
+            SegmentClass::Secondary => "secondary",
+            SegmentClass::Tertiary => "tertiary",
+            SegmentClass::Residential => "residential",
+            SegmentClass::LivingStreet => "living_street",
+            SegmentClass::Trunk => "trunk",
+            SegmentClass::Unclassified => "unclassified",
+            SegmentClass::Service => "service",
+            SegmentClass::Pedestrian => "pedestrian",
+            SegmentClass::Footway => "footway",
+            SegmentClass::Steps => "steps",
+            SegmentClass::Path => "path",
+            SegmentClass::Track => "track",
+            SegmentClass::Cycleway => "cycleway",
+            SegmentClass::Bridleway => "bridleway",
+            SegmentClass::Unknown => "unknown",
+            SegmentClass::Custom(s) => s.as_str(),
+        };
+        f.write_str(s)
+    }
 }
 
 impl<'de> Deserialize<'de> for SegmentClass {
@@ -183,6 +240,42 @@ pub enum SegmentSubclass {
     Driveway,
     Alley,
     CycleCrossing,
+}
+
+impl fmt::Display for SegmentSubclass {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            SegmentSubclass::Link => "link",
+            SegmentSubclass::Sidewalk => "sidewalk",
+            SegmentSubclass::Crosswalk => "crosswalk",
+            SegmentSubclass::ParkingAisle => "parking_aisle",
+            SegmentSubclass::Driveway => "driveway",
+            SegmentSubclass::Alley => "alley",
+            SegmentSubclass::CycleCrossing => "cycle_crossing",
+        };
+        f.write_str(s)
+    }
+}
+
+/// Fully qualified segment type including type, class and subclass. E.g. road-service-driveway
+#[derive(Eq, PartialEq, Hash)]
+pub struct SegmentFullType(SegmentSubtype, SegmentClass, Option<SegmentSubclass>);
+
+impl SegmentFullType {
+    pub fn has_subclass(&self) -> bool {
+        self.2.is_some()
+    }
+
+    pub fn with_subclass(&self, subclass: SegmentSubclass) -> Self {
+        Self(self.0.clone(), self.1.clone(), Some(subclass))
+    }
+
+    pub fn as_str(&self) -> String {
+        match self.2.as_ref() {
+            Some(subclass) => format!("{}-{}-{}", self.0, self.1, subclass),
+            None => format!("{}-{}", self.0, self.1),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
@@ -391,6 +484,15 @@ pub enum SegmentSpeedUnit {
     Mph,
 }
 
+impl SegmentSpeedUnit {
+    pub fn to_uom(&self, value: f64) -> Velocity {
+        match self {
+            SegmentSpeedUnit::Kmh => SpeedUnit::KPH.to_uom(value),
+            SegmentSpeedUnit::Mph => SpeedUnit::MPH.to_uom(value),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ConnectorReference {
     pub connector_id: String,
@@ -419,6 +521,46 @@ pub struct SegmentValueBetween<T> {
     pub value: Option<T>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub between: Option<Vec<f64>>,
+}
+
+impl<T: Debug> SegmentValueBetween<T> {
+    /// Used to filter limits based on a linear reference segment.
+    /// Returns `true` if the open interval `(between[0], between[1])`
+    /// overlaps with the open interval `(start, end)`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use bambam_omf::collection::SegmentSpeedLimit;
+    ///
+    /// let limit = SegmentSpeedLimit {
+    ///     min_speed: None,
+    ///     max_speed: None,
+    ///     is_max_speed_variable: None,
+    ///     when: None,
+    ///     between: Some(vec![10.0, 20.0]),
+    /// };
+    ///
+    /// // (15, 25) overlaps with (10, 20)
+    /// assert!(limit.check_open_intersection(15.0, 25.0).unwrap());
+    /// // (20, 30) does not overlap with open interval (10, 20)
+    /// assert!(!limit.check_open_intersection(20.0, 30.0).unwrap());
+    /// ```
+    pub fn check_open_intersection(
+        &self,
+        start: f64,
+        end: f64,
+    ) -> Result<bool, OvertureMapsCollectionError> {
+        let b_vector =
+            self.between
+                .as_ref()
+                .ok_or(OvertureMapsCollectionError::InvalidBetweenVector(format!(
+                    "`between` vector is empty: {self:?}"
+                )))?;
+        let (low, high) = validate_between_vector(b_vector)?;
+
+        Ok(start < *high && end > *low)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -619,19 +761,132 @@ pub struct SegmentProhibitedTransitionsSequence {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SegmentSpeedLimit {
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    min_speed: Option<SpeedLimitWithUnit>,
+    pub min_speed: Option<SpeedLimitWithUnit>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    max_speed: Option<SpeedLimitWithUnit>,
+    pub max_speed: Option<SpeedLimitWithUnit>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    is_max_speed_variable: Option<bool>,
+    pub is_max_speed_variable: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    when: Option<SegmentAccessRestrictionWhen>,
+    pub when: Option<SegmentAccessRestrictionWhen>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    between: Option<Vec<f64>>,
+    pub between: Option<Vec<f64>>,
+}
+
+impl SegmentSpeedLimit {
+    /// Used to filter limits based on a linear reference segment.
+    /// Returns `true` if the open interval `(between[0], between[1])`
+    /// overlaps with the open interval `(start, end)`.
+    ///
+    /// # Examples
+    ///
+    /// Basic overlap:
+    /// ```
+    /// # use bambam_omf::collection::SegmentSpeedLimit;
+    ///
+    /// let limit = SegmentSpeedLimit {
+    ///     min_speed: None,
+    ///     max_speed: None,
+    ///     is_max_speed_variable: None,
+    ///     when: None,
+    ///     between: Some(vec![10.0, 20.0]),
+    /// };
+    ///
+    /// // (15, 25) overlaps with (10, 20)
+    /// assert!(limit.check_open_intersection(15.0, 25.0).unwrap());
+    /// ```
+    ///
+    /// No overlap:
+    /// ```
+    /// # use bambam_omf::collection::SegmentSpeedLimit;
+    /// # let limit = SegmentSpeedLimit {
+    /// #    min_speed: None,
+    /// #    max_speed: None,
+    /// #    is_max_speed_variable: None,
+    /// #    when: None,
+    /// #    between: Some(vec![10.0, 20.0]),
+    /// # };
+    ///
+    /// // (20, 30) does not overlap with open interval (10, 20)
+    /// assert!(!limit.check_open_intersection(20.0, 30.0).unwrap());
+    /// ```
+    ///
+    /// No `between` restriction means always applicable:
+    /// ```
+    /// # use bambam_omf::collection::SegmentSpeedLimit;
+    /// let limit = SegmentSpeedLimit {
+    ///     min_speed: None,
+    ///     max_speed: None,
+    ///     is_max_speed_variable: None,
+    ///     when: None,
+    ///     between: None,
+    /// };
+    ///
+    /// assert!(limit.check_open_intersection(100.0, 200.0).unwrap());
+    /// ```
+    pub fn check_open_intersection(
+        &self,
+        start: f64,
+        end: f64,
+    ) -> Result<bool, OvertureMapsCollectionError> {
+        match self.between.as_ref() {
+            Some(b_vector) => {
+                let (low, high) = validate_between_vector(b_vector)?;
+                Ok(start < *high && end > *low)
+            }
+            None => Ok(true),
+        }
+    }
+
+    pub fn get_max_speed(&self) -> Option<SpeedLimitWithUnit> {
+        self.max_speed.clone()
+    }
+
+    /// given a sub-segment linear reference (start, end), compute the total overlapping portion
+    pub fn get_linear_reference_portion(
+        &self,
+        start: f64,
+        end: f64,
+    ) -> Result<f64, OvertureMapsCollectionError> {
+        match self.between.as_ref() {
+            Some(b_vector) => {
+                let (low, high) = validate_between_vector(b_vector)?;
+
+                Ok((high.min(end) - low.max(start)).max(0.))
+            }
+            None => Ok(end - start),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SpeedLimitWithUnit {
     value: i32,
     unit: SegmentSpeedUnit,
+}
+
+impl SpeedLimitWithUnit {
+    pub fn to_uom_value(&self) -> Velocity {
+        self.unit.to_uom(self.value as f64)
+    }
+}
+
+/// This function takes a [`Vec<f64>`]` and returns `a` and `b` if and only
+/// if the vector has exactly two elements and the second one is higher than the
+/// first one. Otherwise it returns an error.
+fn validate_between_vector(
+    b_vector: &Vec<f64>,
+) -> Result<(&f64, &f64), OvertureMapsCollectionError> {
+    let [low, high] = b_vector.as_slice() else {
+        return Err(OvertureMapsCollectionError::InvalidBetweenVector(
+            "Between vector has length != 2".to_string(),
+        ));
+    };
+
+    if high < low {
+        return Err(OvertureMapsCollectionError::InvalidBetweenVector(format!(
+            "`high` is lower than `low`: [{low}, {high}]"
+        )));
+    }
+
+    Ok((low, high))
 }
