@@ -31,6 +31,7 @@ pub struct OmfEdgeList {
     pub classes: Vec<SegmentFullType>,
     pub speeds: Vec<f64>,
     pub speed_lookup: HashMap<String, f64>,
+    pub bearings: Vec<f64>
 }
 
 impl OmfGraphVectorized {
@@ -96,7 +97,7 @@ impl OmfGraphVectorized {
                 edge_list_id,
             )?;
             let geometries = ops::create_geometries(&segments, &segment_lookup, &splits)?;
-
+            let bearings = ops::bearing_deg_from_geometries(&geometries)?;
             let classes = ops::create_segment_full_types(&segments, &segment_lookup, &splits)?;
 
             let speeds = ops::create_speeds(&segments, &segment_lookup, &splits)?;
@@ -140,6 +141,7 @@ impl OmfGraphVectorized {
                 classes,
                 speeds,
                 speed_lookup,
+                bearings
             };
             edge_lists.push(edge_list);
         }
