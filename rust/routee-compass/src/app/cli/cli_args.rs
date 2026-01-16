@@ -24,9 +24,10 @@ pub struct CliArgs {
     #[arg(short, long)]
     pub parallelism: Option<usize>,
 
-    /// Override output filename from config file
-    #[arg(short, long, value_name = "FILE")]
-    pub output_file: Option<String>,
+    /// Override output directory for all output files. output filenames in config will be
+    /// treated as filenames only and written to this directory.
+    #[arg(short, long, value_name = "DIR")]
+    pub output_directory: Option<String>,
 }
 
 impl CliArgs {

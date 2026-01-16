@@ -1,5 +1,4 @@
 use super::cli_args::CliArgs;
-use crate::app::compass::response::response_output_format::ResponseOutputFormat;
 use crate::app::compass::response::response_output_policy::ResponseOutputPolicy;
 use crate::app::compass::CompassAppConfig;
 use crate::app::compass::{
@@ -50,16 +49,29 @@ pub fn command_line_runner(
         config.system.parallelism = Some(parallelism);
     }
 
-    if let Some(ref output_file) = args.output_file {
+    if let Some(ref output_directory) = args.output_directory {
         info!(
-            "Overriding output file from config with CLI value: {}",
-            output_file
+            "Overriding output directory from config with CLI value: {}",
+            output_directory
         );
+
+        // Create the directory if it doesn't exist
+        let output_path = Path::new(output_directory);
+        if !output_path.exists() {
+            info!("Creating output directory: {}", output_directory);
+            std::fs::create_dir_all(output_path).map_err(|e| {
+                CompassAppError::BuildFailure(format!(
+                    "Failed to create output directory '{}': {}",
+                    output_directory, e
+                ))
+            })?;
+        }
+
         // Override the output file in the response_output_policy
         if let Some(ref mut response_policy) = config.system.response_output_policy {
-            apply_output_file_override(response_policy, output_file)?;
+            apply_output_directory_override(response_policy, output_directory)?;
         } else {
-            warn!("No response_output_policy in config; output_file override will have no effect");
+            warn!("No response_output_policy in config; output_directory override will have no effect");
         }
     }
 
@@ -154,7 +166,6 @@ fn run_newline_json(
     info!("reading {chunksize} queries at-a-time from newline-delimited JSON file");
 
     for (iteration, chunk) in chunks.into_iter().enumerate() {
-        let chunk_start = Instant::now();
         debug!("executing batch {}", iteration + 1);
 
         // parse JSON output
@@ -195,56 +206,29 @@ fn log_error(result: &Value) {
     }
 }
 
-/// Recursively applies output file override to a ResponseOutputPolicy
-/// Validates that the output file extension matches the expected format
-fn apply_output_file_override(
+/// Recursively applies output directory override to a ResponseOutputPolicy
+/// Any existing filename in the config is treated as a filename only, and re-rooted
+/// to the provided output directory.
+fn apply_output_directory_override(
     policy: &mut ResponseOutputPolicy,
-    output_file: &str,
+    output_directory: &str,
 ) -> Result<(), CompassAppError> {
     match policy {
-        ResponseOutputPolicy::File {
-            filename, format, ..
-        } => {
-            // Strip .gz suffix if present to check the actual format
-            let file_to_check = output_file.strip_suffix(".gz").unwrap_or(output_file);
-
-            // Validate extension matches format
-            let valid = match format {
-                ResponseOutputFormat::Json { .. } => file_to_check.ends_with(".json"),
-                ResponseOutputFormat::Csv { .. } => file_to_check.ends_with(".csv"),
-                ResponseOutputFormat::Parquet { .. } => file_to_check.ends_with(".parquet"),
-            };
-
-            if !valid {
-                let expected_ext = match format {
-                    ResponseOutputFormat::Json { .. } => ".json",
-                    ResponseOutputFormat::Csv { .. } => ".csv",
-                    ResponseOutputFormat::Parquet { .. } => ".parquet",
-                };
-                return Err(CompassAppError::BuildFailure(format!(
-                    "Output file '{}' does not match expected format. Expected file ending with '{}' (optionally followed by '.gz')",
-                    output_file, expected_ext
-                )));
-            }
-
-            *filename = output_file.to_string();
+        ResponseOutputPolicy::File { filename, .. } => {
+            let file_path = Path::new(&filename);
+            let file_name = file_path.file_name().ok_or_else(|| {
+                CompassAppError::BuildFailure(format!(
+                    "Could not extract filename from path '{}'",
+                    filename
+                ))
+            })?;
+            let new_path = Path::new(output_directory).join(file_name);
+            *filename = new_path.to_string_lossy().to_string();
             Ok(())
         }
         ResponseOutputPolicy::Combined { policies } => {
-            // Count how many File policies exist
-            let file_policy_count = count_file_policies(policies);
-
-            if file_policy_count > 1 {
-                return Err(CompassAppError::BuildFailure(format!(
-                    "Cannot override output file with combined policy containing {} file outputs. \
-                    It is ambiguous which file to override. Please adjust your configuration to use \
-                    a single output file, or remove the --output-file CLI argument.",
-                    file_policy_count
-                )));
-            }
-
             for sub_policy in policies.iter_mut() {
-                apply_output_file_override(sub_policy, output_file)?;
+                apply_output_directory_override(sub_policy, output_directory)?;
             }
             Ok(())
         }
@@ -255,18 +239,6 @@ fn apply_output_file_override(
     }
 }
 
-/// Recursively counts the number of File policies in a policy tree
-fn count_file_policies(policies: &[Box<ResponseOutputPolicy>]) -> usize {
-    policies
-        .iter()
-        .map(|policy| match policy.as_ref() {
-            ResponseOutputPolicy::File { .. } => 1,
-            ResponseOutputPolicy::Combined { policies: nested } => count_file_policies(nested),
-            ResponseOutputPolicy::None => 0,
-        })
-        .sum()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -274,7 +246,7 @@ mod tests {
     use ordered_hash_map::OrderedHashMap;
 
     #[test]
-    fn test_apply_output_file_override_json_valid() {
+    fn test_apply_output_directory_override_json() {
         let mut policy = ResponseOutputPolicy::File {
             filename: "old.json".to_string(),
             format: ResponseOutputFormat::Json {
@@ -284,17 +256,25 @@ mod tests {
             write_mode: None,
         };
 
-        // Should succeed for .json file
-        assert!(apply_output_file_override(&mut policy, "new.json").is_ok());
-
-        // Should succeed for .json.gz file
-        assert!(apply_output_file_override(&mut policy, "new.json.gz").is_ok());
+        // Should join directory with filename
+        assert!(apply_output_directory_override(&mut policy, "new_dir").is_ok());
+        if let ResponseOutputPolicy::File { filename, .. } = policy {
+            assert_eq!(
+                filename,
+                Path::new("new_dir")
+                    .join("old.json")
+                    .to_string_lossy()
+                    .to_string()
+            );
+        } else {
+            panic!("Policy changed type");
+        }
     }
 
     #[test]
-    fn test_apply_output_file_override_json_invalid() {
+    fn test_apply_output_directory_override_nested_source() {
         let mut policy = ResponseOutputPolicy::File {
-            filename: "old.json".to_string(),
+            filename: "some/nested/path/old.json".to_string(),
             format: ResponseOutputFormat::Json {
                 newline_delimited: false,
             },
@@ -302,78 +282,27 @@ mod tests {
             write_mode: None,
         };
 
-        // Should fail for .csv file
-        let result = apply_output_file_override(&mut policy, "new.csv");
-        assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("does not match expected format"));
+        // Should strip source path and use only filename
+        assert!(apply_output_directory_override(&mut policy, "new_dir").is_ok());
+        if let ResponseOutputPolicy::File { filename, .. } = policy {
+            assert_eq!(
+                filename,
+                Path::new("new_dir")
+                    .join("old.json")
+                    .to_string_lossy()
+                    .to_string()
+            );
+        } else {
+            panic!("Policy changed type");
+        }
     }
 
     #[test]
-    fn test_apply_output_file_override_csv_valid() {
-        let mut policy = ResponseOutputPolicy::File {
-            filename: "old.csv".to_string(),
-            format: ResponseOutputFormat::Csv {
-                mapping: OrderedHashMap::new(),
-                sorted: false,
-            },
-            file_flush_rate: None,
-            write_mode: None,
-        };
-
-        // Should succeed for .csv file
-        assert!(apply_output_file_override(&mut policy, "new.csv").is_ok());
-
-        // Should succeed for .csv.gz file
-        assert!(apply_output_file_override(&mut policy, "new.csv.gz").is_ok());
-    }
-
-    #[test]
-    fn test_apply_output_file_override_csv_invalid() {
-        let mut policy = ResponseOutputPolicy::File {
-            filename: "old.csv".to_string(),
-            format: ResponseOutputFormat::Csv {
-                mapping: OrderedHashMap::new(),
-                sorted: false,
-            },
-            file_flush_rate: None,
-            write_mode: None,
-        };
-
-        // Should fail for .json file
-        let result = apply_output_file_override(&mut policy, "new.json");
-        assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("does not match expected format"));
-    }
-
-    #[test]
-    fn test_apply_output_file_override_parquet_valid() {
-        let mut policy = ResponseOutputPolicy::File {
-            filename: "old.parquet".to_string(),
-            format: ResponseOutputFormat::Parquet { mapping: None },
-            file_flush_rate: None,
-            write_mode: None,
-        };
-
-        // Should succeed for .parquet file
-        assert!(apply_output_file_override(&mut policy, "new.parquet").is_ok());
-
-        // Should succeed for .parquet.gz file
-        assert!(apply_output_file_override(&mut policy, "new.parquet.gz").is_ok());
-    }
-
-    #[test]
-    fn test_apply_output_file_override_combined_policy() {
-        // Test 1: Combined policy where all sub-policies have the same format
+    fn test_apply_output_directory_override_combined_top_level() {
         let mut policy = ResponseOutputPolicy::Combined {
             policies: vec![
                 Box::new(ResponseOutputPolicy::File {
-                    filename: "old1.json".to_string(),
+                    filename: "file1.json".to_string(),
                     format: ResponseOutputFormat::Json {
                         newline_delimited: false,
                     },
@@ -381,9 +310,10 @@ mod tests {
                     write_mode: None,
                 }),
                 Box::new(ResponseOutputPolicy::File {
-                    filename: "old2.json".to_string(),
-                    format: ResponseOutputFormat::Json {
-                        newline_delimited: true,
+                    filename: "file2.csv".to_string(),
+                    format: ResponseOutputFormat::Csv {
+                        mapping: OrderedHashMap::new(),
+                        sorted: false,
                     },
                     file_flush_rate: None,
                     write_mode: None,
@@ -391,146 +321,101 @@ mod tests {
             ],
         };
 
-        // Should fail because there are multiple File policies
-        let result = apply_output_file_override(&mut policy, "new.json");
-        assert!(result.is_err());
-        let err_msg = result.unwrap_err().to_string();
-        assert!(err_msg.contains("ambiguous"));
-        assert!(err_msg.contains("2 file outputs"));
+        assert!(apply_output_directory_override(&mut policy, "out").is_ok());
 
-        // Test 2: Combined policy with single File and None should succeed
-        let mut policy_single = ResponseOutputPolicy::Combined {
+        if let ResponseOutputPolicy::Combined { policies } = policy {
+            // Check first file
+            if let ResponseOutputPolicy::File { filename, .. } = policies[0].as_ref() {
+                assert_eq!(
+                    filename,
+                    &Path::new("out")
+                        .join("file1.json")
+                        .to_string_lossy()
+                        .to_string()
+                );
+            } else {
+                panic!("First policy changed type");
+            }
+
+            // Check second file
+            if let ResponseOutputPolicy::File { filename, .. } = policies[1].as_ref() {
+                assert_eq!(
+                    filename,
+                    &Path::new("out")
+                        .join("file2.csv")
+                        .to_string_lossy()
+                        .to_string()
+                );
+            } else {
+                panic!("Second policy changed type");
+            }
+        } else {
+            panic!("Policy changed type");
+        }
+    }
+
+    #[test]
+    fn test_apply_output_directory_override_nested_combined() {
+        let mut policy = ResponseOutputPolicy::Combined {
             policies: vec![
                 Box::new(ResponseOutputPolicy::File {
-                    filename: "old.json".to_string(),
+                    filename: "file1.json".to_string(),
                     format: ResponseOutputFormat::Json {
                         newline_delimited: false,
                     },
                     file_flush_rate: None,
                     write_mode: None,
                 }),
-                Box::new(ResponseOutputPolicy::None),
+                Box::new(ResponseOutputPolicy::Combined {
+                    policies: vec![
+                        Box::new(ResponseOutputPolicy::File {
+                            filename: "file2.csv".to_string(),
+                            format: ResponseOutputFormat::Csv {
+                                mapping: OrderedHashMap::new(),
+                                sorted: false,
+                            },
+                            file_flush_rate: None,
+                            write_mode: None,
+                        }),
+                        Box::new(ResponseOutputPolicy::None),
+                    ],
+                }),
             ],
         };
 
-        // Should succeed when only one File policy exists
-        assert!(apply_output_file_override(&mut policy_single, "new.json").is_ok());
+        assert!(apply_output_directory_override(&mut policy, "out").is_ok());
+
+        if let ResponseOutputPolicy::Combined { policies } = policy {
+            // Check first file
+            if let ResponseOutputPolicy::File { filename, .. } = policies[0].as_ref() {
+                assert_eq!(
+                    filename,
+                    &Path::new("out")
+                        .join("file1.json")
+                        .to_string_lossy()
+                        .to_string()
+                );
+            }
+
+            // Check nested file
+            if let ResponseOutputPolicy::Combined { policies: nested } = policies[1].as_ref() {
+                if let ResponseOutputPolicy::File { filename, .. } = nested[0].as_ref() {
+                    assert_eq!(
+                        filename,
+                        &Path::new("out")
+                            .join("file2.csv")
+                            .to_string_lossy()
+                            .to_string()
+                    );
+                }
+            }
+        }
     }
 
     #[test]
-    fn test_apply_output_file_override_none_policy() {
+    fn test_apply_output_directory_override_none() {
         let mut policy = ResponseOutputPolicy::None;
-
-        // Should succeed with no effect on None policy
-        assert!(apply_output_file_override(&mut policy, "new.json").is_ok());
-        assert!(apply_output_file_override(&mut policy, "new.csv").is_ok());
-        assert!(apply_output_file_override(&mut policy, "any_file.txt").is_ok());
-
-        // Verify policy is still None
+        assert!(apply_output_directory_override(&mut policy, "new_dir").is_ok());
         assert!(matches!(policy, ResponseOutputPolicy::None));
-    }
-
-    #[test]
-    fn test_count_file_policies_empty() {
-        let policies: Vec<Box<ResponseOutputPolicy>> = vec![];
-        assert_eq!(count_file_policies(&policies), 0);
-    }
-
-    #[test]
-    fn test_count_file_policies_single_file() {
-        let policies = vec![Box::new(ResponseOutputPolicy::File {
-            filename: "test.json".to_string(),
-            format: ResponseOutputFormat::Json {
-                newline_delimited: false,
-            },
-            file_flush_rate: None,
-            write_mode: None,
-        })];
-        assert_eq!(count_file_policies(&policies), 1);
-    }
-
-    #[test]
-    fn test_count_file_policies_multiple_files() {
-        let policies = vec![
-            Box::new(ResponseOutputPolicy::File {
-                filename: "test1.json".to_string(),
-                format: ResponseOutputFormat::Json {
-                    newline_delimited: false,
-                },
-                file_flush_rate: None,
-                write_mode: None,
-            }),
-            Box::new(ResponseOutputPolicy::File {
-                filename: "test2.csv".to_string(),
-                format: ResponseOutputFormat::Csv {
-                    mapping: OrderedHashMap::new(),
-                    sorted: false,
-                },
-                file_flush_rate: None,
-                write_mode: None,
-            }),
-        ];
-        assert_eq!(count_file_policies(&policies), 2);
-    }
-
-    #[test]
-    fn test_count_file_policies_none() {
-        let policies = vec![Box::new(ResponseOutputPolicy::None)];
-        assert_eq!(count_file_policies(&policies), 0);
-    }
-
-    #[test]
-    fn test_count_file_policies_mixed() {
-        let policies = vec![
-            Box::new(ResponseOutputPolicy::File {
-                filename: "test.json".to_string(),
-                format: ResponseOutputFormat::Json {
-                    newline_delimited: false,
-                },
-                file_flush_rate: None,
-                write_mode: None,
-            }),
-            Box::new(ResponseOutputPolicy::None),
-            Box::new(ResponseOutputPolicy::File {
-                filename: "test.csv".to_string(),
-                format: ResponseOutputFormat::Csv {
-                    mapping: OrderedHashMap::new(),
-                    sorted: false,
-                },
-                file_flush_rate: None,
-                write_mode: None,
-            }),
-        ];
-        assert_eq!(count_file_policies(&policies), 2);
-    }
-
-    #[test]
-    fn test_count_file_policies_nested_combined() {
-        let policies = vec![
-            Box::new(ResponseOutputPolicy::File {
-                filename: "test1.json".to_string(),
-                format: ResponseOutputFormat::Json {
-                    newline_delimited: false,
-                },
-                file_flush_rate: None,
-                write_mode: None,
-            }),
-            Box::new(ResponseOutputPolicy::Combined {
-                policies: vec![
-                    Box::new(ResponseOutputPolicy::File {
-                        filename: "test2.csv".to_string(),
-                        format: ResponseOutputFormat::Csv {
-                            mapping: OrderedHashMap::new(),
-                            sorted: false,
-                        },
-                        file_flush_rate: None,
-                        write_mode: None,
-                    }),
-                    Box::new(ResponseOutputPolicy::None),
-                ],
-            }),
-        ];
-        // Should count 2 files: test1.json and test2.csv
-        assert_eq!(count_file_policies(&policies), 2);
     }
 }
