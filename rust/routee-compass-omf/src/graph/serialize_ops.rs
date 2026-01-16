@@ -293,8 +293,7 @@ pub fn bearing_deg_from_geometries(
             let n = linestring.0.len();
             if n < 2 {
                 return Err(OvertureMapsCollectionError::InternalError(format!(
-                    "cannot compute bearing on linestring with less than two points: {:?}",
-                    linestring
+                    "cannot compute bearing on linestring with less than two points: {linestring:?}"
                 )));
             }
             let p0 = linestring.0[n - 2];

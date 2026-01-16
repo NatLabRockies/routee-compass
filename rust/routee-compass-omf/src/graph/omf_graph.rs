@@ -235,10 +235,7 @@ impl OmfGraphVectorized {
 
             // Write classes
             serialize_into_enumerated_txt(
-                edge_list
-                    .classes
-                    .iter()
-                    .map(|class| class.as_str()),
+                edge_list.classes.iter().map(|class| class.as_str()),
                 CLASSES_FILENAME,
                 &mode_dir,
                 overwrite,
