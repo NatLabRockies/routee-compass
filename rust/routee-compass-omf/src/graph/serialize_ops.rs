@@ -10,8 +10,8 @@ use std::{
 
 use crate::{
     collection::{
-        OvertureMapsCollectionError, SegmentFullType, TransportationConnectorRecord,
-        TransportationSegmentRecord,
+        OvertureMapsCollectionError, SegmentAccessRestrictionWhen, SegmentFullType,
+        TransportationConnectorRecord, TransportationSegmentRecord,
     },
     graph::{segment_split::SegmentSplit, ConnectorInSegment},
 };
@@ -55,16 +55,19 @@ pub fn create_segment_lookup(segments: &[&TransportationSegmentRecord]) -> HashM
 }
 
 /// collects all splits from all segment records, used to create edges.
-/// the application of split ops is parallelized over the segment records.
+/// the application of split ops is parallelized over the segment records, as splits are
+/// not ordered.
 pub fn find_splits(
     segments: &[&TransportationSegmentRecord],
+    when: Option<&SegmentAccessRestrictionWhen>,
     split_op: fn(
         &TransportationSegmentRecord,
+        Option<&SegmentAccessRestrictionWhen>,
     ) -> Result<Vec<SegmentSplit>, OvertureMapsCollectionError>,
 ) -> Result<Vec<SegmentSplit>, OvertureMapsCollectionError> {
     let result = segments
         .par_iter()
-        .map(|s| split_op(s))
+        .map(|s| split_op(s, when))
         .collect::<Result<Vec<Vec<SegmentSplit>>, OvertureMapsCollectionError>>()?
         .into_iter()
         .flatten()

@@ -18,15 +18,12 @@ keywords = [
 categories = ["command-line-utilities", "science", "science::geo"]
 
 [dependencies]
-bamcensus-core = { workspace = true }
-bamcensus-acs = { workspace = true }
-bamcensus-lehd = { workspace = true }
-bamcensus = { workspace = true }
-routee-compass = { workspace = true }
-routee-compass-core = { workspace = true }
-routee-compass-powertrain = { workspace = true }
 
 arrow = { workspace = true }
+bamcensus = { workspace = true }
+bamcensus-acs = { workspace = true }
+bamcensus-core = { workspace = true }
+bamcensus-lehd = { workspace = true }
 chrono = { workspace = true }
 clap = { workspace = true }
 config = { workspace = true }
@@ -41,17 +38,20 @@ itertools = { workspace = true }
 kdam = { workspace = true }
 log = { workspace = true }
 object_store = { workspace = true }
-parquet = { workspace = true }
 opening-hours-syntax = { workspace = true }
 ordered-float = { workspace = true }
+parquet = { workspace = true }
 rayon = { workspace = true }
 reqwest = { workspace = true }
+routee-compass = { workspace = true }
+routee-compass-core = { workspace = true }
+routee-compass-powertrain = { workspace = true }
 serde = { workspace = true }
+serde_arrow = { workspace = true }
 serde_bytes = { workspace = true }
 serde_json = { workspace = true }
-serde_arrow = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 uom = { workspace = true }
-wkt = { workspace = true }
 wkb = { workspace = true }
+wkt = { workspace = true }

@@ -1,13 +1,16 @@
 use geo::{Geometry, MapCoords, TryConvert};
 use geozero::{error::GeozeroError, wkb::Wkb, ToGeo};
 use serde::{Deserialize, Deserializer};
+use serde_bytes;
 
-// Deserialize into an enum that can handle both Vec<u8> and String
+/// Deserialize into an enum that can handle both String and Vec<u8>, in
+/// that order.
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum BytesOrString {
-    String(String), // The order here was important
-    Bytes(serde_bytes::ByteBuf),
+    String(String),
+    #[serde(with = "serde_bytes")]
+    Bytes(Vec<u8>),
 }
 
 impl std::fmt::Display for BytesOrString {
@@ -28,7 +31,7 @@ where
 
     data.map(|v| {
         let bytes = match &v {
-            BytesOrString::Bytes(b) => b.clone().into_vec(),
+            BytesOrString::Bytes(b) => b.clone(),
             BytesOrString::String(s) => hex::decode(s).map_err(|e| {
                 serde::de::Error::custom(format!("failure converting hex wkb string to bytes: {e}"))
             })?,

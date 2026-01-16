@@ -15,7 +15,7 @@ use crate::collection::{OvertureMapsCollectionError, OvertureRecord};
 /// and other attributes relevant to routing and mapping.
 ///
 /// see <https://docs.overturemaps.org/schema/reference/transportation/segment/>
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct TransportationSegmentRecord {
     /// GERS identifier for this segment record
     pub id: String,
@@ -586,7 +586,7 @@ fn default_none<T>() -> Option<T> {
     None
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct SegmentAccessRestrictionWhen {
     /// Time span or time spans during which something is open or active, specified
     /// in the OSM opening hours specification:
@@ -661,36 +661,81 @@ pub struct SegmentAccessRestrictionWhenVehicle {
     unit: Option<SegmentUnit>,
 }
 
+/// Describes objects that can be reached by following a transportation
+/// segment in the same way those objects are described on signposts or
+/// ground writing that a traveller following the segment would observe
+/// in the real world. This allows navigation systems to refer to signs
+/// and observable writing that a traveller actually sees.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SegmentDestination {
+    /// Labeled destinations that can be reached by following the segment.
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    labels: Option<Vec<SegmentDestinationLabel>>,
+    pub labels: Option<Vec<SegmentDestinationLabel>>,
+    /// Indicates what special symbol/icon is present on a signpost, visible as road marking or similar.
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    symbols: Option<Vec<String>>,
+    pub symbols: Option<Vec<SegmentSymbol>>,
+    /// Identifies the point of physical connection on this segment before which the destination sign or marking is visible.
+    pub from_connector_id: String,
+    /// Identifies the segment to transition to reach the destination(s) labeled on the sign or marking.
+    pub to_segment_id: String,
+    /// Identifies the point of physical connection on the segment identified by 'to_segment_id' to transition to for reaching the destination(s).
+    pub to_connector_id: String,
+    /// Properties defining travel headings that match a rule.
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    from_connector_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none", default)]
-    to_segment_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none", default)]
-    to_connector_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none", default)]
-    when: Option<SegmentDestinationWhen>,
-    #[serde(skip_serializing_if = "Option::is_none", default)]
-    final_heading: Option<SegmentHeading>,
+    pub when: Option<SegmentDestinationWhen>,
+    /// Enumerates possible travel headings along segment geometry.
+    pub final_heading: SegmentHeading,
+}
+
+/// Indicates what special symbol/icon is present on a signpost, visible as road marking or similar.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentSymbol {
+    Motorway,
+    Airport,
+    Hospital,
+    Center,
+    Industrial,
+    Parking,
+    Bus,
+    TrainStation,
+    RestArea,
+    Ferry,
+    Motorroad,
+    Fuel,
+    Viewpoint,
+    FuelDiesel,
+    Food,
+    Lodging,
+    Info,
+    CampSite,
+    Interchange,
+    Restrooms,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SegmentDestinationLabel {
-    #[serde(skip_serializing_if = "Option::is_none", default)]
-    value: Option<String>,
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none", default)]
-    type_str: Option<String>,
+    pub value: String,
+    pub r#type: SegmentDestinationLabelType,
+}
+
+/// The type of object of the destination label.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum SegmentDestinationLabelType {
+    Street,
+    Country,
+    RouteRef,
+    TowardRouteRef,
+    Unknown,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SegmentDestinationWhen {
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    heading: Option<String>,
+    pub heading: Option<SegmentHeading>,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub mode: Option<Vec<SegmentMode>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

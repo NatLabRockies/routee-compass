@@ -24,7 +24,7 @@ pub enum TravelModeFilter {
     MatchesClasses {
         classes: HashSet<SegmentClass>,
         behavior: MatchBehavior,
-        ignore_unset: bool,
+        allow_unset: bool,
     },
     /// filter a row based on a class with additional subclass(es). fails if not a match,
     /// and optionally, if 'class' or 'subclass' are unset.
@@ -32,7 +32,7 @@ pub enum TravelModeFilter {
     MatchesClassesWithSubclasses {
         classes: HashMap<SegmentClass, Vec<SegmentSubclass>>,
         behavior: MatchBehavior,
-        ignore_unset: bool,
+        allow_unset: bool,
     },
 
     /// filter a row based on the [SegmentMode].
@@ -145,35 +145,39 @@ impl TravelModeFilter {
     /// returns false if there is no match.
     pub fn matches_filter(&self, segment: &TransportationSegmentRecord) -> bool {
         match self {
+            // subtype matching. default behavior is REJECT
             TravelModeFilter::MatchesSubtype { subtype } => segment
                 .subtype
                 .as_ref()
                 .map(|s| s == subtype)
                 .unwrap_or_default(),
 
+            // class matching. default behavior set by user (allow_unset).
             TravelModeFilter::MatchesClasses {
                 classes,
                 behavior,
-                ignore_unset,
+                allow_unset,
             } => segment
                 .class
                 .as_ref()
                 .map(|c| behavior.apply(classes.contains(c)))
-                .unwrap_or(*ignore_unset),
+                .unwrap_or(*allow_unset),
 
+            // subclass matching. default behavior set by user (allow_unset).
             TravelModeFilter::MatchesClassesWithSubclasses {
                 classes,
                 behavior,
-                ignore_unset,
+                allow_unset,
             } => match (segment.class.as_ref(), segment.subclass.as_ref()) {
                 (Some(cl), None) => behavior.apply(classes.contains_key(cl)),
                 (Some(cl), Some(sc)) => match classes.get(cl) {
-                    None => *ignore_unset,
+                    None => *allow_unset,
                     Some(subclasses) => behavior.apply(subclasses.contains(sc)),
                 },
-                _ => *ignore_unset,
+                _ => *allow_unset,
             },
 
+            // mode matching. default behavior is ALLOW
             TravelModeFilter::MatchesModeAccess { modes } => {
                 let restrictions = segment
                     .access_restrictions

@@ -6,7 +6,8 @@ use crate::{
     app::CliBoundingBox,
     collection::{
         filter::TravelModeFilter, ObjectStoreSource, OvertureMapsCollectionError,
-        OvertureMapsCollectorConfig, ReleaseVersion, TransportationCollection,
+        OvertureMapsCollectorConfig, ReleaseVersion, SegmentAccessRestrictionWhen,
+        TransportationCollection,
     },
     graph::OmfGraphVectorized,
     util,
@@ -16,6 +17,20 @@ use crate::{
 pub struct NetworkEdgeListConfiguration {
     pub mode: String,
     pub filter: Vec<TravelModeFilter>,
+}
+
+impl From<&NetworkEdgeListConfiguration> for SegmentAccessRestrictionWhen {
+    fn from(value: &NetworkEdgeListConfiguration) -> Self {
+        let user_modes_opt = value.filter.iter().find_map(|f| match f {
+            TravelModeFilter::MatchesModeAccess { modes } => Some(modes.clone()),
+            _ => None,
+        });
+        let mut result = SegmentAccessRestrictionWhen::default();
+        if let Some(modes) = user_modes_opt {
+            result.mode = Some(modes);
+        }
+        result
+    }
 }
 
 /// runs an OMF network import using the provided configuration.
