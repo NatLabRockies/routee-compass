@@ -15,7 +15,7 @@ use rayon::prelude::*;
 use routee_compass_core::model::network::{EdgeConfig, EdgeList, EdgeListId, Vertex};
 use wkt::ToWkt;
 
-pub const COMPASS_VERTEX_FILENAME: &str = "vertices_compass.csv.gz";
+pub const COMPASS_VERTEX_FILENAME: &str = "vertices-compass.csv.gz";
 pub const COMPASS_EDGES_FILENAME: &str = "edges-compass.csv.gz";
 pub const GEOMETRIES_FILENAME: &str = "edges-geometries-enumerated.txt.gz";
 pub const SPEEDS_FILENAME: &str = "edges-speeds-mph-enumerated.txt.gz";
