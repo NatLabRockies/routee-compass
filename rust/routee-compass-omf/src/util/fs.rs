@@ -1,4 +1,9 @@
-use std::path::Path;
+use std::{fs::File, path::Path};
+
+use csv::QuoteStyle;
+use flate2::{write::GzEncoder, Compression};
+use kdam::tqdm;
+use serde::Serialize;
 
 use crate::collection::OvertureMapsCollectionError;
 
@@ -19,4 +24,97 @@ where
     } else {
         Ok(())
     }
+}
+
+pub fn serialize_into_csv<T: Serialize>(
+    iterable: &[T],
+    filename: &str,
+    output_directory: &Path,
+    overwrite: bool,
+    desc: &str,
+) -> Result<(), OvertureMapsCollectionError> {
+    let mut writer: Option<csv::Writer<GzEncoder<File>>> = create_writer(
+        output_directory,
+        filename,
+        true,
+        QuoteStyle::Necessary,
+        overwrite,
+    );
+    let iter = tqdm!(iterable.iter(), total = iterable.len(), desc = desc);
+    for element in iter {
+        if let Some(ref mut writer) = writer {
+            // let vertex_ser = VertexSerializable::from(*vertex);
+            writer.serialize(element).map_err(|e| {
+                OvertureMapsCollectionError::CsvWriteError(format!(
+                    "Failed to write to {filename}: {e}"
+                ))
+            })?;
+        }
+    }
+    eprintln!();
+    if let Some(ref mut writer) = writer {
+        writer.flush().map_err(|e| {
+            OvertureMapsCollectionError::CsvWriteError(format!("Failed to flush {filename}: {e}"))
+        })?;
+    };
+
+    Ok(())
+}
+
+pub fn serialize_into_enumerated_txt<T: Serialize>(
+    iterable: &[T],
+    filename: &str,
+    output_directory: &Path,
+    overwrite: bool,
+    desc: &str,
+) -> Result<(), OvertureMapsCollectionError> {
+    let mut writer: Option<csv::Writer<GzEncoder<File>>> = create_writer(
+        output_directory,
+        filename,
+        false,
+        QuoteStyle::Never,
+        overwrite,
+    );
+    let iter = tqdm!(iterable.iter(), total = iterable.len(), desc = desc);
+    for element in iter {
+        if let Some(ref mut writer) = writer {
+            // let vertex_ser = VertexSerializable::from(*vertex);
+            writer.serialize(element).map_err(|e| {
+                OvertureMapsCollectionError::CsvWriteError(format!(
+                    "Failed to write to {filename}: {e}"
+                ))
+            })?;
+        }
+    }
+    eprintln!();
+    if let Some(ref mut writer) = writer {
+        writer.flush().map_err(|e| {
+            OvertureMapsCollectionError::CsvWriteError(format!("Failed to flush {filename}: {e}"))
+        })?;
+    };
+
+    Ok(())
+}
+
+/// helper function to build a filewriter for writing either .csv.gz or
+/// .txt.gz files for compass datasets while respecting the user's overwrite
+/// preferences and properly formatting WKT outputs.
+fn create_writer(
+    directory: &Path,
+    filename: &str,
+    has_headers: bool,
+    quote_style: QuoteStyle,
+    overwrite: bool,
+) -> Option<csv::Writer<GzEncoder<File>>> {
+    let filepath = directory.join(filename);
+    if filepath.exists() && !overwrite {
+        return None;
+    }
+    let file = File::create(filepath).unwrap();
+    let buffer = GzEncoder::new(file, Compression::default());
+    let writer = csv::WriterBuilder::new()
+        .has_headers(has_headers)
+        .quote_style(quote_style)
+        .from_writer(buffer);
+    Some(writer)
 }

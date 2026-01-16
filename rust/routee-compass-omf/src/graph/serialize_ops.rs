@@ -1,4 +1,4 @@
-use geo::{Coord, LineString, Haversine, Bearing};
+use geo::{Bearing, Coord, Haversine, LineString};
 use itertools::Itertools;
 use kdam::{tqdm, Bar, BarExt};
 use rayon::prelude::*;
@@ -284,16 +284,22 @@ pub fn get_global_average_speed(
 
 /// Computes the outward bearings of the geometries representing
 /// segment splits using the last two point in the LineStrings
-pub fn bearing_deg_from_geometries(geometries: &[LineString<f32>]) -> Result<Vec<f64>, OvertureMapsCollectionError>{
-    geometries.iter().map(
-        |linestring|{
+pub fn bearing_deg_from_geometries(
+    geometries: &[LineString<f32>],
+) -> Result<Vec<f64>, OvertureMapsCollectionError> {
+    geometries
+        .iter()
+        .map(|linestring| {
             let n = linestring.0.len();
             if n < 2 {
-                return Err(OvertureMapsCollectionError::InternalError(format!("cannot compute bearing on linestring with less than two points: {:?}", linestring)));
+                return Err(OvertureMapsCollectionError::InternalError(format!(
+                    "cannot compute bearing on linestring with less than two points: {:?}",
+                    linestring
+                )));
             }
             let p0 = linestring.0[n - 2];
             let p1 = linestring.0[n - 1];
             Ok(Haversine.bearing(p0.into(), p1.into()) as f64)
-        }
-    ).collect()
+        })
+        .collect()
 }
