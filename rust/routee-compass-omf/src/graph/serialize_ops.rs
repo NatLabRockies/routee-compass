@@ -10,7 +10,8 @@ use std::{
 
 use crate::{
     collection::{
-        OvertureMapsCollectionError, TransportationConnectorRecord, TransportationSegmentRecord,
+        OvertureMapsCollectionError, SegmentFullType, TransportationConnectorRecord,
+        TransportationSegmentRecord,
     },
     graph::{segment_split::SegmentSplit, ConnectorInSegment},
 };
@@ -188,4 +189,92 @@ pub fn create_geometries(
         .par_iter()
         .map(|split| split.create_geometry_from_split(segments, segment_lookup))
         .collect::<Result<Vec<LineString<f32>>, OvertureMapsCollectionError>>()
+}
+
+pub fn create_speeds(
+    segments: &[&TransportationSegmentRecord],
+    segment_lookup: &HashMap<String, usize>,
+    splits: &[SegmentSplit],
+) -> Result<Vec<Option<f64>>, OvertureMapsCollectionError> {
+    splits
+        .par_iter()
+        .map(|split| split.get_split_speed(segments, segment_lookup))
+        .collect::<Result<Vec<Option<f64>>, OvertureMapsCollectionError>>()
+}
+
+pub fn create_segment_full_types(
+    segments: &[&TransportationSegmentRecord],
+    segment_lookup: &HashMap<String, usize>,
+    splits: &[SegmentSplit],
+) -> Result<Vec<SegmentFullType>, OvertureMapsCollectionError> {
+    splits
+        .par_iter()
+        .map(|split| split.get_split_segment_full_type(segments, segment_lookup))
+        .collect::<Result<Vec<SegmentFullType>, OvertureMapsCollectionError>>()
+}
+
+pub fn create_speed_by_segment_type_lookup<'a>(
+    initial_speeds: &[Option<f64>],
+    segments: &[&TransportationSegmentRecord],
+    segment_lookup: &HashMap<String, usize>,
+    splits: &[SegmentSplit],
+    classes: &'a [SegmentFullType],
+) -> Result<HashMap<&'a SegmentFullType, f64>, OvertureMapsCollectionError> {
+    let split_lenghts = splits
+        .iter()
+        .map(|split| {
+            split
+                .get_split_length_meters(segments, segment_lookup)
+                .map(|v_f32| v_f32 as f64)
+        })
+        .collect::<Result<Vec<f64>, OvertureMapsCollectionError>>()?;
+
+    let mut speed_sum_lookup: HashMap<&SegmentFullType, (f64, f64)> = HashMap::new();
+
+    for ((class, w), speed) in classes.iter().zip(split_lenghts).zip(initial_speeds) {
+        let Some(x) = speed else { continue }; // skip missing speeds
+
+        let element = speed_sum_lookup.entry(class).or_insert((0.0, 0.0));
+        element.0 += w * x;
+        element.1 += w;
+    }
+
+    Ok(speed_sum_lookup
+        .into_iter()
+        .filter(|&(_k, (_wx, w))| w != 0.0)
+        .map(|(k, (wx, w))| (k, wx / w))
+        .collect::<HashMap<&SegmentFullType, f64>>())
+}
+
+pub fn get_global_average_speed(
+    initial_speeds: &[Option<f64>],
+    segments: &[&TransportationSegmentRecord],
+    segment_lookup: &HashMap<String, usize>,
+    splits: &[SegmentSplit],
+) -> Result<f64, OvertureMapsCollectionError> {
+    let split_lenghts = splits
+        .iter()
+        .map(|split| {
+            split
+                .get_split_length_meters(segments, segment_lookup)
+                .map(|v_f32| v_f32 as f64)
+        })
+        .collect::<Result<Vec<f64>, OvertureMapsCollectionError>>()?;
+
+    let mut total_length = 0.;
+    let mut weighted_sum = 0.;
+    for (opt_speed, length) in initial_speeds.iter().zip(split_lenghts) {
+        let Some(speed) = opt_speed else { continue }; // skip missing speeds
+
+        total_length += length;
+        weighted_sum += length * speed;
+    }
+
+    if total_length < 1e-6 {
+        return Err(OvertureMapsCollectionError::InternalError(format!(
+            "internal division by zero when computing average speed: {initial_speeds:?}"
+        )));
+    }
+
+    Ok(weighted_sum / total_length)
 }

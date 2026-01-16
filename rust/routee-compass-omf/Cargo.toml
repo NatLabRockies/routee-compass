@@ -47,6 +47,7 @@ ordered-float = { workspace = true }
 rayon = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }
+serde_bytes = { workspace = true }
 serde_json = { workspace = true }
 serde_arrow = { workspace = true }
 thiserror = { workspace = true }
