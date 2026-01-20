@@ -72,7 +72,7 @@ impl OvertureMapsCollector {
             })?;
 
         // Process all common prefixes to find latest date
-        let mut version_tuples: Vec<(NaiveDate, String)> = common_prefixes
+        let (_, latest) = common_prefixes
             .iter()
             .filter_map(|p| {
                 let clean_str = p.to_string().strip_prefix("release/")?.to_string();
@@ -82,16 +82,14 @@ impl OvertureMapsCollector {
 
                 Some((date_part, clean_str))
             })
-            .collect();
+            .max_by_key(|(date, _)| date.clone())
+            .ok_or_else(|| {
+                OvertureMapsCollectionError::MetadataError(String::from(
+                    "latest /release not found",
+                ))
+            })?;
 
-        // Get the latest date from tuples
-        version_tuples.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.cmp(&b.1)));
-        version_tuples
-            .pop()
-            .ok_or(OvertureMapsCollectionError::ConnectionError(String::from(
-                "No version tuples generated while getting latest version string",
-            )))
-            .map(|(_, v)| v)
+        Ok(latest)
     }
 
     pub fn collect_from_path(
