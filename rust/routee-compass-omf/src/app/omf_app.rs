@@ -93,7 +93,7 @@ impl OmfOperation {
                     &network_config,
                     outdir,
                     local,
-                    object_store.clone(),
+                    *object_store,
                     *batch_size,
                     *store_raw,
                 )
