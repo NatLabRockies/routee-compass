@@ -592,11 +592,7 @@ pub struct SegmentAccessRestrictionWhen {
     /// Time span or time spans during which something is open or active, specified
     /// in the OSM opening hours specification:
     /// see <https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification>
-    #[serde(
-        // with = "opening_hours_codec",
-        skip_serializing_if = "Option::is_none",
-        default = "default_none"
-    )]
+    #[serde(skip_serializing_if = "Option::is_none", default = "default_none")]
     pub during: Option<DuringExpression>,
     /// Enumerates possible travel headings along segment geometry.
     #[serde(skip_serializing_if = "Option::is_none", default)]
