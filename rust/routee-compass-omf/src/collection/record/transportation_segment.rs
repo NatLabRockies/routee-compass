@@ -617,33 +617,6 @@ pub struct SegmentAccessRestrictionWhen {
     pub vehicle: Option<Vec<SegmentAccessRestrictionWhenVehicle>>,
 }
 
-// mod opening_hours_codec {
-//     use opening_hours_syntax::rules::OpeningHoursExpression;
-//     use serde::Deserialize;
-
-//     pub fn serialize<S>(t: &Option<OpeningHoursExpression>, s: S) -> Result<S::Ok, S::Error>
-//     where
-//         S: serde::Serializer,
-//     {
-//         match t {
-//             Some(expr) => s.serialize_str(&expr.to_string()),
-//             None => s.serialize_none(),
-//         }
-//     }
-//     pub fn deserialize<'de, D>(d: D) -> Result<Option<OpeningHoursExpression>, D::Error>
-//     where
-//         D: serde::Deserializer<'de>,
-//     {
-//         let s: Option<&str> = Option::deserialize(d)?;
-//         match s {
-//             Some(text) => opening_hours_syntax::parse(text)
-//                 .map(Some)
-//                 .map_err(serde::de::Error::custom),
-//             None => Ok(None),
-//         }
-//     }
-// }
-
 impl SegmentAccessRestrictionWhen {
     pub fn contains_mode(&self, mode: &SegmentMode) -> bool {
         self.mode
