@@ -1,6 +1,12 @@
 use opening_hours_syntax::rules::OpeningHoursExpression;
 use serde::{Deserialize, Serialize};
 
+/// the opening hours for an OvertureMaps record. because of the existence of
+/// invalid data, this is provided with a fallback Unexpected variant when
+/// parsing as opening hours fails. see documentation for the OSM hours for
+/// more information.
+///
+/// <https://wiki.openstreetmap.org/wiki/Key:opening_hours>
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum DuringExpression {
@@ -24,5 +30,24 @@ mod opening_hours_codec {
     {
         let s = String::deserialize(d)?;
         opening_hours_syntax::parse(&s).map_err(serde::de::Error::custom)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_valid_opening_hours() {
+        let json = r#""07:00-16:00""#;
+        let result: DuringExpression = serde_json::from_str(json).unwrap();
+        assert!(matches!(result, DuringExpression::Osm(_)));
+    }
+
+    #[test]
+    fn test_parse_invalid_opening_hours_as_unexpected() {
+        let json = r#""sunset""#;
+        let result: DuringExpression = serde_json::from_str(json).unwrap();
+        assert!(matches!(result, DuringExpression::Unexpected(s) if s == "sunset"));
     }
 }
