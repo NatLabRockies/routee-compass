@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub enum DuringExpression {
     #[serde(with = "opening_hours_codec")]
     Osm(OpeningHoursExpression),
-    String,
+    Unexpected(String),
 }
 
 mod opening_hours_codec {
