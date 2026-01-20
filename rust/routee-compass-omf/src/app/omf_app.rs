@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     app::{cli_bbox::parse_bbox, network::NetworkEdgeListConfiguration, CliBoundingBox},
-    collection::OvertureMapsCollectionError,
+    collection::{ObjectStoreSource, OvertureMapsCollectionError},
 };
 
 /// Command line tool for batch downloading and summarizing of OMF (Overture Maps Foundation) data
@@ -37,6 +37,14 @@ pub enum OmfOperation {
         #[arg(short, long)]
         local_source: Option<String>,
 
+        /// size of each download batch. this may be modified for network performance
+        #[arg(long, default_value = "128")]
+        batch_size: usize,
+
+        /// location where the file is stored
+        #[arg(long, value_enum, default_value_t = ObjectStoreSource::AmazonS3)]
+        object_store: ObjectStoreSource,
+
         /// write the raw OMF dataset as a JSON blob to the output directory.
         #[arg(short, long)]
         store_raw: bool,
@@ -54,6 +62,8 @@ impl OmfOperation {
                 configuration_file,
                 output_directory,
                 local_source,
+                batch_size,
+                object_store,
                 store_raw,
                 bbox,
             } => {
@@ -78,7 +88,15 @@ impl OmfOperation {
                     None => Path::new(""),
                 };
                 let local = local_source.as_ref().map(Path::new);
-                crate::app::network::run(bbox.as_ref(), &network_config, outdir, local, *store_raw)
+                crate::app::network::run(
+                    bbox.as_ref(),
+                    &network_config,
+                    outdir,
+                    local,
+                    object_store.clone(),
+                    *batch_size,
+                    *store_raw,
+                )
             }
         }
     }

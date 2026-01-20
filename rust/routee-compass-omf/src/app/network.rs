@@ -39,11 +39,13 @@ pub fn run(
     modes: &[NetworkEdgeListConfiguration],
     output_directory: &Path,
     local_source: Option<&Path>,
+    object_store: ObjectStoreSource,
+    batch_size: usize,
     write_json: bool,
 ) -> Result<(), OvertureMapsCollectionError> {
     let collection: TransportationCollection = match local_source {
         Some(src_path) => read_local(src_path),
-        None => run_collector(bbox),
+        None => run_collector(bbox, object_store, batch_size),
     }?;
 
     if write_json {
@@ -75,9 +77,9 @@ fn read_local(path: &Path) -> Result<TransportationCollection, OvertureMapsColle
 /// retrieve a TransportationCollection from a URL.
 fn run_collector(
     bbox_arg: Option<&CliBoundingBox>,
+    object_store: ObjectStoreSource,
+    batch_size: usize,
 ) -> Result<TransportationCollection, OvertureMapsCollectionError> {
-    let object_store = ObjectStoreSource::AmazonS3;
-    let batch_size = 128;
     let collector = OvertureMapsCollectorConfig::new(object_store, batch_size).build()?;
     let release = ReleaseVersion::Latest;
     let bbox = bbox_arg.ok_or_else(|| {
