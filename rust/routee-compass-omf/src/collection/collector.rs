@@ -82,7 +82,7 @@ impl OvertureMapsCollector {
 
                 Some((date_part, clean_str))
             })
-            .max_by_key(|(date, _)| *date)
+            .max() // compare by date then by string for tiebreaking
             .ok_or_else(|| {
                 OvertureMapsCollectionError::MetadataError(String::from(
                     "latest /release not found",
