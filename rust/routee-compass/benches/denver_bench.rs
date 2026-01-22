@@ -23,6 +23,8 @@ fn downtown_denver_example(query_file: String) {
         query_file,
         chunksize: None,
         newline_delimited: false,
+        parallelism: Some(1),
+        output_directory: None,
     };
     let builder = CompassBuilderInventory::new().expect("failed to load compass app builder");
     match run::command_line_runner(&args, Some(builder), None) {
