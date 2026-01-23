@@ -173,7 +173,7 @@ impl OvertureMapsCollector {
 
         let record_batches = runtime.block_on(
             stream::iter(streams)
-                .flatten_unordered(None)
+                .flatten_unordered(self.file_concurrency_limit)
                 .try_collect::<Vec<RecordBatch>>()
                 .map_err(|e| OvertureMapsCollectionError::RecordBatchRetrievalError { source: e }),
         )?;
