@@ -27,10 +27,8 @@ use super::RowFilterConfig;
 #[derive(Debug)]
 pub struct OvertureMapsCollector {
     obj_store: Arc<dyn ObjectStore>,
-    // Number of row groups to schedule for each process. Defaults to 4
-    rg_chunk_size: Option<usize>,
-    // Limit to the number of files to process simultaneously. Defaults to 64
-    file_recurrency_limit: Option<usize>,
+    rg_chunk_size: usize,
+    file_concurrency_limit: usize,
 }
 
 impl TryFrom<OvertureMapsCollectorConfig> for OvertureMapsCollector {
@@ -42,11 +40,15 @@ impl TryFrom<OvertureMapsCollectorConfig> for OvertureMapsCollector {
 }
 
 impl OvertureMapsCollector {
-    pub fn new(object_store: Arc<dyn ObjectStore>) -> Self {
+    pub fn new(
+        object_store: Arc<dyn ObjectStore>,
+        rg_chunk_size: usize,
+        file_concurrency_limit: usize,
+    ) -> Self {
         Self {
             obj_store: object_store,
-            rg_chunk_size: Some(4),
-            file_recurrency_limit: Some(64),
+            rg_chunk_size,
+            file_concurrency_limit: file_concurrency_limit,
         }
     }
 
@@ -146,10 +148,10 @@ impl OvertureMapsCollector {
                         self.obj_store.clone(),
                         Some(io_runtime.handle().clone()),
                         opt_bbox_filter,
-                        self.rg_chunk_size,
+                        Some(self.rg_chunk_size),
                     )
                 })
-                .buffer_unordered(self.file_recurrency_limit.unwrap_or(64))
+                .buffer_unordered(self.file_concurrency_limit)
                 .try_collect::<Vec<Vec<RowGroupTask>>>()
                 .await?
                 .into_iter()
@@ -229,7 +231,7 @@ mod test {
     use std::str::FromStr;
 
     fn get_collector() -> OvertureMapsCollector {
-        OvertureMapsCollectorConfig::new(ObjectStoreSource::AmazonS3, 512)
+        OvertureMapsCollectorConfig::new(ObjectStoreSource::AmazonS3, Some(4), Some(64))
             .build()
             .unwrap()
     }
