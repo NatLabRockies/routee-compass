@@ -1,5 +1,6 @@
 mod collector;
 mod collector_config;
+mod collector_ops;
 mod error;
 mod object_source;
 mod taxonomy;

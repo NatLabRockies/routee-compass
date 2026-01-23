@@ -32,8 +32,6 @@ impl OvertureMapsCollectorConfig {
     pub fn build(&self) -> Result<OvertureMapsCollector, OvertureMapsCollectionError> {
         Ok(OvertureMapsCollector::new(
             self.obj_store_type.build()?,
-            // self.row_filter_config.clone(),
-            self.batch_size,
         ))
     }
 }
