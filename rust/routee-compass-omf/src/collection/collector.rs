@@ -48,7 +48,7 @@ impl OvertureMapsCollector {
         Self {
             obj_store: object_store,
             rg_chunk_size,
-            file_concurrency_limit: file_concurrency_limit,
+            file_concurrency_limit,
         }
     }
 
