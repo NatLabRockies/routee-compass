@@ -65,17 +65,20 @@ pub async fn process_meta_obj_into_tasks(
 
     // Prune row groups using a bbox if available. This optimization
     // could be extended to other kinds of filters in the future.
-    let row_group_indices = bbox_prune.as_ref().map(|bbox| {
-        let indices = prune_row_groups_by_bbox(parquet_metadata.row_groups(), bbox);
+    let row_group_indices = bbox_prune
+        .as_ref()
+        .map(|bbox| {
+            let indices = prune_row_groups_by_bbox(parquet_metadata.row_groups(), bbox);
 
-        log::debug!(
-            "Pruned to {}/{} row groups",
-            indices.len(),
-            parquet_metadata.num_row_groups()
-        );
+            log::debug!(
+                "Pruned to {}/{} row groups",
+                indices.len(),
+                parquet_metadata.num_row_groups()
+            );
 
-        indices
-    }).unwrap_or_else(|| (0..parquet_metadata.num_row_groups()).collect());
+            indices
+        })
+        .unwrap_or_else(|| (0..parquet_metadata.num_row_groups()).collect());
 
     let meta_arc = Arc::new(meta);
     Ok(row_group_indices
