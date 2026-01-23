@@ -30,8 +30,6 @@ impl OvertureMapsCollectorConfig {
     }
 
     pub fn build(&self) -> Result<OvertureMapsCollector, OvertureMapsCollectionError> {
-        Ok(OvertureMapsCollector::new(
-            self.obj_store_type.build()?,
-        ))
+        Ok(OvertureMapsCollector::new(self.obj_store_type.build()?))
     }
 }

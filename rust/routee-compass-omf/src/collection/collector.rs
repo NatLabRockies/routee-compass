@@ -27,6 +27,10 @@ use super::RowFilterConfig;
 #[derive(Debug)]
 pub struct OvertureMapsCollector {
     obj_store: Arc<dyn ObjectStore>,
+    // Number of row groups to schedule for each process. Defaults to 4
+    rg_chunk_size: Option<usize>,
+    // Limit to the number of files to process simultaneously. Defaults to 64
+    file_recurrency_limit: Option<usize>,
 }
 
 impl TryFrom<OvertureMapsCollectorConfig> for OvertureMapsCollector {
@@ -40,7 +44,9 @@ impl TryFrom<OvertureMapsCollectorConfig> for OvertureMapsCollector {
 impl OvertureMapsCollector {
     pub fn new(object_store: Arc<dyn ObjectStore>) -> Self {
         Self {
-            obj_store: object_store
+            obj_store: object_store,
+            rg_chunk_size: Some(4),
+            file_recurrency_limit: Some(64),
         }
     }
 
@@ -127,9 +133,6 @@ impl OvertureMapsCollector {
             None
         };
 
-        const FILE_CONCURRENCY_LIMIT: usize = 64;
-        const RG_CHUNK_SIZE: usize = 4;
-        
         log::info!("Started collection");
         let start_collection = Instant::now();
         // Process each all metadata object into a flat vector of tasks that
@@ -143,10 +146,10 @@ impl OvertureMapsCollector {
                         self.obj_store.clone(),
                         Some(io_runtime.handle().clone()),
                         opt_bbox_filter,
-                        Some(RG_CHUNK_SIZE),
+                        self.rg_chunk_size,
                     )
                 })
-                .buffer_unordered(FILE_CONCURRENCY_LIMIT)
+                .buffer_unordered(self.file_recurrency_limit.unwrap_or(64))
                 .try_collect::<Vec<Vec<RowGroupTask>>>()
                 .await?
                 .into_iter()
@@ -155,21 +158,23 @@ impl OvertureMapsCollector {
         })?;
 
         // Build and collect streams
-        let streams = row_group_tasks.into_iter().map(|rgt| {
-            rgt.build_stream(
-                row_filter.as_ref(),
-                self.obj_store.clone(),
-                io_runtime.handle().clone(),
-            )
-        }).collect::<Result<Vec<_>, OvertureMapsCollectionError>>()?;
+        let streams = row_group_tasks
+            .into_iter()
+            .map(|rgt| {
+                rgt.build_stream(
+                    row_filter.as_ref(),
+                    self.obj_store.clone(),
+                    io_runtime.handle().clone(),
+                )
+            })
+            .collect::<Result<Vec<_>, OvertureMapsCollectionError>>()?;
 
-        let record_batches = runtime
-            .block_on(
-                stream::iter(streams)
-                    .flatten_unordered(None)
-                    .try_collect::<Vec<RecordBatch>>()
-                    .map_err(|e| OvertureMapsCollectionError::RecordBatchRetrievalError { source: e })
-            )?;
+        let record_batches = runtime.block_on(
+            stream::iter(streams)
+                .flatten_unordered(None)
+                .try_collect::<Vec<RecordBatch>>()
+                .map_err(|e| OvertureMapsCollectionError::RecordBatchRetrievalError { source: e }),
+        )?;
         log::info!("Collection time {:?}", start_collection.elapsed());
 
         // Deserialize the batches into Records

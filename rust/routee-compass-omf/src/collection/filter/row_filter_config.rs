@@ -44,7 +44,7 @@ impl RowFilterConfig {
                     .all(|e| seen_variants.insert(discriminant(e.deref())));
 
                 if seen_variants.len() != filters.len() {
-                    return Err(OvertureMapsCollectionError::InvalidUserInput(format!("each row filter can be implemented at most once in a Combined row filter config: {:?}", self)));
+                    return Err(OvertureMapsCollectionError::InvalidUserInput(format!("each row filter can be implemented at most once in a Combined row filter config: {self:?}")));
                 }
 
                 Ok(())

@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use object_store::{ObjectMeta, ObjectStore};
 use parquet::{
     arrow::{
@@ -8,6 +7,7 @@ use parquet::{
     },
     file::{metadata::RowGroupMetaData, statistics::Statistics},
 };
+use std::sync::Arc;
 use tokio::runtime::Handle;
 
 use crate::collection::{Bbox, OvertureMapsCollectionError, RowFilter};
@@ -79,7 +79,7 @@ pub async fn process_meta_obj_into_tasks(
 
     let meta_arc = Arc::new(meta);
     Ok(row_group_indices
-        .unwrap_or(vec![])
+        .unwrap_or_default()
         .chunks(row_group_chunk_size.unwrap_or(4))
         .map(|indices| RowGroupTask {
             obj_meta: meta_arc.clone(),
