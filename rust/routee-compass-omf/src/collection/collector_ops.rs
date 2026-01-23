@@ -75,11 +75,10 @@ pub async fn process_meta_obj_into_tasks(
         );
 
         indices
-    });
+    }).unwrap_or_else(|| (0..parquet_metadata.num_row_groups()).collect());
 
     let meta_arc = Arc::new(meta);
     Ok(row_group_indices
-        .unwrap_or_default()
         .chunks(row_group_chunk_size.unwrap_or(4))
         .map(|indices| RowGroupTask {
             obj_meta: meta_arc.clone(),
