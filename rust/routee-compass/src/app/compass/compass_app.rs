@@ -1,24 +1,19 @@
 use super::compass_app_system::CompassAppSystemParameters;
-use super::response::response_sink::ResponseSink;
-use super::{compass_app_ops as ops, CompassBuilderInventory};
+
+use super::{
+    compass_app_ops as ops, compass_map_matching as map_matching_ops, CompassBuilderInventory,
+};
 use crate::app::compass::compass_app_config::CompassAppConfig;
 use crate::app::compass::response::response_persistence_policy::ResponsePersistencePolicy;
 use crate::{
-    app::{
-        compass::CompassAppError,
-        search::{SearchApp, SearchAppResult},
-    },
-    plugin::{
-        input::{input_plugin_ops as in_ops, InputPlugin},
-        output::{output_plugin_ops as out_ops, OutputPlugin},
-    },
+    app::{compass::CompassAppError, search::SearchApp},
+    plugin::{input::InputPlugin, output::OutputPlugin},
 };
 use chrono::Local;
-use itertools::Itertools;
-use kdam::{Bar, BarExt};
-use rayon::{current_num_threads, prelude::*};
-use routee_compass_core::algorithm::search::{SearchAlgorithm, SearchInstance};
-use routee_compass_core::config::ConfigJsonExtensions;
+
+use kdam::Bar;
+use rayon::current_num_threads;
+use routee_compass_core::algorithm::search::SearchAlgorithm;
 use routee_compass_core::model::cost::cost_model_service::CostModelService;
 use routee_compass_core::model::map::MapModel;
 use routee_compass_core::model::network::Graph;
@@ -30,13 +25,8 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use crate::app::map_matching::{
-    MapMatchingAppError, MapMatchingRequest, MapMatchingResponse, PointMatchResponse, TracePoint,
-};
-use geo::Point;
-use routee_compass_core::algorithm::map_matching::{
-    MapMatchingAlgorithm, MapMatchingPoint, MapMatchingResult, MapMatchingTrace,
-};
+use crate::app::map_matching::{MapMatchingAppError, MapMatchingRequest, MapMatchingResponse};
+use routee_compass_core::algorithm::map_matching::MapMatchingAlgorithm;
 
 /// Instance of RouteE Compass as an application.
 /// When constructed, it holds
@@ -211,7 +201,7 @@ impl CompassApp {
 
         // INPUT PROCESSING
 
-        let input_plugin_result = apply_input_plugins(
+        let input_plugin_result = ops::apply_input_plugins(
             queries,
             &self.input_plugins,
             self.search_app.clone(),
@@ -251,20 +241,22 @@ impl CompassApp {
         // run parallel searches as organized by the (optional) load balancing policy
         // across a thread pool managed by rayon
         let run_query_result = match response_persistence_policy {
-            ResponsePersistencePolicy::PersistResponseInMemory => run_batch_with_responses(
+            ResponsePersistencePolicy::PersistResponseInMemory => ops::run_batch_with_responses(
                 &mut load_balanced_inputs,
                 &self.output_plugins,
                 &self.search_app,
                 &response_writer,
                 search_pb_shared,
             )?,
-            ResponsePersistencePolicy::DiscardResponseFromMemory => run_batch_without_responses(
-                &mut load_balanced_inputs,
-                &self.output_plugins,
-                &self.search_app,
-                &response_writer,
-                search_pb_shared,
-            )?,
+            ResponsePersistencePolicy::DiscardResponseFromMemory => {
+                ops::run_batch_without_responses(
+                    &mut load_balanced_inputs,
+                    &self.output_plugins,
+                    &self.search_app,
+                    &response_writer,
+                    search_pb_shared,
+                )?
+            }
         };
         eprintln!();
         response_writer.close()?;
@@ -278,203 +270,6 @@ impl CompassApp {
     }
 }
 
-/// executes the input plugins on each query, returning all
-/// successful mappings (left) and mapping errors (right) as the pair
-/// (left, right). errors are already serialized into JSON.
-fn apply_input_plugins(
-    queries: &mut Vec<Value>,
-    input_plugins: &Vec<Arc<dyn InputPlugin>>,
-    search_app: Arc<SearchApp>,
-    parallelism: usize,
-) -> Result<(Vec<Value>, Vec<Value>), CompassAppError> {
-    // result of each iteration of plugin updates is stored here
-    let mut queries_processed = queries.drain(..).collect_vec();
-    let mut query_errors: Vec<Value> = vec![];
-
-    // progress bar running for each input plugin
-    let mut outer_bar = Bar::builder()
-        .total(input_plugins.len())
-        .position(0)
-        .build()
-        .map_err(CompassAppError::InternalError)?;
-    outer_bar.set_description("input plugins"); // until we have named plugins
-
-    for (idx, plugin) in input_plugins.iter().enumerate() {
-        // nested progress bar running for each query
-        // outer_bar.set_description(format!("{}", plugin.name));  // placeholder for named plugins
-        let inner_bar = Arc::new(Mutex::new(
-            Bar::builder()
-                .total(queries_processed.len())
-                .position(1)
-                .animation("fillup")
-                .desc(format!("applying input plugin {}", idx + 1))
-                .build()
-                .map_err(|e| {
-                    CompassAppError::InternalError(format!(
-                        "could not build input plugin progress bar: {e}"
-                    ))
-                })?,
-        ));
-
-        let tasks_per_thread = queries_processed.len() as f64 / parallelism as f64;
-        let chunk_size: usize = std::cmp::max(1, tasks_per_thread.ceil() as usize);
-
-        // apply this input plugin in parallel, assigning the result back to `queries_processed`
-        // and tracking any errors along the way.
-        let (good, bad): (Vec<Value>, Vec<Value>) = queries_processed
-            .par_chunks_mut(chunk_size)
-            .flat_map(|qs| {
-                qs.iter_mut()
-                    .flat_map(|q| {
-                        if let Ok(mut pb_local) = inner_bar.lock() {
-                            let _ = pb_local.update(1);
-                        }
-                        // run the input plugin and flatten the result if it is a JSON array
-                        let p = plugin.clone();
-                        match p.process(q, search_app.clone()) {
-                            Err(e) => vec![in_ops::package_error(&mut q.clone(), e)],
-                            Ok(_) => in_ops::unpack_json_array_as_vec(q),
-                        }
-                    })
-                    .collect_vec()
-            })
-            .partition(|row| !matches!(row.as_object(), Some(obj) if obj.contains_key("error")));
-        queries_processed = good;
-        query_errors.extend(bad);
-    }
-    eprintln!();
-    eprintln!();
-
-    Ok((queries_processed, query_errors))
-}
-
-#[allow(unused)]
-pub fn get_optional_run_config<'a, K, T>(
-    key: &K,
-    parent_key: &K,
-    config: Option<&serde_json::Value>,
-) -> Result<Option<T>, CompassAppError>
-where
-    K: AsRef<str>,
-    T: serde::de::DeserializeOwned + 'a,
-{
-    match config {
-        Some(c) => {
-            let value = c.get_config_serde_optional::<T>(key, parent_key)?;
-            Ok(value)
-        }
-        None => Ok(None),
-    }
-}
-
-/// Helper function that runs CompassApp on a single query.
-/// It is assumed that all pre-processing from InputPlugins have been applied.
-/// This function runs a vertex-oriented search and feeds the result into the
-/// OutputPlugins for post-processing, returning the result as JSON.
-///
-/// # Arguments
-///
-/// * `query` - a single search query that has been processed by InputPlugins
-///
-/// # Returns
-///
-/// * The result of the search and post-processing as a JSON object, or, an error
-pub fn run_single_query(
-    query: &mut serde_json::Value,
-    output_plugins: &[Arc<dyn OutputPlugin>],
-    search_app: &SearchApp,
-) -> Result<serde_json::Value, CompassAppError> {
-    let search_result = search_app.run(query);
-    let output = apply_output_processing(query, search_result, search_app, output_plugins);
-    Ok(output)
-}
-
-/// runs a query batch which has been sorted into parallel chunks
-/// and retains the responses from each search in memory.
-pub fn run_batch_with_responses(
-    load_balanced_inputs: &mut Vec<Vec<Value>>,
-    output_plugins: &[Arc<dyn OutputPlugin>],
-    search_app: &SearchApp,
-    response_writer: &ResponseSink,
-    pb: Arc<Mutex<Bar>>,
-) -> Result<Box<dyn Iterator<Item = Value>>, CompassAppError> {
-    let run_query_result = load_balanced_inputs
-        .par_iter_mut()
-        .map(|queries| {
-            queries
-                .iter_mut()
-                .map(|q| {
-                    let mut response = run_single_query(q, output_plugins, search_app)?;
-                    if let Ok(mut pb_local) = pb.lock() {
-                        let _ = pb_local.update(1);
-                    }
-                    response_writer.write_response(&mut response)?;
-                    Ok(response)
-                })
-                .collect::<Result<Vec<serde_json::Value>, CompassAppError>>()
-        })
-        .collect::<Result<Vec<Vec<serde_json::Value>>, CompassAppError>>()?;
-
-    let run_result = run_query_result.into_iter().flatten();
-
-    Ok(Box::new(run_result))
-}
-
-/// runs a query batch which has been sorted into parallel chunks.
-/// the search result is not persisted in memory.
-pub fn run_batch_without_responses(
-    load_balanced_inputs: &mut Vec<Vec<Value>>,
-    output_plugins: &[Arc<dyn OutputPlugin>],
-    search_app: &SearchApp,
-    response_writer: &ResponseSink,
-    pb: Arc<Mutex<Bar>>,
-) -> Result<Box<dyn Iterator<Item = Value>>, CompassAppError> {
-    // run the computations, discard values that do not trigger an error
-    let _ = load_balanced_inputs
-        .par_iter_mut()
-        .map(|queries| {
-            // fold over query iterator allows us to propagate failures up while still using constant
-            // memory to hold the state of the result object. we can't similarly return error values from
-            // within a for loop or for_each call, and map creates more allocations. open to other ideas!
-            let initial: Result<(), CompassAppError> = Ok(());
-            let _ = queries.iter_mut().fold(initial, |_, q| {
-                let mut response = run_single_query(q, output_plugins, search_app)?;
-                if let Ok(mut pb_local) = pb.lock() {
-                    let _ = pb_local.update(1);
-                }
-                response_writer.write_response(&mut response)?;
-                Ok(())
-            });
-            Ok(())
-        })
-        .collect::<Result<Vec<_>, CompassAppError>>()?;
-
-    Ok(Box::new(std::iter::empty::<Value>()))
-}
-
-// helper that applies the output processing. this includes
-// 1. summarizing from the TraversalModel
-// 2. applying the output plugins
-pub fn apply_output_processing(
-    request_json: &serde_json::Value,
-    result: Result<(SearchAppResult, SearchInstance), CompassAppError>,
-    search_app: &SearchApp,
-    output_plugins: &[Arc<dyn OutputPlugin>],
-) -> serde_json::Value {
-    let mut initial: Value = match out_ops::create_initial_output(request_json, &result, search_app)
-    {
-        Ok(value) => value,
-        Err(error_value) => return error_value,
-    };
-    for output_plugin in output_plugins.iter() {
-        match output_plugin.process(&mut initial, &result) {
-            Ok(()) => {}
-            Err(e) => return out_ops::package_error(request_json, e),
-        }
-    }
-
-    initial
-}
 impl CompassApp {
     /// Runs map matching on a request, returning a JSON response.
     ///
@@ -495,7 +290,7 @@ impl CompassApp {
             .map_err(MapMatchingAppError::InvalidRequest)?;
 
         // Convert request to internal trace format
-        let trace = self.convert_request_to_trace(&request);
+        let trace = map_matching_ops::convert_request_to_trace(&request);
 
         // Build a search instance for this query
         // Using an empty JSON object as we don't need query-specific configuration
@@ -511,45 +306,7 @@ impl CompassApp {
             .match_trace(&trace, &search_instance)?;
 
         // Convert result to response format
-        Ok(self.convert_result_to_response(result))
-    }
-
-    /// Converts a JSON request to the internal trace format.
-    fn convert_request_to_trace(&self, request: &MapMatchingRequest) -> MapMatchingTrace {
-        let points: Vec<MapMatchingPoint> = request
-            .trace
-            .iter()
-            .map(|tp| self.convert_trace_point(tp))
-            .collect();
-        MapMatchingTrace::new(points)
-    }
-
-    /// Converts a single trace point from the request format.
-    fn convert_trace_point(&self, point: &TracePoint) -> MapMatchingPoint {
-        let coord = Point::new(point.x as f32, point.y as f32);
-        match &point.timestamp {
-            Some(ts) => MapMatchingPoint::with_timestamp(coord, ts.clone()),
-            None => MapMatchingPoint::new(coord),
-        }
-    }
-
-    /// Converts the internal result to the response format.
-    fn convert_result_to_response(&self, result: MapMatchingResult) -> MapMatchingResponse {
-        let point_matches: Vec<PointMatchResponse> = result
-            .point_matches
-            .into_iter()
-            .map(|pm| {
-                PointMatchResponse::new(pm.edge_list_id.0, pm.edge_id.0 as u64, pm.distance_to_edge)
-            })
-            .collect();
-
-        let matched_path: Vec<(usize, u64)> = result
-            .matched_path
-            .into_iter()
-            .map(|(list_id, edge_id)| (list_id.0, edge_id.0 as u64))
-            .collect();
-
-        MapMatchingResponse::new(point_matches, matched_path)
+        Ok(map_matching_ops::convert_result_to_response(result))
     }
 }
 

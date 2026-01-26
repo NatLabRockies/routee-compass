@@ -7,6 +7,7 @@ mod compass_builder_inventory;
 mod compass_component_error;
 mod compass_input_field;
 mod compass_json_extensions;
+pub mod compass_map_matching;
 pub mod response;
 
 pub use compass_app::CompassApp;
