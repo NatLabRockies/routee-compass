@@ -30,6 +30,14 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+use crate::app::map_matching::{
+    MapMatchingAppError, MapMatchingRequest, MapMatchingResponse, PointMatchResponse, TracePoint,
+};
+use geo::Point;
+use routee_compass_core::algorithm::map_matching::{
+    MapMatchingAlgorithm, MapMatchingPoint, MapMatchingResult, MapMatchingTrace,
+};
+
 /// Instance of RouteE Compass as an application.
 /// When constructed, it holds
 ///   - the core search application which performs parallel path search
@@ -43,6 +51,7 @@ pub struct CompassApp {
     pub input_plugins: Vec<Arc<dyn InputPlugin>>,
     pub output_plugins: Vec<Arc<dyn OutputPlugin>>,
     pub system_parameters: CompassAppSystemParameters,
+    pub map_matching_algorithm: Arc<dyn MapMatchingAlgorithm>,
 }
 
 impl TryFrom<&Path> for CompassApp {
@@ -139,11 +148,16 @@ impl CompassApp {
             Ok(builder.build_output_plugins(&config.plugin.output_plugins)?)
         })?;
 
+        let map_matching_algorithm = with_timing("map matching algorithm", || {
+            Ok(builder.build_map_matching_algorithm(&config.map_matching)?)
+        })?;
+
         let app = CompassApp {
             search_app,
             input_plugins,
             output_plugins,
             system_parameters: config.system.clone(),
+            map_matching_algorithm,
         };
         Ok(app)
     }
@@ -460,6 +474,83 @@ pub fn apply_output_processing(
     }
 
     initial
+}
+impl CompassApp {
+    /// Runs map matching on a request, returning a JSON response.
+    ///
+    /// # Arguments
+    ///
+    /// * `request` - The map matching request containing the GPS trace
+    ///
+    /// # Returns
+    ///
+    /// A `MapMatchingResponse` with matched edges and the inferred path.
+    pub fn map_match(
+        &self,
+        request: MapMatchingRequest,
+    ) -> Result<MapMatchingResponse, MapMatchingAppError> {
+        // Validate the request
+        request
+            .validate()
+            .map_err(MapMatchingAppError::InvalidRequest)?;
+
+        // Convert request to internal trace format
+        let trace = self.convert_request_to_trace(&request);
+
+        // Build a search instance for this query
+        // Using an empty JSON object as we don't need query-specific configuration
+        let query = serde_json::json!({});
+        let search_instance = self
+            .search_app
+            .build_search_instance(&query)
+            .map_err(|e| MapMatchingAppError::BuildFailure(e.to_string()))?;
+
+        // Run the algorithm
+        let result = self
+            .map_matching_algorithm
+            .match_trace(&trace, &search_instance)?;
+
+        // Convert result to response format
+        Ok(self.convert_result_to_response(result))
+    }
+
+    /// Converts a JSON request to the internal trace format.
+    fn convert_request_to_trace(&self, request: &MapMatchingRequest) -> MapMatchingTrace {
+        let points: Vec<MapMatchingPoint> = request
+            .trace
+            .iter()
+            .map(|tp| self.convert_trace_point(tp))
+            .collect();
+        MapMatchingTrace::new(points)
+    }
+
+    /// Converts a single trace point from the request format.
+    fn convert_trace_point(&self, point: &TracePoint) -> MapMatchingPoint {
+        let coord = Point::new(point.x as f32, point.y as f32);
+        match &point.timestamp {
+            Some(ts) => MapMatchingPoint::with_timestamp(coord, ts.clone()),
+            None => MapMatchingPoint::new(coord),
+        }
+    }
+
+    /// Converts the internal result to the response format.
+    fn convert_result_to_response(&self, result: MapMatchingResult) -> MapMatchingResponse {
+        let point_matches: Vec<PointMatchResponse> = result
+            .point_matches
+            .into_iter()
+            .map(|pm| {
+                PointMatchResponse::new(pm.edge_list_id.0, pm.edge_id.0 as u64, pm.distance_to_edge)
+            })
+            .collect();
+
+        let matched_path: Vec<(usize, u64)> = result
+            .matched_path
+            .into_iter()
+            .map(|(list_id, edge_id)| (list_id.0, edge_id.0 as u64))
+            .collect();
+
+        MapMatchingResponse::new(point_matches, matched_path)
+    }
 }
 
 /// helper function to wrap some lambda with runtime logging

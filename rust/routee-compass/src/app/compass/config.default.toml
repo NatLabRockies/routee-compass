@@ -72,3 +72,6 @@ frequency = 100_000
 [plugin]
 input_plugins = []
 output_plugins = []
+
+[map_matching]
+type = "simple"

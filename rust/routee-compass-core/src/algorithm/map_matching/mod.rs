@@ -1,5 +1,27 @@
-pub mod lcss;
-pub mod map_matcher;
-pub mod trace;
-pub mod map_matching_result;
-pub mod map_matching_error;
+//! Map matching algorithms for matching GPS traces to road networks.
+//!
+//! This module provides abstractions for map matching algorithms that take
+//! GPS traces and match them to edges in the road network graph.
+//!
+//! # Core Types
+//!
+//! - [`MapMatchingAlgorithm`] - Trait defining the algorithm interface
+//! - [`MapMatchingTrace`] - Input GPS trace
+//! - [`MapMatchingResult`] - Output with matched edges and path
+//! - [`MapMatchingError`] - Error types for matching operations
+//!
+//! # Implementations
+//!
+//! - [`SimpleMapMatching`] - Baseline nearest-edge matching algorithm
+
+mod map_matching_algorithm;
+mod map_matching_error;
+mod map_matching_result;
+mod map_matching_trace;
+mod simple_map_matching;
+
+pub use map_matching_algorithm::MapMatchingAlgorithm;
+pub use map_matching_error::MapMatchingError;
+pub use map_matching_result::{MapMatchingResult, PointMatch};
+pub use map_matching_trace::{MapMatchingPoint, MapMatchingTrace};
+pub use simple_map_matching::SimpleMapMatching;

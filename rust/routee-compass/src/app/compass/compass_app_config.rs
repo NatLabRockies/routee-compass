@@ -34,6 +34,7 @@ pub struct CompassAppConfig {
     pub plugin: PluginConfig,
     pub termination: TerminationModel,
     pub system: CompassAppSystemParameters,
+    pub map_matching: Value,
 }
 
 /// sub-section of [`CompassAppConfig`] where the [`TraversalModelService`], [`AccessModelService`], and [`ConstraintModelService`] components
