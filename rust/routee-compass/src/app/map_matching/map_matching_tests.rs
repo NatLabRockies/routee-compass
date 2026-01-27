@@ -26,11 +26,6 @@ const BASE_X: f64 = -105.0;
 const BASE_Y: f64 = 40.0;
 const SPACING: f64 = 0.01;
 
-/// Computes the vertex ID for a grid position
-fn vertex_id(row: usize, col: usize) -> usize {
-    row * GRID_COLS + col
-}
-
 /// Computes the edge ID for a horizontal edge (going right) at the given grid position.
 /// Returns None if the position is at the right edge of the grid.
 fn horizontal_edge_id(row: usize, col: usize) -> Option<i64> {
@@ -97,6 +92,127 @@ fn vertical_edge_midpoint_y(row: usize) -> f64 {
 }
 
 // =============================================================================
+// Test Trace Abstraction
+// =============================================================================
+
+struct TestTrace {
+    points: Vec<serde_json::Value>,
+    expected_edges: Vec<i64>,
+}
+
+impl TestTrace {
+    fn eastward_horizontal(row: usize, count: usize) -> Self {
+        let points = (0..count)
+            .map(|col| {
+                let x = horizontal_edge_midpoint_x(col);
+                let y = row_y(row);
+                serde_json::json!({"x": x, "y": y})
+            })
+            .collect();
+        let expected_edges = (0..count)
+            .map(|col| horizontal_edge_id(row, col).unwrap())
+            .collect();
+        Self {
+            points,
+            expected_edges,
+        }
+    }
+
+    fn northward_vertical(col: usize, count: usize) -> Self {
+        let points = (0..count)
+            .map(|row| {
+                let x = col_x(col);
+                let y = vertical_edge_midpoint_y(row);
+                serde_json::json!({"x": x, "y": y})
+            })
+            .collect();
+        let expected_edges = (0..count)
+            .map(|row| vertical_edge_id(row, col).unwrap())
+            .collect();
+        Self {
+            points,
+            expected_edges,
+        }
+    }
+
+    fn l_shaped() -> Self {
+        // East along row 0 (cols 0, 1), then North along col 2 (rows 0, 1, 2)
+        let points = vec![
+            serde_json::json!({"x": horizontal_edge_midpoint_x(0), "y": row_y(0)}),
+            serde_json::json!({"x": horizontal_edge_midpoint_x(1), "y": row_y(0)}),
+            serde_json::json!({"x": col_x(2), "y": vertical_edge_midpoint_y(0)}),
+            serde_json::json!({"x": col_x(2), "y": vertical_edge_midpoint_y(1)}),
+            serde_json::json!({"x": col_x(2), "y": vertical_edge_midpoint_y(2)}),
+        ];
+        let expected_edges = vec![
+            horizontal_edge_id(0, 0).unwrap(),
+            horizontal_edge_id(0, 1).unwrap(),
+            vertical_edge_id(0, 2).unwrap(),
+            vertical_edge_id(1, 2).unwrap(),
+            vertical_edge_id(2, 2).unwrap(),
+        ];
+        Self {
+            points,
+            expected_edges,
+        }
+    }
+
+    fn noisy_eastward_horizontal(row: usize, count: usize) -> Self {
+        let points = (0..count)
+            .map(|col| {
+                let noise = if col % 2 == 0 { 0.0003 } else { -0.0003 };
+                let x = horizontal_edge_midpoint_x(col);
+                let y = row_y(row) + noise;
+                serde_json::json!({"x": x, "y": y})
+            })
+            .collect();
+        let expected_edges = (0..count)
+            .map(|col| horizontal_edge_id(row, col).unwrap())
+            .collect();
+        Self {
+            points,
+            expected_edges,
+        }
+    }
+}
+
+fn run_map_match_test(app: &CompassApp, trace: TestTrace, label: &str) {
+    let query = serde_json::json!({
+        "trace": trace.points
+    });
+    let queries = vec![query];
+
+    let result = app.map_match(&queries).unwrap();
+    assert_eq!(result.len(), 1, "{}: Expected 1 result", label);
+
+    let point_matches = result[0]
+        .get("point_matches")
+        .expect("result has point_matches")
+        .as_array()
+        .expect("point_matches is array");
+
+    assert_eq!(
+        point_matches.len(),
+        trace.expected_edges.len(),
+        "{}: point_matches length mismatch",
+        label
+    );
+
+    for (i, (matched, &expected)) in point_matches
+        .iter()
+        .zip(trace.expected_edges.iter())
+        .enumerate()
+    {
+        let actual = matched.get("edge_id").unwrap().as_i64().unwrap();
+        assert_eq!(
+            actual, expected,
+            "{}: mismatch at point {}, expected edge {}, got {}",
+            label, i, expected, actual
+        );
+    }
+}
+
+// =============================================================================
 // App Loading Helpers
 // =============================================================================
 
@@ -122,6 +238,18 @@ fn load_hmm_app() -> CompassApp {
         .join("map_matching_test")
         .join("compass_hmm.toml");
     CompassApp::try_from(conf_file.as_path()).expect("failed to load HMM map matching config")
+}
+
+/// Helper to load the CompassApp with the LCSS map matching config
+fn load_lcss_app() -> CompassApp {
+    let conf_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("src")
+        .join("app")
+        .join("compass")
+        .join("test")
+        .join("map_matching_test")
+        .join("compass_lcss.toml");
+    CompassApp::try_from(conf_file.as_path()).expect("failed to load LCSS map matching config")
 }
 
 // =============================================================================
@@ -389,297 +517,59 @@ fn test_hmm_basic_trace() {
 #[test]
 fn test_hmm_eastward_horizontal_trace() {
     let app = load_hmm_app();
-
-    // Trace moving East along row 0
-    let trace_points: Vec<serde_json::Value> = (0..5)
-        .map(|col| {
-            let x = horizontal_edge_midpoint_x(col);
-            let y = row_y(0);
-            serde_json::json!({"x": x, "y": y})
-        })
-        .collect();
-
-    let query = serde_json::json!({
-        "trace": trace_points
-    });
-    let queries = vec![query];
-
-    let result = app.map_match(&queries).unwrap();
-    assert_eq!(result.len(), 1);
-
-    let point_matches = result[0]
-        .get("point_matches")
-        .expect("result has point_matches")
-        .as_array()
-        .expect("point_matches is array");
-
-    assert_eq!(point_matches.len(), 5);
-
-    let edge_ids: Vec<i64> = point_matches
-        .iter()
-        .map(|m| m.get("edge_id").unwrap().as_i64().unwrap())
-        .collect();
-
-    // All edges should be on the same row (may not be row 0 due to HMM optimization)
-    let matched_row = edge_row(edge_ids[0]);
-    for (i, &edge_id) in edge_ids.iter().enumerate() {
-        assert_eq!(
-            edge_row(edge_id),
-            matched_row,
-            "HMM eastward trace: row inconsistency at point {}, edge {}",
-            i,
-            edge_id
-        );
-    }
-
-    // All should be horizontal edges with correct column progression
-    for i in 0..edge_ids.len() {
-        assert!(
-            is_horizontal_edge(edge_ids[i]),
-            "HMM eastward trace: edge {} at point {} is not horizontal",
-            edge_ids[i],
-            i
-        );
-        let expected_col = i;
-        let actual_col = horizontal_edge_col(edge_ids[i]);
-        assert_eq!(
-            actual_col, expected_col,
-            "HMM eastward trace: column mismatch at point {}, expected col {}, got {}",
-            i, expected_col, actual_col
-        );
-    }
-
-    // Verify matched_path contains the same edges
-    let matched_path = result[0]
-        .get("matched_path")
-        .expect("result has matched_path")
-        .as_array()
-        .expect("matched_path is array");
-
-    assert_eq!(matched_path.len(), 5, "Expected 5 edges in matched path");
-}
-
-/// Returns whether an edge is vertical and its row number
-fn is_vertical_edge(edge_id: i64) -> bool {
-    let within_row = (edge_id as usize) % edges_per_row();
-    // Vertical edges are at odd positions (1, 3, 5, ..., 17) plus the last one (18)
-    within_row % 2 == 1 || within_row == 2 * (GRID_COLS - 1)
-}
-
-/// Returns the row of a vertical edge (the row it originates from)
-fn vertical_edge_origin_row(edge_id: i64) -> usize {
-    (edge_id as usize) / edges_per_row()
+    let trace = TestTrace::eastward_horizontal(0, 5);
+    run_map_match_test(&app, trace, "HMM eastward horizontal");
 }
 
 #[test]
 fn test_hmm_northward_vertical_trace() {
     let app = load_hmm_app();
-
-    // Trace moving North along column 0
-    let trace_points: Vec<serde_json::Value> = (0..5)
-        .map(|row| {
-            let x = col_x(0);
-            let y = vertical_edge_midpoint_y(row);
-            serde_json::json!({"x": x, "y": y})
-        })
-        .collect();
-
-    let query = serde_json::json!({
-        "trace": trace_points
-    });
-    let queries = vec![query];
-
-    let result = app.map_match(&queries).unwrap();
-    assert_eq!(result.len(), 1);
-
-    let point_matches = result[0]
-        .get("point_matches")
-        .expect("result has point_matches")
-        .as_array()
-        .expect("point_matches is array");
-
-    assert_eq!(point_matches.len(), 5);
-
-    let edge_ids: Vec<i64> = point_matches
-        .iter()
-        .map(|m| m.get("edge_id").unwrap().as_i64().unwrap())
-        .collect();
-
-    // All should be vertical edges with progressive rows
-    for (i, &edge_id) in edge_ids.iter().enumerate() {
-        assert!(
-            is_vertical_edge(edge_id),
-            "HMM northward trace: edge {} at point {} is not vertical",
-            edge_id,
-            i
-        );
-    }
-
-    // Rows should be increasing
-    for i in 1..edge_ids.len() {
-        let row_prev = vertical_edge_origin_row(edge_ids[i - 1]);
-        let row_curr = vertical_edge_origin_row(edge_ids[i]);
-        assert!(
-            row_curr >= row_prev,
-            "HMM northward trace: row regression from {} to {} at point {}",
-            row_prev,
-            row_curr,
-            i
-        );
-    }
-
-    // Verify matched_path
-    let matched_path = result[0]
-        .get("matched_path")
-        .expect("result has matched_path")
-        .as_array()
-        .expect("matched_path is array");
-
-    assert_eq!(matched_path.len(), 5, "Expected 5 edges in matched path");
+    let trace = TestTrace::northward_vertical(0, 5);
+    run_map_match_test(&app, trace, "HMM northward vertical");
 }
 
 #[test]
 fn test_hmm_l_shaped_path() {
     let app = load_hmm_app();
-
-    // L-turn: East along row, then North along column
-    let trace_points = vec![
-        // Horizontal edges
-        serde_json::json!({"x": horizontal_edge_midpoint_x(0), "y": row_y(0)}),
-        serde_json::json!({"x": horizontal_edge_midpoint_x(1), "y": row_y(0)}),
-        // Vertical edges at column 2
-        serde_json::json!({"x": col_x(2), "y": vertical_edge_midpoint_y(0)}),
-        serde_json::json!({"x": col_x(2), "y": vertical_edge_midpoint_y(1)}),
-        serde_json::json!({"x": col_x(2), "y": vertical_edge_midpoint_y(2)}),
-    ];
-
-    let query = serde_json::json!({
-        "trace": trace_points
-    });
-    let queries = vec![query];
-
-    let result = app.map_match(&queries).unwrap();
-    assert_eq!(result.len(), 1);
-
-    let point_matches = result[0]
-        .get("point_matches")
-        .expect("result has point_matches")
-        .as_array()
-        .expect("point_matches is array");
-
-    assert_eq!(point_matches.len(), 5);
-
-    let edge_ids: Vec<i64> = point_matches
-        .iter()
-        .map(|m| m.get("edge_id").unwrap().as_i64().unwrap())
-        .collect();
-
-    // First two edges should be horizontal (eastward movement)
-    for i in 0..2 {
-        assert!(
-            is_horizontal_edge(edge_ids[i]),
-            "HMM L-shaped: edge {} at point {} should be horizontal",
-            edge_ids[i],
-            i
-        );
-    }
-
-    // Last three edges should be vertical (northward movement)
-    for i in 2..5 {
-        assert!(
-            is_vertical_edge(edge_ids[i]),
-            "HMM L-shaped: edge {} at point {} should be vertical",
-            edge_ids[i],
-            i
-        );
-    }
-
-    // Verify matched_path shows the turn
-    let matched_path = result[0]
-        .get("matched_path")
-        .expect("result has matched_path")
-        .as_array()
-        .expect("matched_path is array");
-
-    assert!(
-        matched_path.len() >= 5,
-        "L-shaped path should have at least 5 edges, got {}",
-        matched_path.len()
-    );
+    let trace = TestTrace::l_shaped();
+    run_map_match_test(&app, trace, "HMM L-shaped");
 }
 
 #[test]
 fn test_hmm_noisy_trace() {
     let app = load_hmm_app();
+    let trace = TestTrace::noisy_eastward_horizontal(0, 5);
+    run_map_match_test(&app, trace, "HMM noisy horizontal");
+}
 
-    // Trace with GPS noise - points perturbed north/south of row 0
-    let trace_points = vec![
-        serde_json::json!({"x": horizontal_edge_midpoint_x(0), "y": row_y(0) + 0.0003}),
-        serde_json::json!({"x": horizontal_edge_midpoint_x(1), "y": row_y(0) - 0.0003}),
-        serde_json::json!({"x": horizontal_edge_midpoint_x(2), "y": row_y(0) + 0.0005}),
-        serde_json::json!({"x": horizontal_edge_midpoint_x(3), "y": row_y(0) - 0.0002}),
-        serde_json::json!({"x": horizontal_edge_midpoint_x(4), "y": row_y(0) + 0.0002}),
-    ];
+// =============================================================================
+// LCSS Map Matching Tests
+// =============================================================================
 
-    let query = serde_json::json!({
-        "trace": trace_points
-    });
-    let queries = vec![query];
+#[test]
+fn test_lcss_eastward_horizontal_trace() {
+    let app = load_lcss_app();
+    let trace = TestTrace::eastward_horizontal(0, 5);
+    run_map_match_test(&app, trace, "LCSS eastward horizontal");
+}
 
-    let result = app.map_match(&queries).unwrap();
-    assert_eq!(result.len(), 1);
+#[test]
+fn test_lcss_northward_vertical_trace() {
+    let app = load_lcss_app();
+    let trace = TestTrace::northward_vertical(0, 5);
+    run_map_match_test(&app, trace, "LCSS northward vertical");
+}
 
-    let point_matches = result[0]
-        .get("point_matches")
-        .expect("result has point_matches")
-        .as_array()
-        .expect("point_matches is array");
+#[test]
+fn test_lcss_l_shaped_path() {
+    let app = load_lcss_app();
+    let trace = TestTrace::l_shaped();
+    run_map_match_test(&app, trace, "LCSS L-shaped");
+}
 
-    assert_eq!(point_matches.len(), 5);
-
-    let edge_ids: Vec<i64> = point_matches
-        .iter()
-        .map(|m| m.get("edge_id").unwrap().as_i64().unwrap())
-        .collect();
-
-    // Despite noise, all edges should be on the same row
-    let matched_row = edge_row(edge_ids[0]);
-    for (i, &edge_id) in edge_ids.iter().enumerate() {
-        assert_eq!(
-            edge_row(edge_id),
-            matched_row,
-            "HMM noisy trace: row inconsistency at point {}, edge {}",
-            i,
-            edge_id
-        );
-    }
-
-    // All should be horizontal edges with correct column progression
-    for i in 0..edge_ids.len() {
-        assert!(
-            is_horizontal_edge(edge_ids[i]),
-            "HMM noisy trace: edge {} at point {} is not horizontal",
-            edge_ids[i],
-            i
-        );
-    }
-
-    // Columns should progress correctly
-    for i in 0..edge_ids.len() {
-        let actual_col = horizontal_edge_col(edge_ids[i]);
-        assert_eq!(
-            actual_col, i,
-            "HMM noisy trace: expected column {} at point {}, got {}",
-            i, i, actual_col
-        );
-    }
-
-    // Verify matched_path
-    let matched_path = result[0]
-        .get("matched_path")
-        .expect("result has matched_path")
-        .as_array()
-        .expect("matched_path is array");
-
-    assert_eq!(matched_path.len(), 5, "Expected 5 edges in matched path");
+#[test]
+fn test_lcss_noisy_trace() {
+    let app = load_lcss_app();
+    let trace = TestTrace::noisy_eastward_horizontal(0, 5);
+    run_map_match_test(&app, trace, "LCSS noisy horizontal");
 }

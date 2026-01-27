@@ -44,7 +44,8 @@ use routee_compass_core::model::{
 };
 use routee_compass_core::{
     algorithm::map_matching::{
-        HmmMapMatchingBuilder, MapMatchingAlgorithm, MapMatchingBuilder, SimpleMapMatchingBuilder,
+        HmmMapMatchingBuilder, LcssMapMatchingBuilder, MapMatchingAlgorithm, MapMatchingBuilder,
+        SimpleMapMatchingBuilder,
     },
     config::{CompassConfigurationError, ConfigJsonExtensions},
     model::traversal::default::{distance::DistanceTraversalBuilder, speed::SpeedTraversalBuilder},
@@ -96,6 +97,7 @@ inventory::submit! {
         builder.add_output_plugin("uuid".to_string(), Rc::new(UUIDOutputPluginBuilder {}));
         builder.add_map_matching_model("simple".to_string(), Rc::new(SimpleMapMatchingBuilder {}));
         builder.add_map_matching_model("hmm".to_string(), Rc::new(HmmMapMatchingBuilder {}));
+        builder.add_map_matching_model("lcss".to_string(), Rc::new(LcssMapMatchingBuilder {}));
         Ok(())
     })
 }
