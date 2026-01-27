@@ -18,6 +18,13 @@ pub struct RowGroupTask {
     pub parquet_metadata: ArrowReaderMetadata,
 }
 
+/// a [`RowGroupTask`] represents a fully determined retrieval operation
+/// at the rowgroup level (including file location and metadata).
+/// With a [`RowGroupTask`] object constructed, we have all the information
+/// needed to build a stream object that produces a vector of RecordBatch.
+/// 
+/// A successful call to `build_stream`, you retrieve a [`ParquetRecordBatchStream`] that
+/// when consumed, returns the record batches associated with a row group.
 impl RowGroupTask {
     pub fn build_stream(
         self,
@@ -42,6 +49,12 @@ impl RowGroupTask {
     }
 }
 
+/// this auxliary function takes an [`ObjectMeta`]
+/// pointing to a specific file in an object store
+/// and process it into a [`RowGroupTask`] following
+/// the configuration provided. During this process,
+/// we perform IO to retrieve the file's metadata and
+/// prune it according to an Optional bbox.
 pub async fn process_meta_obj_into_tasks(
     meta: ObjectMeta,
     store: Arc<dyn ObjectStore>,
