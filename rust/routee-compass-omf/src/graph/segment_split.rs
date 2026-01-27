@@ -34,7 +34,6 @@ impl SegmentSplit {
     }
 
     /// identifies any locations where additional coordinates are needed.
-
     /// when creating any missing connectors, call [ConnectorInSegment::new_without_connector_id]
     /// which generates a new connector_id based on the segment_id and linear referencing position.
     pub fn missing_connectors(&self) -> Vec<ConnectorInSegment> {
@@ -217,13 +216,13 @@ impl SegmentSplit {
                 // retain speed limits with no heading or with a matching heading
                 let speed_limits_with_heading = speed_limits
                     .iter()
-                    .filter_map(|s| match s.when.as_ref() {
+                    .filter(|s| match s.when.as_ref() {
                         Some(access) => match access.heading.as_ref() {
-                            None => Some(s),
-                            Some(h) if h == heading => Some(s),
-                            _ => None,
+                            None => true,
+                            Some(h) if h == heading => true,
+                            _ => false,
                         },
-                        None => None,
+                        None => false,
                     })
                     .collect_vec();
 
@@ -290,12 +289,12 @@ impl SegmentSplit {
                 // This ignores errors in `check_open_intersection` coming from invalid between values
                 let opt_first_matching_sublcass =
                     segment.subclass_rules.as_ref().and_then(|rules| {
-                        rules.iter().find_map(|rule| {
-                            match rule.check_open_intersection(start, end) {
-                                Ok(true) => Some(rule),
-                                _ => None,
-                            }
-                        })
+                        rules
+                            .iter()
+                            .find(|rule| match rule.check_open_intersection(start, end) {
+                                Ok(true) => true,
+                                _ => false,
+                            })
                     });
 
                 // Get value from inside
