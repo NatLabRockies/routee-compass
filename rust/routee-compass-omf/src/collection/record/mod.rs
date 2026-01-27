@@ -1,5 +1,6 @@
 mod building;
 mod common;
+mod during_expression;
 mod overture_record;
 mod place;
 mod record_type;
