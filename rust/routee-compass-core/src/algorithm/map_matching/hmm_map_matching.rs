@@ -137,6 +137,13 @@ impl HmmMapMatching {
             }
         }
 
+        // Sort candidates by actual distance (closest first)
+        candidates.sort_by(|a, b| {
+            a.distance_to_edge
+                .partial_cmp(&b.distance_to_edge)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
         if candidates.is_empty() {
             // Fall back to single nearest if iterator returns nothing
             match si.map_model.spatial_index.nearest_graph_id(point) {
@@ -256,9 +263,31 @@ impl HmmMapMatching {
     }
 
     /// Computes the route distance between two candidate edges using A* search.
+    /// Returns the approximate distance from the midpoint of the source edge
+    /// to the midpoint of the destination edge.
     fn route_distance(&self, from: &Candidate, to: &Candidate, si: &SearchInstance) -> Option<f64> {
+        // Get the distances of source and destination edges
+        let from_edge = si.graph.get_edge(&from.edge_list_id, &from.edge_id).ok()?;
+        let to_edge = si.graph.get_edge(&to.edge_list_id, &to.edge_id).ok()?;
+        let from_edge_dist = from_edge.distance.get::<uom::si::length::meter>();
+        let to_edge_dist = to_edge.distance.get::<uom::si::length::meter>();
+
+        // Same edge: distance is 0
         if from.edge_list_id == to.edge_list_id && from.edge_id == to.edge_id {
             return Some(0.0);
+        }
+
+        // Check if edges are directly connected (dst of source = src of destination)
+        // In this case, A* returns early with empty tree, so handle specially
+        let from_dst = si
+            .graph
+            .dst_vertex_id(&from.edge_list_id, &from.edge_id)
+            .ok()?;
+        let to_src = si.graph.src_vertex_id(&to.edge_list_id, &to.edge_id).ok()?;
+        if from_dst == to_src {
+            // Edges are directly connected: midpoint to midpoint distance is
+            // half of source edge + half of destination edge
+            return Some((from_edge_dist / 2.0) + (to_edge_dist / 2.0));
         }
 
         // Run A* search from source edge to target edge
@@ -277,8 +306,8 @@ impl HmmMapMatching {
 
                 // Backtrack to get the path
                 if let Ok(path) = search_result.tree.backtrack(dst_vertex) {
-                    // Sum up the edge distances
-                    let total_distance: f64 = path
+                    // Sum up the edge distances for intermediate edges
+                    let intermediate_distance: f64 = path
                         .iter()
                         .filter_map(|et| {
                             si.graph
@@ -287,7 +316,11 @@ impl HmmMapMatching {
                                 .map(|e| e.distance.get::<uom::si::length::meter>())
                         })
                         .sum();
-                    Some(total_distance)
+
+                    // Add half of source edge (from midpoint to end) and half of
+                    // destination edge (from start to midpoint) to approximate
+                    // the midpoint-to-midpoint travel distance
+                    Some(intermediate_distance + (from_edge_dist / 2.0) + (to_edge_dist / 2.0))
                 } else {
                     None
                 }
@@ -470,7 +503,23 @@ impl MapMatchingAlgorithm for HmmMapMatching {
 
         for t in (1..n_points).rev() {
             let current_state = &all_states[t][best_indices[t]];
-            best_indices[t - 1] = current_state.prev_state_idx.unwrap_or(0);
+            best_indices[t - 1] = match current_state.prev_state_idx {
+                Some(idx) => idx,
+                None => {
+                    // No valid transition found - fall back to the state with best log probability
+                    // at time t-1 (which corresponds to best emission probability)
+                    all_states[t - 1]
+                        .iter()
+                        .enumerate()
+                        .max_by(|(_, a), (_, b)| {
+                            a.log_prob
+                                .partial_cmp(&b.log_prob)
+                                .unwrap_or(std::cmp::Ordering::Equal)
+                        })
+                        .map(|(idx, _)| idx)
+                        .unwrap_or(0)
+                }
+            };
         }
 
         // Build result from best path
@@ -498,6 +547,42 @@ impl MapMatchingAlgorithm for HmmMapMatching {
 
     fn name(&self) -> &str {
         "hmm_map_matching"
+    }
+
+    fn configure(
+        &self,
+        config: &serde_json::Value,
+    ) -> Result<std::sync::Arc<dyn MapMatchingAlgorithm>, MapMatchingError> {
+        let defaults = Self::default();
+
+        let sigma = config
+            .get("sigma")
+            .and_then(|v| v.as_f64())
+            .unwrap_or(defaults.sigma);
+
+        let beta = config
+            .get("beta")
+            .and_then(|v| v.as_f64())
+            .unwrap_or(defaults.beta);
+
+        let max_candidates = config
+            .get("max_candidates")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as usize)
+            .unwrap_or(defaults.max_candidates);
+
+        log::debug!(
+            "HMM map matching configured: sigma={}, beta={}, max_candidates={}",
+            sigma,
+            beta,
+            max_candidates
+        );
+
+        Ok(std::sync::Arc::new(HmmMapMatching {
+            sigma,
+            beta,
+            max_candidates,
+        }))
     }
 }
 

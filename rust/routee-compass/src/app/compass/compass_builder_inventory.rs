@@ -332,6 +332,9 @@ impl CompassBuilderInventory {
                 self.map_matching_builders.keys().join(", "),
             )
         })?;
-        Ok(builder.clone())
+        // Call configure to create a configured instance from the builder
+        builder
+            .configure(config)
+            .map_err(CompassConfigurationError::MapMatchingError)
     }
 }

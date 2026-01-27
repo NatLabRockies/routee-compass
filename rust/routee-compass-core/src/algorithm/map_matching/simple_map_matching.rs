@@ -97,6 +97,14 @@ impl MapMatchingAlgorithm for SimpleMapMatching {
     fn name(&self) -> &str {
         "simple_map_matching"
     }
+
+    fn configure(
+        &self,
+        _config: &serde_json::Value,
+    ) -> Result<std::sync::Arc<dyn MapMatchingAlgorithm>, super::MapMatchingError> {
+        // Simple map matching has no configurable parameters
+        Ok(std::sync::Arc::new(Self))
+    }
 }
 
 #[cfg(test)]

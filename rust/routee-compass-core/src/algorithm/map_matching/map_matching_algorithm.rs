@@ -2,6 +2,7 @@ use super::map_matching_error::MapMatchingError;
 use super::map_matching_result::MapMatchingResult;
 use super::map_matching_trace::MapMatchingTrace;
 use crate::algorithm::search::SearchInstance;
+use std::sync::Arc;
 
 /// Trait defining the interface for map matching algorithms.
 ///
@@ -53,4 +54,19 @@ pub trait MapMatchingAlgorithm: Send + Sync {
     fn name(&self) -> &str {
         "map_matching_algorithm"
     }
+
+    /// Creates a configured instance from JSON config.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - JSON configuration for the algorithm
+    ///
+    /// # Returns
+    ///
+    /// A configured instance of this algorithm wrapped in Arc.
+    /// Default implementation returns self as-is (no configuration).
+    fn configure(
+        &self,
+        _config: &serde_json::Value,
+    ) -> Result<Arc<dyn MapMatchingAlgorithm>, MapMatchingError>;
 }

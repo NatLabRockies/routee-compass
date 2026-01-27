@@ -12,7 +12,7 @@ pub fn test_threshold(
     let this_coord = envelope.lower().0;
     let distance =
         haversine::coord_distance(&this_coord, &other.0).map_err(MapError::MapMatchError)?;
-    Ok(distance >= tolerance_distance)
+    Ok(distance <= tolerance_distance)
 }
 
 pub fn within_threshold(
