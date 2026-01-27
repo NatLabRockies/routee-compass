@@ -1,0 +1,32 @@
+[graph]
+vertex_list_input_file = "src/app/compass/test/map_matching_test/test_nodes.csv"
+
+[graph.edge_list]
+input_file = "src/app/compass/test/map_matching_test/test_edges.csv"
+
+[search]
+[search.traversal]
+type = "distance"
+distance_unit = "miles"
+
+[cost]
+cost_aggregation = "sum"
+[cost.weights]
+trip_distance = 1.0
+[cost.vehicle_rates.trip_distance]
+type = "raw"
+
+[map_matching]
+type = "simple"
+geometry_input_file = "src/app/compass/test/map_matching_test/test_edge_geometries.txt"
+
+[mapping]
+spatial_index_type = "edge"
+
+[mapping.geometry]
+type = "from_linestrings"
+geometry_input_file = "src/app/compass/test/map_matching_test/test_edge_geometries.txt"
+
+[mapping.tolerance]
+distance = 2000.0
+unit = "meters"

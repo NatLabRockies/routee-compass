@@ -389,6 +389,94 @@ mod tests {
     }
 
     #[test]
+    fn test_map_matching() {
+        let conf_file_test = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src")
+            .join("app")
+            .join("compass")
+            .join("test")
+            .join("map_matching_test")
+            .join("compass.toml");
+
+        let app = CompassApp::try_from(conf_file_test.as_path()).unwrap();
+
+        // Query point near edge 0
+        // Edge 0: (-105.0, 40.0) -> (-104.99, 40.0)
+        // Midpoint: (-104.995, 40.0)
+        let query = serde_json::json!({
+            "trace": [
+                {"x": -104.995, "y": 40.0}
+            ]
+        });
+        let queries = vec![query];
+
+        // Execute map match
+        let result = app.map_match(&queries).unwrap();
+
+        // Verify result matches Edge 0
+        assert_eq!(result.len(), 1);
+        let first_result = &result[0];
+        let point_matches = first_result
+            .get("point_matches")
+            .expect("result has point_matches");
+        let first_match = &point_matches[0];
+        let edge_id = first_match
+            .get("edge_id")
+            .expect("match has edge_id")
+            .as_i64()
+            .expect("edge_id is i64");
+        assert_eq!(edge_id, 0);
+    }
+
+    #[test]
+    fn test_map_matching_long_trace() {
+        let conf_file_test = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src")
+            .join("app")
+            .join("compass")
+            .join("test")
+            .join("map_matching_test")
+            .join("compass.toml");
+
+        let app = CompassApp::try_from(conf_file_test.as_path()).unwrap();
+
+        // Construct a trace moving East along the top row of the grid
+        // Path: 0 -> 1 -> ... -> 9
+        // Edges: 0, 2, ... 16
+        // Points: Midpoints of these edges
+        // Max horizontal edges in 10-col grid is 9 (0->1 ... 8->9).
+        // So up to 9 points can be matched to distinct edges.
+        let trace_points: Vec<serde_json::Value> = (0..9)
+            .map(|i| {
+                let x = -105.0 + (i as f64 * 0.01) + 0.005;
+                serde_json::json!({"x": x, "y": 40.0})
+            })
+            .collect();
+
+        let query = serde_json::json!({
+            "trace": trace_points
+        });
+        let queries = vec![query];
+
+        let result = app.map_match(&queries).unwrap();
+        assert_eq!(result.len(), 1);
+
+        let point_matches = result[0]
+            .get("point_matches")
+            .expect("result has point_matches")
+            .as_array()
+            .expect("point_matches is array");
+
+        assert_eq!(point_matches.len(), 9);
+
+        // Expected edge IDs: 0, 2, 4, 6, 8 (stride 2)
+        for (i, matched) in point_matches.iter().enumerate() {
+            let edge_id = matched.get("edge_id").unwrap().as_i64().unwrap();
+            assert_eq!(edge_id, (i * 2) as i64, "Mismatch at index {}", i);
+        }
+    }
+
+    #[test]
     fn test_e2e_dist_speed_time_traversal() {
         // let cwd_str = match std::env::current_dir() {
         //     Ok(cwd_path) => String::from(cwd_path.to_str().unwrap_or("<unknown>")),

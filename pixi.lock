@@ -3220,8 +3220,8 @@ packages:
   requires_python: '>=3.7'
 - pypi: ./
   name: nrel-routee-compass
-  version: 0.15.2
-  sha256: 4f6afee040fa6a052ca905c043567420920ed93f43c78175136b5d727223a6ef
+  version: 0.17.0
+  sha256: 5b4cf20465a5a7e88fc0bd31e7cadf029242347e01e89d4d09b2647512515a40
   requires_dist:
   - tomlkit>=0.11.0,<1.0
   - pytest>=8.0,<9.0 ; extra == 'dev'
@@ -4222,20 +4222,20 @@ packages:
   - pytest-cov>=2.2.0 ; extra == 'test'
   - pytest>=2.8.2 ; extra == 'test'
   - shapely ; extra == 'test'
-  - hypothesis ; extra == 'all'
-  - ipython>=2.0 ; extra == 'all'
-  - shapely ; extra == 'all'
-  - sphinx ; extra == 'all'
-  - ghp-import ; extra == 'all'
-  - matplotlib ; extra == 'all'
-  - pytest-cov>=2.2.0 ; extra == 'all'
-  - fsspec ; extra == 'all'
   - sphinx-click ; extra == 'all'
-  - sphinx-rtd-theme ; extra == 'all'
-  - boto3>=1.2.4 ; extra == 'all'
-  - numpydoc ; extra == 'all'
-  - packaging ; extra == 'all'
   - pytest>=2.8.2 ; extra == 'all'
+  - boto3>=1.2.4 ; extra == 'all'
+  - shapely ; extra == 'all'
+  - ghp-import ; extra == 'all'
+  - numpydoc ; extra == 'all'
+  - sphinx ; extra == 'all'
+  - pytest-cov>=2.2.0 ; extra == 'all'
+  - ipython>=2.0 ; extra == 'all'
+  - matplotlib ; extra == 'all'
+  - hypothesis ; extra == 'all'
+  - sphinx-rtd-theme ; extra == 'all'
+  - packaging ; extra == 'all'
+  - fsspec ; extra == 'all'
   requires_python: '>=3.9'
 - conda: https://conda.anaconda.org/conda-forge/linux-64/readline-8.2-h8c095d6_2.conda
   sha256: 2d6d0c026902561ed77cd646b5021aef2d4db22e57a5b0178dfc669231e06d2c

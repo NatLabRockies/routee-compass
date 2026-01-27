@@ -104,16 +104,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_empty_trace_returns_error() {
-        let alg = SimpleMapMatching::new();
-        let trace = MapMatchingTrace::new(vec![]);
-
-        // We can't easily test without a SearchInstance, but we can verify the empty check
-        // This test would need a mock SearchInstance for full coverage
-        assert!(trace.is_empty());
-    }
-
-    #[test]
     fn test_algorithm_name() {
         let alg = SimpleMapMatching::new();
         assert_eq!(alg.name(), "simple_map_matching");
