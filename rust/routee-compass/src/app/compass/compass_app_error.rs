@@ -1,4 +1,5 @@
 use super::CompassComponentError;
+use crate::app::map_matching::MapMatchingAppError;
 use crate::plugin::{input::InputPluginError, output::OutputPluginError, PluginError};
 use config::ConfigError;
 use routee_compass_core::config::CompassConfigurationError;
@@ -40,6 +41,8 @@ pub enum CompassAppError {
     InputPluginFailure(#[from] InputPluginError),
     #[error(transparent)]
     OutputPluginFailure(#[from] OutputPluginError),
+    #[error(transparent)]
+    MapMatchingFailure(#[from] MapMatchingAppError),
 
     // CONTEXTUALIZED MODULE FAILURES
     //   failures from these modules are happening outside of the context of running the search,

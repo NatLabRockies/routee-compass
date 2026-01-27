@@ -25,7 +25,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use crate::app::map_matching::{MapMatchingAppError, MapMatchingRequest, MapMatchingResponse};
+use crate::app::map_matching::{MapMatchingAppError, MapMatchingRequest};
 use routee_compass_core::algorithm::map_matching::MapMatchingAlgorithm;
 
 /// Instance of RouteE Compass as an application.
@@ -271,42 +271,49 @@ impl CompassApp {
 }
 
 impl CompassApp {
-    /// Runs map matching on a request, returning a JSON response.
+    /// Runs map matching on a batch of requests, returning a JSON response for each.
     ///
     /// # Arguments
     ///
-    /// * `request` - The map matching request containing the GPS trace
+    /// * `queries` - List of map matching requests as JSON values
     ///
     /// # Returns
     ///
-    /// A `MapMatchingResponse` with matched edges and the inferred path.
-    pub fn map_match(
-        &self,
-        request: MapMatchingRequest,
-    ) -> Result<MapMatchingResponse, MapMatchingAppError> {
-        // Validate the request
-        request
-            .validate()
-            .map_err(MapMatchingAppError::InvalidRequest)?;
+    /// A list of `MapMatchingResponse` objects as JSON values.
+    pub fn map_match(&self, queries: &Vec<Value>) -> Result<Vec<Value>, CompassAppError> {
+        let mut results = Vec::with_capacity(queries.len());
 
-        // Convert request to internal trace format
-        let trace = map_matching_ops::convert_request_to_trace(&request);
+        for query in queries {
+            let request: MapMatchingRequest = serde_json::from_value(query.clone())?;
+            // Validate the request
+            request
+                .validate()
+                .map_err(MapMatchingAppError::InvalidRequest)?;
 
-        // Build a search instance for this query
-        // Using an empty JSON object as we don't need query-specific configuration
-        let query = serde_json::json!({});
-        let search_instance = self
-            .search_app
-            .build_search_instance(&query)
-            .map_err(|e| MapMatchingAppError::BuildFailure(e.to_string()))?;
+            // Convert request to internal trace format
+            let trace = map_matching_ops::convert_request_to_trace(&request);
 
-        // Run the algorithm
-        let result = self
-            .map_matching_algorithm
-            .match_trace(&trace, &search_instance)?;
+            // Build a search instance for this query
+            // Using an empty JSON object as we don't need query-specific configuration
+            let query_config = serde_json::json!({});
+            let search_instance = self
+                .search_app
+                .build_search_instance(&query_config)
+                .map_err(|e| MapMatchingAppError::BuildFailure(e.to_string()))?;
 
-        // Convert result to response format
-        Ok(map_matching_ops::convert_result_to_response(result))
+            // Run the algorithm
+            let result = self
+                .map_matching_algorithm
+                .match_trace(&trace, &search_instance)
+                .map_err(|e| MapMatchingAppError::AlgorithmError { source: e })?;
+
+            // Convert result to response format
+            let response = map_matching_ops::convert_result_to_response(result);
+            let response_json = serde_json::to_value(response)?;
+            results.push(response_json);
+        }
+
+        Ok(results)
     }
 }
 
@@ -333,6 +340,53 @@ mod tests {
     use crate::app::compass::CompassAppError;
     use routee_compass_core::config::CompassConfigurationError;
     use std::path::PathBuf;
+
+    #[test]
+    fn test_map_match_json() {
+        let conf_file_test = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src")
+            .join("app")
+            .join("compass")
+            .join("test")
+            .join("speeds_test")
+            .join("speeds_test.toml");
+
+        let conf_str = std::fs::read_to_string(&conf_file_test).unwrap();
+        let conf_str_with_mm = format!(
+            "{}\n[map_matching]\ntype = \"simple\"\n[mapping]\nspatial_index_type = \"edge\"",
+            conf_str
+        );
+
+        let config = crate::app::compass::compass_app_config::CompassAppConfig::from_str(
+            &conf_str_with_mm,
+            conf_file_test.to_str().unwrap(),
+            config::FileFormat::Toml,
+        )
+        .unwrap();
+        let builder = crate::app::compass::CompassBuilderInventory::new().unwrap();
+        let app = CompassApp::new(&config, &builder).unwrap();
+
+        // Construct a simple trace within range of the test graph (Denver area)
+        // Vertex 0: -105.1683038, 39.7379033
+        // Vertex 2: -111.9095014, 40.7607176
+        // Let's use points very close to Vertex 0
+        let query = serde_json::json!({
+            "trace": [
+                {"x": -105.1683, "y": 39.7379},
+                {"x": -105.1683, "y": 39.7379}
+            ]
+        });
+        let queries = vec![query];
+
+        // Execute map match
+        let result = app.map_match(&queries).unwrap();
+
+        // Verify result structure
+        assert_eq!(result.len(), 1);
+        let first_result = &result[0];
+        assert!(first_result.get("point_matches").is_some());
+        assert!(first_result.get("matched_path").is_some());
+    }
 
     #[test]
     fn test_e2e_dist_speed_time_traversal() {
@@ -398,40 +452,4 @@ mod tests {
         let expected_path = serde_json::json!(vec![0, 2]);
         assert_eq!(path_0, &expected_path);
     }
-
-    // #[test]
-    // fn test_energy() {
-    //     // rust runs test and debug at different locations, which breaks the URLs
-    //     // written in the referenced TOML files. here's a quick fix
-    //     // turnaround that doesn't leak into anyone's VS Code settings.json files
-    //     // see https://github.com/rust-lang/rust-analyzer/issues/4705 for discussion
-    //     let conf_file_test = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-    //         .join("src")
-    //         .join("app")
-    //         .join("compass")
-    //         .join("test")
-    //         .join("energy_test")
-    //         .join("energy_test.toml");
-
-    //     let conf_file_debug = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-    //         .join("src")
-    //         .join("app")
-    //         .join("compass")
-    //         .join("test")
-    //         .join("energy_test")
-    //         .join("energy_debug.toml");
-
-    //     let app = CompassApp::try_from(conf_file_test)
-    //         .or(CompassApp::try_from(conf_file_debug))
-    //         .unwrap();
-    //     let query = serde_json::json!({
-    //         "origin_vertex": 0,
-    //         "destination_vertex": 2
-    //     });
-    //     let result = app.run(vec![query]).unwrap();
-    //     let edge_ids = result[0].get("edge_id_list").unwrap();
-    //     // path [1] is distance-optimal; path [0, 2] is time-optimal
-    //     let expected = serde_json::json!(vec![0, 2]);
-    //     assert_eq!(edge_ids, &expected);
-    // }
 }
