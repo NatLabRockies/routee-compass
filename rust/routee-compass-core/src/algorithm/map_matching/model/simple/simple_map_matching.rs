@@ -1,7 +1,7 @@
-use super::map_matching_algorithm::MapMatchingAlgorithm;
-use super::map_matching_error::MapMatchingError;
-use super::map_matching_result::{MapMatchingResult, PointMatch};
-use super::map_matching_trace::MapMatchingTrace;
+use crate::algorithm::map_matching::map_matching_algorithm::MapMatchingAlgorithm;
+use crate::algorithm::map_matching::map_matching_error::MapMatchingError;
+use crate::algorithm::map_matching::map_matching_result::{MapMatchingResult, PointMatch};
+use crate::algorithm::map_matching::map_matching_trace::MapMatchingTrace;
 use crate::algorithm::search::SearchInstance;
 use crate::model::map::NearestSearchResult;
 
@@ -96,14 +96,6 @@ impl MapMatchingAlgorithm for SimpleMapMatching {
 
     fn name(&self) -> &str {
         "simple_map_matching"
-    }
-
-    fn configure(
-        &self,
-        _config: &serde_json::Value,
-    ) -> Result<std::sync::Arc<dyn MapMatchingAlgorithm>, super::MapMatchingError> {
-        // Simple map matching has no configurable parameters
-        Ok(std::sync::Arc::new(Self))
     }
 }
 

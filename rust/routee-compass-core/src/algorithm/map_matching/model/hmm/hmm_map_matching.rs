@@ -1,7 +1,7 @@
-use super::map_matching_algorithm::MapMatchingAlgorithm;
-use super::map_matching_error::MapMatchingError;
-use super::map_matching_result::{MapMatchingResult, PointMatch};
-use super::map_matching_trace::MapMatchingTrace;
+use crate::algorithm::map_matching::map_matching_algorithm::MapMatchingAlgorithm;
+use crate::algorithm::map_matching::map_matching_error::MapMatchingError;
+use crate::algorithm::map_matching::map_matching_result::{MapMatchingResult, PointMatch};
+use crate::algorithm::map_matching::map_matching_trace::MapMatchingTrace;
 use crate::algorithm::search::a_star::run_edge_oriented;
 use crate::algorithm::search::{Direction, SearchInstance};
 use crate::model::map::NearestSearchResult;
@@ -547,42 +547,6 @@ impl MapMatchingAlgorithm for HmmMapMatching {
 
     fn name(&self) -> &str {
         "hmm_map_matching"
-    }
-
-    fn configure(
-        &self,
-        config: &serde_json::Value,
-    ) -> Result<std::sync::Arc<dyn MapMatchingAlgorithm>, MapMatchingError> {
-        let defaults = Self::default();
-
-        let sigma = config
-            .get("sigma")
-            .and_then(|v| v.as_f64())
-            .unwrap_or(defaults.sigma);
-
-        let beta = config
-            .get("beta")
-            .and_then(|v| v.as_f64())
-            .unwrap_or(defaults.beta);
-
-        let max_candidates = config
-            .get("max_candidates")
-            .and_then(|v| v.as_u64())
-            .map(|v| v as usize)
-            .unwrap_or(defaults.max_candidates);
-
-        log::debug!(
-            "HMM map matching configured: sigma={}, beta={}, max_candidates={}",
-            sigma,
-            beta,
-            max_candidates
-        );
-
-        Ok(std::sync::Arc::new(HmmMapMatching {
-            sigma,
-            beta,
-            max_candidates,
-        }))
     }
 }
 

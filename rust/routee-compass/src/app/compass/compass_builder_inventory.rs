@@ -43,7 +43,9 @@ use routee_compass_core::model::{
     },
 };
 use routee_compass_core::{
-    algorithm::map_matching::{HmmMapMatching, MapMatchingAlgorithm, SimpleMapMatching},
+    algorithm::map_matching::{
+        HmmMapMatchingBuilder, MapMatchingAlgorithm, MapMatchingBuilder, SimpleMapMatchingBuilder,
+    },
     config::{CompassConfigurationError, ConfigJsonExtensions},
     model::traversal::default::{distance::DistanceTraversalBuilder, speed::SpeedTraversalBuilder},
 };
@@ -92,8 +94,8 @@ inventory::submit! {
         builder.add_output_plugin("traversal".to_string(), Rc::new(TraversalPluginBuilder {}));
         builder.add_output_plugin("summary".to_string(), Rc::new(SummaryOutputPluginBuilder {}));
         builder.add_output_plugin("uuid".to_string(), Rc::new(UUIDOutputPluginBuilder {}));
-        builder.add_map_matching_model("simple".to_string(), Arc::new(SimpleMapMatching::new()));
-        builder.add_map_matching_model("hmm".to_string(), Arc::new(HmmMapMatching::new()));
+        builder.add_map_matching_model("simple".to_string(), Rc::new(SimpleMapMatchingBuilder {}));
+        builder.add_map_matching_model("hmm".to_string(), Rc::new(HmmMapMatchingBuilder {}));
         Ok(())
     })
 }
@@ -119,7 +121,7 @@ pub struct CompassBuilderInventory {
     label_model_builders: HashMap<String, Rc<dyn LabelModelBuilder>>,
     input_plugin_builders: HashMap<String, Rc<dyn InputPluginBuilder>>,
     output_plugin_builders: HashMap<String, Rc<dyn OutputPluginBuilder>>,
-    map_matching_builders: HashMap<String, Arc<dyn MapMatchingAlgorithm>>,
+    map_matching_builders: HashMap<String, Rc<dyn MapMatchingBuilder>>,
 }
 
 impl CompassBuilderInventory {
@@ -181,7 +183,7 @@ impl CompassBuilderInventory {
         let _ = self.output_plugin_builders.insert(name, builder);
     }
 
-    pub fn add_map_matching_model(&mut self, name: String, builder: Arc<dyn MapMatchingAlgorithm>) {
+    pub fn add_map_matching_model(&mut self, name: String, builder: Rc<dyn MapMatchingBuilder>) {
         let _ = self.map_matching_builders.insert(name, builder);
     }
 
@@ -332,9 +334,9 @@ impl CompassBuilderInventory {
                 self.map_matching_builders.keys().join(", "),
             )
         })?;
-        // Call configure to create a configured instance from the builder
+        // Call build to create a configured instance from the builder
         builder
-            .configure(config)
+            .build(config)
             .map_err(CompassConfigurationError::MapMatchingError)
     }
 }
