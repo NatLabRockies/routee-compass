@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     app::{cli_bbox::parse_bbox, network::NetworkEdgeListConfiguration, CliBoundingBox},
-    collection::{ObjectStoreSource, OvertureMapsCollectionError},
+    collection::OvertureMapsCollectionError,
 };
 
 /// Command line tool for batch downloading and summarizing of OMF (Overture Maps Foundation) data
