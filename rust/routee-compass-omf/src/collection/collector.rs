@@ -1,16 +1,14 @@
 use arrow::array::RecordBatch;
 use chrono::NaiveDate;
 use futures::stream::{self, StreamExt};
+use futures::{TryFutureExt, TryStreamExt};
 use itertools::Itertools;
 use object_store::{path::Path, ListResult, ObjectMeta, ObjectStore};
-use parquet::arrow::arrow_reader::ArrowPredicate;
-use parquet::arrow::arrow_reader::ArrowReaderOptions;
-use parquet::arrow::async_reader::ParquetObjectReader;
-use parquet::arrow::async_reader::ParquetRecordBatchStreamBuilder;
 use rayon::prelude::*;
 use std::sync::Arc;
 use std::time::Instant;
 
+use crate::collection::collector_ops::{process_meta_obj_into_tasks, RowGroupTask};
 use crate::collection::record::TransportationConnectorRecord;
 use crate::collection::record::TransportationSegmentRecord;
 use crate::collection::BuildingsRecord;
@@ -29,7 +27,8 @@ use super::RowFilterConfig;
 #[derive(Debug)]
 pub struct OvertureMapsCollector {
     obj_store: Arc<dyn ObjectStore>,
-    batch_size: usize,
+    rg_chunk_size: usize,
+    file_concurrency_limit: usize,
 }
 
 impl TryFrom<OvertureMapsCollectorConfig> for OvertureMapsCollector {
@@ -41,10 +40,15 @@ impl TryFrom<OvertureMapsCollectorConfig> for OvertureMapsCollector {
 }
 
 impl OvertureMapsCollector {
-    pub fn new(object_store: Arc<dyn ObjectStore>, batch_size: usize) -> Self {
+    pub fn new(
+        object_store: Arc<dyn ObjectStore>,
+        rg_chunk_size: usize,
+        file_concurrency_limit: usize,
+    ) -> Self {
         Self {
             obj_store: object_store,
-            batch_size,
+            rg_chunk_size,
+            file_concurrency_limit,
         }
     }
 
@@ -119,69 +123,68 @@ impl OvertureMapsCollector {
             .map_err(|e| OvertureMapsCollectionError::MetadataError(e.to_string()))?;
 
         // Prepare the filter predicates
+        let opt_bbox_filter = row_filter_config
+            .as_ref()
+            .and_then(|f| f.get_bbox_filter_if_exists());
+
+        // validate provided bbox
+        if let Some(bbox) = opt_bbox_filter.as_ref() {
+            bbox.validate()?
+        };
+
+        // build rest of the filters
         let row_filter = if let Some(row_filter_config) = &row_filter_config {
+            row_filter_config.validate_unique_variant()?;
             Some(RowFilter::try_from(row_filter_config.clone())?)
         } else {
             None
         };
 
-        // Instantiate Stream Builders
-        let mut streams = vec![];
-        for meta in meta_objects {
-            log::debug!("File Name: {}, Size: {}", meta.location, meta.size);
-
-            // Parquet objects in charge of processing the incoming stream
-            let opts = ArrowReaderOptions::new().with_page_index(true);
-            let reader = ParquetObjectReader::new(self.obj_store.clone(), meta.location)
-                .with_runtime(io_runtime.handle().clone());
-            let builder = runtime
-                .block_on(ParquetRecordBatchStreamBuilder::new_with_options(
-                    reader, opts,
-                ))
-                .map_err(|e| OvertureMapsCollectionError::ArrowReaderError { source: e })?;
-
-            // Implement the required query filters
-            // For this we need the scema of each file so we get that from the builder
-            let parquet_metadata = builder.metadata().file_metadata();
-
-            // Build Arrow filters from RowFilter enum
-            let predicates: Vec<Box<dyn ArrowPredicate>> = if let Some(filter) = &row_filter {
-                filter.build(parquet_metadata)?
-            } else {
-                vec![]
-            };
-
-            let row_filter = parquet::arrow::arrow_reader::RowFilter::new(predicates);
-
-            // Build stream object
-            let stream: parquet::arrow::async_reader::ParquetRecordBatchStream<
-                ParquetObjectReader,
-            > = builder
-                .with_row_filter(row_filter)
-                .with_batch_size(self.batch_size)
-                .build()
-                .map_err(
-                    |e| OvertureMapsCollectionError::ParquetRecordBatchStreamError { source: e },
-                )?;
-
-            streams.push(stream);
-        }
-
         log::info!("Started collection");
         let start_collection = Instant::now();
-        let result_vec = runtime.block_on(
+        // Process each all metadata object into a flat vector of tasks that
+        // each take a small number of row_groups. Inside the `process_meta_obj_into_tasks`
+        // function we also prune based on the bounding box
+        let row_group_tasks: Vec<RowGroupTask> = runtime.block_on(async {
+            Ok(stream::iter(meta_objects)
+                .map(|meta| {
+                    process_meta_obj_into_tasks(
+                        meta,
+                        self.obj_store.clone(),
+                        Some(io_runtime.handle().clone()),
+                        opt_bbox_filter,
+                        Some(self.rg_chunk_size),
+                    )
+                })
+                .buffer_unordered(self.file_concurrency_limit)
+                .try_collect::<Vec<Vec<RowGroupTask>>>()
+                .await?
+                .into_iter()
+                .flatten()
+                .collect())
+        })?;
+
+        // Build and collect streams
+        let streams = row_group_tasks
+            .into_iter()
+            .map(|rgt| {
+                rgt.build_stream(
+                    row_filter.as_ref(),
+                    self.obj_store.clone(),
+                    io_runtime.handle().clone(),
+                )
+            })
+            .collect::<Result<Vec<_>, OvertureMapsCollectionError>>()?;
+
+        let record_batches = runtime.block_on(
             stream::iter(streams)
-                .flatten_unordered(None)
-                .collect::<Vec<_>>(),
-        );
+                .flatten_unordered(self.file_concurrency_limit)
+                .try_collect::<Vec<RecordBatch>>()
+                .map_err(|e| OvertureMapsCollectionError::RecordBatchRetrievalError { source: e }),
+        )?;
         log::info!("Collection time {:?}", start_collection.elapsed());
 
-        // Unpack record batches
-        let record_batches: Vec<RecordBatch> = result_vec
-            .into_iter()
-            .collect::<Result<Vec<RecordBatch>, _>>()
-            .map_err(|e| OvertureMapsCollectionError::RecordBatchRetrievalError { source: e })?;
-
+        // Deserialize the batches into Records
         let start_deserialization = Instant::now();
         let records: Vec<OvertureRecord> = record_batches
             .par_iter()
@@ -233,7 +236,7 @@ mod test {
     use std::str::FromStr;
 
     fn get_collector() -> OvertureMapsCollector {
-        OvertureMapsCollectorConfig::new(ObjectStoreSource::AmazonS3, 512)
+        OvertureMapsCollectorConfig::new(ObjectStoreSource::AmazonS3, Some(4), Some(64))
             .build()
             .unwrap()
     }
@@ -255,7 +258,7 @@ mod test {
         let connector_records = collector
             .collect_from_release(
                 ReleaseVersion::Monthly {
-                    datetime: NaiveDate::from_str("2025-11-19").unwrap(),
+                    datetime: NaiveDate::from_str("2025-12-17").unwrap(),
                     version: Some(0),
                 },
                 &OvertureRecordType::Connector,
@@ -265,7 +268,7 @@ mod test {
 
         println!("Records Length: {}", connector_records.len());
 
-        assert_eq!(connector_records.len(), 6401);
+        assert_eq!(connector_records.len(), 6436);
         assert!(matches!(
             connector_records[0],
             OvertureRecord::Connector(..)
@@ -275,7 +278,7 @@ mod test {
         let segment_records = collector
             .collect_from_release(
                 ReleaseVersion::Monthly {
-                    datetime: NaiveDate::from_str("2025-11-19").unwrap(),
+                    datetime: NaiveDate::from_str("2025-12-17").unwrap(),
                     version: Some(0),
                 },
                 &OvertureRecordType::Segment,
@@ -285,7 +288,7 @@ mod test {
 
         println!("Records Length: {}", segment_records.len());
 
-        assert_eq!(segment_records.len(), 3804);
+        assert_eq!(segment_records.len(), 3771);
         assert!(matches!(segment_records[0], OvertureRecord::Segment(..)));
     }
 }

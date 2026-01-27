@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::collection::OvertureMapsCollectionError;
+
 #[derive(Clone, Debug, Serialize, Deserialize, Copy)]
 pub struct Bbox {
     pub xmin: f32,
@@ -16,5 +18,15 @@ impl Bbox {
             ymin,
             ymax,
         }
+    }
+
+    pub fn validate(&self) -> Result<(), OvertureMapsCollectionError> {
+        if self.xmax < self.xmin || self.ymax < self.xmin {
+            return Err(OvertureMapsCollectionError::InvalidUserInput(format!(
+                "The provided Bbox is invalid: {self:?}"
+            )));
+        }
+
+        Ok(())
     }
 }

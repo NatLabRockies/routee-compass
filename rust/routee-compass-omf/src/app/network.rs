@@ -39,13 +39,11 @@ pub fn run(
     modes: &[NetworkEdgeListConfiguration],
     output_directory: &Path,
     local_source: Option<&Path>,
-    object_store: ObjectStoreSource,
-    batch_size: usize,
     write_json: bool,
 ) -> Result<(), OvertureMapsCollectionError> {
     let collection: TransportationCollection = match local_source {
         Some(src_path) => read_local(src_path),
-        None => run_collector(bbox, object_store, batch_size),
+        None => run_collector(bbox),
     }?;
 
     if write_json {
@@ -77,10 +75,16 @@ fn read_local(path: &Path) -> Result<TransportationCollection, OvertureMapsColle
 /// retrieve a TransportationCollection from a URL.
 fn run_collector(
     bbox_arg: Option<&CliBoundingBox>,
-    object_store: ObjectStoreSource,
-    batch_size: usize,
 ) -> Result<TransportationCollection, OvertureMapsCollectionError> {
-    let collector = OvertureMapsCollectorConfig::new(object_store, batch_size).build()?;
+    let object_store = ObjectStoreSource::AmazonS3;
+    let rg_chunk_size = 4;
+    let file_concurrency_limit = 64;
+    let collector = OvertureMapsCollectorConfig::new(
+        object_store,
+        Some(rg_chunk_size),
+        Some(file_concurrency_limit),
+    )
+    .build()?;
     let release = ReleaseVersion::Latest;
     let bbox = bbox_arg.ok_or_else(|| {
         let msg = String::from("must provide bbox argument for download");
@@ -89,7 +93,8 @@ fn run_collector(
     log::info!(
         "running OMF import with
         object store {object_store:?}
-        batch size {batch_size}
+        rg_chunk_size {rg_chunk_size}
+        file_concurrency_limit {file_concurrency_limit}
         release {release}
         (xmin,xmax,ymin,ymax): {bbox}"
     );
