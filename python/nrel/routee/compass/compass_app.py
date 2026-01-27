@@ -377,3 +377,46 @@ class CompassApp:
             edges: the edge ids of edges arriving at this vertex
         """
         return cast(List[int], self._app.graph_get_in_edge_ids(vertex_id))
+
+    def map_match(
+        self,
+        query: Union[CompassQuery, List[CompassQuery]],
+    ) -> Union[Result, Results]:
+        """
+        Run a map matching query (or multiple queries) against the CompassApp
+
+        Args:
+            query: A query or list of queries to run
+
+        Returns:
+            results: A list of results (or a single result if a single query was passed)
+
+        Example:
+            >>> from nrel.routee.compass import CompassApp
+            >>> app = CompassApp.from_config_file("config.toml")
+            >>> query = {
+                    "trace": [
+                        {"x": -105.1710052, "y": 39.7402804, "t": 0},
+                        {"x": -105.1710052, "y": 39.7402804, "t": 1}
+                    ]
+                }
+            >>> result = app.map_match(query)
+        """
+        if isinstance(query, dict):
+            queries = [query]
+            single_query = True
+        elif isinstance(query, list):
+            queries = query
+            single_query = False
+        else:
+            raise ValueError(
+                f"Query must be a dict or list of dicts, not {type(query)}"
+            )
+
+        queries_str = list(map(json.dumps, queries))
+        results_json: List[str] = self._app._map_match(queries_str)
+
+        results: Results = list(map(json.loads, results_json))
+        if single_query and len(results) == 1:
+            return results[0]
+        return results

@@ -17,12 +17,10 @@ class TestDowntownDenverExample(TestCase):
         )
 
         base_query = {
-            "origin_name": "NREL",
-            "destination_name": "Comrade Brewing Company",
-            "destination_y": 39.62627481432341,
-            "destination_x": -104.99460207519721,
-            "origin_y": 39.798311884359094,
-            "origin_x": -104.86796368632217,
+            "destination_y": 39.757431,
+            "destination_x": -104.988567,
+            "origin_y": 39.749513,
+            "origin_x": -105.000316,
         }
 
         t_opt_query = dict(base_query)
@@ -49,6 +47,12 @@ class TestDowntownDenverExample(TestCase):
             self.fail(
                 f"Balanced response is not a dict. response: {json.dumps(c_opt_result, indent=2)}",
             )
+        
+        if "error" in t_opt_result:
+            self.fail(f"Time optimal failed with error: {t_opt_result['error']}")
+
+        if "error" in c_opt_result:
+            self.fail(f"Balanced failed with error: {c_opt_result['error']}")
 
         self.assertIsNotNone(
             t_opt_result.get("route"),
@@ -125,12 +129,10 @@ class TestDowntownDenverExample(TestCase):
         )
 
         base_query = {
-            "origin_name": "NREL",
-            "destination_name": "Comrade Brewing Company",
-            "destination_y": 39.62627481432341,
-            "destination_x": -104.99460207519721,
-            "origin_y": 39.798311884359094,
-            "origin_x": -104.86796368632217,
+            "destination_y": 39.757431,
+            "destination_x": -104.988567,
+            "origin_y": 39.749513,
+            "origin_x": -105.000316,
             "starting_soc_percent": 100,
             "model_name": "2017_CHEVROLET_Bolt",
             "vehicle_rates": {
@@ -181,6 +183,13 @@ class TestDowntownDenverExample(TestCase):
             self.fail(
                 f"Balanced response is not a dict. response: {json.dumps(c_opt_result, indent=2)}",
             )
+        
+        if "error" in t_opt_result:
+            self.fail(f"Time optimal failed with error: {t_opt_result['error']}")
+        if "error" in e_opt_result:
+            self.fail(f"Energy optimal failed with error: {e_opt_result['error']}")
+        if "error" in c_opt_result:
+            self.fail(f"Balanced failed with error: {c_opt_result['error']}")
 
         self.assertIsNotNone(
             t_opt_result.get("route"),

@@ -51,6 +51,9 @@ cargo test
 
 ### Python Wrapper Operations
 ```bash
-# All checks (lint, typing, tests)
-pixi run -e dev-py312 check
+conda activate routee-compass
+maturin develop
+
+pytest python/
+
 ```

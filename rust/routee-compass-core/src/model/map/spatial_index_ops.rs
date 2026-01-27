@@ -26,9 +26,9 @@ pub fn within_threshold(
     if this_distance >= tolerance_distance {
         Err(MapError::MapMatchError(
             format!(
-                "coord {:?} nearest vertex coord is {:?} which is {} {} away, exceeding the distance tolerance of {} {}", 
-                this_coord,
+                "coord {:?} nearest map coord is {:?} which is {} {} away, exceeding the distance tolerance of {} {}", 
                 other,
+                this_coord,
                 this_distance.get::<uom::si::length::meter>(),
                 "meters",
                 tolerance_distance.get::<uom::si::length::meter>(),
