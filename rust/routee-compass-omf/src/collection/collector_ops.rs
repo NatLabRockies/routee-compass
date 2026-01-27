@@ -22,7 +22,7 @@ pub struct RowGroupTask {
 /// at the rowgroup level (including file location and metadata).
 /// With a [`RowGroupTask`] object constructed, we have all the information
 /// needed to build a stream object that produces a vector of RecordBatch.
-/// 
+///
 /// A successful call to `build_stream`, you retrieve a [`ParquetRecordBatchStream`] that
 /// when consumed, returns the record batches associated with a row group.
 impl RowGroupTask {

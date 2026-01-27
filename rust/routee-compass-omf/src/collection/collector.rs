@@ -128,7 +128,7 @@ impl OvertureMapsCollector {
         let opt_bbox_filter = row_filter_config
             .as_ref()
             .and_then(|f| f.get_bbox_filter_if_exists());
-        
+
         // validate provided bbox
         if let Some(bbox) = opt_bbox_filter.as_ref() {
             bbox.validate()?
