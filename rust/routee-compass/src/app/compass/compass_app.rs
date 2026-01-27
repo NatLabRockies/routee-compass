@@ -477,6 +477,51 @@ mod tests {
     }
 
     #[test]
+    fn test_map_matching_hmm() {
+        let conf_file_test = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src")
+            .join("app")
+            .join("compass")
+            .join("test")
+            .join("map_matching_test")
+            .join("compass_hmm.toml");
+
+        let app = CompassApp::try_from(conf_file_test.as_path()).unwrap();
+
+        // Construct a trace moving East along the top row of the grid
+        // Same trace as test_map_matching_long_trace but using HMM algorithm
+        let trace_points: Vec<serde_json::Value> = (0..5)
+            .map(|i| {
+                let x = -105.0 + (i as f64 * 0.01) + 0.005;
+                serde_json::json!({"x": x, "y": 40.0})
+            })
+            .collect();
+
+        let query = serde_json::json!({
+            "trace": trace_points
+        });
+        let queries = vec![query];
+
+        let result = app.map_match(&queries).unwrap();
+        assert_eq!(result.len(), 1);
+
+        let point_matches = result[0]
+            .get("point_matches")
+            .expect("result has point_matches")
+            .as_array()
+            .expect("point_matches is array");
+
+        assert_eq!(point_matches.len(), 5);
+
+        // The HMM algorithm should produce a valid matching
+        // Each point should be matched to an edge
+        for matched in point_matches.iter() {
+            assert!(matched.get("edge_id").is_some());
+            assert!(matched.get("edge_list_id").is_some());
+        }
+    }
+
+    #[test]
     fn test_e2e_dist_speed_time_traversal() {
         // let cwd_str = match std::env::current_dir() {
         //     Ok(cwd_path) => String::from(cwd_path.to_str().unwrap_or("<unknown>")),

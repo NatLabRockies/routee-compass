@@ -13,13 +13,16 @@
 //! # Implementations
 //!
 //! - [`SimpleMapMatching`] - Baseline nearest-edge matching algorithm
+//! - [`HmmMapMatching`] - Hidden Markov Model-based map matching
 
+mod hmm_map_matching;
 mod map_matching_algorithm;
 mod map_matching_error;
 mod map_matching_result;
 mod map_matching_trace;
 mod simple_map_matching;
 
+pub use hmm_map_matching::HmmMapMatching;
 pub use map_matching_algorithm::MapMatchingAlgorithm;
 pub use map_matching_error::MapMatchingError;
 pub use map_matching_result::{MapMatchingResult, PointMatch};

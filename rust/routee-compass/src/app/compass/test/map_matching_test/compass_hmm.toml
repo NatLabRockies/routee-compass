@@ -17,7 +17,7 @@ trip_distance = 1.0
 type = "raw"
 
 [map_matching]
-type = "simple"
+type = "hmm"
 
 [mapping]
 spatial_index_type = "edge"

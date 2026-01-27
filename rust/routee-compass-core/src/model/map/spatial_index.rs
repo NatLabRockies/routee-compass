@@ -116,6 +116,11 @@ impl SpatialIndex {
             }
         }
     }
+
+    /// Returns true if this is an edge-oriented spatial index.
+    pub fn is_edge_oriented(&self) -> bool {
+        matches!(self, SpatialIndex::EdgeOrientedIndex { .. })
+    }
 }
 
 #[cfg(test)]

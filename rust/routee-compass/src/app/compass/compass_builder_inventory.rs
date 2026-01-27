@@ -43,7 +43,7 @@ use routee_compass_core::model::{
     },
 };
 use routee_compass_core::{
-    algorithm::map_matching::{MapMatchingAlgorithm, SimpleMapMatching},
+    algorithm::map_matching::{HmmMapMatching, MapMatchingAlgorithm, SimpleMapMatching},
     config::{CompassConfigurationError, ConfigJsonExtensions},
     model::traversal::default::{distance::DistanceTraversalBuilder, speed::SpeedTraversalBuilder},
 };
@@ -93,6 +93,7 @@ inventory::submit! {
         builder.add_output_plugin("summary".to_string(), Rc::new(SummaryOutputPluginBuilder {}));
         builder.add_output_plugin("uuid".to_string(), Rc::new(UUIDOutputPluginBuilder {}));
         builder.add_map_matching_model("simple".to_string(), Arc::new(SimpleMapMatching::new()));
+        builder.add_map_matching_model("hmm".to_string(), Arc::new(HmmMapMatching::new()));
         Ok(())
     })
 }
