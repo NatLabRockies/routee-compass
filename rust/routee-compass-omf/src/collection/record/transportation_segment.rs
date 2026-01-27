@@ -319,6 +319,7 @@ pub enum SegmentRoadFlags {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "snake_case")]
+#[allow(clippy::enum_variant_names)]
 pub enum SegmentRailFlags {
     IsBridge,
     IsTunnel,
