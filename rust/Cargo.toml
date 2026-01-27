@@ -32,7 +32,7 @@ itertools = { version = "0.14.0" }
 kdam = "0.6.3"
 log = "0.4.28"
 lru = "0.16.2"
-ndarray = "=0.17.1" # forces correct transitive dependency on ndarray by ninterp 0.8.0
+ndarray = "=0.17.2" # forces correct transitive dependency on ndarray by ninterp 0.8.0
 ninterp = "0.8.0"
 ordered-float = { version = "5.1.0", features = ["serde"] }
 ordered_hash_map = { version = "0.5.0", features = ["serde"] }
