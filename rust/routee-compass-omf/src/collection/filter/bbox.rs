@@ -23,8 +23,7 @@ impl Bbox {
     pub fn validate(&self) -> Result<(), OvertureMapsCollectionError> {
         if self.xmax < self.xmin || self.ymax < self.xmin {
             return Err(OvertureMapsCollectionError::InvalidUserInput(format!(
-                "The provided Bbox is invalid: {:?}",
-                self
+                "The provided Bbox is invalid: {self:?}"
             )));
         }
 
