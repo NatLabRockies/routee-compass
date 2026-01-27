@@ -12,7 +12,7 @@ To install as a library in Rust, add routee-compass-core to your Cargo.toml file
 
 ```toml
 [dependencies]
-routee-compass-core = { version = "0.17.0" }
+routee-compass-core = { version = "0.17.1" }
 ```
 
 Please see the [documentation](https://docs.rs/routee-compass-core/latest/routee_compass_core/) for usage.

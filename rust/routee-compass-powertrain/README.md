@@ -12,7 +12,7 @@ To install as a library in Rust, add routee-compass-powertrain to your Cargo.tom
 
 ```toml
 [dependencies]
-routee-compass-powertrain = { version = "0.17.0" }
+routee-compass-powertrain = { version = "0.17.1" }
 ```
 
 Please see the [documentation](https://docs.rs/routee-compass-powertrain/latest/routee_compass_powertrain/) for usage.

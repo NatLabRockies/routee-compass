@@ -10,7 +10,7 @@ To install as a library in Rust, add routee-compass-macros to your Cargo.toml fi
 
 ```toml
 [dependencies]
-routee-compass-macros = { version = "0.17.0" }
+routee-compass-macros = { version = "0.17.1" }
 ```
 
 This crate currently just provides a single macro for wrapping a compass application with python bindings.
