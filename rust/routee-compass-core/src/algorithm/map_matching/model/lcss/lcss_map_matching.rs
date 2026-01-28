@@ -324,11 +324,10 @@ impl LcssMapMatching {
 
             // Collect points close to epsilon
             for (i, m) in segment.matches.iter().enumerate() {
-                if !m.distance_to_edge.is_infinite() {
-                    if (m.distance_to_edge - self.distance_epsilon).abs() < self.cutting_threshold {
+                if !m.distance_to_edge.is_infinite()
+                    && (m.distance_to_edge - self.distance_epsilon).abs() < self.cutting_threshold {
                         cutting_points.push(i);
                     }
-                }
             }
         }
 
@@ -358,7 +357,7 @@ impl LcssMapMatching {
 
         for &cp in &segment.cutting_points {
             let sub_points = segment.trace.points[last_idx..cp].to_vec();
-            if sub_points.len() >= 1 {
+            if !sub_points.is_empty() {
                 let sub_trace = MapMatchingTrace::new(sub_points);
                 let path = self.new_path_for_trace(&sub_trace, si);
                 result.push(TrajectorySegment {
@@ -373,7 +372,7 @@ impl LcssMapMatching {
         }
 
         let sub_points = segment.trace.points[last_idx..].to_vec();
-        if sub_points.len() >= 1 {
+        if !sub_points.is_empty() {
             let sub_trace = MapMatchingTrace::new(sub_points);
             let path = self.new_path_for_trace(&sub_trace, si);
             result.push(TrajectorySegment {
@@ -413,18 +412,17 @@ impl LcssMapMatching {
                             cutting_points: Vec::new(),
                         };
 
-                        if let Ok(_) = self.score_and_match(&mut temp_segment, si) {
+                        if self.score_and_match(&mut temp_segment, si).is_ok() {
                             let path_dist = self.compute_path_distance(&path, si);
                             if temp_segment.score > best_score * 1.001 {
                                 best_score = temp_segment.score;
                                 best_path = path;
                                 best_dist = path_dist;
-                            } else if temp_segment.score > best_score * 0.999 {
-                                if path_dist < best_dist {
+                            } else if temp_segment.score > best_score * 0.999
+                                && path_dist < best_dist {
                                     best_dist = path_dist;
                                     best_path = path;
                                 }
-                            }
 
                             // Early exit if we found a very good path
                             if best_score > 0.99 {
