@@ -410,7 +410,9 @@ mod tests {
         let route_0 = result[0].get("route").expect("result has no route");
         let path_0 = route_0.get("path").expect("result route has no path");
         // Verify path contains edge IDs (current configuration uses edge_id format)
-        let edge_ids = path_0.as_array().expect("path should be an array of edge IDs");
+        let edge_ids = path_0
+            .as_array()
+            .expect("path should be an array of edge IDs");
         assert!(!edge_ids.is_empty(), "Path should not be empty");
         // Verify we got a valid route (the algorithm may choose different paths based on cost)
         assert!(
