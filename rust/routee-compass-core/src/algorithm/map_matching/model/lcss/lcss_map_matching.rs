@@ -63,32 +63,68 @@ impl LcssMapMatching {
         Self::default()
     }
 
-    /// Finds the nearest edge for a point.
-    fn find_nearest_edge(
+    /// Computes the total distance of a path.
+    fn compute_path_distance(&self, path: &[(EdgeListId, EdgeId)], si: &SearchInstance) -> f64 {
+        path.iter()
+            .filter_map(|(list_id, edge_id)| {
+                si.graph
+                    .get_edge(list_id, edge_id)
+                    .ok()
+                    .map(|e| e.distance.get::<uom::si::length::meter>())
+            })
+            .sum()
+    }
+
+    /// Finds the nearest edges for a point.
+    fn find_candidates(
         &self,
         point: &geo::Point<f32>,
         si: &SearchInstance,
-    ) -> Result<(EdgeListId, EdgeId, f64), MapMatchingError> {
-        let nearest = si
+        k: usize,
+    ) -> Result<Vec<(EdgeListId, EdgeId, f64)>, MapMatchingError> {
+        let nearest_iter = si
             .map_model
             .spatial_index
-            .nearest_graph_id(point)
-            .map_err(|e| {
-                MapMatchingError::InternalError(format!("spatial index query failed: {}", e))
-            })?;
+            .nearest_graph_id_iter(point)
+            .take(k);
 
-        match nearest {
-            NearestSearchResult::NearestEdge(list_id, eid) => {
-                let distance = self.compute_distance_to_edge(point, &list_id, &eid, si);
-                Ok((list_id, eid, distance))
+        let mut candidates = Vec::new();
+        for result in nearest_iter {
+            match result {
+                NearestSearchResult::NearestEdge(list_id, eid) => {
+                    let distance = self.compute_distance_to_edge(point, &list_id, &eid, si);
+                    candidates.push((list_id, eid, distance));
+                }
+                NearestSearchResult::NearestVertex(_) => continue,
             }
-            NearestSearchResult::NearestVertex(_) => Err(MapMatchingError::InternalError(
-                "vertex-oriented spatial index not supported for LCSS map matching".to_string(),
-            )),
         }
+
+        if candidates.is_empty() {
+            let nearest = si
+                .map_model
+                .spatial_index
+                .nearest_graph_id(point)
+                .map_err(|e| {
+                    MapMatchingError::InternalError(format!("spatial index query failed: {}", e))
+                })?;
+
+            match nearest {
+                NearestSearchResult::NearestEdge(list_id, eid) => {
+                    let distance = self.compute_distance_to_edge(point, &list_id, &eid, si);
+                    candidates.push((list_id, eid, distance));
+                }
+                NearestSearchResult::NearestVertex(_) => {
+                    return Err(MapMatchingError::InternalError(
+                        "vertex-oriented spatial index not supported for LCSS map matching"
+                            .to_string(),
+                    ));
+                }
+            }
+        }
+
+        Ok(candidates)
     }
 
-    /// Computes the approximate distance from a point to an edge.
     /// (Copied from HmmMapMatching)
     fn compute_distance_to_edge(
         &self,
@@ -357,15 +393,48 @@ impl LcssMapMatching {
         trace: &MapMatchingTrace,
         si: &SearchInstance,
     ) -> Vec<(EdgeListId, EdgeId)> {
-        if trace.len() < 1 {
-            return Vec::new();
-        }
+        match (
+            self.find_candidates(&trace.points[0].coord, si, 5),
+            self.find_candidates(&trace.points[trace.len() - 1].coord, si, 5),
+        ) {
+            (Ok(starts), Ok(ends)) => {
+                let mut best_path = Vec::new();
+                let mut best_score = -1.0;
+                let mut best_dist = f64::INFINITY;
 
-        let start_res = self.find_nearest_edge(&trace.points[0].coord, si);
-        let end_res = self.find_nearest_edge(&trace.points[trace.len() - 1].coord, si);
+                for start in starts {
+                    for end in &ends {
+                        let path = self.run_shortest_path((start.0, start.1), (end.0, end.1), si);
+                        let mut temp_segment = TrajectorySegment {
+                            trace: trace.clone(),
+                            path: path.clone(),
+                            matches: Vec::new(),
+                            score: 0.0,
+                            cutting_points: Vec::new(),
+                        };
 
-        match (start_res, end_res) {
-            (Ok(start), Ok(end)) => self.run_shortest_path((start.0, start.1), (end.0, end.1), si),
+                        if let Ok(_) = self.score_and_match(&mut temp_segment, si) {
+                            let path_dist = self.compute_path_distance(&path, si);
+                            if temp_segment.score > best_score * 1.001 {
+                                best_score = temp_segment.score;
+                                best_path = path;
+                                best_dist = path_dist;
+                            } else if temp_segment.score > best_score * 0.999 {
+                                if path_dist < best_dist {
+                                    best_dist = path_dist;
+                                    best_path = path;
+                                }
+                            }
+
+                            // Early exit if we found a very good path
+                            if best_score > 0.99 {
+                                return best_path;
+                            }
+                        }
+                    }
+                }
+                best_path
+            }
             _ => Vec::new(),
         }
     }

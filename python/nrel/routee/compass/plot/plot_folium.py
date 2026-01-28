@@ -10,6 +10,9 @@ from nrel.routee.compass.plot.plot_utils import ColormapCircularIterator, rgba_t
 
 from nrel.routee.compass.utils.geometry import ROUTE_KEY, geometry_from_route
 
+MATCHED_PATH_KEY = "matched_path"
+GEOMETRY_KEY = "geometry"
+
 DEFAULT_LINE_KWARGS = {
     "color": "blue",
     "weight": 10,
@@ -285,3 +288,56 @@ def plot_routes_folium(
         line_kwargs = {"color": route_color, "tooltip": f"{value}"}
         folium_map = plot_coords_folium(coords, line_kwargs, folium_map=folium_map)
     return folium_map
+
+
+def matched_path_to_coords(
+    matched_path: Sequence[dict[str, Any]],
+) -> Sequence[Tuple[float, float]]:
+    """
+    Converts the matched path from a map matching query to coords to be sent to the folium map.
+
+    Args:
+        matched_path (Sequence[Dict[str, Any]]): A matched path from a map matching query
+
+    Returns:
+        Sequence[(float, float)]: A sequence of latitude and longitude tuples.
+    """
+    coords = []
+    for edge in matched_path:
+        geometry = edge.get(GEOMETRY_KEY)
+        if geometry is None:
+            raise ValueError(
+                f"Edge {edge.get('edge_id')} is missing geometry. "
+                "Make sure 'include_geometry' is set to True in the map matching request."
+            )
+        for point in geometry:
+            coords.append((point["y"], point["x"]))
+    return coords
+
+
+def plot_matched_path_folium(
+    result_dict: QueryResult,
+    line_kwargs: Optional[QueryResult] = None,
+    folium_map: Optional[folium.Map] = None,
+) -> folium.Map:
+    """
+    Plots the matched path from a map matching query on a folium map.
+
+    Args:
+        result_dict: A result dictionary from a CompassApp map_match query
+        line_kwargs: A dictionary of keyword arguments to pass to the folium Polyline
+        folium_map: A existing folium map to plot the route on.
+
+    Returns:
+        folium_map: A folium map with the route plotted on it
+    """
+    matched_path = result_dict.get(MATCHED_PATH_KEY)
+    if matched_path is None:
+        raise KeyError(
+            f"Could not find '{MATCHED_PATH_KEY}' in result. "
+            "Make sure this is a result from a map matching query."
+        )
+
+    coords = matched_path_to_coords(matched_path)
+
+    return plot_coords_folium(coords, line_kwargs, folium_map)
