@@ -325,9 +325,10 @@ impl LcssMapMatching {
             // Collect points close to epsilon
             for (i, m) in segment.matches.iter().enumerate() {
                 if !m.distance_to_edge.is_infinite()
-                    && (m.distance_to_edge - self.distance_epsilon).abs() < self.cutting_threshold {
-                        cutting_points.push(i);
-                    }
+                    && (m.distance_to_edge - self.distance_epsilon).abs() < self.cutting_threshold
+                {
+                    cutting_points.push(i);
+                }
             }
         }
 
@@ -419,10 +420,11 @@ impl LcssMapMatching {
                                 best_path = path;
                                 best_dist = path_dist;
                             } else if temp_segment.score > best_score * 0.999
-                                && path_dist < best_dist {
-                                    best_dist = path_dist;
-                                    best_path = path;
-                                }
+                                && path_dist < best_dist
+                            {
+                                best_dist = path_dist;
+                                best_path = path;
+                            }
 
                             // Early exit if we found a very good path
                             if best_score > 0.99 {
