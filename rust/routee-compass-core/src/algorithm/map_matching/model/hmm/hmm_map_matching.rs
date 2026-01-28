@@ -38,6 +38,8 @@ pub struct HmmMapMatching {
     pub beta: f64,
     /// Maximum candidate edges per GPS point
     pub max_candidates: usize,
+    /// Search query requirements for this algorithm
+    pub search_parameters: serde_json::Value,
 }
 
 /// A candidate edge for a GPS observation
@@ -63,6 +65,7 @@ impl Default for HmmMapMatching {
             sigma: 50.0,
             beta: 2.0,
             max_candidates: 5,
+            search_parameters: serde_json::json!({}),
         }
     }
 }
@@ -74,11 +77,17 @@ impl HmmMapMatching {
     }
 
     /// Creates a new HMM map matching algorithm with custom parameters.
-    pub fn with_params(sigma: f64, beta: f64, max_candidates: usize) -> Self {
+    pub fn with_params(
+        sigma: f64,
+        beta: f64,
+        max_candidates: usize,
+        search_parameters: serde_json::Value,
+    ) -> Self {
         Self {
             sigma,
             beta,
             max_candidates,
+            search_parameters,
         }
     }
 
@@ -548,6 +557,10 @@ impl MapMatchingAlgorithm for HmmMapMatching {
     fn name(&self) -> &str {
         "hmm_map_matching"
     }
+
+    fn search_parameters(&self) -> serde_json::Value {
+        self.search_parameters.clone()
+    }
 }
 
 #[cfg(test)]
@@ -570,7 +583,7 @@ mod tests {
 
     #[test]
     fn test_custom_params() {
-        let alg = HmmMapMatching::with_params(100.0, 5.0, 10);
+        let alg = HmmMapMatching::with_params(100.0, 5.0, 10, serde_json::json!({}));
         assert_eq!(alg.sigma, 100.0);
         assert_eq!(alg.beta, 5.0);
         assert_eq!(alg.max_candidates, 10);
@@ -578,7 +591,7 @@ mod tests {
 
     #[test]
     fn test_emission_log_prob() {
-        let alg = HmmMapMatching::with_params(50.0, 2.0, 5);
+        let alg = HmmMapMatching::with_params(50.0, 2.0, 5, serde_json::json!({}));
         // At distance 0, log prob should be 0
         assert_eq!(alg.emission_log_prob(0.0), 0.0);
         // Higher distance should give lower (more negative) log prob
@@ -589,7 +602,7 @@ mod tests {
 
     #[test]
     fn test_transition_log_prob() {
-        let alg = HmmMapMatching::with_params(50.0, 2.0, 5);
+        let alg = HmmMapMatching::with_params(50.0, 2.0, 5, serde_json::json!({}));
         // When route distance equals gc distance, log prob should be 0
         assert_eq!(alg.transition_log_prob(100.0, 100.0), 0.0);
         // Larger difference should give lower log prob

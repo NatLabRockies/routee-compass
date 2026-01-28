@@ -41,13 +41,19 @@ impl MapMatchingBuilder for LcssMapMatchingBuilder {
             .and_then(|v| v.as_f64())
             .unwrap_or(defaults.distance_threshold);
 
+        let search_parameters = config
+            .get("search_parameters")
+            .cloned()
+            .unwrap_or(defaults.search_parameters);
+
         log::debug!(
-            "LCSS map matching configured: distance_epsilon={}, similarity_cutoff={}, cutting_threshold={}, random_cuts={}, distance_threshold={}",
+            "LCSS map matching configured: distance_epsilon={}, similarity_cutoff={}, cutting_threshold={}, random_cuts={}, distance_threshold={}, search_parameters={:?}",
             distance_epsilon,
             similarity_cutoff,
             cutting_threshold,
             random_cuts,
-            distance_threshold
+            distance_threshold,
+            search_parameters
         );
 
         let alg = LcssMapMatching {
@@ -56,6 +62,7 @@ impl MapMatchingBuilder for LcssMapMatchingBuilder {
             cutting_threshold,
             random_cuts,
             distance_threshold,
+            search_parameters,
         };
         Ok(Arc::new(alg))
     }

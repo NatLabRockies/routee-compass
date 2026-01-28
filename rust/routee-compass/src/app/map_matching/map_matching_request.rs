@@ -5,6 +5,9 @@ use serde::Deserialize;
 pub struct MapMatchingRequest {
     /// The GPS trace to match to the road network.
     pub trace: Vec<TracePoint>,
+    /// Optional search configuration to override defaults.
+    #[serde(default)]
+    pub search_parameters: Option<serde_json::Value>,
 }
 
 /// A single GPS point in the request trace.
@@ -52,7 +55,10 @@ mod tests {
 
     #[test]
     fn test_empty_trace_validation() {
-        let request = MapMatchingRequest { trace: vec![] };
+        let request = MapMatchingRequest {
+            trace: vec![],
+            search_parameters: None,
+        };
         assert!(request.validate().is_err());
     }
 }

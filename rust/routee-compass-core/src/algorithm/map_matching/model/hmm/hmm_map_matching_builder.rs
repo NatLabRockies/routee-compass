@@ -31,17 +31,24 @@ impl MapMatchingBuilder for HmmMapMatchingBuilder {
             .map(|v| v as usize)
             .unwrap_or(defaults.max_candidates);
 
+        let search_parameters = config
+            .get("search_parameters")
+            .cloned()
+            .unwrap_or(defaults.search_parameters);
+
         log::debug!(
-            "HMM map matching configured: sigma={}, beta={}, max_candidates={}",
+            "HMM map matching configured: sigma={}, beta={}, max_candidates={}, search_parameters={:?}",
             sigma,
             beta,
-            max_candidates
+            max_candidates,
+            search_parameters
         );
 
         let alg = HmmMapMatching {
             sigma,
             beta,
             max_candidates,
+            search_parameters,
         };
         Ok(Arc::new(alg))
     }

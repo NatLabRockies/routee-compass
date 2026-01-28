@@ -27,6 +27,8 @@ pub struct LcssMapMatching {
     pub cutting_threshold: f64,
     pub random_cuts: usize,
     pub distance_threshold: f64,
+    /// Search query requirements for this algorithm
+    pub search_parameters: serde_json::Value,
 }
 
 impl Default for LcssMapMatching {
@@ -37,6 +39,7 @@ impl Default for LcssMapMatching {
             cutting_threshold: 10.0,
             random_cuts: 0,
             distance_threshold: 10000.0,
+            search_parameters: serde_json::json!({}),
         }
     }
 }
@@ -593,5 +596,9 @@ impl MapMatchingAlgorithm for LcssMapMatching {
 
     fn name(&self) -> &str {
         "lcss_map_matching"
+    }
+
+    fn search_parameters(&self) -> serde_json::Value {
+        self.search_parameters.clone()
     }
 }

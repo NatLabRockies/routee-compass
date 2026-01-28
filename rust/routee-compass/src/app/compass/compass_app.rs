@@ -294,8 +294,14 @@ impl CompassApp {
             let trace = map_matching_ops::convert_request_to_trace(&request);
 
             // Build a search instance for this query
-            // Using an empty JSON object as we don't need query-specific configuration
-            let query_config = serde_json::json!({});
+            let mut query_config = self.map_matching_algorithm.search_parameters();
+            if let Some(search_overrides) = &request.search_parameters {
+                if let Some(obj) = search_overrides.as_object() {
+                    for (k, v) in obj {
+                        query_config[k] = v.clone();
+                    }
+                }
+            }
             let search_instance = self
                 .search_app
                 .build_search_instance(&query_config)

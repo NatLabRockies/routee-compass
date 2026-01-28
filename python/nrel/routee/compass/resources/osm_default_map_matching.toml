@@ -1,14 +1,21 @@
 parallelism = 2
 
+[map_matching]
+type = "lcss"
+search_parameters.weights.trip_time = 1.0
+search_parameters.model_name = "2016_TOYOTA_Camry_4cyl_2WD"
+
+
 [graph]
 vertex_list_input_file = "vertices-compass.csv.gz"
 
 [mapping]
 type = "edge"
 queries_without_destinations = false
-geometry.input_file = "edges-geometries-enumerated.txt.gz"
+spatial_index_type = "edge"
 tolerance.distance = 100.0
 tolerance.unit = "meters"
+geometry.input_file = "edges-geometries-enumerated.txt.gz"
 matching_type = ["point", "vertex_id", "edge_id"]
 
 [plugin]

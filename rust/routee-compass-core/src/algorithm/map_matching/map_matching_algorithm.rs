@@ -53,4 +53,10 @@ pub trait MapMatchingAlgorithm: Send + Sync {
     fn name(&self) -> &str {
         "map_matching_algorithm"
     }
+
+    /// Returns a search query that defines the search instance requirements for this algorithm.
+    /// This is used to build the search instance when running the algorithm.
+    fn search_parameters(&self) -> serde_json::Value {
+        serde_json::json!({})
+    }
 }
