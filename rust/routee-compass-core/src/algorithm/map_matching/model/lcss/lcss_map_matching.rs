@@ -122,6 +122,9 @@ impl LcssMapMatching {
             }
         }
 
+        // Sort by distance
+        candidates.sort_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(std::cmp::Ordering::Equal));
+
         Ok(candidates)
     }
 
@@ -292,6 +295,20 @@ impl LcssMapMatching {
         segment.score = c[m][n] / (m.min(n) as f64);
         segment.matches = point_matches;
 
+        // Penalize paths that don't cover the endpoints well
+        if !segment.matches.is_empty() {
+            let first_point_dist = segment.matches[0].distance_to_edge;
+            let last_point_dist = segment.matches[m - 1].distance_to_edge;
+
+            // Apply penalty if first or last point is not well-matched
+            if first_point_dist > self.distance_epsilon || last_point_dist > self.distance_epsilon {
+                let endpoint_penalty = ((first_point_dist / self.distance_epsilon).max(1.0)
+                    + (last_point_dist / self.distance_epsilon).max(1.0))
+                    / 2.0;
+                segment.score /= endpoint_penalty;
+            }
+        }
+
         Ok(())
     }
 
@@ -401,6 +418,8 @@ impl LcssMapMatching {
                 let mut best_path = Vec::new();
                 let mut best_score = -1.0;
                 let mut best_dist = f64::INFINITY;
+                let mut best_start_dist = f64::INFINITY;
+                let mut best_end_dist = f64::INFINITY;
 
                 for start in starts {
                     for end in &ends {
@@ -415,20 +434,24 @@ impl LcssMapMatching {
 
                         if self.score_and_match(&mut temp_segment, si).is_ok() {
                             let path_dist = self.compute_path_distance(&path, si);
-                            if temp_segment.score > best_score * 1.001 {
+
+                            // Prefer paths with better scores, breaking ties by preferring closer start/end edges,
+                            // then by shorter path distance
+                            let is_better = temp_segment.score > best_score * 1.001
+                                || (temp_segment.score > best_score * 0.999
+                                    && (start.2 + end.2)
+                                        < (best_start_dist + best_end_dist) * 0.999)
+                                || (temp_segment.score > best_score * 0.999
+                                    && (start.2 + end.2)
+                                        < (best_start_dist + best_end_dist) * 1.001
+                                    && path_dist < best_dist);
+
+                            if is_better {
                                 best_score = temp_segment.score;
                                 best_path = path;
                                 best_dist = path_dist;
-                            } else if temp_segment.score > best_score * 0.999
-                                && path_dist < best_dist
-                            {
-                                best_dist = path_dist;
-                                best_path = path;
-                            }
-
-                            // Early exit if we found a very good path
-                            if best_score > 0.99 {
-                                return best_path;
+                                best_start_dist = start.2;
+                                best_end_dist = end.2;
                             }
                         }
                     }
@@ -556,19 +579,20 @@ impl LcssMapMatching {
             }
         }
 
-        for i in 0.. {
-            if sub_trace_idx >= matches.len() {
-                break;
-            }
+        // Calculate the original trace length: sub_trace length + skipped points
+        let original_trace_len = matches.len() + skip_indices.len();
 
+        for i in 0..original_trace_len {
             if skip_indices.contains(&i) {
                 // This was a dropped stationary point, use the match of the previous point
                 if let Some(last_match) = final_matches.last() {
                     final_matches.push(last_match.clone());
                 }
             } else {
-                final_matches.push(matches[sub_trace_idx].clone());
-                sub_trace_idx += 1;
+                if sub_trace_idx < matches.len() {
+                    final_matches.push(matches[sub_trace_idx].clone());
+                    sub_trace_idx += 1;
+                }
             }
         }
 
