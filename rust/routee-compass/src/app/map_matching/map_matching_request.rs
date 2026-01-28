@@ -8,6 +8,13 @@ pub struct MapMatchingRequest {
     /// Optional search configuration to override defaults.
     #[serde(default)]
     pub search_parameters: Option<serde_json::Value>,
+    /// Whether to include the geometry of the matched path in the response.
+    #[serde(default = "default_include_geometry")]
+    pub include_geometry: bool,
+}
+
+fn default_include_geometry() -> bool {
+    true
 }
 
 /// A single GPS point in the request trace.
@@ -58,6 +65,7 @@ mod tests {
         let request = MapMatchingRequest {
             trace: vec![],
             search_parameters: None,
+            include_geometry: false,
         };
         assert!(request.validate().is_err());
     }

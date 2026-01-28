@@ -573,3 +573,75 @@ fn test_lcss_noisy_trace() {
     let trace = TestTrace::noisy_eastward_horizontal(0, 5);
     run_map_match_test(&app, trace, "LCSS noisy horizontal");
 }
+#[test]
+fn test_map_matching_with_geometry() {
+    let app = load_simple_app();
+
+    // Query point near edge 0
+    let query = serde_json::json!({
+        "trace": [
+            {"x": -104.995, "y": 40.0}
+        ]
+        // include_geometry defaults to true
+    });
+    let queries = vec![query];
+
+    // Execute map match
+    let result = app.map_match(&queries).unwrap();
+
+    // Verify result has geometry
+    assert_eq!(result.len(), 1);
+    let first_result = &result[0];
+
+    // Check point matches
+    let point_matches = first_result
+        .get("point_matches")
+        .unwrap()
+        .as_array()
+        .unwrap();
+    assert_eq!(point_matches.len(), 1);
+    assert_eq!(
+        point_matches[0].get("edge_id").unwrap().as_i64().unwrap(),
+        0
+    );
+
+    // Check matched path
+    let matched_path = first_result
+        .get("matched_path")
+        .unwrap()
+        .as_array()
+        .unwrap();
+    assert_eq!(matched_path.len(), 1);
+    let matched_edge = &matched_path[0];
+    assert_eq!(matched_edge.get("edge_id").unwrap().as_i64().unwrap(), 0);
+
+    // Check geometry inside matched_path object
+    let geometry = matched_edge
+        .get("geometry")
+        .expect("geometry should be present by default")
+        .as_array()
+        .expect("geometry should be an array of points");
+    assert!(!geometry.is_empty(), "Geometry should not be empty");
+
+    let first_point = geometry[0].as_object().unwrap();
+    assert!(first_point.contains_key("x"));
+    assert!(first_point.contains_key("y"));
+
+    // Verify it can be disabled
+    let query_no_geom = serde_json::json!({
+        "trace": [
+            {"x": -104.995, "y": 40.0}
+        ],
+        "include_geometry": false
+    });
+    let result_no_geom = app.map_match(&vec![query_no_geom]).unwrap();
+    let matched_path_no_geom = result_no_geom[0]
+        .get("matched_path")
+        .unwrap()
+        .as_array()
+        .unwrap();
+    assert!(!matched_path_no_geom[0]
+        .as_object()
+        .unwrap()
+        .contains_key("geometry"));
+}

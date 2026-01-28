@@ -314,7 +314,11 @@ impl CompassApp {
                 .map_err(|e| MapMatchingAppError::AlgorithmError { source: e })?;
 
             // Convert result to response format
-            let response = map_matching_ops::convert_result_to_response(result);
+            let response = map_matching_ops::convert_result_to_response(
+                result,
+                &self.search_app.map_model,
+                request.include_geometry,
+            );
             let response_json = serde_json::to_value(response)?;
             results.push(response_json);
         }
@@ -398,14 +402,31 @@ mod tests {
         .unwrap();
         let query = serde_json::json!({
             "origin_vertex": 0,
-            "destination_vertex": 2
+            "destination_vertex": 2,
+            "include_geometry": true
         });
         let mut queries = vec![query];
         let result = app.run(&mut queries, None).expect("run failed");
         assert_eq!(result.len(), 1, "expected one result");
-        eprintln!("{}", serde_json::to_string_pretty(&result).unwrap());
         let route_0 = result[0].get("route").expect("result has no route");
         let path_0 = route_0.get("path").expect("result route has no path");
+        let geometry = route_0
+            .get("geometry")
+            .expect("result route has no geometry")
+            .as_array()
+            .expect("geometry should be an array");
+        assert!(!geometry.is_empty(), "Geometry should not be empty");
+        // Verify it's a valid linestring (not empty)
+        let first_linestring = geometry[0]
+            .as_array()
+            .expect("first linestring should be an array of points");
+        assert!(
+            !first_linestring.is_empty(),
+            "Linestring should not be empty"
+        );
+        let first_point = first_linestring[0].as_object().unwrap();
+        assert!(first_point.contains_key("x"));
+        assert!(first_point.contains_key("y"));
 
         // path [1] is distance-optimal; path [0, 2] is time-optimal
         let expected_path = serde_json::json!(vec![0, 2]);
