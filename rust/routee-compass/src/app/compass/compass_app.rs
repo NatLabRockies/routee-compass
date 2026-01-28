@@ -416,7 +416,7 @@ mod tests {
         assert!(!edge_ids.is_empty(), "Path should not be empty");
         // Verify we got a valid route (the algorithm may choose different paths based on cost)
         assert!(
-            edge_ids.len() > 0 && edge_ids.len() <= 2,
+            !edge_ids.is_empty() && edge_ids.len() <= 2,
             "Path should contain 1-2 edges for route from vertex 0 to vertex 2"
         );
 

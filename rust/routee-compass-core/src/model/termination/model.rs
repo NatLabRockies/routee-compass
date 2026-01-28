@@ -383,6 +383,8 @@ mod tests {
             let cost = TraversalCost {
                 objective_cost: Cost::MIN_COST,
                 total_cost: Cost::MIN_COST,
+                #[cfg(feature = "detailed_costs")]
+                cost_component: std::collections::HashMap::new(),
             };
             let edge_traversal = EdgeTraversal {
                 edge_list_id: EdgeListId(0),
@@ -405,13 +407,13 @@ mod tests {
         // Test deserialization from hh:mm:ss string format
         let json_str = r#"{"type": "query_runtime", "limit": "01:30:45", "frequency": 10}"#;
         let result: Result<T, _> = serde_json::from_str(json_str);
-        if result.is_err() {
-            println!("Error: {:?}", result.as_ref().unwrap_err());
+        if let Err(e) = &result {
+            println!("Error: {:?}", e);
         }
         assert!(result.is_ok());
 
         if let Ok(T::QueryRuntimeLimit { limit, frequency }) = result {
-            assert_eq!(limit, Duration::from_secs(1 * 3600 + 30 * 60 + 45)); // 1:30:45 = 5445 seconds
+            assert_eq!(limit, Duration::from_secs(3600 + 30 * 60 + 45)); // 1:30:45 = 5445 seconds
             assert_eq!(frequency, Some(10));
         } else {
             panic!("Expected QueryRuntimeLimit variant");
@@ -423,8 +425,8 @@ mod tests {
         // Test deserialization from numeric seconds format (backward compatibility)
         let json_str = r#"{"type": "query_runtime", "limit": 5445, "frequency": 10}"#;
         let result: Result<T, _> = serde_json::from_str(json_str);
-        if result.is_err() {
-            println!("Error: {:?}", result.as_ref().unwrap_err());
+        if let Err(e) = &result {
+            println!("Error: {:?}", e);
         }
         assert!(result.is_ok());
 

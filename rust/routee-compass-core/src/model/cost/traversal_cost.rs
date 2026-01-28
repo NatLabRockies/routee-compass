@@ -1,5 +1,7 @@
 use allocative::Allocative;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "detailed_costs")]
+use std::collections::HashMap;
 
 use crate::model::unit::Cost;
 
@@ -21,14 +23,14 @@ impl TraversalCost {
     /// by only applying the "weight" value to the objective cost.
     ///
     /// when recording a cost component, if it already exists, we append to the cost value.
-    pub fn insert(&mut self, cost: Cost, weight: f64) {
+    pub fn insert(&mut self, #[allow(unused_variables)] name: &str, cost: Cost, weight: f64) {
         let positive_cost = Cost::enforce_strictly_positive(cost);
         self.total_cost += positive_cost;
         self.objective_cost += positive_cost * weight;
         #[cfg(feature = "detailed_costs")]
         {
-            self.cost_components
-                .entry(cost.name.clone())
+            self.cost_component
+                .entry(name.to_string())
                 .and_modify(|c| *c += positive_cost)
                 .or_insert(positive_cost);
         }

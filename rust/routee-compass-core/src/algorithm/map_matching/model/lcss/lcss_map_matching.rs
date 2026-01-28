@@ -588,11 +588,9 @@ impl LcssMapMatching {
                 if let Some(last_match) = final_matches.last() {
                     final_matches.push(last_match.clone());
                 }
-            } else {
-                if sub_trace_idx < matches.len() {
-                    final_matches.push(matches[sub_trace_idx].clone());
-                    sub_trace_idx += 1;
-                }
+            } else if sub_trace_idx < matches.len() {
+                final_matches.push(matches[sub_trace_idx].clone());
+                sub_trace_idx += 1;
             }
         }
 

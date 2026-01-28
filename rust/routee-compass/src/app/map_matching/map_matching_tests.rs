@@ -435,7 +435,7 @@ fn edge_row(edge_id: i64) -> usize {
 fn is_horizontal_edge(edge_id: i64) -> bool {
     let within_row = (edge_id as usize) % edges_per_row();
     // In each row: 0, 2, 4, ..., 16 are horizontal (even positions for cols 0-8)
-    within_row < 2 * (GRID_COLS - 1) && within_row % 2 == 0
+    within_row < 2 * (GRID_COLS - 1) && within_row.is_multiple_of(2)
 }
 
 /// Returns the column of a horizontal edge within its row
