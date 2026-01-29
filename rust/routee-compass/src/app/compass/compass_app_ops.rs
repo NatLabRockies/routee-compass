@@ -225,19 +225,14 @@ pub fn run_batch_without_responses(
     let _ = load_balanced_inputs
         .par_iter_mut()
         .map(|queries| {
-            // fold over query iterator allows us to propagate failures up while still using constant
-            // memory to hold the state of the result object. we can't similarly return error values from
-            // within a for loop or for_each call, and map creates more allocations. open to other ideas!
-            let initial: Result<(), CompassAppError> = Ok(());
-            let _ = queries.iter_mut().fold(initial, |_, q| {
+            queries.iter_mut().try_for_each(|q| {
                 let mut response = run_single_query(q, output_plugins, search_app)?;
                 if let Ok(mut pb_local) = pb.lock() {
                     let _ = pb_local.update(1);
                 }
                 response_writer.write_response(&mut response)?;
                 Ok(())
-            });
-            Ok(())
+            })
         })
         .collect::<Result<Vec<_>, CompassAppError>>()?;
 

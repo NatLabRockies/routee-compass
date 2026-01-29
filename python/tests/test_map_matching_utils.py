@@ -30,29 +30,6 @@ class TestMapMatchingUtils(TestCase):
             # Check first point
             self.assertEqual(query["trace"][0]["x"], -104.9735321)
             self.assertEqual(query["trace"][0]["y"], 39.7625164)
-
-            # Check that timestamp is not included by default
-            self.assertNotIn("t", query["trace"][0])
-        finally:
-            csv_path.unlink()
-
-    def test_load_trace_csv_with_timestamp(self) -> None:
-        """Test loading a trace from a CSV file with timestamp."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
-            f.write("longitude,latitude,timestamp\n")
-            f.write("-104.9735321,39.7625164,0\n")
-            f.write("-104.9740539,39.7629127,1\n")
-            csv_path = pathlib.Path(f.name)
-
-        try:
-            query = load_trace_csv(csv_path, t_col="timestamp")
-
-            self.assertIn("trace", query)
-            self.assertEqual(len(query["trace"]), 2)
-
-            # Check that timestamp is included
-            self.assertIn("t", query["trace"][0])
-            self.assertEqual(query["trace"][0]["t"], 0)
         finally:
             csv_path.unlink()
 
@@ -107,8 +84,6 @@ class TestMapMatchingUtils(TestCase):
             # Check first point
             self.assertEqual(query["trace"][0]["x"], -104.9735321)
             self.assertEqual(query["trace"][0]["y"], 39.7625164)
-            self.assertIn("t", query["trace"][0])
-            self.assertEqual(query["trace"][0]["t"], "2024-01-01T00:00:00Z")
         finally:
             gpx_path.unlink()
 

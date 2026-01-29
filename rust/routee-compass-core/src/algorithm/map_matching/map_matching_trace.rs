@@ -30,28 +30,12 @@ impl MapMatchingTrace {
 pub struct MapMatchingPoint {
     /// Geographic coordinate of the GPS observation
     pub coord: Point<f32>,
-
-    /// Optional timestamp of the observation as an ISO 8601 string.
-    /// Using String to avoid chrono serde feature dependencies.
-    #[serde(default)]
-    pub timestamp: Option<String>,
 }
 
 impl MapMatchingPoint {
     /// Creates a new point with just coordinates.
     pub fn new(coord: Point<f32>) -> Self {
-        Self {
-            coord,
-            timestamp: None,
-        }
-    }
-
-    /// Creates a new point with coordinates and timestamp.
-    pub fn with_timestamp(coord: Point<f32>, timestamp: String) -> Self {
-        Self {
-            coord,
-            timestamp: Some(timestamp),
-        }
+        Self { coord }
     }
 }
 

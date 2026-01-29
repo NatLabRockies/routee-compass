@@ -25,10 +25,6 @@ pub struct TracePoint {
 
     /// Latitude (y coordinate)  
     pub y: f64,
-
-    /// Optional timestamp as ISO 8601 string
-    #[serde(default)]
-    pub timestamp: Option<String>,
 }
 
 impl MapMatchingRequest {
@@ -50,14 +46,12 @@ mod tests {
         let json = r#"{
             "trace": [
                 {"x": -105.0, "y": 40.0},
-                {"x": -105.1, "y": 40.1, "timestamp": "2024-01-01T12:00:00Z"}
+                {"x": -105.1, "y": 40.1}
             ]
         }"#;
 
         let request: MapMatchingRequest = serde_json::from_str(json).unwrap();
         assert_eq!(request.trace.len(), 2);
-        assert!(request.trace[0].timestamp.is_none());
-        assert!(request.trace[1].timestamp.is_some());
     }
 
     #[test]

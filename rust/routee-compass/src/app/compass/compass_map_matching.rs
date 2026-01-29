@@ -16,10 +16,7 @@ pub fn convert_request_to_trace(request: &MapMatchingRequest) -> MapMatchingTrac
 /// Converts a single trace point from the request format.
 pub fn convert_trace_point(point: &TracePoint) -> MapMatchingPoint {
     let coord = Point::new(point.x as f32, point.y as f32);
-    match &point.timestamp {
-        Some(ts) => MapMatchingPoint::with_timestamp(coord, ts.clone()),
-        None => MapMatchingPoint::new(coord),
-    }
+    MapMatchingPoint::new(coord)
 }
 
 /// Converts the internal result to the response format.

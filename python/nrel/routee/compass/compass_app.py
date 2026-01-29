@@ -396,8 +396,8 @@ class CompassApp:
             >>> app = CompassApp.from_config_file("config.toml")
             >>> query = {
                     "trace": [
-                        {"x": -105.1710052, "y": 39.7402804, "t": 0},
-                        {"x": -105.1710052, "y": 39.7402804, "t": 1}
+                        {"x": -105.1710052, "y": 39.7402804},
+                        {"x": -105.1710052, "y": 39.7402804}
                     ]
                 }
             >>> result = app.map_match(query)
