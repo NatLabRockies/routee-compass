@@ -11,5 +11,6 @@ path = "src/main.rs"
 
 [dependencies]
 clap = { workspace = true }
+heck = { workspace = true }
 indoc = { workspace = true }
 serde = { workspace = true }
