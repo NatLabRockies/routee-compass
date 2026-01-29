@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::Path;
 
+use heck::ToSnakeCase;
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize};
 
@@ -11,7 +12,7 @@ pub enum TraversalExtensions {
     /// include the config.rs and params.rs files and deserialize the inputs to
     /// builder and service .build() methods into these types.
     TypedConfig,
-    /// also include an engine.rs file for module business logic with a TryFrom<&Config>
+    /// also include an engine.rs file for module business logic with a TryFrom<Config>
     /// implementation stub.
     TypedConfigAndEngine,
 }
@@ -19,74 +20,95 @@ pub enum TraversalExtensions {
 /// creates the file contents and writes to the files with template code.
 pub fn generate_traversal_module(
     pascal_case_name: &str,
-    snake_case_name: &str,
     path: &Path,
     extensions: Option<&TraversalExtensions>,
+    force: bool
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let module_dir = path.join(snake_case_name);
+
+    let parent_traversal_in_path = path.to_str()
+        .map(|p| p.contains("..")).unwrap_or_default();
+    if parent_traversal_in_path {
+        return Err("provided path traverses upward with '..' which is not allowed".into());
+    }
+
+    let snake_case_name = pascal_case_name.to_snake_case();
+    let module_dir = path.join(&snake_case_name);
     fs::create_dir_all(&module_dir)?;
 
     let typed_config = extensions.is_some();
     let engine = matches!(extensions, Some(&TraversalExtensions::TypedConfigAndEngine));
 
     // Generate files with template content
-    fs::write(
-        module_dir.join("mod.rs"),
+    super::util::write_file(
+        module_dir.join("mod.rs").as_path(),
         mod_template(pascal_case_name, typed_config, engine),
+        force
     )?;
-    fs::write(
-        module_dir.join("model.rs"),
+    super::util::write_file(
+        module_dir.join("model.rs").as_path(),
         model_template(pascal_case_name, extensions),
+        force
     )?;
     match extensions {
         None => {
-            fs::write(
-                module_dir.join("builder.rs"),
+            super::util::write_file(
+                module_dir.join("builder.rs").as_path(),
                 builder_template(pascal_case_name),
+                force
             )?;
-            fs::write(
-                module_dir.join("service.rs"),
+            super::util::write_file(
+                module_dir.join("service.rs").as_path(),
                 service_template(pascal_case_name),
+                force
             )?;
         }
         Some(&TraversalExtensions::TypedConfig) => {
-            fs::write(
-                module_dir.join("builder.rs"),
+            super::util::write_file(
+                module_dir.join("builder.rs").as_path(),
                 builder_template_typed(pascal_case_name),
+                force
             )?;
-            fs::write(
-                module_dir.join("service.rs"),
+            super::util::write_file(
+                module_dir.join("service.rs").as_path(),
                 service_template_typed(pascal_case_name),
+                force
             )?;
-            fs::write(
-                module_dir.join("config.rs"),
+            super::util::write_file(
+                module_dir.join("config.rs").as_path(),
                 config_template(pascal_case_name),
+                force
             )?;
-            fs::write(
-                module_dir.join("params.rs"),
+            super::util::write_file(
+                module_dir.join("params.rs").as_path(),
                 params_template(pascal_case_name),
+                force
             )?;
         }
         Some(&TraversalExtensions::TypedConfigAndEngine) => {
-            fs::write(
-                module_dir.join("builder.rs"),
+            super::util::write_file(
+                module_dir.join("builder.rs").as_path(),
                 builder_template_engine(pascal_case_name),
+                force
             )?;
-            fs::write(
-                module_dir.join("service.rs"),
+            super::util::write_file(
+                module_dir.join("service.rs").as_path(),
                 service_template_engine(pascal_case_name),
+                force
             )?;
-            fs::write(
-                module_dir.join("config.rs"),
+            super::util::write_file(
+                module_dir.join("config.rs").as_path(),
                 config_template(pascal_case_name),
+                force
             )?;
-            fs::write(
-                module_dir.join("params.rs"),
+            super::util::write_file(
+                module_dir.join("params.rs").as_path(),
                 params_template(pascal_case_name),
+                force
             )?;
-            fs::write(
-                module_dir.join("engine.rs"),
+            super::util::write_file(
+                module_dir.join("engine.rs").as_path(),
                 engine_template(pascal_case_name),
+                force
             )?;
         }
     }
@@ -154,7 +176,7 @@ pub fn builder_template(pascal_case_name: &str) -> String {
         impl TraversalModelBuilder for {builder_name} {{
             fn build(
                 &self,
-                _params: &serde_json::Value,
+                _value: &serde_json::Value,
             ) -> Result<Arc<dyn TraversalModelService>, TraversalModelError> {{
                 let service = {service_name}::new();
                 Ok(Arc::new(service))
@@ -187,7 +209,7 @@ pub fn builder_template_typed(pascal_case_name: &str) -> String {
             ) -> Result<Arc<dyn TraversalModelService>, TraversalModelError> {{
                 let config: {config_name} = serde_json::from_value(value.clone())
                     .map_err(|e| {{
-                        let msg = format!(\"failure reading params for {pascal_case_name} service: {{e}}\");
+                        let msg = format!(\"failure reading config for {pascal_case_name} builder: {{e}}\");
                         TraversalModelError::BuildError(msg)
                     }})?;
                 let service = {service_name}::new(config);
@@ -219,9 +241,9 @@ pub fn builder_template_engine(pascal_case_name: &str) -> String {
         impl TraversalModelBuilder for {builder_name} {{
             fn build(
                 &self,
-                config: &serde_json::Value,
+                value: &serde_json::Value,
             ) -> Result<Arc<dyn TraversalModelService>, TraversalModelError> {{
-                let config: {config_name} = serde_json::from_value(config.clone())
+                let config: {config_name} = serde_json::from_value(value.clone())
                     .map_err(|e| {{
                         let msg = format!(\"failure reading config for {pascal_case_name} builder: {{e}}\");
                         TraversalModelError::BuildError(msg)
@@ -355,7 +377,7 @@ pub fn model_template(pascal_case_name: &str, extensions: Option<&TraversalExten
     let engine_name = format!("{pascal_case_name}Engine");
     let params_name = format!("{pascal_case_name}Params");
 
-    //
+    // imports depend on which extensions are chosen, if any
     let super_import = match extensions {
         None => "".to_string(),
         Some(TraversalExtensions::TypedConfig) => {
@@ -366,6 +388,7 @@ pub fn model_template(pascal_case_name: &str, extensions: Option<&TraversalExten
         }
     };
 
+    // struct definition also depends on the extension
     let struct_def = match extensions {
         None => formatdoc!(
             "
