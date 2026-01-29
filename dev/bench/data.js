@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1769555899383,
+  "lastUpdate": 1769726511482,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -2459,6 +2459,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2857381,
             "range": "± 79790",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "301fbf2697ea79d5d7a16aade6a38a4674dd8d28",
+          "message": "Merge pull request #458 from NatLabRockies/dependabot/cargo/rust/ndarray-eq-0.17.2\n\nUpdate ndarray requirement from =0.17.1 to =0.17.2 in /rust",
+          "timestamp": "2026-01-29T15:37:36-07:00",
+          "tree_id": "8c488e0bfffde67daee088d314f384ad2f236d6f",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/301fbf2697ea79d5d7a16aade6a38a4674dd8d28"
+        },
+        "date": 1769726511006,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2840162,
+            "range": "± 336370",
             "unit": "ns/iter"
           }
         ]
