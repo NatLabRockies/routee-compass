@@ -222,7 +222,7 @@ impl SegmentSplit {
                             Some(h) if h == heading => true,
                             _ => false,
                         },
-                        None => false,
+                        None => true,
                     })
                     .collect_vec();
 
