@@ -34,6 +34,9 @@ enum CompassSubcommands {
         /// optionally include extensions for typed configuration and engine struct
         #[arg(long)]
         extensions: Option<TraversalExtensions>,
+        /// allow the user to force overwriting existing files
+        #[arg(short, long)]
+        force: bool
     },
     /// Generate a new ConstraintModel module
     Constraint {
@@ -68,59 +71,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             name,
             path,
             extensions,
+            force
         } => {
-            let snake_case_name = pascal_to_snake_case(&name);
+
             routee_compass_codegen::generator::traversal::generate_traversal_module(
                 &name,
-                &snake_case_name,
                 &path,
                 extensions.as_ref(),
+                force
             )?;
         }
         CompassSubcommands::Constraint { name, path } => {
-            let snake_case_name = pascal_to_snake_case(&name);
+
             routee_compass_codegen::generator::constraint::generate_constraint_module(
                 &name,
-                &snake_case_name,
                 &path,
             )?;
         }
         CompassSubcommands::InputPlugin { name, path } => {
-            let snake_case_name = pascal_to_snake_case(&name);
+
             routee_compass_codegen::generator::input_plugin::generate_input_plugin_module(
                 &name,
-                &snake_case_name,
                 &path,
             )?;
         }
         CompassSubcommands::OutputPlugin { name, path } => {
-            let snake_case_name = pascal_to_snake_case(&name);
+
             routee_compass_codegen::generator::output_plugin::generate_output_plugin_module(
                 &name,
-                &snake_case_name,
                 &path,
             )?;
         }
     }
 
     Ok(())
-}
-
-/// Convert PascalCase to snake_case
-fn pascal_to_snake_case(s: &str) -> String {
-    let mut result = String::new();
-    let mut chars = s.chars().peekable();
-
-    for c in chars {
-        if c.is_uppercase() {
-            if !result.is_empty() {
-                result.push('_');
-            }
-            result.push(c.to_lowercase().next().unwrap());
-        } else {
-            result.push(c);
-        }
-    }
-
-    result
 }

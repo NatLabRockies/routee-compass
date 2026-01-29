@@ -33,7 +33,7 @@ Options:
 
           Possible values:
           - typed-config:            include the config.rs and params.rs files and deserialize the inputs to builder and service .build() methods into these types
-          - typed-config-and-engine: also include an engine.rs file for module business logic with a TryFrom<&Config> implementation stub
+          - typed-config-and-engine: also include an engine.rs file for module business logic with a TryFrom<Config> implementation stub
 
   -h, --help
           Print help (see a summary with '-h')
