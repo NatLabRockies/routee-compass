@@ -33,7 +33,7 @@ enum CompassSubcommands {
         path: PathBuf,
         /// optionally include extensions for typed configuration and engine struct
         #[arg(long)]
-        extensions: Option<TraversalExtensions>
+        extensions: Option<TraversalExtensions>,
     },
     /// Generate a new ConstraintModel module
     Constraint {
@@ -64,13 +64,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } = Cli::parse();
 
     match args.subcommand {
-        CompassSubcommands::Traversal { name, path, extensions } => {
+        CompassSubcommands::Traversal {
+            name,
+            path,
+            extensions,
+        } => {
             let snake_case_name = pascal_to_snake_case(&name);
             routee_compass_codegen::generator::traversal::generate_traversal_module(
                 &name,
                 &snake_case_name,
                 &path,
-                extensions.as_ref()
+                extensions.as_ref(),
             )?;
         }
         CompassSubcommands::Constraint { name, path } => {
