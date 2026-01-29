@@ -681,10 +681,14 @@ pub struct SegmentAccessRestrictionWhenVehicle {
 }
 
 impl SegmentAccessRestrictionWhenVehicle {
-    /// returns true if the value and unit provided would pass the restriction
+    /// returns true if the when provided would pass the restriction
     /// based on the comparison logic
-    pub fn is_valid(&self, value: f64, unit: Option<&SegmentUnit>) -> bool {
-        match (&self.unit, unit) {
+    pub fn is_valid(&self, when: &SegmentAccessRestrictionWhenVehicle) -> bool {
+        if when.dimension != self.dimension {
+            return false;
+        }
+
+        match (&self.unit, &when.unit) {
             (Some(this_unit), Some(other_unit)) => {
                 let this_value_f64 = match this_unit {
                     SegmentUnit::Length(segment_length_unit) => segment_length_unit
@@ -697,10 +701,10 @@ impl SegmentAccessRestrictionWhenVehicle {
 
                 let other_value_f64 = match other_unit {
                     SegmentUnit::Length(segment_length_unit) => segment_length_unit
-                        .to_uom(value)
+                        .to_uom(when.value)
                         .get::<uom::si::length::meter>(),
                     SegmentUnit::Weight(segment_weight_unit) => segment_weight_unit
-                        .to_uom(value)
+                        .to_uom(when.value)
                         .get::<uom::si::mass::kilogram>(),
                 };
 
@@ -708,7 +712,7 @@ impl SegmentAccessRestrictionWhenVehicle {
             }
 
             // If we miss any unit, check the raw values
-            _ => self.comparison.apply(value, self.value),
+            _ => self.comparison.apply(when.value, self.value),
         }
     }
 }

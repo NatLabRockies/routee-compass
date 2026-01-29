@@ -225,7 +225,7 @@ fn when_is_compatible(
             if let Some(when_vehicles) = &when.vehicle {
                 when_vehicles
                     .iter()
-                    .all(|w_vehicle| r_vehicle.is_valid(w_vehicle.value, w_vehicle.unit.as_ref()))
+                    .all(|w_vehicle| r_vehicle.is_valid(w_vehicle))
             } else {
                 false
             }
@@ -685,7 +685,7 @@ mod tests {
         .collect();
 
         TravelModeFilter::MatchesClasses {
-            classes: classes,
+            classes,
             behavior: MatchBehavior::Include,
             allow_unset: true,
         }
