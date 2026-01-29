@@ -20,7 +20,9 @@ DEFAULT_LINE_KWARGS = {
 }
 
 
-def result_dict_to_coords(result_dict: QueryResult) -> Sequence[Tuple[float, float]]:
+def result_dict_to_coords(
+    result_dict: dict[str, Any],
+) -> Sequence[Tuple[float, float]]:
     """
     Converts the CompassApp results to coords to be sent to the folium map.
 
@@ -67,7 +69,9 @@ def result_dict_to_coords(result_dict: QueryResult) -> Sequence[Tuple[float, flo
     return coords
 
 
-def _calculate_folium_args(fit_coords: Sequence[Tuple[float, float]]) -> dict[str, Any]:
+def _calculate_folium_args(
+    fit_coords: Sequence[Tuple[float, float]],
+) -> dict[str, Any]:
     """
     Calculates where the center of the map and the bounds that the map
     should fit.
@@ -99,7 +103,9 @@ def _calculate_folium_args(fit_coords: Sequence[Tuple[float, float]]) -> dict[st
     }
 
 
-def _create_empty_folium_map(fit_coords: Sequence[Tuple[float, float]]) -> folium.Map:
+def _create_empty_folium_map(
+    fit_coords: Sequence[Tuple[float, float]],
+) -> folium.Map:
     """
     Creates an empty folium.Map calculating the center and the fit_bounds
     using _calculate_folium_args.
@@ -133,8 +139,8 @@ def _create_empty_folium_map(fit_coords: Sequence[Tuple[float, float]]) -> foliu
 
 
 def plot_route_folium(
-    result_dict: QueryResult,
-    line_kwargs: Optional[QueryResult] = None,
+    result_dict: dict[str, Any],
+    line_kwargs: Optional[dict[str, Any]] = None,
     folium_map: Optional[folium.Map] = None,
 ) -> folium.Map:
     """
@@ -223,8 +229,8 @@ def plot_coords_folium(
 
 
 def plot_routes_folium(
-    results: Union[QueryResult, QueryResults],
-    value_fn: Callable[[QueryResult], Any] = lambda r: r["request"].get("name"),
+    results: Union[dict[str, Any], list[dict[str, Any]]],
+    value_fn: Callable[[dict[str, Any]], Any] = lambda r: r["request"].get("name"),
     color_map: str = "viridis",
     folium_map: Optional[folium.Map] = None,
 ) -> folium.Map:
@@ -316,8 +322,8 @@ def matched_path_to_coords(
 
 
 def plot_matched_path_folium(
-    result_dict: QueryResult,
-    line_kwargs: Optional[QueryResult] = None,
+    result_dict: dict[str, Any],
+    line_kwargs: Optional[dict[str, Any]] = None,
     folium_map: Optional[folium.Map] = None,
 ) -> folium.Map:
     """

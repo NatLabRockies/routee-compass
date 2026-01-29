@@ -27,6 +27,23 @@ rust/                       # Core Rust implementation
 scripts/                    # Utility scripts for building and maintenance
 ```
 
+## Code Quality Requirements
+
+**All code changes must pass the following checks before being committed:**
+
+```bash
+# Rust
+cargo test
+cargo fmt -- --check                                  # Rust formatting
+cargo clippy --all --all-targets --all-features -- -D warnings  # Rust linting
+
+# Python
+ruff check
+ruff format --check
+mypy python
+pytest python
+```
+
 ## Component-Specific Guidance
 
 **For Rust core development**:
@@ -36,24 +53,18 @@ scripts/                    # Utility scripts for building and maintenance
 - Package is managed with matruin and pyproject.toml and uses PyO3 bindings
 - Development setup: `pip install -e .[all]` from root directory
 
-## Quick Start Commands
+## Build Commands
 
-### Core Operations
+### Rust 
 ```bash
 cd rust 
 
 # Build 
 cargo build --release
-
-# Run tests
-cargo test
 ```
 
-### Python Wrapper Operations
+### Python Wrapper 
 ```bash
 conda activate routee-compass
 maturin develop
-
-pytest python/
-
 ```

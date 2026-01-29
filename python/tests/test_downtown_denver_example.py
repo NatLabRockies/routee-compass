@@ -1,5 +1,6 @@
 import json
 from unittest import TestCase
+from typing import Any
 from nrel.routee.compass import package_root
 from nrel.routee.compass.compass_app import CompassApp
 
@@ -16,7 +17,7 @@ class TestDowntownDenverExample(TestCase):
             / "osm_default_speed.toml"
         )
 
-        base_query = {
+        base_query: dict[str, Any] = {
             "destination_y": 39.757431,
             "destination_x": -104.988567,
             "origin_y": 39.749513,
@@ -47,7 +48,7 @@ class TestDowntownDenverExample(TestCase):
             self.fail(
                 f"Balanced response is not a dict. response: {json.dumps(c_opt_result, indent=2)}",
             )
-        
+
         if "error" in t_opt_result:
             self.fail(f"Time optimal failed with error: {t_opt_result['error']}")
 
@@ -128,7 +129,7 @@ class TestDowntownDenverExample(TestCase):
             / "osm_default_energy.toml"
         )
 
-        base_query = {
+        base_query: dict[str, Any] = {
             "destination_y": 39.757431,
             "destination_x": -104.988567,
             "origin_y": 39.749513,
@@ -183,7 +184,7 @@ class TestDowntownDenverExample(TestCase):
             self.fail(
                 f"Balanced response is not a dict. response: {json.dumps(c_opt_result, indent=2)}",
             )
-        
+
         if "error" in t_opt_result:
             self.fail(f"Time optimal failed with error: {t_opt_result['error']}")
         if "error" in e_opt_result:
