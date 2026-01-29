@@ -16,16 +16,15 @@ use crate::algorithm::search::SearchInstance;
 /// # Example Implementation
 ///
 /// ```ignore
-/// struct SimpleMapMatching;
+/// struct LcssMapMatching;
 ///
-/// impl MapMatchingAlgorithm for SimpleMapMatching {
+/// impl MapMatchingAlgorithm for LcssMapMatching {
 ///     fn match_trace(
 ///         &self,
 ///         trace: &MapMatchingTrace,
 ///         si: &SearchInstance,
 ///     ) -> Result<MapMatchingResult, MapMatchingError> {
-///         // Match each point to nearest edge
-///         // Connect matched edges via shortest path
+///         // Implement map matching logic
 ///         todo!()
 ///     }
 /// }

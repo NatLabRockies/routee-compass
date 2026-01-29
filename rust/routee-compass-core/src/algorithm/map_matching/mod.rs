@@ -12,8 +12,8 @@
 //!
 //! # Implementations
 //!
-//! - [`SimpleMapMatching`] - Baseline nearest-edge matching algorithm
 //! - [`HmmMapMatching`] - Hidden Markov Model-based map matching
+//! - [`LcssMapMatching`] - Longest Common Subsequence-based map matching
 
 pub mod map_matching_algorithm;
 pub mod map_matching_builder;
@@ -29,4 +29,3 @@ pub use map_matching_result::{MapMatchingResult, PointMatch};
 pub use map_matching_trace::{MapMatchingPoint, MapMatchingTrace};
 pub use model::hmm::{HmmMapMatching, HmmMapMatchingBuilder};
 pub use model::lcss::{LcssMapMatching, LcssMapMatchingBuilder};
-pub use model::simple::{SimpleMapMatching, SimpleMapMatchingBuilder};
