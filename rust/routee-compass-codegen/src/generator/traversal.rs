@@ -124,7 +124,7 @@ pub fn mod_template(pascal_case_name: &str, typed_config: bool, engine: bool) ->
         let mod_row = format!("mod {entry};\n");
         result.push_str(&mod_row);
     }
-    result.push_str("\n");
+    result.push('\n');
 
     // expose each type from each file (pub)
     for entry in entries.iter() {
