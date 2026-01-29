@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "nrel_routee_compass"
-version = "0.17.0"
+version = "0.17.1"
 description = "An eco-routing tool build upon RouteE-Powertrain"
 readme = "README.md"
 requires-python = ">=3.10,<3.14"

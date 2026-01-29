@@ -1,6 +1,6 @@
 [package]
 name = "routee-compass-macros"
-version = "0.17.0"
+version = "0.17.1"
 edition = "2021"
 readme = "README.md"
 license = "BSD-3-Clause"
