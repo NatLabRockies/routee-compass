@@ -40,7 +40,7 @@ cargo clippy --all --all-targets --all-features -- -D warnings  # Rust linting
 # Python
 ruff check
 ruff format --check
-mypy python
+mypy . 
 pytest python
 ```
 

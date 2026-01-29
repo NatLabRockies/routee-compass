@@ -36,7 +36,7 @@ for r in range(rows):
 edge_id_counter = 0
 
 
-def dist(x1, y1, x2, y2):
+def dist(x1: float, y1: float, x2: float, y2: float) -> float:
     # Approximation for test data generation
     # 1 degree lat ~ 111km, 1 degree lon ~ 111km * cos(lat)
     # let's just use Euclidean distance in meters for simplicity in this generated set
