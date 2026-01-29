@@ -8,4 +8,3 @@ pub fn generate_constraint_module(
     // TODO: Implement constraint model generation
     Err("ConstraintModel generation not yet implemented".into())
 }
-

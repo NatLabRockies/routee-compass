@@ -8,12 +8,12 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Clone, clap::ValueEnum)]
 #[serde(rename_all = "snake_case")]
 pub enum TraversalExtensions {
-    /// include the config.rs and params.rs files and deserialize the inputs to 
+    /// include the config.rs and params.rs files and deserialize the inputs to
     /// builder and service .build() methods into these types.
     TypedConfig,
     /// also include an engine.rs file for module business logic with a TryFrom<&Config>
     /// implementation stub.
-    TypedConfigAndEngine
+    TypedConfigAndEngine,
 }
 
 /// creates the file contents and writes to the files with template code.
@@ -21,7 +21,7 @@ pub fn generate_traversal_module(
     pascal_case_name: &str,
     snake_case_name: &str,
     path: &Path,
-    extensions: Option<&TraversalExtensions>
+    extensions: Option<&TraversalExtensions>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let module_dir = path.join(snake_case_name);
     fs::create_dir_all(&module_dir)?;
@@ -48,7 +48,7 @@ pub fn generate_traversal_module(
                 module_dir.join("service.rs"),
                 service_template(pascal_case_name),
             )?;
-        },
+        }
         Some(&TraversalExtensions::TypedConfig) => {
             fs::write(
                 module_dir.join("builder.rs"),
@@ -65,8 +65,8 @@ pub fn generate_traversal_module(
             fs::write(
                 module_dir.join("params.rs"),
                 params_template(pascal_case_name),
-            )?; 
-        },
+            )?;
+        }
         Some(&TraversalExtensions::TypedConfigAndEngine) => {
             fs::write(
                 module_dir.join("builder.rs"),
@@ -83,11 +83,11 @@ pub fn generate_traversal_module(
             fs::write(
                 module_dir.join("params.rs"),
                 params_template(pascal_case_name),
-            )?; 
+            )?;
             fs::write(
                 module_dir.join("engine.rs"),
                 engine_template(pascal_case_name),
-            )?; 
+            )?;
         }
     }
 
@@ -99,9 +99,7 @@ pub fn generate_traversal_module(
     println!("  Next steps:");
     println!("  1. Add 'mod {};' to your lib.rs", snake_case_name);
     println!("  2. Implement the trait methods in each file");
-    println!(
-        "  3. Register builder with inventory::submit! in your plugin registration"
-    );
+    println!("  3. Register builder with inventory::submit! in your plugin registration");
 
     Ok(())
 }
@@ -357,15 +355,20 @@ pub fn model_template(pascal_case_name: &str, extensions: Option<&TraversalExten
     let engine_name = format!("{pascal_case_name}Engine");
     let params_name = format!("{pascal_case_name}Params");
 
-    // 
+    //
     let super_import = match extensions {
         None => "".to_string(),
-        Some(TraversalExtensions::TypedConfig) => format!("use super::{{{config_name}, {params_name}}};"),
-        Some(TraversalExtensions::TypedConfigAndEngine) => format!("use super::{{{engine_name}, {params_name}}};"),
+        Some(TraversalExtensions::TypedConfig) => {
+            format!("use super::{{{config_name}, {params_name}}};")
+        }
+        Some(TraversalExtensions::TypedConfigAndEngine) => {
+            format!("use super::{{{engine_name}, {params_name}}};")
+        }
     };
 
     let struct_def = match extensions {
-        None => formatdoc!("
+        None => formatdoc!(
+            "
             pub struct {model_name} {{}}
 
             impl {model_name} {{
@@ -373,8 +376,10 @@ pub fn model_template(pascal_case_name: &str, extensions: Option<&TraversalExten
                     Self {{}}
                 }}
             }}
-        "),
-        Some(TraversalExtensions::TypedConfig) => formatdoc!("
+        "
+        ),
+        Some(TraversalExtensions::TypedConfig) => formatdoc!(
+            "
             pub struct {model_name} {{
                 pub config: Arc<{config_name}>,
                 pub params: {params_name}
@@ -389,8 +394,10 @@ pub fn model_template(pascal_case_name: &str, extensions: Option<&TraversalExten
                     }}
                 }}
             }}
-        "),
-        Some(TraversalExtensions::TypedConfigAndEngine) => formatdoc!("
+        "
+        ),
+        Some(TraversalExtensions::TypedConfigAndEngine) => formatdoc!(
+            "
             pub struct {model_name} {{
                 pub engine: Arc<{engine_name}>,
                 pub params: {params_name}
@@ -405,10 +412,12 @@ pub fn model_template(pascal_case_name: &str, extensions: Option<&TraversalExten
                     }}
                 }}
             }}
-        ")
+        "
+        ),
     };
 
-    formatdoc!("
+    formatdoc!(
+        "
         use std::sync::Arc;
 
         {super_import}
@@ -457,33 +466,39 @@ pub fn model_template(pascal_case_name: &str, extensions: Option<&TraversalExten
                 todo!()
             }}
         }}
-    ")
+    "
+    )
 }
 
 pub fn config_template(pascal_case_name: &str) -> String {
     let config_name = format!("{pascal_case_name}Config");
-    formatdoc!("
+    formatdoc!(
+        "
         use serde::{{Deserialize, Serialize}};
 
         #[derive(Deserialize, Serialize, Clone, Debug)]
         pub struct {config_name} {{}}
-    ")
+    "
+    )
 }
 
 pub fn params_template(pascal_case_name: &str) -> String {
     let params_name = format!("{pascal_case_name}Params");
-    formatdoc!("
+    formatdoc!(
+        "
         use serde::{{Deserialize, Serialize}};
 
         #[derive(Deserialize, Serialize, Clone, Debug)]
         pub struct {params_name} {{}}
-    ")
+    "
+    )
 }
 
 pub fn engine_template(pascal_case_name: &str) -> String {
     let engine_name = format!("{pascal_case_name}Engine");
     let config_name = format!("{pascal_case_name}Config");
-    formatdoc!("
+    formatdoc!(
+        "
         use super::{config_name};
 
         use routee_compass_core::model::traversal::TraversalModelError;
@@ -497,5 +512,6 @@ pub fn engine_template(pascal_case_name: &str) -> String {
                 todo!()
             }}
         }}
-    ")
+    "
+    )
 }
