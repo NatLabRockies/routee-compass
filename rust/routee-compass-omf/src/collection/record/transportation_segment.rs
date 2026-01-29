@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug};
 
 use geo::{Coord, Geometry, Haversine, InterpolatableLine, Length, LineString};
-use routee_compass_core::model::unit::SpeedUnit;
+use routee_compass_core::model::unit::{DistanceUnit, SpeedUnit, WeightUnit};
 use serde::{Deserialize, Serialize};
 use uom::si::f64::Velocity;
 
@@ -421,6 +421,18 @@ pub enum SegmentVehicleComparator {
     LessThanEqual,
 }
 
+impl SegmentVehicleComparator {
+    pub fn apply(&self, value: f64, restriction: f64) -> bool {
+        match self {
+            SegmentVehicleComparator::GreaterThan => value > restriction,
+            SegmentVehicleComparator::GreaterThanEqual => value >= restriction,
+            SegmentVehicleComparator::Equal => value == restriction,
+            SegmentVehicleComparator::LessThan => value < restriction,
+            SegmentVehicleComparator::LessThanEqual => value <= restriction,
+        }
+    }
+}
+
 /// units in vehicle restrictions which may be length or weight units.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 #[serde(untagged)]
@@ -447,11 +459,47 @@ pub enum SegmentLengthUnit {
     Kilometer,
 }
 
+impl SegmentLengthUnit {
+    pub fn to_uom(&self, value: f64) -> uom::si::f64::Length {
+        match self {
+            SegmentLengthUnit::Inches => DistanceUnit::Inches.to_uom(value),
+            SegmentLengthUnit::Feet => DistanceUnit::Feet.to_uom(value),
+            SegmentLengthUnit::Yard => DistanceUnit::Meters.to_uom(value * 0.9144),
+            SegmentLengthUnit::Mile => DistanceUnit::Miles.to_uom(value),
+            SegmentLengthUnit::Centimeter => DistanceUnit::Meters.to_uom(value / 100.),
+            SegmentLengthUnit::Meter => DistanceUnit::Meters.to_uom(value),
+            SegmentLengthUnit::Kilometer => DistanceUnit::Kilometers.to_uom(value),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 #[serde(untagged)]
 pub enum SegmentWeightUnit {
     Imperial(SegmentImperialWeightUnit),
     Metric(SegmentMetricWeightUnit),
+}
+
+impl SegmentWeightUnit {
+    pub fn to_uom(&self, value: f64) -> uom::si::f64::Mass {
+        match self {
+            SegmentWeightUnit::Imperial(segment_imperial_weight_unit) => {
+                match segment_imperial_weight_unit {
+                    SegmentImperialWeightUnit::Ounce => WeightUnit::Kg.to_uom(value * 0.0283495),
+                    SegmentImperialWeightUnit::Pound => WeightUnit::Pounds.to_uom(value * 0.453592),
+                    SegmentImperialWeightUnit::Stone => WeightUnit::Kg.to_uom(value * 6.350288),
+                    SegmentImperialWeightUnit::LongTon => WeightUnit::Kg.to_uom(value * 1016.05),
+                }
+            }
+            SegmentWeightUnit::Metric(segment_metric_weight_unit) => {
+                match segment_metric_weight_unit {
+                    SegmentMetricWeightUnit::Gram => WeightUnit::Kg.to_uom(value * 0.001),
+                    SegmentMetricWeightUnit::Kilogram => WeightUnit::Kg.to_uom(value),
+                    SegmentMetricWeightUnit::MetricTon => WeightUnit::Kg.to_uom(value * 1000.),
+                }
+            }
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
@@ -625,11 +673,44 @@ impl SegmentAccessRestrictionWhen {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SegmentAccessRestrictionWhenVehicle {
-    dimension: SegmentVehicleDimension,
-    comparison: SegmentVehicleComparator,
-    value: f64,
+    pub dimension: SegmentVehicleDimension,
+    pub comparison: SegmentVehicleComparator,
+    pub value: f64,
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    unit: Option<SegmentUnit>,
+    pub unit: Option<SegmentUnit>,
+}
+
+impl SegmentAccessRestrictionWhenVehicle {
+    /// returns true if the value and unit provided would pass the restriction
+    /// based on the comparison logic
+    pub fn is_valid(&self, value: f64, unit: Option<&SegmentUnit>) -> bool {
+        match (&self.unit, unit) {
+            (Some(this_unit), Some(other_unit)) => {
+                let this_value_f64 = match this_unit {
+                    SegmentUnit::Length(segment_length_unit) => segment_length_unit
+                        .to_uom(self.value)
+                        .get::<uom::si::length::meter>(),
+                    SegmentUnit::Weight(segment_weight_unit) => segment_weight_unit
+                        .to_uom(self.value)
+                        .get::<uom::si::mass::kilogram>(),
+                };
+
+                let other_value_f64 = match other_unit {
+                    SegmentUnit::Length(segment_length_unit) => segment_length_unit
+                        .to_uom(value)
+                        .get::<uom::si::length::meter>(),
+                    SegmentUnit::Weight(segment_weight_unit) => segment_weight_unit
+                        .to_uom(value)
+                        .get::<uom::si::mass::kilogram>(),
+                };
+
+                self.comparison.apply(other_value_f64, this_value_f64)
+            }
+
+            // If we miss any unit, check the raw values
+            _ => self.comparison.apply(value, self.value),
+        }
+    }
 }
 
 /// Describes objects that can be reached by following a transportation
