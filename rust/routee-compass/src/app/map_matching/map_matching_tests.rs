@@ -216,8 +216,8 @@ fn run_map_match_test(app: &CompassApp, trace: TestTrace, label: &str) {
 // App Loading Helpers
 // =============================================================================
 
-/// Helper to load the CompassApp with the simple map matching config
-fn load_simple_app() -> CompassApp {
+/// Helper to load the CompassApp with the default map matching config (LCSS)
+fn load_default_app() -> CompassApp {
     let conf_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("src")
         .join("app")
@@ -225,7 +225,7 @@ fn load_simple_app() -> CompassApp {
         .join("test")
         .join("map_matching_test")
         .join("compass.toml");
-    CompassApp::try_from(conf_file.as_path()).expect("failed to load simple map matching config")
+    CompassApp::try_from(conf_file.as_path()).expect("failed to load default map matching config")
 }
 
 /// Helper to load the CompassApp with the HMM map matching config
@@ -309,7 +309,7 @@ fn test_map_match_json() {
 
     let conf_str = std::fs::read_to_string(&conf_file_test).unwrap();
     let conf_str_with_mm = format!(
-        "{}\n[map_matching]\ntype = \"simple\"\n[mapping]\nspatial_index_type = \"edge\"",
+        "{}\n[map_matching]\ntype = \"lcss\"\n[mapping]\nspatial_index_type = \"edge\"",
         conf_str
     );
 
@@ -346,7 +346,7 @@ fn test_map_match_json() {
 
 #[test]
 fn test_map_matching_simple_single_point() {
-    let app = load_simple_app();
+    let app = load_default_app();
 
     // Query point near edge 0
     // Edge 0: (-105.0, 40.0) -> (-104.99, 40.0)
@@ -378,7 +378,7 @@ fn test_map_matching_simple_single_point() {
 
 #[test]
 fn test_map_matching_simple_long_trace() {
-    let app = load_simple_app();
+    let app = load_default_app();
 
     // Construct a trace moving East along the top row of the grid
     // Path: 0 -> 1 -> ... -> 9
@@ -575,7 +575,7 @@ fn test_lcss_noisy_trace() {
 }
 #[test]
 fn test_map_matching_with_geometry() {
-    let app = load_simple_app();
+    let app = load_default_app();
 
     // Query point near edge 0
     let query = serde_json::json!({
