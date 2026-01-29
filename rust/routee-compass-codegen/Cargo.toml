@@ -1,0 +1,16 @@
+[package]
+name = "routee-compass-codegen"
+version = "0.1.0"
+edition = "2021"
+description = "Code generation tools for RouteE Compass plugin development"
+license = "BSD-3-Clause"
+
+[[bin]]
+name = "cargo-compass"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true }
+heck = { workspace = true }
+indoc = { workspace = true }
+serde = { workspace = true }
