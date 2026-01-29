@@ -1,9 +1,5 @@
 import folium
 
-from nrel.routee.compass.utils.type_alias import (
-    Result as QueryResult,
-    Results as QueryResults,
-)
 
 from typing import Any, Callable, Optional, Sequence, Tuple, Union
 from nrel.routee.compass.plot.plot_utils import ColormapCircularIterator, rgba_to_hex
