@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "routee-compass",
+    "routee-compass-codegen",
     "routee-compass-core",
     "routee-compass-macros",
     "routee-compass-powertrain",
