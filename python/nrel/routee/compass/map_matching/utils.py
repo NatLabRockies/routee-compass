@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pathlib
-from typing import Any, Dict, Optional, Union, TYPE_CHECKING
+from typing import Any, Dict, Union, TYPE_CHECKING
 import xml.etree.ElementTree as ET
 
 if TYPE_CHECKING:
@@ -14,7 +14,6 @@ def load_trace(
     file: Union[str, pathlib.Path],
     x_col: str = "longitude",
     y_col: str = "latitude",
-    t_col: Optional[str] = None,
 ) -> CompassQuery:
     """
     Load a trace from a file and convert it into a map matching query.
@@ -32,7 +31,7 @@ def load_trace(
     path = pathlib.Path(file)
     ext = path.suffix.lower()
     if ext == ".csv":
-        return load_trace_csv(path, x_col, y_col, t_col)
+        return load_trace_csv(path, x_col, y_col)
     elif ext == ".gpx":
         return load_trace_gpx(path)
     else:
@@ -43,7 +42,6 @@ def load_trace_csv(
     file: Union[str, pathlib.Path],
     x_col: str = "longitude",
     y_col: str = "latitude",
-    t_col: Optional[str] = None,
 ) -> CompassQuery:
     """
     Load a trace from a CSV file and convert it into a map matching query.
@@ -68,8 +66,6 @@ def load_trace_csv(
     trace = []
     for _, row in df.iterrows():
         point: Dict[str, Any] = {"x": float(row[x_col]), "y": float(row[y_col])}
-        if t_col and t_col in row:
-            point["t"] = row[t_col]
         trace.append(point)
 
     return {"trace": trace}
@@ -97,11 +93,6 @@ def load_trace_gpx(file: Union[str, pathlib.Path]) -> CompassQuery:
         lat = float(trkpt.attrib["lat"])
         lon = float(trkpt.attrib["lon"])
         point: Dict[str, Any] = {"x": lon, "y": lat}
-
-        time_elem = trkpt.find("gpx:time", namespace)
-        if time_elem is not None:
-            point["t"] = time_elem.text
-
         trace.append(point)
 
     if not trace:
@@ -110,9 +101,6 @@ def load_trace_gpx(file: Union[str, pathlib.Path]) -> CompassQuery:
             lat = float(trkpt.attrib["lat"])
             lon = float(trkpt.attrib["lon"])
             point = {"x": lon, "y": lat}
-            time_elem = trkpt.find("time")
-            if time_elem is not None:
-                point["t"] = time_elem.text
             trace.append(point)
 
     return {"trace": trace}
