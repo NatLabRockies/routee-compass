@@ -486,7 +486,7 @@ impl SegmentWeightUnit {
             SegmentWeightUnit::Imperial(segment_imperial_weight_unit) => {
                 match segment_imperial_weight_unit {
                     SegmentImperialWeightUnit::Ounce => WeightUnit::Kg.to_uom(value * 0.0283495),
-                    SegmentImperialWeightUnit::Pound => WeightUnit::Pounds.to_uom(value * 0.453592),
+                    SegmentImperialWeightUnit::Pound => WeightUnit::Pounds.to_uom(value),
                     SegmentImperialWeightUnit::Stone => WeightUnit::Kg.to_uom(value * 6.350288),
                     SegmentImperialWeightUnit::LongTon => WeightUnit::Kg.to_uom(value * 1016.05),
                 }
