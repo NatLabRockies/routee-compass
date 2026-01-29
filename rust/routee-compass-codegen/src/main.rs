@@ -111,7 +111,7 @@ fn pascal_to_snake_case(s: &str) -> String {
     let mut result = String::new();
     let mut chars = s.chars().peekable();
 
-    while let Some(c) = chars.next() {
+    for c in chars {
         if c.is_uppercase() {
             if !result.is_empty() {
                 result.push('_');
