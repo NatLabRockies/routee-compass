@@ -36,7 +36,7 @@ enum CompassSubcommands {
         extensions: Option<TraversalExtensions>,
         /// allow the user to force overwriting existing files
         #[arg(short, long)]
-        force: bool
+        force: bool,
     },
     /// Generate a new ConstraintModel module
     Constraint {
@@ -71,35 +71,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             name,
             path,
             extensions,
-            force
+            force,
         } => {
-
             routee_compass_codegen::generator::traversal::generate_traversal_module(
                 &name,
                 &path,
                 extensions.as_ref(),
-                force
+                force,
             )?;
         }
         CompassSubcommands::Constraint { name, path } => {
-
             routee_compass_codegen::generator::constraint::generate_constraint_module(
-                &name,
-                &path,
+                &name, &path,
             )?;
         }
         CompassSubcommands::InputPlugin { name, path } => {
-
             routee_compass_codegen::generator::input_plugin::generate_input_plugin_module(
-                &name,
-                &path,
+                &name, &path,
             )?;
         }
         CompassSubcommands::OutputPlugin { name, path } => {
-
             routee_compass_codegen::generator::output_plugin::generate_output_plugin_module(
-                &name,
-                &path,
+                &name, &path,
             )?;
         }
     }

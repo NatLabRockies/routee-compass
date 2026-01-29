@@ -1,8 +1,12 @@
-use std::path::Path;
 use std::fs;
+use std::path::Path;
 
 /// helper for file writing with overwrite check
-pub fn write_file(path: &Path, contents: String, force: bool) -> Result<(), Box<dyn std::error::Error>> {
+pub fn write_file(
+    path: &Path,
+    contents: String,
+    force: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     let path_exists = fs::exists(path)?;
     if path_exists && !force {
         let p_str = path.to_str().unwrap_or_default();

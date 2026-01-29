@@ -22,11 +22,9 @@ pub fn generate_traversal_module(
     pascal_case_name: &str,
     path: &Path,
     extensions: Option<&TraversalExtensions>,
-    force: bool
+    force: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-
-    let parent_traversal_in_path = path.to_str()
-        .map(|p| p.contains("..")).unwrap_or_default();
+    let parent_traversal_in_path = path.to_str().map(|p| p.contains("..")).unwrap_or_default();
     if parent_traversal_in_path {
         return Err("provided path traverses upward with '..' which is not allowed".into());
     }
@@ -42,73 +40,73 @@ pub fn generate_traversal_module(
     super::util::write_file(
         module_dir.join("mod.rs").as_path(),
         mod_template(pascal_case_name, typed_config, engine),
-        force
+        force,
     )?;
     super::util::write_file(
         module_dir.join("model.rs").as_path(),
         model_template(pascal_case_name, extensions),
-        force
+        force,
     )?;
     match extensions {
         None => {
             super::util::write_file(
                 module_dir.join("builder.rs").as_path(),
                 builder_template(pascal_case_name),
-                force
+                force,
             )?;
             super::util::write_file(
                 module_dir.join("service.rs").as_path(),
                 service_template(pascal_case_name),
-                force
+                force,
             )?;
         }
         Some(&TraversalExtensions::TypedConfig) => {
             super::util::write_file(
                 module_dir.join("builder.rs").as_path(),
                 builder_template_typed(pascal_case_name),
-                force
+                force,
             )?;
             super::util::write_file(
                 module_dir.join("service.rs").as_path(),
                 service_template_typed(pascal_case_name),
-                force
+                force,
             )?;
             super::util::write_file(
                 module_dir.join("config.rs").as_path(),
                 config_template(pascal_case_name),
-                force
+                force,
             )?;
             super::util::write_file(
                 module_dir.join("params.rs").as_path(),
                 params_template(pascal_case_name),
-                force
+                force,
             )?;
         }
         Some(&TraversalExtensions::TypedConfigAndEngine) => {
             super::util::write_file(
                 module_dir.join("builder.rs").as_path(),
                 builder_template_engine(pascal_case_name),
-                force
+                force,
             )?;
             super::util::write_file(
                 module_dir.join("service.rs").as_path(),
                 service_template_engine(pascal_case_name),
-                force
+                force,
             )?;
             super::util::write_file(
                 module_dir.join("config.rs").as_path(),
                 config_template(pascal_case_name),
-                force
+                force,
             )?;
             super::util::write_file(
                 module_dir.join("params.rs").as_path(),
                 params_template(pascal_case_name),
-                force
+                force,
             )?;
             super::util::write_file(
                 module_dir.join("engine.rs").as_path(),
                 engine_template(pascal_case_name),
-                force
+                force,
             )?;
         }
     }
