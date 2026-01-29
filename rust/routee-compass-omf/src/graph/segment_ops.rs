@@ -763,7 +763,7 @@ mod tests {
         }
     }
 
-    /// Helpter to create a simple access restriction with vehicle detail
+    /// Helper to create a simple access restriction with vehicle detail
     fn create_restriction_when_vehicle(
         access_type: SegmentAccessType,
         vehicle: SegmentAccessRestrictionWhenVehicle,
