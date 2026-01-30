@@ -15,8 +15,11 @@ queries_without_destinations = false
 spatial_index_type = "edge"
 tolerance.distance = 100.0
 tolerance.unit = "meters"
-geometry.input_file = "edges-geometries-enumerated.txt.gz"
 matching_type = ["point", "vertex_id", "edge_id"]
+
+[mapping.geometry]
+type = "from_linestrings"
+geometry_input_file = "edges-geometries-enumerated.txt.gz"
 
 [plugin]
 [[plugin.input_plugins]]
