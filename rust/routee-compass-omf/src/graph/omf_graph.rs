@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs::File, path::Path};
+use std::{collections::HashMap, path::Path};
 
 use super::serialize_ops as ops;
 use crate::{
@@ -9,13 +9,19 @@ use crate::{
     },
     graph::{segment_ops, vertex_serializable::VertexSerializable},
 };
-use csv::QuoteStyle;
-use flate2::{write::GzEncoder, Compression};
 use geo::LineString;
 use kdam::tqdm;
 use rayon::prelude::*;
 use routee_compass_core::model::network::{EdgeConfig, EdgeList, EdgeListId, Vertex};
 use wkt::ToWkt;
+
+pub const COMPASS_VERTEX_FILENAME: &str = "vertices-compass.csv.gz";
+pub const COMPASS_EDGES_FILENAME: &str = "edges-compass.csv.gz";
+pub const GEOMETRIES_FILENAME: &str = "edges-geometries-enumerated.txt.gz";
+pub const SPEEDS_FILENAME: &str = "edges-speeds-mph-enumerated.txt.gz";
+pub const CLASSES_FILENAME: &str = "edges-classes-enumerated.txt.gz";
+pub const SPEED_MAPPING_FILENAME: &str = "edges-classes-speed-mapping.csv.gz";
+pub const BEARINGS_FILENAME: &str = "edges-bearings-enumerated.txt.gz";
 
 pub struct OmfGraphVectorized {
     pub vertices: Vec<Vertex>,
@@ -31,6 +37,7 @@ pub struct OmfEdgeList {
     pub classes: Vec<SegmentFullType>,
     pub speeds: Vec<f64>,
     pub speed_lookup: HashMap<String, f64>,
+    pub bearings: Vec<f64>,
 }
 
 impl OmfGraphVectorized {
@@ -96,7 +103,7 @@ impl OmfGraphVectorized {
                 edge_list_id,
             )?;
             let geometries = ops::create_geometries(&segments, &segment_lookup, &splits)?;
-
+            let bearings = ops::bearing_deg_from_geometries(&geometries)?;
             let classes = ops::create_segment_full_types(&segments, &segment_lookup, &splits)?;
 
             let speeds = ops::create_speeds(&segments, &segment_lookup, &splits)?;
@@ -140,6 +147,7 @@ impl OmfGraphVectorized {
                 classes,
                 speeds,
                 speed_lookup,
+                bearings,
             };
             edge_lists.push(edge_list);
         }
@@ -166,38 +174,17 @@ impl OmfGraphVectorized {
         })?;
         // create output directory if missing
         crate::util::fs::create_dirs(output_directory)?;
+        use crate::util::fs::serialize_into_csv;
+        use crate::util::fs::serialize_into_enumerated_txt;
 
         // write vertices
-        let mut vertex_writer = create_writer(
+        serialize_into_csv(
+            self.vertices.iter().map(|v| VertexSerializable::from(*v)),
+            COMPASS_VERTEX_FILENAME,
             output_directory,
-            "vertices-compass.csv.gz",
-            true,
-            QuoteStyle::Necessary,
             overwrite,
-        );
-        let v_iter = tqdm!(
-            self.vertices.iter(),
-            total = self.vertices.len(),
-            desc = "write vertex dataset"
-        );
-        for vertex in v_iter {
-            if let Some(ref mut writer) = vertex_writer {
-                let vertex_ser = VertexSerializable::from(*vertex);
-                writer.serialize(vertex_ser).map_err(|e| {
-                    OvertureMapsCollectionError::CsvWriteError(format!(
-                        "Failed to write to vertices-compass.csv.gz: {e}"
-                    ))
-                })?;
-            }
-        }
-        eprintln!();
-        if let Some(ref mut writer) = vertex_writer {
-            writer.flush().map_err(|e| {
-                OvertureMapsCollectionError::CsvWriteError(format!(
-                    "Failed to flush vertices-compass.csv.gz: {e}"
-                ))
-            })?;
-        }
+            "write vertex dataset",
+        )?;
 
         // write each edge list
         let edge_list_iter = tqdm!(
@@ -207,182 +194,71 @@ impl OmfGraphVectorized {
             position = 0
         );
         for (edge_list, edge_list_config) in edge_list_iter {
-            let mode_dir = output_directory.join(&edge_list_config.mode);
+            let mode_str = &edge_list_config.mode;
+            let mode_dir = output_directory.join(mode_str);
             crate::util::fs::create_dirs(&mode_dir)?;
 
-            let mut edge_writer = create_writer(
-                &mode_dir,
-                "edges-compass.csv.gz",
-                true,
-                QuoteStyle::Necessary,
-                overwrite,
-            );
-            let mut geometries_writer = create_writer(
-                &mode_dir,
-                "edges-geometries-enumerated.txt.gz",
-                false,
-                QuoteStyle::Never,
-                overwrite,
-            );
-            let mut classes_writer = create_writer(
-                &mode_dir,
-                "edges-classes-enumerated.txt.gz",
-                false,
-                QuoteStyle::Never,
-                overwrite,
-            );
-            let mut speeds_writer = create_writer(
-                &mode_dir,
-                "edges-speeds-mph-enumerated.txt.gz",
-                false,
-                QuoteStyle::Never,
-                overwrite,
-            );
-            let mut speeds_mapping_writer = create_writer(
-                &mode_dir,
-                "edges-classes-speed-mapping.csv.gz",
-                true,
-                QuoteStyle::Necessary,
-                overwrite,
-            );
-
             // Write Edges
-            let e_iter = tqdm!(
-                edge_list.edges.0.iter(),
-                total = edge_list.edges.len(),
-                desc = "edges",
-                position = 1
-            );
-            for row in e_iter {
-                if let Some(ref mut writer) = edge_writer {
-                    let edge = EdgeConfig {
-                        edge_id: row.edge_id,
-                        src_vertex_id: row.src_vertex_id,
-                        dst_vertex_id: row.dst_vertex_id,
-                        distance: row.distance.get::<uom::si::length::meter>(),
-                    };
-                    writer.serialize(edge).map_err(|e| {
-                        OvertureMapsCollectionError::CsvWriteError(format!(
-                            "Failed to write to edges-compass.csv.gz: {e}"
-                        ))
-                    })?;
-                }
-            }
-            eprintln!();
-
-            if let Some(ref mut writer) = edge_writer {
-                writer.flush().map_err(|e| {
-                    OvertureMapsCollectionError::CsvWriteError(format!(
-                        "Failed to flush edges-compass.csv.gz: {e}"
-                    ))
-                })?;
-            }
+            serialize_into_csv(
+                edge_list.edges.0.iter().map(|row| EdgeConfig {
+                    edge_id: row.edge_id,
+                    src_vertex_id: row.src_vertex_id,
+                    dst_vertex_id: row.dst_vertex_id,
+                    distance: row.distance.get::<uom::si::length::meter>(),
+                }),
+                COMPASS_EDGES_FILENAME,
+                &mode_dir,
+                overwrite,
+                "write edges",
+            )?;
 
             // Write geometries
-            let g_iter = tqdm!(
-                edge_list.geometries.iter(),
-                total = edge_list.geometries.len(),
-                desc = "geometries",
-                position = 1
-            );
-            for row in g_iter {
-                if let Some(ref mut writer) = geometries_writer {
-                    writer
-                    .serialize(row.to_wkt().to_string())
-                    .map_err(|e| {
-                        OvertureMapsCollectionError::CsvWriteError(format!(
-                            "Failed to write to geometry file edges-geometries-enumerated.txt.gz: {e}"
-                        ))
-                    })?;
-                }
-            }
-            eprintln!();
-
-            if let Some(ref mut writer) = geometries_writer {
-                writer.flush().map_err(|e| {
-                    OvertureMapsCollectionError::CsvWriteError(format!(
-                        "Failed to flush edges-geometries-enumerated.txt.gz: {e}"
-                    ))
-                })?;
-            }
+            serialize_into_enumerated_txt(
+                edge_list
+                    .geometries
+                    .iter()
+                    .map(|row| row.to_wkt().to_string()),
+                GEOMETRIES_FILENAME,
+                &mode_dir,
+                overwrite,
+                "write geometries",
+            )?;
 
             // Write speeds
-            let s_iter = tqdm!(
-                edge_list.speeds.iter(),
-                total = edge_list.edges.len(),
-                desc = "speeds",
-                position = 1
-            );
-            for row in s_iter {
-                if let Some(ref mut writer) = speeds_writer {
-                    writer.serialize(row).map_err(|e| {
-                        OvertureMapsCollectionError::CsvWriteError(format!(
-                            "Failed to write to edges-speeds-mph-enumerated.txt.gz: {e}"
-                        ))
-                    })?;
-                }
-            }
-            eprintln!();
-
-            if let Some(ref mut writer) = speeds_writer {
-                writer.flush().map_err(|e| {
-                    OvertureMapsCollectionError::CsvWriteError(format!(
-                        "Failed to flush edges-speeds-mph-enumerated.txt.gz: {e}"
-                    ))
-                })?;
-            }
+            serialize_into_enumerated_txt(
+                &edge_list.speeds,
+                SPEEDS_FILENAME,
+                &mode_dir,
+                overwrite,
+                "write speeds",
+            )?;
 
             // Write classes
-            let c_iter = tqdm!(
-                edge_list.classes.iter(),
-                total = edge_list.classes.len(),
-                desc = "classes",
-                position = 1
-            );
-            for row in c_iter {
-                if let Some(ref mut writer) = classes_writer {
-                    writer.serialize(row.as_str()).map_err(|e| {
-                        OvertureMapsCollectionError::CsvWriteError(format!(
-                            "Failed to write to geometry file edges-classes-enumerated.txt.gz: {e}"
-                        ))
-                    })?;
-                }
-            }
-            eprintln!();
+            serialize_into_enumerated_txt(
+                edge_list.classes.iter().map(|class| class.as_str()),
+                CLASSES_FILENAME,
+                &mode_dir,
+                overwrite,
+                "write classes",
+            )?;
 
-            if let Some(ref mut writer) = classes_writer {
-                writer.flush().map_err(|e| {
-                    OvertureMapsCollectionError::CsvWriteError(format!(
-                        "Failed to flush edges-classes-enumerated.txt.gz: {e}"
-                    ))
-                })?;
-            }
-
-            // Write classes-speed mapping
-            let c_iter = tqdm!(
+            // Write speed_mapping
+            serialize_into_csv(
                 edge_list.speed_lookup.iter(),
-                total = edge_list.speed_lookup.len(),
-                desc = "classes-speed-mapping",
-                position = 1
-            );
-            for row in c_iter {
-                if let Some(ref mut writer) = speeds_mapping_writer {
-                    writer.serialize(row).map_err(|e| {
-                        OvertureMapsCollectionError::CsvWriteError(format!(
-                            "Failed to write to geometry file edges-classes-speed-mapping.csv.gz: {e}"
-                        ))
-                    })?;
-                }
-            }
-            eprintln!();
+                SPEED_MAPPING_FILENAME,
+                &mode_dir,
+                overwrite,
+                "write speed mapping",
+            )?;
 
-            if let Some(ref mut writer) = speeds_mapping_writer {
-                writer.flush().map_err(|e| {
-                    OvertureMapsCollectionError::CsvWriteError(format!(
-                        "Failed to flush edges-classes-speed-mapping.csv.gz: {e}"
-                    ))
-                })?;
-            }
+            // Write bearings
+            serialize_into_enumerated_txt(
+                &edge_list.bearings,
+                BEARINGS_FILENAME,
+                &mode_dir,
+                overwrite,
+                "write bearings",
+            )?;
         }
         eprintln!();
 
@@ -392,27 +268,4 @@ impl OmfGraphVectorized {
 
         Ok(())
     }
-}
-
-/// helper function to build a filewriter for writing either .csv.gz or
-/// .txt.gz files for compass datasets while respecting the user's overwrite
-/// preferences and properly formatting WKT outputs.
-fn create_writer(
-    directory: &Path,
-    filename: &str,
-    has_headers: bool,
-    quote_style: QuoteStyle,
-    overwrite: bool,
-) -> Option<csv::Writer<GzEncoder<File>>> {
-    let filepath = directory.join(filename);
-    if filepath.exists() && !overwrite {
-        return None;
-    }
-    let file = File::create(filepath).unwrap();
-    let buffer = GzEncoder::new(file, Compression::default());
-    let writer = csv::WriterBuilder::new()
-        .has_headers(has_headers)
-        .quote_style(quote_style)
-        .from_writer(buffer);
-    Some(writer)
 }
