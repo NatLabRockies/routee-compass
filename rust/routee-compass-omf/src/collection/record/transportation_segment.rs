@@ -1,13 +1,14 @@
 use std::fmt::{self, Debug};
 
 use geo::{Coord, Geometry, Haversine, InterpolatableLine, Length, LineString};
-use opening_hours_syntax::rules::OpeningHoursExpression;
 use routee_compass_core::model::unit::SpeedUnit;
 use serde::{Deserialize, Serialize};
 use uom::si::f64::Velocity;
 
 use super::{geometry_wkb_codec, OvertureMapsBbox, OvertureMapsNames, OvertureMapsSource};
-use crate::collection::{OvertureMapsCollectionError, OvertureRecord};
+use crate::collection::{
+    record::during_expression::DuringExpression, OvertureMapsCollectionError, OvertureRecord,
+};
 
 /// Represents a transportation segment record in the Overture Maps schema.
 /// This struct contains information about a segment of transportation infrastructure,
@@ -319,6 +320,7 @@ pub enum SegmentRoadFlags {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "snake_case")]
+#[allow(clippy::enum_variant_names)]
 pub enum SegmentRailFlags {
     IsBridge,
     IsTunnel,
@@ -591,12 +593,8 @@ pub struct SegmentAccessRestrictionWhen {
     /// Time span or time spans during which something is open or active, specified
     /// in the OSM opening hours specification:
     /// see <https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification>
-    #[serde(
-        with = "opening_hours_codec",
-        skip_serializing_if = "Option::is_none",
-        default = "default_none"
-    )]
-    pub during: Option<OpeningHoursExpression>,
+    #[serde(skip_serializing_if = "Option::is_none", default = "default_none")]
+    pub during: Option<DuringExpression>,
     /// Enumerates possible travel headings along segment geometry.
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub heading: Option<SegmentHeading>,
@@ -614,33 +612,6 @@ pub struct SegmentAccessRestrictionWhen {
     /// Vehicle attributes for which the rule applies
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub vehicle: Option<Vec<SegmentAccessRestrictionWhenVehicle>>,
-}
-
-mod opening_hours_codec {
-    use opening_hours_syntax::rules::OpeningHoursExpression;
-    use serde::Deserialize;
-
-    pub fn serialize<S>(t: &Option<OpeningHoursExpression>, s: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        match t {
-            Some(expr) => s.serialize_str(&expr.to_string()),
-            None => s.serialize_none(),
-        }
-    }
-    pub fn deserialize<'de, D>(d: D) -> Result<Option<OpeningHoursExpression>, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let s: Option<&str> = Option::deserialize(d)?;
-        match s {
-            Some(text) => opening_hours_syntax::parse(text)
-                .map(Some)
-                .map_err(serde::de::Error::custom),
-            None => Ok(None),
-        }
-    }
 }
 
 impl SegmentAccessRestrictionWhen {
