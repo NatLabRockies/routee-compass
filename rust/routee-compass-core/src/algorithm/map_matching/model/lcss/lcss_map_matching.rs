@@ -284,7 +284,7 @@ impl LcssMapMatching {
             // Pick the middle point
             cutting_points.push(segment.trace.len() / 2);
         } else {
-            // Find furthest point
+             // Find furthest point
             if let Some((idx, _)) = segment
                 .matches
                 .iter()
@@ -309,11 +309,12 @@ impl LcssMapMatching {
             }
         }
 
-        // Add random cuts (omitted for now to keep it deterministic and simpler)
+        // Compress cutting points
+        let compressed_points = compress(cutting_points);
 
         // Filter out start/end
         let n = segment.trace.len();
-        segment.cutting_points = cutting_points
+        segment.cutting_points = compressed_points
             .into_iter()
             .unique()
             .filter(|&idx| idx > 1 && idx < n - 2)
@@ -371,8 +372,8 @@ impl LcssMapMatching {
         si: &SearchInstance,
     ) -> Vec<(EdgeListId, EdgeId)> {
         match (
-            self.find_candidates(&trace.points[0].coord, si, 5),
-            self.find_candidates(&trace.points[trace.len() - 1].coord, si, 5),
+            self.find_candidates(&trace.points[0].coord, si, 4),
+            self.find_candidates(&trace.points[trace.len() - 1].coord, si, 4),
         ) {
             (Ok(starts), Ok(ends)) => {
                 let mut best_path = Vec::new();
@@ -651,5 +652,79 @@ impl MapMatchingAlgorithm for LcssMapMatching {
 
     fn search_parameters(&self) -> serde_json::Value {
         self.search_parameters.clone()
+    }
+}
+
+fn compress(mut cutting_points: Vec<usize>) -> Vec<usize> {
+    if cutting_points.is_empty() {
+        return Vec::new();
+    }
+    cutting_points.sort();
+
+    let mut result = Vec::new();
+    let mut current_group = vec![cutting_points[0]];
+
+    for &point in &cutting_points[1..] {
+        if point == current_group.last().unwrap() + 1 {
+            current_group.push(point);
+        } else {
+            let mid = current_group.len() / 2;
+            result.push(current_group[mid]);
+            current_group = vec![point];
+        }
+    }
+    
+    if !current_group.is_empty() {
+        let mid = current_group.len() / 2;
+        result.push(current_group[mid]);
+    }
+
+    result
+}
+
+#[cfg(test)]
+mod compress_tests {
+    use super::*;
+
+    #[test]
+    fn test_compress_no_consecutive() {
+        let points = vec![1, 3, 5, 7];
+        let compressed = compress(points.clone());
+        assert_eq!(compressed, points);
+    }
+
+    #[test]
+    fn test_compress_all_consecutive() {
+        let points = vec![1, 2, 3, 4, 5];
+        let compressed = compress(points);
+        assert_eq!(compressed, vec![3]);
+    }
+
+    #[test]
+    fn test_compress_mixed() {
+        let points = vec![1, 2, 3, 6, 7, 8, 10];
+        let compressed = compress(points);
+        assert_eq!(compressed, vec![2, 7, 10]);
+    }
+
+    #[test]
+    fn test_compress_empty() {
+        let points: Vec<usize> = vec![];
+        let compressed = compress(points);
+        assert!(compressed.is_empty());
+    }
+
+    #[test]
+    fn test_compress_single() {
+        let points = vec![5];
+        let compressed = compress(points);
+        assert_eq!(compressed, vec![5]);
+    }
+
+    #[test]
+    fn test_compress_groups() {
+         let points = vec![1, 2, 4, 5];
+         let compressed = compress(points);
+         assert_eq!(compressed, vec![2, 5]);
     }
 }
