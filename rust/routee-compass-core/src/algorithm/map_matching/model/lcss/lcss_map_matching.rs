@@ -2,10 +2,10 @@ use crate::algorithm::map_matching::map_matching_algorithm::MapMatchingAlgorithm
 use crate::algorithm::map_matching::map_matching_error::MapMatchingError;
 use crate::algorithm::map_matching::map_matching_result::{MapMatchingResult, PointMatch};
 use crate::algorithm::map_matching::map_matching_trace::MapMatchingTrace;
-use crate::algorithm::search::a_star::run_edge_oriented;
+use crate::algorithm::search::a_star::run_vertex_oriented;
 use crate::algorithm::search::{Direction, SearchInstance};
 use crate::model::map::NearestSearchResult;
-use crate::model::network::{EdgeId, EdgeListId};
+use crate::model::network::{EdgeId, EdgeListId, VertexId};
 use crate::util::geo::haversine;
 use geo::ClosestPoint;
 use itertools::Itertools;
@@ -129,7 +129,6 @@ impl LcssMapMatching {
         Ok(candidates)
     }
 
-    /// (Copied from HmmMapMatching)
     fn compute_distance_to_edge(
         &self,
         point: &geo::Point<f32>,
@@ -151,35 +150,65 @@ impl LcssMapMatching {
         }
     }
 
+    fn get_closest_vertex(
+        &self,
+        point: &geo::Point<f32>,
+        edge_list_id: &EdgeListId,
+        edge_id: &EdgeId,
+        si: &SearchInstance,
+    ) -> Result<(VertexId, f64), MapMatchingError> {
+        let src_id = si
+            .graph
+            .src_vertex_id(edge_list_id, edge_id)
+            .map_err(|e| MapMatchingError::InternalError(e.to_string()))?;
+        let dst_id = si
+            .graph
+            .dst_vertex_id(edge_list_id, edge_id)
+            .map_err(|e| MapMatchingError::InternalError(e.to_string()))?;
+
+        let src_vertex = si
+            .graph
+            .get_vertex(&src_id)
+            .map_err(|e| MapMatchingError::InternalError(e.to_string()))?;
+        let dst_vertex = si
+            .graph
+            .get_vertex(&dst_id)
+            .map_err(|e| MapMatchingError::InternalError(e.to_string()))?;
+
+        let src_dist =
+            haversine::haversine_distance(point.x(), point.y(), src_vertex.x(), src_vertex.y())
+                .map(|d| d.get::<uom::si::length::meter>())
+                .unwrap_or(f64::INFINITY);
+
+        let dst_dist =
+            haversine::haversine_distance(point.x(), point.y(), dst_vertex.x(), dst_vertex.y())
+                .map(|d| d.get::<uom::si::length::meter>())
+                .unwrap_or(f64::INFINITY);
+
+        if src_dist <= dst_dist {
+            Ok((src_id, src_dist))
+        } else {
+            Ok((dst_id, dst_dist))
+        }
+    }
+
     fn run_shortest_path(
         &self,
-        start: (EdgeListId, EdgeId),
-        end: (EdgeListId, EdgeId),
+        start: VertexId,
+        end: VertexId,
         si: &SearchInstance,
     ) -> Vec<(EdgeListId, EdgeId)> {
-        if start == end {
-            return vec![start];
-        }
-
-        match run_edge_oriented(start, Some(end), &Direction::Forward, true, si) {
+        match run_vertex_oriented(start, Some(end), &Direction::Forward, true, si) {
             Ok(search_result) => {
-                if let Ok(path) = search_result
-                    .tree
-                    .backtrack_edge_oriented_route(end, si.graph.clone())
-                {
-                    let mut result = Vec::with_capacity(path.len() + 2);
-                    result.push(start);
-                    for et in path {
-                        result.push((et.edge_list_id, et.edge_id));
-                    }
-                    result.push(end);
-                    result.dedup();
-                    result
+                if let Ok(path) = search_result.tree.backtrack(end) {
+                    path.iter()
+                        .map(|et| (et.edge_list_id, et.edge_id))
+                        .collect()
                 } else {
-                    vec![start, end]
+                    Vec::new()
                 }
             }
-            Err(_) => vec![start, end],
+            Err(_) => Vec::new(),
         }
     }
 
@@ -284,7 +313,7 @@ impl LcssMapMatching {
             // Pick the middle point
             cutting_points.push(segment.trace.len() / 2);
         } else {
-             // Find furthest point
+            // Find furthest point
             if let Some((idx, _)) = segment
                 .matches
                 .iter()
@@ -383,8 +412,28 @@ impl LcssMapMatching {
                 let mut best_end_dist = f64::INFINITY;
 
                 for start in starts {
+                    let (start_v, start_v_dist) = match self.get_closest_vertex(
+                        &trace.points[0].coord,
+                        &start.0,
+                        &start.1,
+                        si,
+                    ) {
+                        Ok(res) => res,
+                        Err(_) => continue,
+                    };
+
                     for end in &ends {
-                        let path = self.run_shortest_path((start.0, start.1), (end.0, end.1), si);
+                        let (end_v, end_v_dist) = match self.get_closest_vertex(
+                            &trace.points[trace.len() - 1].coord,
+                            &end.0,
+                            &end.1,
+                            si,
+                        ) {
+                            Ok(res) => res,
+                            Err(_) => continue,
+                        };
+
+                        let path = self.run_shortest_path(start_v, end_v, si);
                         let mut temp_segment = TrajectorySegment {
                             trace: trace.clone(),
                             path: path.clone(),
@@ -400,10 +449,10 @@ impl LcssMapMatching {
                             // then by shorter path distance
                             let is_better = temp_segment.score > best_score * 1.001
                                 || (temp_segment.score > best_score * 0.999
-                                    && (start.2 + end.2)
+                                    && (start_v_dist + end_v_dist)
                                         < (best_start_dist + best_end_dist) * 0.999)
                                 || (temp_segment.score > best_score * 0.999
-                                    && (start.2 + end.2)
+                                    && (start_v_dist + end_v_dist)
                                         < (best_start_dist + best_end_dist) * 1.001
                                     && path_dist < best_dist);
 
@@ -411,8 +460,8 @@ impl LcssMapMatching {
                                 best_score = temp_segment.score;
                                 best_path = path;
                                 best_dist = path_dist;
-                                best_start_dist = start.2;
-                                best_end_dist = end.2;
+                                best_start_dist = start_v_dist;
+                                best_end_dist = end_v_dist;
                             }
                         }
                     }
@@ -459,11 +508,8 @@ impl LcssMapMatching {
                             .map_err(|e| MapMatchingError::InternalError(e.to_string()))?;
 
                         if prev_dst_v != curr_src_v {
-                            let gap_path = self.run_shortest_path(prev_end, curr_start, si);
-                            // prepend/append already includes start/end edges
-                            if gap_path.len() > 2 {
-                                total_path.extend(gap_path[1..gap_path.len() - 1].iter().cloned());
-                            }
+                            let gap_path = self.run_shortest_path(prev_dst_v, curr_src_v, si);
+                            total_path.extend(gap_path);
                         }
                     }
                 }
@@ -673,7 +719,7 @@ fn compress(mut cutting_points: Vec<usize>) -> Vec<usize> {
             current_group = vec![point];
         }
     }
-    
+
     if !current_group.is_empty() {
         let mid = current_group.len() / 2;
         result.push(current_group[mid]);
@@ -723,8 +769,8 @@ mod compress_tests {
 
     #[test]
     fn test_compress_groups() {
-         let points = vec![1, 2, 4, 5];
-         let compressed = compress(points);
-         assert_eq!(compressed, vec![2, 5]);
+        let points = vec![1, 2, 4, 5];
+        let compressed = compress(points);
+        assert_eq!(compressed, vec![2, 5]);
     }
 }
