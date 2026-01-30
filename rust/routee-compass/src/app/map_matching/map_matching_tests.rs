@@ -104,7 +104,13 @@ impl TestTrace {
     fn eastward_horizontal(row: usize, count: usize) -> Self {
         let points = (0..count)
             .map(|col| {
-                let x = horizontal_edge_midpoint_x(col);
+                let x = if col == 0 {
+                    col_x(col) + SPACING * 0.25
+                } else if col == count - 1 {
+                    col_x(col) + SPACING * 0.75
+                } else {
+                    horizontal_edge_midpoint_x(col)
+                };
                 let y = row_y(row);
                 serde_json::json!({"x": x, "y": y})
             })
@@ -121,8 +127,14 @@ impl TestTrace {
     fn northward_vertical(col: usize, count: usize) -> Self {
         let points = (0..count)
             .map(|row| {
+                let y = if row == 0 {
+                    row_y(row) + SPACING * 0.25
+                } else if row == count - 1 {
+                    row_y(row) + SPACING * 0.75
+                } else {
+                    vertical_edge_midpoint_y(row)
+                };
                 let x = col_x(col);
-                let y = vertical_edge_midpoint_y(row);
                 serde_json::json!({"x": x, "y": y})
             })
             .collect();
@@ -138,11 +150,11 @@ impl TestTrace {
     fn l_shaped() -> Self {
         // East along row 0 (cols 0, 1), then North along col 2 (rows 0, 1, 2)
         let points = vec![
-            serde_json::json!({"x": horizontal_edge_midpoint_x(0), "y": row_y(0)}),
-            serde_json::json!({"x": horizontal_edge_midpoint_x(1), "y": row_y(0)}),
-            serde_json::json!({"x": col_x(2), "y": vertical_edge_midpoint_y(0)}),
-            serde_json::json!({"x": col_x(2), "y": vertical_edge_midpoint_y(1)}),
-            serde_json::json!({"x": col_x(2), "y": vertical_edge_midpoint_y(2)}),
+            serde_json::json!({"x": col_x(0) + SPACING * 0.25, "y": row_y(0)}),
+            serde_json::json!({"x": col_x(1) + SPACING * 0.25, "y": row_y(0)}),
+            serde_json::json!({"x": col_x(2), "y": row_y(0) + SPACING * 0.25}),
+            serde_json::json!({"x": col_x(2), "y": row_y(1) + SPACING * 0.25}),
+            serde_json::json!({"x": col_x(2), "y": row_y(2) + SPACING * 0.75}),
         ];
         let expected_edges = vec![
             horizontal_edge_id(0, 0).unwrap(),
@@ -161,7 +173,13 @@ impl TestTrace {
         let points = (0..count)
             .map(|col| {
                 let noise = if col % 2 == 0 { 0.0003 } else { -0.0003 };
-                let x = horizontal_edge_midpoint_x(col);
+                let x = if col == 0 {
+                    col_x(col) + SPACING * 0.25
+                } else if col == count - 1 {
+                    col_x(col) + SPACING * 0.75
+                } else {
+                    horizontal_edge_midpoint_x(col)
+                };
                 let y = row_y(row) + noise;
                 serde_json::json!({"x": x, "y": y})
             })
@@ -350,6 +368,14 @@ fn test_map_matching_simple_single_point() {
         .as_i64()
         .expect("edge_id is i64");
     assert_eq!(edge_id, 0);
+
+    // Vertex-oriented LCSS algorithm will return an empty path for a single point
+    assert!(first_result
+        .get("matched_path")
+        .unwrap()
+        .as_array()
+        .unwrap()
+        .is_empty());
 }
 
 #[test]
@@ -362,7 +388,13 @@ fn test_map_matching_simple_long_trace() {
     // Points: Midpoints of these edges
     let trace_points: Vec<serde_json::Value> = (0..9)
         .map(|i| {
-            let x = -105.0 + (i as f64 * 0.01) + 0.005;
+            let x = if i == 0 {
+                -105.0 + 0.0025
+            } else if i == 8 {
+                -105.0 + (i as f64 * 0.01) + 0.0075
+            } else {
+                -105.0 + (i as f64 * 0.01) + 0.005
+            };
             serde_json::json!({"x": x, "y": 40.0})
         })
         .collect();
@@ -425,10 +457,11 @@ fn test_lcss_noisy_trace() {
 fn test_map_matching_with_geometry() {
     let app = load_lcss_app();
 
-    // Query point near edge 0
+    // Query points near edges 0 and 2
     let query = serde_json::json!({
         "trace": [
-            {"x": -104.995, "y": 40.0}
+            {"x": col_x(0) + SPACING * 0.25, "y": row_y(0)},
+            {"x": col_x(1) + SPACING * 0.75, "y": row_y(0)}
         ]
         // include_geometry defaults to true
     });
@@ -447,10 +480,14 @@ fn test_map_matching_with_geometry() {
         .unwrap()
         .as_array()
         .unwrap();
-    assert_eq!(point_matches.len(), 1);
+    assert_eq!(point_matches.len(), 2);
     assert_eq!(
         point_matches[0].get("edge_id").unwrap().as_i64().unwrap(),
         0
+    );
+    assert_eq!(
+        point_matches[1].get("edge_id").unwrap().as_i64().unwrap(),
+        2
     );
 
     // Check matched path
@@ -459,7 +496,7 @@ fn test_map_matching_with_geometry() {
         .unwrap()
         .as_array()
         .unwrap();
-    assert_eq!(matched_path.len(), 1);
+    assert_eq!(matched_path.len(), 2);
     let matched_edge = &matched_path[0];
     assert_eq!(matched_edge.get("edge_id").unwrap().as_i64().unwrap(), 0);
 
@@ -478,7 +515,8 @@ fn test_map_matching_with_geometry() {
     // Verify it can be disabled
     let query_no_geom = serde_json::json!({
         "trace": [
-            {"x": -104.995, "y": 40.0}
+            {"x": col_x(0) + SPACING * 0.25, "y": row_y(0)},
+            {"x": col_x(1) + SPACING * 0.75, "y": row_y(0)}
         ],
         "include_geometry": false
     });
