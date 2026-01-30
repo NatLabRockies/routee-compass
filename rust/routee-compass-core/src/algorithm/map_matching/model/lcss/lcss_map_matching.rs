@@ -64,18 +64,6 @@ impl LcssMapMatching {
         Self::default()
     }
 
-    /// Computes the total distance of a path.
-    fn compute_path_distance(&self, path: &[(EdgeListId, EdgeId)], si: &SearchInstance) -> f64 {
-        path.iter()
-            .filter_map(|(list_id, edge_id)| {
-                si.graph
-                    .get_edge(list_id, edge_id)
-                    .ok()
-                    .map(|e| e.distance.get::<uom::si::length::meter>())
-            })
-            .sum()
-    }
-
     /// Finds the nearest edges for a point.
     fn find_candidates(
         &self,
@@ -400,75 +388,31 @@ impl LcssMapMatching {
         trace: &MapMatchingTrace,
         si: &SearchInstance,
     ) -> Vec<(EdgeListId, EdgeId)> {
-        match (
-            self.find_candidates(&trace.points[0].coord, si, 4),
-            self.find_candidates(&trace.points[trace.len() - 1].coord, si, 4),
-        ) {
-            (Ok(starts), Ok(ends)) => {
-                let mut best_path = Vec::new();
-                let mut best_score = -1.0;
-                let mut best_dist = f64::INFINITY;
-                let mut best_start_dist = f64::INFINITY;
-                let mut best_end_dist = f64::INFINITY;
+        // We fetch more candidates (k=10) to ensure we find the true nearest edge
+        // regarding the geometry, not just the bounding box.
+        // find_candidates sorts them by exact distance, so .first() will be the true nearest.
+        let start_candidate = self
+            .find_candidates(&trace.points[0].coord, si, 10)
+            .ok()
+            .and_then(|c| c.first().cloned());
+        let end_candidate = self
+            .find_candidates(&trace.points[trace.len() - 1].coord, si, 10)
+            .ok()
+            .and_then(|c| c.first().cloned());
 
-                for start in starts {
-                    let (start_v, start_v_dist) = match self.get_closest_vertex(
-                        &trace.points[0].coord,
-                        &start.0,
-                        &start.1,
-                        si,
-                    ) {
-                        Ok(res) => res,
-                        Err(_) => continue,
-                    };
+        if let (Some(start), Some(end)) = (start_candidate, end_candidate) {
+            let start_v = self
+                .get_closest_vertex(&trace.points[0].coord, &start.0, &start.1, si)
+                .map(|(v, _)| v)
+                .unwrap_or_else(|_| VertexId(0)); // Should not happen if finding candidates succeeded
+            let end_v = self
+                .get_closest_vertex(&trace.points[trace.len() - 1].coord, &end.0, &end.1, si)
+                .map(|(v, _)| v)
+                .unwrap_or_else(|_| VertexId(0));
 
-                    for end in &ends {
-                        let (end_v, end_v_dist) = match self.get_closest_vertex(
-                            &trace.points[trace.len() - 1].coord,
-                            &end.0,
-                            &end.1,
-                            si,
-                        ) {
-                            Ok(res) => res,
-                            Err(_) => continue,
-                        };
-
-                        let path = self.run_shortest_path(start_v, end_v, si);
-                        let mut temp_segment = TrajectorySegment {
-                            trace: trace.clone(),
-                            path: path.clone(),
-                            matches: Vec::new(),
-                            score: 0.0,
-                            cutting_points: Vec::new(),
-                        };
-
-                        if self.score_and_match(&mut temp_segment, si).is_ok() {
-                            let path_dist = self.compute_path_distance(&path, si);
-
-                            // Prefer paths with better scores, breaking ties by preferring closer start/end edges,
-                            // then by shorter path distance
-                            let is_better = temp_segment.score > best_score * 1.001
-                                || (temp_segment.score > best_score * 0.999
-                                    && (start_v_dist + end_v_dist)
-                                        < (best_start_dist + best_end_dist) * 0.999)
-                                || (temp_segment.score > best_score * 0.999
-                                    && (start_v_dist + end_v_dist)
-                                        < (best_start_dist + best_end_dist) * 1.001
-                                    && path_dist < best_dist);
-
-                            if is_better {
-                                best_score = temp_segment.score;
-                                best_path = path;
-                                best_dist = path_dist;
-                                best_start_dist = start_v_dist;
-                                best_end_dist = end_v_dist;
-                            }
-                        }
-                    }
-                }
-                best_path
-            }
-            _ => Vec::new(),
+            self.run_shortest_path(start_v, end_v, si)
+        } else {
+            Vec::new()
         }
     }
 
