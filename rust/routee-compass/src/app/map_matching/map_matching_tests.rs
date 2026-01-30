@@ -216,30 +216,6 @@ fn run_map_match_test(app: &CompassApp, trace: TestTrace, label: &str) {
 // App Loading Helpers
 // =============================================================================
 
-/// Helper to load the CompassApp with the default map matching config (LCSS)
-fn load_default_app() -> CompassApp {
-    let conf_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("src")
-        .join("app")
-        .join("compass")
-        .join("test")
-        .join("map_matching_test")
-        .join("compass.toml");
-    CompassApp::try_from(conf_file.as_path()).expect("failed to load default map matching config")
-}
-
-/// Helper to load the CompassApp with the HMM map matching config
-fn load_hmm_app() -> CompassApp {
-    let conf_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("src")
-        .join("app")
-        .join("compass")
-        .join("test")
-        .join("map_matching_test")
-        .join("compass_hmm.toml");
-    CompassApp::try_from(conf_file.as_path()).expect("failed to load HMM map matching config")
-}
-
 /// Helper to load the CompassApp with the LCSS map matching config
 fn load_lcss_app() -> CompassApp {
     let conf_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -346,7 +322,7 @@ fn test_map_match_json() {
 
 #[test]
 fn test_map_matching_simple_single_point() {
-    let app = load_default_app();
+    let app = load_lcss_app();
 
     // Query point near edge 0
     // Edge 0: (-105.0, 40.0) -> (-104.99, 40.0)
@@ -378,7 +354,7 @@ fn test_map_matching_simple_single_point() {
 
 #[test]
 fn test_map_matching_simple_long_trace() {
-    let app = load_default_app();
+    let app = load_lcss_app();
 
     // Construct a trace moving East along the top row of the grid
     // Path: 0 -> 1 -> ... -> 9
@@ -415,134 +391,6 @@ fn test_map_matching_simple_long_trace() {
 }
 
 // =============================================================================
-// HMM Map Matching Tests
-// =============================================================================
-//
-// NOTE: The HMM algorithm finds k-nearest candidate edges for each point and
-// uses transition probabilities to find a globally optimal path. The spatial
-// index may return candidates from multiple rows. These tests verify:
-// 1. All matched edges exist in the network
-// 2. Edge IDs form a coherent horizontal or vertical progression
-// 3. The matched path is consistent across all points
-
-/// Extracts the row number from an edge ID
-/// Row 0: edges 0-18, Row 1: edges 19-37, Row 2: edges 38-56, etc.
-fn edge_row(edge_id: i64) -> usize {
-    (edge_id as usize) / edges_per_row()
-}
-
-/// Extracts whether an edge is horizontal (vs vertical) within its row
-fn is_horizontal_edge(edge_id: i64) -> bool {
-    let within_row = (edge_id as usize) % edges_per_row();
-    // In each row: 0, 2, 4, ..., 16 are horizontal (even positions for cols 0-8)
-    within_row < 2 * (GRID_COLS - 1) && within_row.is_multiple_of(2)
-}
-
-/// Returns the column of a horizontal edge within its row
-fn horizontal_edge_col(edge_id: i64) -> usize {
-    let within_row = (edge_id as usize) % edges_per_row();
-    within_row / 2
-}
-
-#[test]
-fn test_hmm_basic_trace() {
-    let app = load_hmm_app();
-
-    // 5 points along a horizontal path
-    let trace_points: Vec<serde_json::Value> = (0..5)
-        .map(|col| {
-            let x = horizontal_edge_midpoint_x(col);
-            let y = row_y(0);
-            serde_json::json!({"x": x, "y": y})
-        })
-        .collect();
-
-    let query = serde_json::json!({
-        "trace": trace_points
-    });
-    let queries = vec![query];
-
-    let result = app.map_match(&queries).unwrap();
-    assert_eq!(result.len(), 1);
-
-    let point_matches = result[0]
-        .get("point_matches")
-        .expect("result has point_matches")
-        .as_array()
-        .expect("point_matches is array");
-
-    assert_eq!(point_matches.len(), 5);
-
-    // Extract edge IDs
-    let edge_ids: Vec<i64> = point_matches
-        .iter()
-        .map(|m| m.get("edge_id").unwrap().as_i64().unwrap())
-        .collect();
-
-    // All edges should be on the same row
-    let first_row = edge_row(edge_ids[0]);
-    for (i, &edge_id) in edge_ids.iter().enumerate() {
-        let row = edge_row(edge_id);
-        assert_eq!(
-            row, first_row,
-            "HMM basic trace: edge {} at point {} is on row {}, expected row {}",
-            edge_id, i, row, first_row
-        );
-    }
-
-    // All edges should be horizontal
-    for (i, &edge_id) in edge_ids.iter().enumerate() {
-        assert!(
-            is_horizontal_edge(edge_id),
-            "HMM basic trace: edge {} at point {} is not horizontal",
-            edge_id,
-            i
-        );
-    }
-
-    // Edges should progress eastward (increasing column)
-    for i in 1..edge_ids.len() {
-        let col_prev = horizontal_edge_col(edge_ids[i - 1]);
-        let col_curr = horizontal_edge_col(edge_ids[i]);
-        assert!(
-            col_curr >= col_prev,
-            "HMM basic trace: column regression from {} to {} at point {}",
-            col_prev,
-            col_curr,
-            i
-        );
-    }
-}
-
-#[test]
-fn test_hmm_eastward_horizontal_trace() {
-    let app = load_hmm_app();
-    let trace = TestTrace::eastward_horizontal(0, 5);
-    run_map_match_test(&app, trace, "HMM eastward horizontal");
-}
-
-#[test]
-fn test_hmm_northward_vertical_trace() {
-    let app = load_hmm_app();
-    let trace = TestTrace::northward_vertical(0, 5);
-    run_map_match_test(&app, trace, "HMM northward vertical");
-}
-
-#[test]
-fn test_hmm_l_shaped_path() {
-    let app = load_hmm_app();
-    let trace = TestTrace::l_shaped();
-    run_map_match_test(&app, trace, "HMM L-shaped");
-}
-
-#[test]
-fn test_hmm_noisy_trace() {
-    let app = load_hmm_app();
-    let trace = TestTrace::noisy_eastward_horizontal(0, 5);
-    run_map_match_test(&app, trace, "HMM noisy horizontal");
-}
-
-// =============================================================================
 // LCSS Map Matching Tests
 // =============================================================================
 
@@ -575,7 +423,7 @@ fn test_lcss_noisy_trace() {
 }
 #[test]
 fn test_map_matching_with_geometry() {
-    let app = load_default_app();
+    let app = load_lcss_app();
 
     // Query point near edge 0
     let query = serde_json::json!({

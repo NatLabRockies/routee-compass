@@ -12,7 +12,6 @@
 //!
 //! # Implementations
 //!
-//! - [`HmmMapMatching`] - Hidden Markov Model-based map matching
 //! - [`LcssMapMatching`] - Longest Common Subsequence-based map matching
 
 pub mod map_matching_algorithm;
@@ -27,5 +26,4 @@ pub use map_matching_builder::MapMatchingBuilder;
 pub use map_matching_error::MapMatchingError;
 pub use map_matching_result::{MapMatchingResult, PointMatch};
 pub use map_matching_trace::{MapMatchingPoint, MapMatchingTrace};
-pub use model::hmm::{HmmMapMatching, HmmMapMatchingBuilder};
 pub use model::lcss::{LcssMapMatching, LcssMapMatchingBuilder};
