@@ -8,6 +8,10 @@ type = "edge"
 queries_without_destinations = false
 matching_type = ["point", "vertex_id", "edge_id"]
 
+[mapping.geometry]
+type = "from_linestrings"
+geometry_input_file = "edges-geometries-enumerated.txt.gz"
+
 [plugin]
 [[plugin.input_plugins]]
 type = "grid_search"
@@ -27,9 +31,6 @@ geometry_input_file = "edges-geometries-enumerated.txt.gz"
 
 [graph.edge_list]
 input_file = "edges-compass.csv.gz"
-
-[mapping.geometry]
-input_file = "edges-geometries-enumerated.txt.gz"
 
 [mapping.tolerance]
 distance = 15.0

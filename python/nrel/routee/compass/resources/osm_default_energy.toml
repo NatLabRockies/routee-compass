@@ -6,10 +6,13 @@ vertex_list_input_file = "vertices-compass.csv.gz"
 [mapping]
 type = "edge"
 queries_without_destinations = false
-geometry.input_file = "edges-geometries-enumerated.txt.gz"
 tolerance.distance = 100.0
 tolerance.unit = "meters"
 matching_type = ["point", "vertex_id", "edge_id"]
+
+[mapping.geometry]
+type = "from_linestrings"
+geometry_input_file = "edges-geometries-enumerated.txt.gz"
 
 [plugin]
 [[plugin.input_plugins]]

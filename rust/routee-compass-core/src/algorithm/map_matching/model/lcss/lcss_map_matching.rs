@@ -7,6 +7,7 @@ use crate::algorithm::search::{Direction, SearchInstance};
 use crate::model::map::NearestSearchResult;
 use crate::model::network::{EdgeId, EdgeListId};
 use crate::util::geo::haversine;
+use geo::ClosestPoint;
 use itertools::Itertools;
 
 /// A map matching algorithm based on the Longest Common Subsequence (LCSS) similarity.
@@ -137,58 +138,17 @@ impl LcssMapMatching {
         si: &SearchInstance,
     ) -> f64 {
         if let Ok(linestring) = si.map_model.get_linestring(edge_list_id, edge_id) {
-            let mut min_distance = f64::INFINITY;
-            let points: Vec<geo::Point<f32>> = linestring.points().collect();
-            for window in points.windows(2) {
-                let segment_dist = self.distance_to_segment(point, &window[0], &window[1]);
-                if segment_dist < min_distance {
-                    min_distance = segment_dist;
+            match linestring.closest_point(point) {
+                geo::Closest::SinglePoint(p) | geo::Closest::Intersection(p) => {
+                    haversine::haversine_distance(point.x(), point.y(), p.x(), p.y())
+                        .map(|d| d.get::<uom::si::length::meter>())
+                        .unwrap_or(f64::INFINITY)
                 }
+                geo::Closest::Indeterminate => f64::INFINITY,
             }
-            for p in linestring.points() {
-                if let Ok(dist) = haversine::haversine_distance(point.x(), point.y(), p.x(), p.y())
-                {
-                    let dist_m = dist.get::<uom::si::length::meter>();
-                    if dist_m < min_distance {
-                        min_distance = dist_m;
-                    }
-                }
-            }
-            min_distance
         } else {
             f64::INFINITY
         }
-    }
-
-    fn distance_to_segment(
-        &self,
-        point: &geo::Point<f32>,
-        seg_start: &geo::Point<f32>,
-        seg_end: &geo::Point<f32>,
-    ) -> f64 {
-        let dx = seg_end.x() - seg_start.x();
-        let dy = seg_end.y() - seg_start.y();
-
-        if dx == 0.0 && dy == 0.0 {
-            return haversine::haversine_distance(
-                point.x(),
-                point.y(),
-                seg_start.x(),
-                seg_start.y(),
-            )
-            .map(|d| d.get::<uom::si::length::meter>())
-            .unwrap_or(f64::INFINITY);
-        }
-
-        let t = ((point.x() - seg_start.x()) * dx + (point.y() - seg_start.y()) * dy)
-            / (dx * dx + dy * dy);
-        let t = t.clamp(0.0, 1.0);
-        let closest_x = seg_start.x() + t * dx;
-        let closest_y = seg_start.y() + t * dy;
-
-        haversine::haversine_distance(point.x(), point.y(), closest_x, closest_y)
-            .map(|d| d.get::<uom::si::length::meter>())
-            .unwrap_or(f64::INFINITY)
     }
 
     fn run_shortest_path(
