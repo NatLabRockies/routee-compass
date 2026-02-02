@@ -24,11 +24,6 @@ use crate::algorithm::search::SearchInstance;
 ///         trace: &MapMatchingTrace,
 ///         si: &SearchInstance,
 ///     ) -> Result<MapMatchingResult, MapMatchingError> {
-///         // Implement map matching logic
-///         todo!()
-///     }
-/// }
-/// ```
 pub trait MapMatchingAlgorithm: Send + Sync {
     /// Matches a GPS trace to the road network.
     ///

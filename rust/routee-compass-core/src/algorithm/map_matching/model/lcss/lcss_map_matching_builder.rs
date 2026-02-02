@@ -4,7 +4,7 @@ use crate::algorithm::map_matching::{
 };
 use std::sync::Arc;
 
-use super::LcssMapMatching;
+use super::{lcss_map_matching::LcssConfig, LcssMapMatching};
 
 pub struct LcssMapMatchingBuilder;
 
@@ -13,57 +13,16 @@ impl MapMatchingBuilder for LcssMapMatchingBuilder {
         &self,
         config: &serde_json::Value,
     ) -> Result<Arc<dyn MapMatchingAlgorithm>, MapMatchingError> {
-        let defaults = LcssMapMatching::default();
+        let lcss_config: LcssConfig = serde_json::from_value(config.clone()).map_err(|e| {
+            MapMatchingError::InternalError(format!(
+                "failed to deserialize LCSS map matching config: {}",
+                e
+            ))
+        })?;
 
-        let distance_epsilon = config
-            .get("distance_epsilon")
-            .and_then(|v| v.as_f64())
-            .unwrap_or(defaults.distance_epsilon);
+        log::debug!("LCSS map matching configured: {:?}", lcss_config);
 
-        let similarity_cutoff = config
-            .get("similarity_cutoff")
-            .and_then(|v| v.as_f64())
-            .unwrap_or(defaults.similarity_cutoff);
-
-        let cutting_threshold = config
-            .get("cutting_threshold")
-            .and_then(|v| v.as_f64())
-            .unwrap_or(defaults.cutting_threshold);
-
-        let random_cuts = config
-            .get("random_cuts")
-            .and_then(|v| v.as_u64())
-            .map(|v| v as usize)
-            .unwrap_or(defaults.random_cuts);
-
-        let distance_threshold = config
-            .get("distance_threshold")
-            .and_then(|v| v.as_f64())
-            .unwrap_or(defaults.distance_threshold);
-
-        let search_parameters = config
-            .get("search_parameters")
-            .cloned()
-            .unwrap_or(defaults.search_parameters);
-
-        log::debug!(
-            "LCSS map matching configured: distance_epsilon={}, similarity_cutoff={}, cutting_threshold={}, random_cuts={}, distance_threshold={}, search_parameters={:?}",
-            distance_epsilon,
-            similarity_cutoff,
-            cutting_threshold,
-            random_cuts,
-            distance_threshold,
-            search_parameters
-        );
-
-        let alg = LcssMapMatching {
-            distance_epsilon,
-            similarity_cutoff,
-            cutting_threshold,
-            random_cuts,
-            distance_threshold,
-            search_parameters,
-        };
+        let alg = LcssMapMatching::from_config(lcss_config);
         Ok(Arc::new(alg))
     }
 }
