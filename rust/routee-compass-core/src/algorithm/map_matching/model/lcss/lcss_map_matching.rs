@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::algorithm::map_matching::map_matching_algorithm::MapMatchingAlgorithm;
 use crate::algorithm::map_matching::map_matching_error::MapMatchingError;
 use crate::algorithm::map_matching::map_matching_result::MapMatchingResult;
@@ -14,7 +16,7 @@ use super::trajectory_segment::TrajectorySegment;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LcssConfig {
     #[serde(default = "LcssConfig::default_distance_unit")]
-    pub distance_unit: DistanceUnit,
+    pub distance_unit: String,
     #[serde(default = "LcssConfig::default_distance_epsilon")]
     pub distance_epsilon: f64,
     #[serde(default = "LcssConfig::default_similarity_cutoff")]
@@ -30,8 +32,8 @@ pub struct LcssConfig {
 }
 
 impl LcssConfig {
-    pub fn default_distance_unit() -> DistanceUnit {
-        DistanceUnit::Meters
+    pub fn default_distance_unit() -> String {
+        "meters".to_string()
     }
     pub fn default_distance_epsilon() -> f64 {
         50.0
@@ -76,16 +78,21 @@ pub struct LcssMapMatching {
 }
 
 impl LcssMapMatching {
-    pub fn from_config(config: LcssConfig) -> Self {
-        let unit = config.distance_unit;
-        Self {
+    pub fn from_config(config: LcssConfig) -> Result<Self, MapMatchingError> {
+        let unit = DistanceUnit::from_str(&config.distance_unit).map_err(|_| {
+            MapMatchingError::InternalError(format!(
+                "Invalid distance unit: {}",
+                config.distance_unit
+            ))
+        })?;
+        Ok(Self {
             distance_epsilon: unit.to_uom(config.distance_epsilon),
             similarity_cutoff: config.similarity_cutoff,
             cutting_threshold: unit.to_uom(config.cutting_threshold),
             random_cuts: config.random_cuts,
             distance_threshold: unit.to_uom(config.distance_threshold),
             search_parameters: config.search_parameters,
-        }
+        })
     }
 }
 

@@ -80,4 +80,5 @@ similarity_cutoff = 0.9
 cutting_threshold = 10.0
 random_cuts = 0
 distance_threshold = 10000.0
+distance_unit = "meters"
 search_parameters = {}
