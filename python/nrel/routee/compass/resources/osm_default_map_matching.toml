@@ -2,6 +2,11 @@ parallelism = 2
 
 [map_matching]
 type = "lcss"
+distance_epsilon = 50.0
+similarity_cutoff = 0.9
+cutting_threshold = 10.0
+random_cuts = 0
+distance_threshold = 10000.0
 search_parameters.weights.trip_time = 1.0
 search_parameters.model_name = "2016_TOYOTA_Camry_4cyl_2WD"
 
