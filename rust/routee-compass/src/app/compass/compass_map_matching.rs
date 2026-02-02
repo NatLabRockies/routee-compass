@@ -29,7 +29,11 @@ pub fn convert_result_to_response(
         .point_matches
         .into_iter()
         .map(|pm| {
-            PointMatchResponse::new(pm.edge_list_id.0, pm.edge_id.0 as u64, pm.distance_to_edge)
+            PointMatchResponse::new(
+                pm.edge_list_id.0,
+                pm.edge_id.0 as u64,
+                pm.distance_to_edge.get::<uom::si::length::meter>(),
+            )
         })
         .collect();
 
