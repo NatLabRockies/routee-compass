@@ -7,38 +7,60 @@ use crate::model::map::NearestSearchResult;
 use crate::model::network::{EdgeId, EdgeListId, VertexId};
 use crate::util::geo::haversine;
 use geo::ClosestPoint;
+use uom::si::f64::Length;
+use uom::si::length::meter;
 
+/// A struct representing a collection of indices where the trace points are stationary.
 #[derive(Debug, Clone)]
 pub(crate) struct StationaryIndex {
     pub(crate) i_index: Vec<usize>,
 }
 
+/// Computes the distance from a point to an edge.
+///
+/// # Arguments
+/// * `point` - The point to compute the distance from.
+/// * `edge_list_id` - The edge list ID of the edge.
+/// * `edge_id` - The edge ID of the edge.
+/// * `si` - The search instance containing the map model.
+///
+/// # Returns
+/// The distance from the point to the edge, or infinity if not found.
 pub(crate) fn compute_distance_to_edge(
     point: &geo::Point<f32>,
     edge_list_id: &EdgeListId,
     edge_id: &EdgeId,
     si: &SearchInstance,
-) -> f64 {
+) -> Length {
     if let Ok(linestring) = si.map_model.get_linestring(edge_list_id, edge_id) {
         match linestring.closest_point(point) {
             geo::Closest::SinglePoint(p) | geo::Closest::Intersection(p) => {
                 haversine::haversine_distance(point.x(), point.y(), p.x(), p.y())
-                    .map(|d| d.get::<uom::si::length::meter>())
-                    .unwrap_or(f64::INFINITY)
+                    .unwrap_or_else(|_| Length::new::<meter>(f64::INFINITY))
             }
-            geo::Closest::Indeterminate => f64::INFINITY,
+            geo::Closest::Indeterminate => Length::new::<meter>(f64::INFINITY),
         }
     } else {
-        f64::INFINITY
+        Length::new::<meter>(f64::INFINITY)
     }
 }
 
+/// Finds the closest vertex (source or destination) of an edge to a given point.
+///
+/// # Arguments
+/// * `point` - The point to find the closest vertex to.
+/// * `edge_list_id` - The edge list ID of the edge.
+/// * `edge_id` - The edge ID of the edge.
+/// * `si` - The search instance containing the graph.
+///
+/// # Returns
+/// A result containing the closest vertex ID and its distance, or a map matching error.
 pub(crate) fn get_closest_vertex(
     point: &geo::Point<f32>,
     edge_list_id: &EdgeListId,
     edge_id: &EdgeId,
     si: &SearchInstance,
-) -> Result<(VertexId, f64), MapMatchingError> {
+) -> Result<(VertexId, Length), MapMatchingError> {
     let src_id = si.graph.src_vertex_id(edge_list_id, edge_id).map_err(|_| {
         MapMatchingError::InternalError(format!(
             "Failed to get source vertex id for edge {} from edge list {}",
@@ -67,13 +89,11 @@ pub(crate) fn get_closest_vertex(
 
     let src_dist =
         haversine::haversine_distance(point.x(), point.y(), src_vertex.x(), src_vertex.y())
-            .map(|d| d.get::<uom::si::length::meter>())
-            .unwrap_or(f64::INFINITY);
+            .unwrap_or_else(|_| Length::new::<meter>(f64::INFINITY));
 
     let dst_dist =
         haversine::haversine_distance(point.x(), point.y(), dst_vertex.x(), dst_vertex.y())
-            .map(|d| d.get::<uom::si::length::meter>())
-            .unwrap_or(f64::INFINITY);
+            .unwrap_or_else(|_| Length::new::<meter>(f64::INFINITY));
 
     if src_dist <= dst_dist {
         Ok((src_id, src_dist))
@@ -82,6 +102,15 @@ pub(crate) fn get_closest_vertex(
     }
 }
 
+/// Runs a vertex-oriented shortest path search between two vertices.
+///
+/// # Arguments
+/// * `start` - The starting vertex ID.
+/// * `end` - The ending vertex ID.
+/// * `si` - The search instance to run the search on.
+///
+/// # Returns
+/// A result containing the path as a vector of (EdgeListId, EdgeId) pairs, or a map matching error.
 pub(crate) fn run_shortest_path(
     start: VertexId,
     end: VertexId,
@@ -100,11 +129,13 @@ pub(crate) fn run_shortest_path(
     }
 }
 
+/// # Returns
+/// A result containing a vector of candidates (EdgeListId, EdgeId, distance), or a map matching error.
 pub(crate) fn find_candidates(
     point: &geo::Point<f32>,
     si: &SearchInstance,
     k: usize,
-) -> Result<Vec<(EdgeListId, EdgeId, f64)>, MapMatchingError> {
+) -> Result<Vec<(EdgeListId, EdgeId, Length)>, MapMatchingError> {
     let nearest_iter = si
         .map_model
         .spatial_index
@@ -150,6 +181,14 @@ pub(crate) fn find_candidates(
     Ok(candidates)
 }
 
+/// Creates a new path for a trace by connecting the closest vertices of the start and end candidates.
+///
+/// # Arguments
+/// * `trace` - The trace to create a path for.
+/// * `si` - The search instance to use for finding candidates and running shortest path.
+///
+/// # Returns
+/// A result containing the path as a vector of (EdgeListId, EdgeId) pairs, or a map matching error.
 pub(crate) fn new_path_for_trace(
     trace: &MapMatchingTrace,
     si: &SearchInstance,
@@ -175,6 +214,13 @@ pub(crate) fn new_path_for_trace(
     }
 }
 
+/// Identifies stationary points in a trace (points that are very close to each other).
+///
+/// # Arguments
+/// * `trace` - The trace to find stationary points in.
+///
+/// # Returns
+/// A vector of `StationaryIndex` objects representing stationary collections.
 pub(crate) fn find_stationary_points(trace: &MapMatchingTrace) -> Vec<StationaryIndex> {
     let mut collections = Vec::new();
     let mut current_index = Vec::new();
@@ -185,7 +231,7 @@ pub(crate) fn find_stationary_points(trace: &MapMatchingTrace) -> Vec<Stationary
         if let Ok(dist) =
             haversine::haversine_distance(p1.coord.x(), p1.coord.y(), p2.coord.x(), p2.coord.y())
         {
-            if dist.get::<uom::si::length::meter>() < 0.001 {
+            if dist < Length::new::<meter>(0.001) {
                 if current_index.is_empty() {
                     current_index.push(i - 1);
                 }
@@ -208,6 +254,14 @@ pub(crate) fn find_stationary_points(trace: &MapMatchingTrace) -> Vec<Stationary
     collections
 }
 
+/// Adds matches back for stationary points that were removed during processing.
+///
+/// # Arguments
+/// * `matches` - The matches computed for the reduced trace.
+/// * `stationary_indices` - The stationary indices used to reduce the trace.
+///
+/// # Returns
+/// A vector of `PointMatch` objects matching the original trace length.
 pub(crate) fn add_matches_for_stationary_points(
     matches: Vec<PointMatch>,
     stationary_indices: Vec<StationaryIndex>,

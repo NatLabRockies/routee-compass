@@ -1,5 +1,6 @@
 use crate::model::network::{EdgeId, EdgeListId};
 use serde::{Deserialize, Serialize};
+use uom::si::f64::Length;
 
 /// Result of matching a GPS trace to the road network.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,13 +33,13 @@ pub struct PointMatch {
     /// ID of the matched edge
     pub edge_id: EdgeId,
 
-    /// Distance from the GPS point to the matched edge (in meters)
-    pub distance_to_edge: f64,
+    /// Distance from the GPS point to the matched edge
+    pub distance_to_edge: Length,
 }
 
 impl PointMatch {
     /// Creates a new point match.
-    pub fn new(edge_list_id: EdgeListId, edge_id: EdgeId, distance_to_edge: f64) -> Self {
+    pub fn new(edge_list_id: EdgeListId, edge_id: EdgeId, distance_to_edge: Length) -> Self {
         Self {
             edge_list_id,
             edge_id,
@@ -54,8 +55,16 @@ mod tests {
     #[test]
     fn test_result_creation() {
         let point_matches = vec![
-            PointMatch::new(EdgeListId(0), EdgeId(1), 5.5),
-            PointMatch::new(EdgeListId(0), EdgeId(2), 3.2),
+            PointMatch::new(
+                EdgeListId(0),
+                EdgeId(1),
+                Length::new::<uom::si::length::meter>(5.5),
+            ),
+            PointMatch::new(
+                EdgeListId(0),
+                EdgeId(2),
+                Length::new::<uom::si::length::meter>(3.2),
+            ),
         ];
         let matched_path = vec![(EdgeListId(0), EdgeId(1)), (EdgeListId(0), EdgeId(2))];
         let result = MapMatchingResult::new(point_matches, matched_path);

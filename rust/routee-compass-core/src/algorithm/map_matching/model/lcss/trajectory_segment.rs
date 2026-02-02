@@ -4,10 +4,14 @@ use crate::algorithm::map_matching::map_matching_trace::MapMatchingTrace;
 use crate::algorithm::search::SearchInstance;
 use crate::model::network::{EdgeId, EdgeListId};
 use itertools::Itertools;
+use uom::si::f64::Length;
+use uom::si::length::meter;
 
 use super::lcss_map_matching::LcssMapMatching;
 use super::lcss_ops;
 
+/// A segment of a trajectory that includes the trace points, the matched path,
+/// and the score of the match.
 #[derive(Debug, Clone)]
 pub(crate) struct TrajectorySegment {
     pub(crate) trace: MapMatchingTrace,
@@ -18,6 +22,7 @@ pub(crate) struct TrajectorySegment {
 }
 
 impl TrajectorySegment {
+    /// Creates a new trajectory segment with the given trace and path.
     pub(crate) fn new(trace: MapMatchingTrace, path: Vec<(EdgeListId, EdgeId)>) -> Self {
         Self {
             trace,
@@ -28,6 +33,14 @@ impl TrajectorySegment {
         }
     }
 
+    /// Scores the segment and matches each trace point to the nearest edge in the path.
+    ///
+    /// # Arguments
+    /// * `lcss` - The LCSS map matching configuration.
+    /// * `si` - The search instance containing the graph and map model.
+    ///
+    /// # Returns
+    /// A result indicating success or a map matching error.
     pub(crate) fn score_and_match(
         &mut self,
         lcss: &LcssMapMatching,
@@ -46,13 +59,19 @@ impl TrajectorySegment {
                 .trace
                 .points
                 .iter()
-                .map(|_| PointMatch::new(EdgeListId(0), EdgeId(0), f64::INFINITY))
+                .map(|_| {
+                    PointMatch::new(
+                        EdgeListId(0),
+                        EdgeId(0),
+                        Length::new::<meter>(f64::INFINITY),
+                    )
+                })
                 .collect();
             return Ok(());
         }
 
         // Precompute distances
-        let mut distances = vec![vec![0.0; m]; n];
+        let mut distances = vec![vec![Length::new::<meter>(0.0); m]; n];
         for (j, path_edge) in self.path.iter().enumerate() {
             for (i, trace_point) in self.trace.points.iter().enumerate() {
                 distances[j][i] = lcss_ops::compute_distance_to_edge(
@@ -68,7 +87,7 @@ impl TrajectorySegment {
         let mut point_matches = Vec::with_capacity(m);
 
         for i in 1..=m {
-            let mut min_dist = f64::INFINITY;
+            let mut min_dist = Length::new::<meter>(f64::INFINITY);
             let mut nearest_edge = self.path[0];
 
             for j in 1..=n {
@@ -79,7 +98,7 @@ impl TrajectorySegment {
                 }
 
                 let point_similarity = if dt < lcss.distance_epsilon {
-                    1.0 - (dt / lcss.distance_epsilon)
+                    1.0 - (dt.get::<meter>() / lcss.distance_epsilon.get::<meter>())
                 } else {
                     0.0
                 };
@@ -91,7 +110,7 @@ impl TrajectorySegment {
             }
 
             if min_dist > lcss.distance_threshold {
-                min_dist = f64::INFINITY;
+                min_dist = Length::new::<meter>(f64::INFINITY);
             }
 
             point_matches.push(PointMatch::new(nearest_edge.0, nearest_edge.1, min_dist));
@@ -107,9 +126,11 @@ impl TrajectorySegment {
 
             // Apply penalty if first or last point is not well-matched
             if first_point_dist > lcss.distance_epsilon || last_point_dist > lcss.distance_epsilon {
-                let endpoint_penalty = ((first_point_dist / lcss.distance_epsilon).max(1.0)
-                    + (last_point_dist / lcss.distance_epsilon).max(1.0))
-                    / 2.0;
+                let first_ratio =
+                    first_point_dist.get::<meter>() / lcss.distance_epsilon.get::<meter>();
+                let last_ratio =
+                    last_point_dist.get::<meter>() / lcss.distance_epsilon.get::<meter>();
+                let endpoint_penalty = (first_ratio.max(1.0) + last_ratio.max(1.0)) / 2.0;
                 self.score /= endpoint_penalty;
             }
         }
@@ -117,13 +138,17 @@ impl TrajectorySegment {
         Ok(())
     }
 
+    /// Computes the cutting points for the segment based on the LCSS matches.
+    ///
+    /// # Arguments
+    /// * `lcss` - The LCSS map matching configuration.
     pub(crate) fn compute_cutting_points(&mut self, lcss: &LcssMapMatching) {
         let mut cutting_points = Vec::new();
 
         let no_match = self
             .matches
             .iter()
-            .all(|m| m.distance_to_edge.is_infinite());
+            .all(|m| m.distance_to_edge.get::<meter>().is_infinite());
 
         if self.path.is_empty() || no_match {
             // Pick the middle point
@@ -134,7 +159,7 @@ impl TrajectorySegment {
                 .matches
                 .iter()
                 .enumerate()
-                .filter(|(_, m)| !m.distance_to_edge.is_infinite())
+                .filter(|(_, m)| !m.distance_to_edge.get::<meter>().is_infinite())
                 .max_by(|(_, a), (_, b)| {
                     a.distance_to_edge
                         .partial_cmp(&b.distance_to_edge)
@@ -146,7 +171,7 @@ impl TrajectorySegment {
 
             // Collect points close to epsilon
             for (i, m) in self.matches.iter().enumerate() {
-                if !m.distance_to_edge.is_infinite()
+                if !m.distance_to_edge.get::<meter>().is_infinite()
                     && (m.distance_to_edge - lcss.distance_epsilon).abs() < lcss.cutting_threshold
                 {
                     cutting_points.push(i);
@@ -154,10 +179,9 @@ impl TrajectorySegment {
             }
         }
 
-        // Compress cutting points
         let compressed_points = compress(cutting_points);
 
-        // Filter out start/end
+        // Filter out start/end and points directly adjacent to them since it doesn't make sense to split there
         let n = self.trace.len();
         self.cutting_points = compressed_points
             .into_iter()
@@ -167,6 +191,13 @@ impl TrajectorySegment {
         self.cutting_points.sort();
     }
 
+    /// Splits the segment into sub-segments based on the computed cutting points.
+    ///
+    /// # Arguments
+    /// * `si` - The search instance to use for finding new paths for sub-segments.
+    ///
+    /// # Returns
+    /// A result containing a vector of sub-segments or a map matching error.
     pub(crate) fn split_segment(
         &self,
         si: &SearchInstance,
@@ -198,6 +229,15 @@ impl TrajectorySegment {
         Ok(result)
     }
 }
+/// Joins multiple trajectory segments into a single segment, filling gaps with shortest paths.
+///
+/// # Arguments
+/// * `lcss` - The LCSS map matching configuration.
+/// * `segments` - The segments to join.
+/// * `si` - The search instance containing the graph and map model.
+///
+/// # Returns
+/// A result containing the joined segment or a map matching error.
 pub(crate) fn join_segments(
     lcss: &LcssMapMatching,
     segments: Vec<TrajectorySegment>,
@@ -252,6 +292,13 @@ pub(crate) fn join_segments(
     Ok(joined)
 }
 
+/// Compresses a list of cutting points by picking the middle point of each consecutive group.
+///
+/// # Arguments
+/// * `cutting_points` - The indices of the cutting points.
+///
+/// # Returns
+/// A compressed list of cutting point indices.
 pub(crate) fn compress(mut cutting_points: Vec<usize>) -> Vec<usize> {
     if cutting_points.is_empty() {
         return Vec::new();
