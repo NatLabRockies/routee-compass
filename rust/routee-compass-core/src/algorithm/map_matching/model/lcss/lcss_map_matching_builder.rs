@@ -22,7 +22,7 @@ impl MapMatchingBuilder for LcssMapMatchingBuilder {
 
         log::debug!("LCSS map matching configured: {:?}", lcss_config);
 
-        let alg = LcssMapMatching::from_config(lcss_config);
+        let alg = LcssMapMatching::from_config(lcss_config)?;
         Ok(Arc::new(alg))
     }
 }
