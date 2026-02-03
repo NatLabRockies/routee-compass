@@ -354,6 +354,10 @@ fn test_map_matching_simple_single_point() {
 
     // Execute map match
     let result = app.map_match(&queries).unwrap();
+    println!(
+        "DEBUG SINGLE POINT RESPONSE: {}",
+        serde_json::to_string_pretty(&result).unwrap()
+    );
 
     // Verify result matches Edge 0
     assert_eq!(result.len(), 1);
@@ -369,9 +373,14 @@ fn test_map_matching_simple_single_point() {
         .expect("edge_id is i64");
     assert_eq!(edge_id, 0);
 
-    // Vertex-oriented LCSS algorithm will return an empty path for a single point
-    assert!(first_result
-        .get("matched_path")
+    // Vertex-oriented LCSS algorithm will return an empty FeatureCollection for a single point
+    let matched_path = first_result.get("matched_path").unwrap();
+    assert_eq!(
+        matched_path.get("type").unwrap().as_str().unwrap(),
+        "FeatureCollection"
+    );
+    assert!(matched_path
+        .get("features")
         .unwrap()
         .as_array()
         .unwrap()
@@ -462,8 +471,8 @@ fn test_map_matching_with_geometry() {
         "trace": [
             {"x": col_x(0) + SPACING * 0.25, "y": row_y(0)},
             {"x": col_x(1) + SPACING * 0.75, "y": row_y(0)}
-        ]
-        // include_geometry defaults to true
+        ],
+        "output_format": "json"
     });
     let queries = vec![query];
 
@@ -500,17 +509,19 @@ fn test_map_matching_with_geometry() {
     let matched_edge = &matched_path[0];
     assert_eq!(matched_edge.get("edge_id").unwrap().as_i64().unwrap(), 0);
 
-    // Check geometry inside matched_path object
-    let geometry = matched_edge
-        .get("geometry")
-        .expect("geometry should be present by default")
-        .as_array()
-        .expect("geometry should be an array of points");
-    assert!(!geometry.is_empty(), "Geometry should not be empty");
-
-    let first_point = geometry[0].as_object().unwrap();
-    assert!(first_point.contains_key("x"));
-    assert!(first_point.contains_key("y"));
+    // Check geometry inside matched_path objects
+    for edge in matched_path {
+        assert!(
+            edge.get("geometry").is_some(),
+            "geometry should be present by default"
+        );
+        let geometry = edge
+            .get("geometry")
+            .unwrap()
+            .as_array()
+            .expect("geometry should be an array");
+        assert!(!geometry.is_empty(), "geometry should not be empty");
+    }
 
     // Verify it can be disabled
     let query_no_geom = serde_json::json!({
@@ -518,7 +529,7 @@ fn test_map_matching_with_geometry() {
             {"x": col_x(0) + SPACING * 0.25, "y": row_y(0)},
             {"x": col_x(1) + SPACING * 0.75, "y": row_y(0)}
         ],
-        "include_geometry": false
+        "output_format": "edge_id"
     });
     let result_no_geom = app.map_match(&vec![query_no_geom]).unwrap();
     let matched_path_no_geom = result_no_geom[0]
@@ -526,8 +537,64 @@ fn test_map_matching_with_geometry() {
         .unwrap()
         .as_array()
         .unwrap();
-    assert!(!matched_path_no_geom[0]
+    // edge_id format returns a list of edge IDs (i64)
+    assert_eq!(matched_path_no_geom[0].as_i64().unwrap(), 0);
+}
+
+#[test]
+fn test_map_matching_formats_and_summaries() {
+    let app = load_lcss_app();
+
+    // Query points near edges 0 and 2
+    let query = serde_json::json!({
+        "trace": [
+            {"x": col_x(0) + SPACING * 0.25, "y": row_y(0)},
+            {"x": col_x(1) + SPACING * 0.75, "y": row_y(0)}
+        ],
+        "output_format": "wkt",
+        "summary_ops": {
+            "trip_distance": "sum"
+        }
+    });
+    let queries = vec![query];
+
+    // Execute map match
+    let result = app.map_match(&queries).unwrap();
+    assert_eq!(result.len(), 1);
+    let first_result = &result[0];
+
+    // Check matched path is WKT (string)
+    let matched_path = first_result
+        .get("matched_path")
+        .expect("should have matched_path")
+        .as_str()
+        .expect("matched_path should be a string (WKT)");
+    assert!(matched_path.starts_with("LINESTRING"));
+
+    // Check traversal summary exists and has trip_distance
+    let summary = first_result
+        .get("traversal_summary")
+        .expect("should have traversal_summary")
         .as_object()
-        .unwrap()
-        .contains_key("geometry"));
+        .expect("traversal_summary should be an object");
+    assert!(summary.contains_key("trip_distance"));
+
+    // Verify GeoJSON format
+    let query_geojson = serde_json::json!({
+        "trace": [
+            {"x": col_x(0) + SPACING * 0.25, "y": row_y(0)},
+            {"x": col_x(1) + SPACING * 0.75, "y": row_y(0)}
+        ],
+        "output_format": "geo_json"
+    });
+    let result_geojson = app.map_match(&vec![query_geojson]).unwrap();
+    let matched_path_geojson = result_geojson[0]
+        .get("matched_path")
+        .expect("should have matched_path")
+        .as_object()
+        .expect("matched_path should be a GeoJSON object");
+    assert_eq!(
+        matched_path_geojson.get("type").unwrap().as_str().unwrap(),
+        "FeatureCollection"
+    );
 }

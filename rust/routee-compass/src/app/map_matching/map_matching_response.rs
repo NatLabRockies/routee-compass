@@ -9,7 +9,12 @@ pub struct MapMatchingResponse {
     pub point_matches: Vec<PointMatchResponse>,
 
     /// The inferred complete path through the network.
-    pub matched_path: Vec<MatchedEdgeResponse>,
+    /// This can be an array of edges, WKT string, GeoJSON, etc. depending on format.
+    pub matched_path: serde_json::Value,
+
+    /// Summary of the traversal (e.g. total energy, distance, etc.)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub traversal_summary: Option<serde_json::Value>,
 }
 
 /// A single edge in the matched path.
@@ -63,11 +68,13 @@ impl MapMatchingResponse {
     /// Creates a new response from point matches and path.
     pub fn new(
         point_matches: Vec<PointMatchResponse>,
-        matched_path: Vec<MatchedEdgeResponse>,
+        matched_path: serde_json::Value,
+        traversal_summary: Option<serde_json::Value>,
     ) -> Self {
         Self {
             point_matches,
             matched_path,
+            traversal_summary,
         }
     }
 }
@@ -86,6 +93,7 @@ impl PointMatchResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
     #[test]
     fn test_serialize_response() {
@@ -94,10 +102,11 @@ mod tests {
                 PointMatchResponse::new(0, 1, 5.5),
                 PointMatchResponse::new(0, 2, 3.2),
             ],
-            matched_path: vec![
+            matched_path: json!([
                 MatchedEdgeResponse::new(0, 1, None, TraversalCost::default(), vec![]),
                 MatchedEdgeResponse::new(0, 2, None, TraversalCost::default(), vec![]),
-            ],
+            ]),
+            traversal_summary: None,
         };
 
         let json = serde_json::to_string(&response).unwrap();

@@ -1,4 +1,3 @@
-use crate::algorithm::search::EdgeTraversal;
 use crate::model::network::{EdgeId, EdgeListId};
 use serde::{Deserialize, Serialize};
 use uom::si::f64::Length;
@@ -9,15 +8,15 @@ pub struct MapMatchingResult {
     /// Match results for each input point in the trace
     pub point_matches: Vec<PointMatch>,
 
-    /// The inferred complete path through the network as edge traversals.
+    /// The inferred complete path through the network as edge IDs.
     /// This represents the assumed path the vehicle took, including
     /// edges between matched points that were computed via shortest path.
-    pub matched_path: Vec<EdgeTraversal>,
+    pub matched_path: Vec<(EdgeListId, EdgeId)>,
 }
 
 impl MapMatchingResult {
     /// Creates a new result with the given point matches and path.
-    pub fn new(point_matches: Vec<PointMatch>, matched_path: Vec<EdgeTraversal>) -> Self {
+    pub fn new(point_matches: Vec<PointMatch>, matched_path: Vec<(EdgeListId, EdgeId)>) -> Self {
         Self {
             point_matches,
             matched_path,
@@ -52,8 +51,6 @@ impl PointMatch {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::cost::TraversalCost;
-    use crate::model::state::StateVariable;
 
     #[test]
     fn test_result_creation() {
@@ -69,28 +66,7 @@ mod tests {
                 Length::new::<uom::si::length::meter>(3.2),
             ),
         ];
-        let matched_path = vec![
-            EdgeTraversal {
-                edge_list_id: EdgeListId(0),
-                edge_id: EdgeId(1),
-                cost: TraversalCost {
-                    total_cost: crate::model::unit::Cost::from(1.0),
-                    objective_cost: crate::model::unit::Cost::from(1.0),
-                    ..Default::default()
-                },
-                result_state: vec![StateVariable(1.0)],
-            },
-            EdgeTraversal {
-                edge_list_id: EdgeListId(0),
-                edge_id: EdgeId(2),
-                cost: TraversalCost {
-                    total_cost: crate::model::unit::Cost::from(1.0),
-                    objective_cost: crate::model::unit::Cost::from(1.0),
-                    ..Default::default()
-                },
-                result_state: vec![StateVariable(2.0)],
-            },
-        ];
+        let matched_path = vec![(EdgeListId(0), EdgeId(1)), (EdgeListId(0), EdgeId(2))];
         let result = MapMatchingResult::new(point_matches, matched_path);
 
         assert_eq!(result.point_matches.len(), 2);

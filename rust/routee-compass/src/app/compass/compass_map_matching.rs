@@ -1,11 +1,13 @@
 use crate::app::map_matching::{
-    MapMatchingRequest, MapMatchingResponse, MatchedEdgeResponse, PointMatchResponse, TracePoint,
+    MapMatchingRequest, MapMatchingResponse, PointMatchResponse, TracePoint,
 };
+use crate::app::search::RouteOutput;
+use crate::plugin::output::default::traversal::TraversalOutputFormat;
 use geo::Point;
 use routee_compass_core::algorithm::map_matching::{
     MapMatchingPoint, MapMatchingResult, MapMatchingTrace,
 };
-use routee_compass_core::model::map::MapModel;
+use routee_compass_core::algorithm::search::{EdgeTraversal, SearchInstance};
 
 /// Converts a JSON request to the internal trace format.
 pub fn convert_request_to_trace(request: &MapMatchingRequest) -> MapMatchingTrace {
@@ -22,8 +24,9 @@ pub fn convert_trace_point(point: &TracePoint) -> MapMatchingPoint {
 /// Converts the internal result to the response format.
 pub fn convert_result_to_response(
     result: MapMatchingResult,
-    map_model: &MapModel,
-    include_geometry: bool,
+    matched_path: Vec<EdgeTraversal>,
+    si: &SearchInstance,
+    request: &MapMatchingRequest,
 ) -> MapMatchingResponse {
     let point_matches: Vec<PointMatchResponse> = result
         .point_matches
@@ -37,26 +40,43 @@ pub fn convert_result_to_response(
         })
         .collect();
 
-    let matched_path: Vec<MatchedEdgeResponse> = result
-        .matched_path
-        .into_iter()
-        .map(|et| {
-            let list_id = et.edge_list_id;
-            let edge_id = et.edge_id;
-            let geometry = if include_geometry {
-                map_model.get_linestring(&list_id, &edge_id).ok().cloned()
-            } else {
-                None
-            };
-            MatchedEdgeResponse::new(
-                list_id.0,
-                edge_id.0 as u64,
-                geometry,
-                et.cost,
-                et.result_state,
-            )
-        })
-        .collect();
+    let output_format = request.output_format;
+    let summary_ops = &request.summary_ops;
 
-    MapMatchingResponse::new(point_matches, matched_path)
+    let (mut path_json, traversal_summary) =
+        match RouteOutput::generate(&matched_path, si, &output_format, summary_ops) {
+            Ok(output) => {
+                let path = output
+                    .get("path")
+                    .cloned()
+                    .unwrap_or(serde_json::Value::Null);
+                let summary = output.get("traversal_summary").cloned();
+                (path, summary)
+            }
+            Err(e) => {
+                log::error!("failed to generate route output for map matching: {}", e);
+                (
+                    serde_json::to_value(&matched_path).unwrap_or(serde_json::Value::Null),
+                    None,
+                )
+            }
+        };
+
+    // If format is JSON, we need to add geometry manually since TraversalOutputFormat::Json doesn't include it by default
+    // and map matching expects it.
+    if matches!(output_format, TraversalOutputFormat::Json) {
+        if let Some(arr) = path_json.as_array_mut() {
+            for (i, edge_val) in arr.iter_mut().enumerate() {
+                if let Some(et) = matched_path.get(i) {
+                    if let Ok(geom) = si.map_model.get_linestring(&et.edge_list_id, &et.edge_id) {
+                        if let Some(obj) = edge_val.as_object_mut() {
+                            obj.insert("geometry".to_string(), serde_json::to_value(geom).unwrap());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    MapMatchingResponse::new(point_matches, path_json, traversal_summary)
 }
