@@ -22,7 +22,14 @@ pub(crate) struct TrajectorySegment {
 }
 
 impl TrajectorySegment {
-    /// Creates a new trajectory segment with the given trace and path.
+    /// Creates a new `TrajectorySegment` with the given trace and path.
+    ///
+    /// The segment is initialized with an empty set of matches, a score of 0.0,
+    /// and no cutting points. To populate these fields, call [`score_and_match`].
+    ///
+    /// # Arguments
+    /// * `trace` - The map matching trace containing the sequence of GPS points.
+    /// * `path` - The sequence of edges and edge list IDs that are matched to the trace.
     pub(crate) fn new(trace: MapMatchingTrace, path: Vec<(EdgeListId, EdgeId)>) -> Self {
         Self {
             trace,
@@ -33,14 +40,26 @@ impl TrajectorySegment {
         }
     }
 
-    /// Scores the segment and matches each trace point to the nearest edge in the path.
+    /// Scores the segment using a Longest Common Subsequence (LCSS) approach and
+    /// matches each individual trace point to the nearest edge in the path.
+    ///
+    /// This function performs several steps:
+    /// 1. Precomputes distances from every trace point to every edge in the path.
+    /// 2. Uses a dynamic programming approach (LCSS) to calculate a similarity score
+    ///    between the trace and the path, based on the `distance_epsilon`.
+    /// 3. Normalizes the score based on the lengths of the trace and path.
+    /// 4. Assigns each trace point to its nearest path edge, as long as the distance
+    ///    is within the `distance_threshold`.
+    /// 5. Applies an optional penalty if the first or last points are poorly matched,
+    ///    ensuring the path covers the extent of the trace.
     ///
     /// # Arguments
-    /// * `lcss` - The LCSS map matching configuration.
-    /// * `si` - The search instance containing the graph and map model.
+    /// * `lcss` - The LCSS map matching configuration and parameters.
+    /// * `si` - The search instance used to lookup edge geometry and calculate distances.
     ///
     /// # Returns
-    /// A result indicating success or a map matching error.
+    /// - `Ok(())` on success.
+    /// - `Err(MapMatchingError::EmptyTrace)` if the trace contains no points.
     pub(crate) fn score_and_match(
         &mut self,
         lcss: &LcssMapMatching,
@@ -138,10 +157,21 @@ impl TrajectorySegment {
         Ok(())
     }
 
-    /// Computes the cutting points for the segment based on the LCSS matches.
+    /// Identifies "cutting points" within the trace where the current path match
+    /// might be suboptimal, allowing for potential segment splitting.
+    ///
+    /// Cutting points are selected based on several heuristics:
+    /// - If the path is empty or no points were matched within the threshold, the
+    ///   midpoint of the trace is selected.
+    /// - The point with the maximum distance to its matched edge is selected.
+    /// - Points with distances that are very close to the `distance_epsilon` (within `cutting_threshold`)
+    ///   are selected, as these represent boundary cases in the LCSS similarity logic.
+    ///
+    /// The resulting points are compressed to avoid redundant splits (see [`compress`])
+    /// and filtered to exclude points too close to the start or end of the trace.
     ///
     /// # Arguments
-    /// * `lcss` - The LCSS map matching configuration.
+    /// * `lcss` - The LCSS configuration containing epsilon and threshold parameters.
     pub(crate) fn compute_cutting_points(&mut self, lcss: &LcssMapMatching) {
         let mut cutting_points = Vec::new();
 
@@ -191,13 +221,19 @@ impl TrajectorySegment {
         self.cutting_points.sort();
     }
 
-    /// Splits the segment into sub-segments based on the computed cutting points.
+    /// Splits this segment into multiple sub-segments based on the previously
+    /// computed `cutting_points`.
+    ///
+    /// For each sub-sequence of trace points defined by the cutting points, a new
+    /// optimal path is searched for using [`lcss_ops::new_path_for_trace`].
     ///
     /// # Arguments
-    /// * `si` - The search instance to use for finding new paths for sub-segments.
+    /// * `si` - The search instance used to find new paths for the resulting sub-segments.
     ///
     /// # Returns
-    /// A result containing a vector of sub-segments or a map matching error.
+    /// - `Ok(Vec<TrajectorySegment>)`: A list of new segments. If there are no cutting
+    ///   points, it returns a vector containing a clone of the current segment.
+    /// - `Err(MapMatchingError)` if a path cannot be found for one of the sub-segments.
     pub(crate) fn split_segment(
         &self,
         si: &SearchInstance,
@@ -229,15 +265,24 @@ impl TrajectorySegment {
         Ok(result)
     }
 }
-/// Joins multiple trajectory segments into a single segment, filling gaps with shortest paths.
+/// Combines multiple `TrajectorySegment`s into a single cohesive segment.
+///
+/// This function iterates through the provided segments, concatenating their trace
+/// points. It also stitches their paths together. If a gap exists between the end
+/// of one segment's path and the start of the next (i.e., the vertices don't match),
+/// a shortest-path search is performed to bridge the gap.
+///
+/// Finally, the combined segment is re-scored and re-matched against the full trace.
 ///
 /// # Arguments
-/// * `lcss` - The LCSS map matching configuration.
-/// * `segments` - The segments to join.
-/// * `si` - The search instance containing the graph and map model.
+/// * `lcss` - The LCSS configuration for re-scoring the joined segment.
+/// * `segments` - The ordered list of segments to be joined.
+/// * `si` - The search instance used for gap-filling shortest path searches and re-scoring.
 ///
 /// # Returns
-/// A result containing the joined segment or a map matching error.
+/// - `Ok(TrajectorySegment)` representing the fully joined trajectory.
+/// - `Err(MapMatchingError)` if the segments list is empty or if an error occurs during
+///   gap-filling or re-scoring.
 pub(crate) fn join_segments(
     lcss: &LcssMapMatching,
     segments: Vec<TrajectorySegment>,
@@ -292,13 +337,18 @@ pub(crate) fn join_segments(
     Ok(joined)
 }
 
-/// Compresses a list of cutting points by picking the middle point of each consecutive group.
+/// Reduces a list of cutting point indices by grouping consecutive integers.
+///
+/// For each group of consecutive indices (e.g., `[1, 2, 3]`), only the middle index
+/// is retained (e.g., `2`). This prevents the algorithm from splitting the trace
+/// at every single point in a "bad" region, instead picking a single representative
+/// split point for each region.
 ///
 /// # Arguments
-/// * `cutting_points` - The indices of the cutting points.
+/// * `cutting_points` - A list of (potentially unsorted) indices into the trace.
 ///
 /// # Returns
-/// A compressed list of cutting point indices.
+/// A sorted `Vec<usize>` containing the representative split points.
 pub(crate) fn compress(mut cutting_points: Vec<usize>) -> Vec<usize> {
     if cutting_points.is_empty() {
         return Vec::new();
