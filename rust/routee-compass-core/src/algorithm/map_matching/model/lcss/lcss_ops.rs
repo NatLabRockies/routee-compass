@@ -2,7 +2,7 @@ use crate::algorithm::map_matching::map_matching_error::MapMatchingError;
 use crate::algorithm::map_matching::map_matching_result::PointMatch;
 use crate::algorithm::map_matching::map_matching_trace::MapMatchingTrace;
 use crate::algorithm::search::a_star::run_vertex_oriented;
-use crate::algorithm::search::{Direction, SearchError, SearchInstance};
+use crate::algorithm::search::{Direction, EdgeTraversal, SearchError, SearchInstance};
 use crate::model::map::NearestSearchResult;
 use crate::model::network::{EdgeId, EdgeListId, VertexId};
 use crate::util::geo::haversine;
@@ -115,13 +115,10 @@ pub(crate) fn run_shortest_path(
     start: VertexId,
     end: VertexId,
     si: &SearchInstance,
-) -> Result<Vec<(EdgeListId, EdgeId)>, MapMatchingError> {
+) -> Result<Vec<EdgeTraversal>, MapMatchingError> {
     match run_vertex_oriented(start, Some(end), &Direction::Forward, true, si) {
         Ok(search_result) => match search_result.tree.backtrack(end) {
-            Ok(path) => Ok(path
-                .iter()
-                .map(|et| (et.edge_list_id, et.edge_id))
-                .collect()),
+            Ok(path) => Ok(path),
             Err(e) => Err(MapMatchingError::SearchTreeError(e)),
         },
         Err(SearchError::NoPathExistsBetweenVertices(_, _, _)) => Ok(Vec::new()),
@@ -192,7 +189,7 @@ pub(crate) fn find_candidates(
 pub(crate) fn new_path_for_trace(
     trace: &MapMatchingTrace,
     si: &SearchInstance,
-) -> Result<Vec<(EdgeListId, EdgeId)>, MapMatchingError> {
+) -> Result<Vec<EdgeTraversal>, MapMatchingError> {
     let start_candidate = find_candidates(&trace.points[0].coord, si, 10)
         .ok()
         .and_then(|c| c.first().cloned());

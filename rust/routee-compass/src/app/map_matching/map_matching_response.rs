@@ -1,3 +1,5 @@
+use routee_compass_core::model::cost::TraversalCost;
+use routee_compass_core::model::state::StateVariable;
 use serde::Serialize;
 
 /// JSON-serializable response from map matching.
@@ -20,14 +22,26 @@ pub struct MatchedEdgeResponse {
     /// Optional geometry of the edge
     #[serde(skip_serializing_if = "Option::is_none")]
     pub geometry: Option<geo::LineString<f32>>,
+    /// The cost of traversing this edge
+    pub cost: TraversalCost,
+    /// The state after traversing this edge
+    pub result_state: Vec<StateVariable>,
 }
 
 impl MatchedEdgeResponse {
-    pub fn new(edge_list_id: usize, edge_id: u64, geometry: Option<geo::LineString<f32>>) -> Self {
+    pub fn new(
+        edge_list_id: usize,
+        edge_id: u64,
+        geometry: Option<geo::LineString<f32>>,
+        cost: TraversalCost,
+        result_state: Vec<StateVariable>,
+    ) -> Self {
         Self {
             edge_list_id,
             edge_id,
             geometry,
+            cost,
+            result_state,
         }
     }
 }
@@ -81,8 +95,8 @@ mod tests {
                 PointMatchResponse::new(0, 2, 3.2),
             ],
             matched_path: vec![
-                MatchedEdgeResponse::new(0, 1, None),
-                MatchedEdgeResponse::new(0, 2, None),
+                MatchedEdgeResponse::new(0, 1, None, TraversalCost::default(), vec![]),
+                MatchedEdgeResponse::new(0, 2, None, TraversalCost::default(), vec![]),
             ],
         };
 
@@ -90,5 +104,7 @@ mod tests {
         assert!(json.contains("\"point_matches\""));
         assert!(json.contains("\"matched_path\""));
         assert!(!json.contains("\"geometry\""));
+        assert!(json.contains("\"cost\""));
+        assert!(json.contains("\"result_state\""));
     }
 }

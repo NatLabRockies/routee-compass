@@ -40,13 +40,21 @@ pub fn convert_result_to_response(
     let matched_path: Vec<MatchedEdgeResponse> = result
         .matched_path
         .into_iter()
-        .map(|(list_id, edge_id)| {
+        .map(|et| {
+            let list_id = et.edge_list_id;
+            let edge_id = et.edge_id;
             let geometry = if include_geometry {
                 map_model.get_linestring(&list_id, &edge_id).ok().cloned()
             } else {
                 None
             };
-            MatchedEdgeResponse::new(list_id.0, edge_id.0 as u64, geometry)
+            MatchedEdgeResponse::new(
+                list_id.0,
+                edge_id.0 as u64,
+                geometry,
+                et.cost,
+                et.result_state,
+            )
         })
         .collect();
 

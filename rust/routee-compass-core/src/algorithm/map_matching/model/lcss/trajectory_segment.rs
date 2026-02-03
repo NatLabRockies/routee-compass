@@ -1,7 +1,7 @@
 use crate::algorithm::map_matching::map_matching_error::MapMatchingError;
 use crate::algorithm::map_matching::map_matching_result::PointMatch;
 use crate::algorithm::map_matching::map_matching_trace::MapMatchingTrace;
-use crate::algorithm::search::SearchInstance;
+use crate::algorithm::search::{EdgeTraversal, SearchInstance};
 use crate::model::network::{EdgeId, EdgeListId};
 use itertools::Itertools;
 use uom::si::f64::Length;
@@ -15,7 +15,7 @@ use super::lcss_ops;
 #[derive(Debug, Clone)]
 pub(crate) struct TrajectorySegment {
     pub(crate) trace: MapMatchingTrace,
-    pub(crate) path: Vec<(EdgeListId, EdgeId)>,
+    pub(crate) path: Vec<EdgeTraversal>,
     pub(crate) matches: Vec<PointMatch>,
     pub(crate) score: f64,
     pub(crate) cutting_points: Vec<usize>,
@@ -30,7 +30,7 @@ impl TrajectorySegment {
     /// # Arguments
     /// * `trace` - The map matching trace containing the sequence of GPS points.
     /// * `path` - The sequence of edges and edge list IDs that are matched to the trace.
-    pub(crate) fn new(trace: MapMatchingTrace, path: Vec<(EdgeListId, EdgeId)>) -> Self {
+    pub(crate) fn new(trace: MapMatchingTrace, path: Vec<EdgeTraversal>) -> Self {
         Self {
             trace,
             path,
@@ -95,8 +95,8 @@ impl TrajectorySegment {
             for (i, trace_point) in self.trace.points.iter().enumerate() {
                 distances[j][i] = lcss_ops::compute_distance_to_edge(
                     &trace_point.coord,
-                    &path_edge.0,
-                    &path_edge.1,
+                    &path_edge.edge_list_id,
+                    &path_edge.edge_id,
                     si,
                 );
             }
@@ -107,13 +107,13 @@ impl TrajectorySegment {
 
         for i in 1..=m {
             let mut min_dist = Length::new::<meter>(f64::INFINITY);
-            let mut nearest_edge = self.path[0];
+            let mut nearest_edge = (self.path[0].edge_list_id, self.path[0].edge_id);
 
             for j in 1..=n {
                 let dt = distances[j - 1][i - 1];
                 if dt < min_dist {
                     min_dist = dt;
-                    nearest_edge = self.path[j - 1];
+                    nearest_edge = (self.path[j - 1].edge_list_id, self.path[j - 1].edge_id);
                 }
 
                 let point_similarity = if dt < lcss.distance_epsilon {
@@ -304,18 +304,20 @@ pub(crate) fn join_segments(
             let prev_path = &segments[i - 1].path;
             let curr_path = &segments[i].path;
             if !prev_path.is_empty() && !curr_path.is_empty() {
-                let prev_end = prev_path[prev_path.len() - 1];
-                let curr_start = curr_path[0];
+                let prev_end = &prev_path[prev_path.len() - 1];
+                let curr_start = &curr_path[0];
 
-                if prev_end != curr_start {
+                if prev_end.edge_list_id != curr_start.edge_list_id
+                    || prev_end.edge_id != curr_start.edge_id
+                {
                     // Check if they are connected
                     let prev_dst_v = si
                         .graph
-                        .dst_vertex_id(&prev_end.0, &prev_end.1)
+                        .dst_vertex_id(&prev_end.edge_list_id, &prev_end.edge_id)
                         .map_err(|e| MapMatchingError::InternalError(e.to_string()))?;
                     let curr_src_v = si
                         .graph
-                        .src_vertex_id(&curr_start.0, &curr_start.1)
+                        .src_vertex_id(&curr_start.edge_list_id, &curr_start.edge_id)
                         .map_err(|e| MapMatchingError::InternalError(e.to_string()))?;
 
                     if prev_dst_v != curr_src_v {
