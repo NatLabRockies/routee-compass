@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1769729475654,
+  "lastUpdate": 1770139564549,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -2519,6 +2519,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2884628,
             "range": "± 210052",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nreinicke@users.noreply.github.com",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "599a952ec91aacce8dd57aebd8efa9a3dd66e9d3",
+          "message": "Merge pull request #462 from NatLabRockies/ndr/map-matching\n\nNdr/map matching",
+          "timestamp": "2026-02-03T10:19:39-07:00",
+          "tree_id": "f2f7426acf151dbfeee993f3258280f4b5ee18fe",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/599a952ec91aacce8dd57aebd8efa9a3dd66e9d3"
+        },
+        "date": 1770139563824,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2880889,
+            "range": "± 254010",
             "unit": "ns/iter"
           }
         ]
