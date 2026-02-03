@@ -1,4 +1,5 @@
 use crate::{
+    algorithm::map_matching::MapMatchingError,
     model::{
         constraint::ConstraintModelError, label::label_model_error::LabelModelError,
         network::NetworkError, traversal::TraversalModelError,
@@ -63,4 +64,6 @@ pub enum CompassConfigurationError {
     ConstraintModelError(#[from] ConstraintModelError),
     #[error(transparent)]
     LabelModelError(#[from] LabelModelError),
+    #[error(transparent)]
+    MapMatchingError(#[from] MapMatchingError),
 }

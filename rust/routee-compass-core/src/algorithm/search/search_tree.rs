@@ -1104,6 +1104,8 @@ mod tests {
             cost: TraversalCost {
                 total_cost: Cost::new(cost),
                 objective_cost: Cost::new(cost),
+                #[cfg(feature = "detailed_costs")]
+                cost_component: std::collections::HashMap::new(),
             },
             result_state: vec![],
         }

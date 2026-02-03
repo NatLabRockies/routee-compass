@@ -58,7 +58,7 @@ mod test {
     /// # Arguments
     /// * `road_class_vector` - the value assumed to be read from a file, with road classes by EdgeId index value
     /// * `query` - the user query which should provide the set of valid road classes for this search
-    fn mock(road_class_vector: Box<[String]>, query: Value) -> Arc<dyn ConstraintModel> {
+    fn mock(road_class_vector: &[String], query: Value) -> Arc<dyn ConstraintModel> {
         let mut mapping = std::collections::HashMap::new();
         let mut encoded = Vec::with_capacity(road_class_vector.len());
         let mut next_id = 0u8;
@@ -86,7 +86,7 @@ mod test {
 
     #[test]
     fn test_no_road_classes() {
-        let model = mock(Box::new([String::from("a")]), json!({}));
+        let model = mock(&[String::from("a")], json!({}));
         let edge = mock_edge();
         let result = model.valid_edge(&edge).unwrap();
         assert!(result)
@@ -94,10 +94,7 @@ mod test {
 
     #[test]
     fn test_valid_class() {
-        let model = mock(
-            Box::new([String::from("a")]),
-            json!({"road_classes": ["a"]}),
-        );
+        let model = mock(&[String::from("a")], json!({"road_classes": ["a"]}));
         let edge = mock_edge();
         let result = model.valid_edge(&edge).unwrap();
         assert!(result)
@@ -198,7 +195,7 @@ mod test {
 
     #[test]
     fn test_valid_numeric_class() {
-        let model = mock(Box::new([String::from("1")]), json!({"road_classes": [1]}));
+        let model = mock(&[String::from("1")], json!({"road_classes": [1]}));
         let edge = mock_edge();
         let result = model.valid_edge(&edge).unwrap();
         assert!(result)
@@ -235,10 +232,7 @@ mod test {
 
     #[test]
     fn test_valid_boolean_class() {
-        let model = mock(
-            Box::new([String::from("true")]),
-            json!({"road_classes": [true]}),
-        );
+        let model = mock(&[String::from("true")], json!({"road_classes": [true]}));
         let edge = mock_edge();
         let result = model.valid_edge(&edge).unwrap();
         assert!(result)
@@ -277,7 +271,7 @@ mod test {
     fn test_edge_with_different_valid_class_is_rejected() {
         // Both "a" and "b" are in the mapping, but edge has "b" and query wants "a"
         let model = mock(
-            Box::new([String::from("b"), String::from("a")]),
+            &[String::from("b"), String::from("a")],
             json!({"road_classes": ["a"]}),
         );
         let edge = mock_edge(); // edge 0 has road class "b"
@@ -289,7 +283,7 @@ mod test {
     fn test_edge_matches_one_of_multiple_valid_classes() {
         // Edge has "a", query allows "a", "b", "c" - all are in mapping
         let model = mock(
-            Box::new([String::from("a"), String::from("b"), String::from("c")]),
+            &[String::from("a"), String::from("b"), String::from("c")],
             json!({"road_classes": ["a", "b", "c"]}),
         );
         let edge = mock_edge(); // edge 0 has road class "a"
@@ -301,12 +295,12 @@ mod test {
     fn test_edge_rejected_when_not_in_multiple_valid_classes() {
         // Edge has "d", query allows "a", "b", "c" - all are in mapping
         let model = mock(
-            Box::new([
+            &[
                 String::from("d"),
                 String::from("a"),
                 String::from("b"),
                 String::from("c"),
-            ]),
+            ],
             json!({"road_classes": ["a", "b", "c"]}),
         );
         let edge = mock_edge(); // edge 0 has road class "d"

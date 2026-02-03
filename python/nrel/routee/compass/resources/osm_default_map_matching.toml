@@ -1,0 +1,119 @@
+parallelism = 2
+
+[map_matching]
+type = "lcss"
+distance_epsilon = 50.0
+similarity_cutoff = 0.9
+cutting_threshold = 10.0
+random_cuts = 0
+distance_threshold = 10000.0
+distance_unit = "meters"
+search_parameters.weights.trip_time = 1.0
+search_parameters.model_name = "2016_TOYOTA_Camry_4cyl_2WD"
+
+
+[graph]
+vertex_list_input_file = "vertices-compass.csv.gz"
+
+[mapping]
+type = "edge"
+queries_without_destinations = false
+spatial_index_type = "edge"
+tolerance.distance = 100.0
+tolerance.unit = "meters"
+matching_type = ["point", "vertex_id", "edge_id"]
+
+[mapping.geometry]
+type = "from_linestrings"
+geometry_input_file = "edges-geometries-enumerated.txt.gz"
+
+[plugin]
+[[plugin.input_plugins]]
+type = "grid_search"
+
+[[plugin.input_plugins]]
+type = "load_balancer"
+
+[plugin.input_plugins.weight_heuristic]
+type = "haversine"
+[[plugin.output_plugins]]
+type = "summary"
+
+[[plugin.output_plugins]]
+type = "traversal"
+route = "geo_json"
+geometry_input_file = "edges-geometries-enumerated.txt.gz"
+
+[graph.edge_list]
+input_file = "edges-compass.csv.gz"
+
+[search.constraint]
+type = "battery"
+
+[search.traversal]
+type = "combined"
+[[search.traversal.models]]
+type = "distance"
+distance_unit = "miles"
+
+[[search.traversal.models]]
+type = "elevation"
+distance_unit = "feet"
+
+[[search.traversal.models]]
+type = "speed"
+speed_table_input_file = "edges-posted-speed-enumerated.txt.gz"
+speed_unit = "kph"
+
+[[search.traversal.models]]
+type = "time"
+time_unit = "minutes"
+
+[[search.traversal.models]]
+type = "turn_delay"
+edge_heading_input_file = "edges-headings-enumerated.csv.gz"
+
+[search.traversal.models.turn_delay_model]
+type = "tabular_discrete"
+time_unit = "seconds"
+[search.traversal.models.turn_delay_model.table]
+no_turn = 0.0
+slight_right = 0.5
+right = 1.0
+sharp_right = 1.5
+slight_left = 1.0
+left = 2.5
+sharp_left = 3.5
+u_turn = 9.5
+[[search.traversal.models]]
+type = "grade"
+grade_unit = "decimal"
+grade_input_file = "edges-grade-enumerated.txt.gz"
+
+[[search.traversal.models]]
+type = "energy"
+vehicle_input_files = [
+    "vehicles/2016_TOYOTA_Camry_4cyl_2WD.json",
+    "vehicles/2017_CHEVROLET_Bolt.json",
+    "vehicles/2016_CHEVROLET_Volt.json",
+]
+
+[cost.vehicle_rates.trip_distance]
+type = "distance"
+factor = 0.655
+unit = "miles"
+
+[cost.vehicle_rates.trip_time]
+type = "time"
+factor = 0.333336
+unit = "minutes"
+
+[cost.vehicle_rates.trip_energy_liquid]
+type = "energy"
+factor = 3.12
+unit = "gge"
+
+[cost.vehicle_rates.trip_energy_electric]
+type = "energy"
+factor = 0.5
+unit = "kwh"

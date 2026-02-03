@@ -232,4 +232,23 @@ pub trait CompassAppBindings {
         let string_results: Vec<String> = results.iter().map(|r| r.to_string()).collect();
         Ok(string_results)
     }
+
+    /// Runs map matching on a batch of requests
+    ///
+    /// # Arguments
+    /// * `queries` - a list of queries to run as json strings
+    ///
+    /// # Returns
+    /// * a list of json strings containing the results of the queries
+    fn map_match(&self, queries: Vec<String>) -> Result<Vec<String>, CompassAppError> {
+        let json_queries = queries
+            .iter()
+            .map(|q| serde_json::from_str(q))
+            .collect::<Result<Vec<serde_json::Value>, serde_json::Error>>()?;
+
+        let results = self.app().map_match(&json_queries)?;
+
+        let string_results: Vec<String> = results.iter().map(|r| r.to_string()).collect();
+        Ok(string_results)
+    }
 }

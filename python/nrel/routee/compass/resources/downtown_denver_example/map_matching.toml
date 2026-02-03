@@ -1,0 +1,76 @@
+parallelism = 2
+
+[graph]
+vertex_list_input_file = "vertices-compass.csv.gz"
+edge_list = { input_file = "edges-compass.csv.gz" }
+
+[mapping]
+type = "edge"
+geometry.input_file = "edges-geometries-enumerated.txt.gz"
+spatial_index_type = "edge"
+tolerance.distance = 100.0
+tolerance.unit = "meters"
+queries_without_destinations = false
+matching_type = ["point", "vertex_id", "edge_id"]
+
+[search.traversal]
+type = "combined"
+
+[[search.traversal.models]]
+type = "distance"
+distance_unit = "miles"
+
+[[search.traversal.models]]
+type = "speed"
+speed_table_input_file = "edges-posted-speed-enumerated.txt.gz"
+speed_unit = "kph"
+
+[[search.traversal.models]]
+type = "time"
+time_unit = "minutes"
+
+[[search.traversal.models]]
+type = "turn_delay"
+edge_heading_input_file = "edges-headings-enumerated.csv.gz"
+[search.traversal.models.turn_delay_model]
+type = "tabular_discrete"
+time_unit = "seconds"
+[search.traversal.models.turn_delay_model.table]
+no_turn = 0.0
+slight_right = 0.5
+right = 1.0
+sharp_right = 1.5
+slight_left = 1.0
+left = 2.5
+sharp_left = 3.5
+u_turn = 9.5
+
+[cost]
+weights = { edge_time = 1.0 }
+
+# based on 65.5 cents per mile 2023 IRS mileage rate
+[cost.vehicle_rates.trip_distance]
+type = "distance"
+factor = 0.655
+unit = "miles"
+
+# based on $20/hr approximation of 2023 median hourly wages
+[cost.vehicle_rates.trip_time]
+type = "time"
+factor = 0.333336
+unit = "minutes"
+
+[cost.vehicle_rates.edge_time]
+type = "time"
+factor = 0.333336
+unit = "minutes"
+
+[plugin]
+input_plugins = [
+    { type = "grid_search" },
+    { type = "load_balancer", weight_heuristic = { type = "haversine" } },
+]
+output_plugins = [
+    { type = "summary" },
+    { type = "traversal", route = "geo_json", geometry_input_file = "edges-geometries-enumerated.txt.gz" },
+]
