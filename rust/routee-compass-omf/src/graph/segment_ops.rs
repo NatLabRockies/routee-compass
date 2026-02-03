@@ -219,6 +219,23 @@ fn when_is_compatible(
         }
     }
 
+    // Check vehicle dimension filters
+    if let Some(restrictions_vehicle) = &restrictions.vehicle {
+        let all_restrictions_apply_to_all_vehicles = restrictions_vehicle.iter().all(|r_vehicle| {
+            if let Some(when_vehicles) = &when.vehicle {
+                when_vehicles
+                    .iter()
+                    .all(|w_vehicle| r_vehicle.is_valid(w_vehicle))
+            } else {
+                false
+            }
+        });
+
+        if !all_restrictions_apply_to_all_vehicles {
+            return false;
+        }
+    }
+
     // If we got here, all specified fields in when are compatible
     true
 }
@@ -226,8 +243,14 @@ fn when_is_compatible(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::collection::record::{
-        OvertureMapsBbox, SegmentAccessType, SegmentMode, SegmentRecognized, SegmentUsing,
+    use crate::collection::{
+        filter::{MatchBehavior, TravelModeFilter},
+        record::{
+            OvertureMapsBbox, SegmentAccessRestrictionWhenVehicle, SegmentAccessType,
+            SegmentLengthUnit, SegmentMode, SegmentRecognized, SegmentUnit, SegmentUsing,
+            SegmentVehicleComparator, SegmentVehicleDimension,
+        },
+        SegmentClass,
     };
 
     #[test]
@@ -576,6 +599,98 @@ mod tests {
         assert_eq!(result2.len(), 0);
     }
 
+    #[test]
+    fn test_from_data_3() {
+        let access_restrictions = vec![
+            create_restriction_mode(SegmentAccessType::Designated, vec![SegmentMode::Hgv]),
+            create_restriction_when_vehicle(
+                SegmentAccessType::Denied,
+                SegmentAccessRestrictionWhenVehicle {
+                    dimension: SegmentVehicleDimension::Height,
+                    comparison: SegmentVehicleComparator::GreaterThan,
+                    value: 13.0,
+                    unit: Some(SegmentUnit::Length(SegmentLengthUnit::Feet)),
+                },
+            ),
+        ];
+
+        let segment = create_test_segment(Some(access_restrictions));
+
+        // Should pass simple drive filter
+        let filter1 = create_simple_drive_filter();
+        assert!(filter1.matches_filter(&segment));
+
+        // Should be denied when vehicle height is greater than 13 ft
+        let when1 = SegmentAccessRestrictionWhen {
+            during: None,
+            heading: Some(SegmentHeading::Forward),
+            using: None,
+            recognized: None,
+            mode: None,
+            vehicle: Some(vec![SegmentAccessRestrictionWhenVehicle {
+                dimension: SegmentVehicleDimension::Height,
+                comparison: SegmentVehicleComparator::GreaterThan,
+                value: 100.0,
+                unit: Some(SegmentUnit::Length(SegmentLengthUnit::Feet)),
+            }]),
+        };
+        let result1 = get_headings(&segment, Some(&when1)).unwrap();
+        assert_eq!(result1.len(), 0);
+
+        // But should be allowed in any other case
+        let when2 = SegmentAccessRestrictionWhen {
+            during: None,
+            heading: Some(SegmentHeading::Forward),
+            using: None,
+            recognized: None,
+            mode: None,
+            vehicle: Some(vec![SegmentAccessRestrictionWhenVehicle {
+                dimension: SegmentVehicleDimension::Height,
+                comparison: SegmentVehicleComparator::GreaterThan,
+                value: 10.,
+                unit: Some(SegmentUnit::Length(SegmentLengthUnit::Feet)),
+            }]),
+        };
+        let result2 = get_headings(&segment, Some(&when2)).unwrap();
+        assert_eq!(result2, vec![SegmentHeading::Forward]);
+
+        // also when no vehicle is specified
+        let when3 = SegmentAccessRestrictionWhen {
+            during: None,
+            heading: Some(SegmentHeading::Forward),
+            using: None,
+            recognized: None,
+            mode: None,
+            vehicle: None,
+        };
+        let result3 = get_headings(&segment, Some(&when3)).unwrap();
+        assert_eq!(result3, vec![SegmentHeading::Forward]);
+    }
+
+    // Helper to represent a typical drive mode filter
+    fn create_simple_drive_filter() -> TravelModeFilter {
+        let classes = vec![
+            SegmentClass::Motorway,
+            SegmentClass::Trunk,
+            SegmentClass::Primary,
+            SegmentClass::Secondary,
+            SegmentClass::Tertiary,
+            SegmentClass::Residential,
+            SegmentClass::LivingStreet,
+            SegmentClass::Unclassified,
+            SegmentClass::Service,
+            SegmentClass::Unknown,
+        ]
+        .into_iter()
+        .collect();
+
+        TravelModeFilter::MatchesClasses {
+            classes,
+            behavior: MatchBehavior::Include,
+            allow_unset: true,
+        }
+    }
+
     /// Helper to create a minimal segment for testing
     fn create_test_segment(
         access_restrictions: Option<Vec<SegmentAccessRestriction>>,
@@ -643,6 +758,25 @@ mod tests {
                 recognized: None,
                 mode: Some(modes),
                 vehicle: None,
+            }),
+            vehicle: None,
+        }
+    }
+
+    /// Helper to create a simple access restriction with vehicle detail
+    fn create_restriction_when_vehicle(
+        access_type: SegmentAccessType,
+        vehicle: SegmentAccessRestrictionWhenVehicle,
+    ) -> SegmentAccessRestriction {
+        SegmentAccessRestriction {
+            access_type,
+            when: Some(SegmentAccessRestrictionWhen {
+                during: None,
+                heading: None,
+                using: None,
+                recognized: None,
+                mode: None,
+                vehicle: Some(vec![vehicle]),
             }),
             vehicle: None,
         }

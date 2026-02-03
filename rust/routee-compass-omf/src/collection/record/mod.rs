@@ -15,10 +15,11 @@ pub use record_type::OvertureRecordType;
 pub use transportation_collection::TransportationCollection;
 pub use transportation_connector::TransportationConnectorRecord;
 pub use transportation_segment::{
-    SegmentAccessRestriction, SegmentAccessRestrictionWhen, SegmentAccessType, SegmentClass,
-    SegmentDestination, SegmentFullType, SegmentHeading, SegmentMode, SegmentRecognized,
-    SegmentSpeedLimit, SegmentSpeedUnit, SegmentSubclass, SegmentSubtype, SegmentUsing,
-    TransportationSegmentRecord,
+    SegmentAccessRestriction, SegmentAccessRestrictionWhen, SegmentAccessRestrictionWhenVehicle,
+    SegmentAccessType, SegmentClass, SegmentDestination, SegmentFullType, SegmentHeading,
+    SegmentLengthUnit, SegmentMode, SegmentRecognized, SegmentSpeedLimit, SegmentSpeedUnit,
+    SegmentSubclass, SegmentSubtype, SegmentUnit, SegmentUsing, SegmentVehicleComparator,
+    SegmentVehicleDimension, TransportationSegmentRecord,
 };
 
 // Common structs and functions for many record types
