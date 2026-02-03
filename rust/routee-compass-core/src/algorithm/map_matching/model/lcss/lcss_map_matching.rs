@@ -15,44 +15,13 @@ use super::trajectory_segment::TrajectorySegment;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LcssConfig {
-    #[serde(default = "LcssConfig::default_distance_unit")]
     pub distance_unit: String,
-    #[serde(default = "LcssConfig::default_distance_epsilon")]
     pub distance_epsilon: f64,
-    #[serde(default = "LcssConfig::default_similarity_cutoff")]
     pub similarity_cutoff: f64,
-    #[serde(default = "LcssConfig::default_cutting_threshold")]
     pub cutting_threshold: f64,
-    #[serde(default = "LcssConfig::default_random_cuts")]
     pub random_cuts: usize,
-    #[serde(default = "LcssConfig::default_distance_threshold")]
     pub distance_threshold: f64,
-    #[serde(default = "LcssConfig::default_search_parameters")]
     pub search_parameters: serde_json::Value,
-}
-
-impl LcssConfig {
-    pub fn default_distance_unit() -> String {
-        "meters".to_string()
-    }
-    pub fn default_distance_epsilon() -> f64 {
-        50.0
-    }
-    pub fn default_similarity_cutoff() -> f64 {
-        0.9
-    }
-    pub fn default_cutting_threshold() -> f64 {
-        10.0
-    }
-    pub fn default_random_cuts() -> usize {
-        0
-    }
-    pub fn default_distance_threshold() -> f64 {
-        10000.0
-    }
-    pub fn default_search_parameters() -> serde_json::Value {
-        serde_json::json!({})
-    }
 }
 
 /// A map matching algorithm based on the Longest Common Subsequence (LCSS) similarity.
