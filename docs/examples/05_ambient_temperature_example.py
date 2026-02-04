@@ -49,7 +49,7 @@ if "error" in result:
 Let's look at the energy consumption for the route.
 """
 
-energy = result["route"]["traversal_summary"]["trip_energy_electric"]
+energy = result["route"]["traversal_summary"]["trip_energy_electric"]["value"]
 print(
     f"Ambient Temperature: {query['ambient_temperature']['value']} F, Trip Energy: {round(energy, 3)} kWh"
 )
@@ -66,7 +66,7 @@ for temp in [0, 15, 32, 50, 72, 90, 110]:
     if "error" in result:
         print(result["error"])
     else:
-        energy = result["route"]["traversal_summary"]["trip_energy_electric"]
+        energy = result["route"]["traversal_summary"]["trip_energy_electric"]["value"]
         temp_results.append(
             {
                 "ambient_temperature_f": temp,
@@ -102,7 +102,9 @@ for model in [
         if "error" in result:
             print(result["error"])
         else:
-            energy = result["route"]["traversal_summary"]["trip_energy_electric"]
+            energy = result["route"]["traversal_summary"]["trip_energy_electric"][
+                "value"
+            ]
             temp_results.append(
                 {
                     "ambient_temperature_f": temp,

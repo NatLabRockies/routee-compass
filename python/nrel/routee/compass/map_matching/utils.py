@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pathlib
-from typing import Any, Dict, Union, TYPE_CHECKING
+from typing import Any, Dict, Optional, Union, TYPE_CHECKING
 import xml.etree.ElementTree as ET
 
 if TYPE_CHECKING:
@@ -14,6 +14,9 @@ def load_trace(
     file: Union[str, pathlib.Path],
     x_col: str = "longitude",
     y_col: str = "latitude",
+    search_parameters: Optional[Dict[str, Any]] = None,
+    output_format: Optional[str] = None,
+    summary_ops: Optional[Dict[str, Any]] = None,
 ) -> CompassQuery:
     """
     Load a trace from a file and convert it into a map matching query.
@@ -23,7 +26,9 @@ def load_trace(
         file: Path to the file (csv or gpx)
         x_col: Column name for longitude (only for csv)
         y_col: Column name for latitude (only for csv)
-        t_col: Column name for timestamp (optional, only for csv)
+        search_parameters: Optional search configuration to override defaults
+        output_format: The format to return the matched path in
+        summary_ops: Operations to perform on the search state for the final summary
 
     Returns:
         A map matching query dictionary
@@ -31,9 +36,21 @@ def load_trace(
     path = pathlib.Path(file)
     ext = path.suffix.lower()
     if ext == ".csv":
-        return load_trace_csv(path, x_col, y_col)
+        return load_trace_csv(
+            path,
+            x_col,
+            y_col,
+            search_parameters=search_parameters,
+            output_format=output_format,
+            summary_ops=summary_ops,
+        )
     elif ext == ".gpx":
-        return load_trace_gpx(path)
+        return load_trace_gpx(
+            path,
+            search_parameters=search_parameters,
+            output_format=output_format,
+            summary_ops=summary_ops,
+        )
     else:
         raise ValueError(f"Unsupported file extension: {ext}")
 
@@ -42,6 +59,9 @@ def load_trace_csv(
     file: Union[str, pathlib.Path],
     x_col: str = "longitude",
     y_col: str = "latitude",
+    search_parameters: Optional[Dict[str, Any]] = None,
+    output_format: Optional[str] = None,
+    summary_ops: Optional[Dict[str, Any]] = None,
 ) -> CompassQuery:
     """
     Load a trace from a CSV file and convert it into a map matching query.
@@ -50,7 +70,9 @@ def load_trace_csv(
         file: Path to the CSV file
         x_col: Column name for longitude
         y_col: Column name for latitude
-        t_col: Column name for timestamp (optional)
+        search_parameters: Optional search configuration to override defaults
+        output_format: The format to return the matched path in
+        summary_ops: Operations to perform on the search state for the final summary
 
     Returns:
         A map matching query dictionary
@@ -68,15 +90,31 @@ def load_trace_csv(
         point: Dict[str, Any] = {"x": float(row[x_col]), "y": float(row[y_col])}
         trace.append(point)
 
-    return {"trace": trace}
+    query: CompassQuery = {"trace": trace}
+    if search_parameters is not None:
+        query["search_parameters"] = search_parameters
+    if output_format is not None:
+        query["output_format"] = output_format
+    if summary_ops is not None:
+        query["summary_ops"] = summary_ops
+
+    return query
 
 
-def load_trace_gpx(file: Union[str, pathlib.Path]) -> CompassQuery:
+def load_trace_gpx(
+    file: Union[str, pathlib.Path],
+    search_parameters: Optional[Dict[str, Any]] = None,
+    output_format: Optional[str] = None,
+    summary_ops: Optional[Dict[str, Any]] = None,
+) -> CompassQuery:
     """
     Load a trace from a GPX file and convert it into a map matching query.
 
     Args:
         file: Path to the GPX file
+        search_parameters: Optional search configuration to override defaults
+        output_format: The format to return the matched path in
+        summary_ops: Operations to perform on the search state for the final summary
 
     Returns:
         A map matching query dictionary
@@ -103,7 +141,15 @@ def load_trace_gpx(file: Union[str, pathlib.Path]) -> CompassQuery:
             point = {"x": lon, "y": lat}
             trace.append(point)
 
-    return {"trace": trace}
+    query: CompassQuery = {"trace": trace}
+    if search_parameters is not None:
+        query["search_parameters"] = search_parameters
+    if output_format is not None:
+        query["output_format"] = output_format
+    if summary_ops is not None:
+        query["summary_ops"] = summary_ops
+
+    return query
 
 
 def match_result_to_geopandas(
@@ -135,41 +181,42 @@ def match_result_to_geopandas(
         if "error" in result:
             continue
 
-        matched_path = result.get("matched_path", [])
-        for edge_idx, edge in enumerate(matched_path):
-            feature = {
-                "match_id": i,
-                "edge_index": edge_idx,
-                "edge_list_id": edge.get("edge_list_id"),
-                "edge_id": edge.get("edge_id"),
-            }
+        matched_path = result.get("matched_path")
+        if matched_path is None:
+            continue
 
-            geometry_data = edge.get("geometry")
-            if geometry_data:
-                # Assuming geometry is a GeoJSON-like dict or already a LineString
-                if isinstance(geometry_data, dict):
-                    # Check if it's a LineString
+        # Check if matched_path is a GeoJSON FeatureCollection
+        if not (
+            isinstance(matched_path, dict)
+            and matched_path.get("type") == "FeatureCollection"
+        ):
+            raise ValueError("matched_path must be a GeoJSON FeatureCollection")
+        else:
+            features = matched_path.get("features", [])
+            for edge_idx, feature in enumerate(features):
+                props = feature.get("properties", {})
+                new_feature = {
+                    "match_id": i,
+                    "edge_index": edge_idx,
+                    "edge_list_id": props.get("edge_list_id"),
+                    "edge_id": props.get("edge_id"),
+                }
+                # Integrate state variables if they exist
+                state = props.get("state")
+                if isinstance(state, dict):
+                    new_feature.update(state)
+                geometry_data = feature.get("geometry")
+                if geometry_data:
+                    # Feature geometry is already a GeoJSON-like dict
                     if geometry_data.get("type") == "LineString":
                         coords = geometry_data.get("coordinates", [])
-                        feature["geometry"] = LineString(coords)
+                        new_feature["geometry"] = LineString(coords)
                     else:
-                        # Fallback for other geometry types if any
-                        pass
-                elif isinstance(geometry_data, list):
-                    # Handle list of dicts with x/y keys or list of coordinate pairs
-                    if geometry_data and isinstance(geometry_data[0], dict):
-                        coords = [(point["x"], point["y"]) for point in geometry_data]
-                        feature["geometry"] = LineString(coords)
-                    else:
-                        # List of [x, y] pairs or tuples
-                        feature["geometry"] = LineString(geometry_data)
+                        new_feature["geometry"] = None
                 else:
-                    # Generic case if it's already a shapely object or similar
-                    feature["geometry"] = geometry_data
-            else:
-                feature["geometry"] = None
+                    new_feature["geometry"] = None
 
-            all_features.append(feature)
+                all_features.append(new_feature)
 
     if not all_features:
         return gpd.GeoDataFrame()

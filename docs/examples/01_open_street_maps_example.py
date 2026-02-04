@@ -261,16 +261,16 @@ What becomes interesting is if we can compare our choices. Here's a quick compar
 # %%
 
 dist_diff = (
-    shortest_time_result["route"]["traversal_summary"]["trip_distance"]
-    - least_energy_result["route"]["traversal_summary"]["trip_distance"]
+    shortest_time_result["route"]["traversal_summary"]["trip_distance"]["value"]
+    - least_energy_result["route"]["traversal_summary"]["trip_distance"]["value"]
 )
 time_diff = (
-    shortest_time_result["route"]["traversal_summary"]["trip_time"]
-    - least_energy_result["route"]["traversal_summary"]["trip_time"]
+    shortest_time_result["route"]["traversal_summary"]["trip_time"]["value"]
+    - least_energy_result["route"]["traversal_summary"]["trip_time"]["value"]
 )
 enrg_diff = (
-    shortest_time_result["route"]["traversal_summary"]["trip_energy_liquid"]
-    - least_energy_result["route"]["traversal_summary"]["trip_energy_liquid"]
+    shortest_time_result["route"]["traversal_summary"]["trip_energy_liquid"]["value"]
+    - least_energy_result["route"]["traversal_summary"]["trip_energy_liquid"]["value"]
 )
 cost_diff = (
     shortest_time_result["route"]["cost"]["total_cost"]
@@ -360,7 +360,7 @@ We can also use the plot_routes_folium function and pass in multiple results. Th
 
 folium_map = plot_routes_folium(
     results,
-    value_fn=lambda r: r["route"]["traversal_summary"]["trip_energy_liquid"],
+    value_fn=lambda r: r["route"]["traversal_summary"]["trip_energy_liquid"]["value"],
     color_map="plasma",
 )
 folium_map
@@ -386,7 +386,7 @@ new_results = app.run(query)
 
 folium_map = plot_routes_folium(
     new_results,
-    value_fn=lambda r: r["route"]["traversal_summary"]["trip_energy_liquid"],
+    value_fn=lambda r: r["route"]["traversal_summary"]["trip_energy_liquid"]["value"],
     color_map="plasma",
     folium_map=folium_map,
 )

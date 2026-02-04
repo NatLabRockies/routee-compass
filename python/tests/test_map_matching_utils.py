@@ -130,30 +130,39 @@ class TestMapMatchingUtils(TestCase):
                 {"edge_list_id": 0, "edge_id": 1, "distance": 5.5},
                 {"edge_list_id": 0, "edge_id": 2, "distance": 3.2},
             ],
-            "matched_path": [
-                {
-                    "edge_list_id": 0,
-                    "edge_id": 1,
-                    "geometry": {
-                        "type": "LineString",
-                        "coordinates": [
-                            [-104.9735321, 39.7625164],
-                            [-104.9740539, 39.7629127],
-                        ],
+            "matched_path": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [
+                                [-104.9735321, 39.7625164],
+                                [-104.9740539, 39.7629127],
+                            ],
+                        },
+                        "properties": {
+                            "edge_list_id": 0,
+                            "edge_id": 1,
+                        },
                     },
-                },
-                {
-                    "edge_list_id": 0,
-                    "edge_id": 2,
-                    "geometry": {
-                        "type": "LineString",
-                        "coordinates": [
-                            [-104.9740539, 39.7629127],
-                            [-104.9745757, 39.7633090],
-                        ],
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [
+                                [-104.9740539, 39.7629127],
+                                [-104.9745757, 39.7633090],
+                            ],
+                        },
+                        "properties": {
+                            "edge_list_id": 0,
+                            "edge_id": 2,
+                        },
                     },
-                },
-            ],
+                ],
+            },
         }
 
         gdf = match_result_to_geopandas(result)
@@ -170,14 +179,26 @@ class TestMapMatchingUtils(TestCase):
         """Test converting multiple map matching results to GeoDataFrame."""
         results = [
             {
-                "matched_path": [
-                    {"edge_list_id": 0, "edge_id": 1},
-                ]
+                "matched_path": {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                            "type": "Feature",
+                            "properties": {"edge_list_id": 0, "edge_id": 1},
+                        },
+                    ],
+                }
             },
             {
-                "matched_path": [
-                    {"edge_list_id": 0, "edge_id": 2},
-                ]
+                "matched_path": {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                            "type": "Feature",
+                            "properties": {"edge_list_id": 0, "edge_id": 2},
+                        },
+                    ],
+                }
             },
         ]
 
@@ -190,10 +211,19 @@ class TestMapMatchingUtils(TestCase):
     def test_match_result_to_geopandas_no_geometry(self) -> None:
         """Test converting a map matching result without geometry."""
         result = {
-            "matched_path": [
-                {"edge_list_id": 0, "edge_id": 1},
-                {"edge_list_id": 0, "edge_id": 2},
-            ]
+            "matched_path": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": {"edge_list_id": 0, "edge_id": 1},
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": {"edge_list_id": 0, "edge_id": 2},
+                    },
+                ],
+            }
         }
 
         gdf = match_result_to_geopandas(result)
@@ -207,9 +237,15 @@ class TestMapMatchingUtils(TestCase):
         results: list[dict[str, Any]] = [
             {"error": "Some error"},
             {
-                "matched_path": [
-                    {"edge_list_id": 0, "edge_id": 1},
-                ]
+                "matched_path": {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                            "type": "Feature",
+                            "properties": {"edge_list_id": 0, "edge_id": 1},
+                        },
+                    ],
+                }
             },
         ]
 
@@ -218,3 +254,53 @@ class TestMapMatchingUtils(TestCase):
         # Only the second result should be included
         self.assertEqual(len(gdf), 1)
         self.assertEqual(gdf.iloc[0]["match_id"], 1)
+
+    def test_match_result_to_geopandas_geojson(self) -> None:
+        """Test converting a GeoJSON map matching result to GeoDataFrame."""
+        result = {
+            "point_matches": [],
+            "matched_path": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [[-104.9735, 39.7625], [-104.9740, 39.7629]],
+                        },
+                        "properties": {
+                            "edge_list_id": 0,
+                            "edge_id": 1,
+                            "cost": 10.0,
+                            "state": {"energy": 0.5, "distance": 100.0},
+                        },
+                    }
+                ],
+            },
+        }
+
+        gdf = match_result_to_geopandas(result)
+
+        self.assertEqual(len(gdf), 1)
+        self.assertEqual(gdf.iloc[0]["edge_id"], 1)
+        self.assertEqual(gdf.iloc[0]["energy"], 0.5)
+        self.assertEqual(gdf.iloc[0]["distance"], 100.0)
+        self.assertIsNotNone(gdf.iloc[0]["geometry"])
+
+    def test_load_trace_with_params(self) -> None:
+        """Test loading a trace with extra parameters."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
+            f.write("longitude,latitude\n")
+            f.write("-104.97,39.76\n")
+            csv_path = pathlib.Path(f.name)
+
+        try:
+            params = {"lcss": {"epsilon": 0.1}}
+            query = load_trace(
+                csv_path, search_parameters=params, output_format="geojson"
+            )
+
+            self.assertEqual(query["search_parameters"], params)
+            self.assertEqual(query["output_format"], "geojson")
+        finally:
+            csv_path.unlink()
