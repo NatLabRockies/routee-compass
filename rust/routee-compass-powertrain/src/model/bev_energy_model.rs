@@ -173,7 +173,7 @@ impl TraversalModel for BevEnergyModel {
                     initial: self.battery_capacity,
                     accumulator: false,
                     output_unit: Some(
-                        self.charge_depleting_model
+                        self.prediction_model_record
                             .energy_rate_unit
                             .associated_energy_unit(),
                     ),

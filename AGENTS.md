@@ -51,7 +51,7 @@ pytest python
 
 **For Python Wrapper development**:
 - Package is managed with matruin and pyproject.toml and uses PyO3 bindings
-- Development setup: `pip install -e .[all]` from root directory
+- When running any python code, first activate the conda environment `conda activate routee-compass`
 
 ## Build Commands
 
