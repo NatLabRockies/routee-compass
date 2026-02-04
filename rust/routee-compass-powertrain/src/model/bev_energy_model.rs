@@ -167,6 +167,18 @@ impl TraversalModel for BevEnergyModel {
                     output_unit: Some(RatioUnit::default()),
                 },
             ),
+            (
+                String::from(fieldname::BATTERY_CAPACITY),
+                StateVariableConfig::Energy {
+                    initial: self.battery_capacity,
+                    accumulator: false,
+                    output_unit: Some(
+                        self.charge_depleting_model
+                            .energy_rate_unit
+                            .associated_energy_unit(),
+                    ),
+                },
+            ),
         ];
         if self.include_trip_energy {
             features.push((
