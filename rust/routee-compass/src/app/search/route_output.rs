@@ -3,11 +3,11 @@ use routee_compass_core::algorithm::search::EdgeTraversal;
 use routee_compass_core::algorithm::search::SearchInstance;
 use routee_compass_core::model::cost::TraversalCost;
 use routee_compass_core::model::state::StateVariable;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SummaryOp {
     Sum,
@@ -129,7 +129,13 @@ impl RouteOutput {
             let serialized = feature
                 .serialize_variable(&value)
                 .map_err(|e| e.to_string())?;
-            traversal_summary.insert(name.clone(), serialized);
+            let unit = feature.get_unit_name();
+            let summary_entry = json!({
+                "value": serialized,
+                "unit": unit,
+                "op": op
+            });
+            traversal_summary.insert(name.clone(), summary_entry);
         }
 
         let result = serde_json::json![{
@@ -143,4 +149,3 @@ impl RouteOutput {
         Ok(result)
     }
 }
-

@@ -571,13 +571,21 @@ fn test_map_matching_formats_and_summaries() {
         .expect("matched_path should be a string (WKT)");
     assert!(matched_path.starts_with("LINESTRING"));
 
-    // Check traversal summary exists and has trip_distance
+    // Check traversal summary exists and has trip_distance with new structured format
     let summary = first_result
         .get("traversal_summary")
         .expect("should have traversal_summary")
         .as_object()
         .expect("traversal_summary should be an object");
-    assert!(summary.contains_key("trip_distance"));
+    let trip_distance = summary
+        .get("trip_distance")
+        .expect("should have trip_distance in summary")
+        .as_object()
+        .expect("trip_distance summary should be an object");
+
+    assert!(trip_distance.contains_key("value"));
+    assert!(trip_distance.contains_key("unit"));
+    assert_eq!(trip_distance.get("op").unwrap().as_str().unwrap(), "sum");
 
     // Verify GeoJSON format
     let query_geojson = serde_json::json!({
