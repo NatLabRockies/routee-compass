@@ -47,10 +47,20 @@ impl OutputPlugin for TraversalPlugin {
 
         // output route if configured
         if let Some(route_args) = self.route {
+            let mut summary_ops = self.summary_ops.clone();
+            let query_summary_ops: Option<HashMap<String, SummaryOp>> = output
+                .get("request")
+                .and_then(|r| r.get("summary_ops"))
+                .and_then(|s| serde_json::from_value(s.clone()).ok());
+
+            if let Some(query_ops) = query_summary_ops {
+                summary_ops.extend(query_ops);
+            }
+
             let routes_serialized = result
                 .routes
                 .iter()
-                .map(|route| RouteOutput::generate(route, si, &route_args, &self.summary_ops))
+                .map(|route| RouteOutput::generate(route, si, &route_args, &summary_ops))
                 .collect::<Result<Vec<_>, _>>()
                 .map_err(OutputPluginError::OutputPluginFailed)?;
 

@@ -18,6 +18,24 @@ pub enum SummaryOp {
     Max,
 }
 
+impl SummaryOp {
+    pub fn default_summary_ops() -> HashMap<String, SummaryOp> {
+        use routee_compass_core::model::traversal::default::fieldname::*;
+        HashMap::from([
+            (EDGE_DISTANCE.to_string(), SummaryOp::Sum),
+            (EDGE_SPEED.to_string(), SummaryOp::Avg),
+            (EDGE_TIME.to_string(), SummaryOp::Sum),
+            (EDGE_GRADE.to_string(), SummaryOp::Avg),
+            (EDGE_TURN_DELAY.to_string(), SummaryOp::Sum),
+            (AMBIENT_TEMPERATURE.to_string(), SummaryOp::Avg),
+            (TRIP_DISTANCE.to_string(), SummaryOp::Last),
+            (TRIP_TIME.to_string(), SummaryOp::Last),
+            (TRIP_ELEVATION_GAIN.to_string(), SummaryOp::Last),
+            (TRIP_ELEVATION_LOSS.to_string(), SummaryOp::Last),
+        ])
+    }
+}
+
 pub struct RouteOutput;
 
 impl RouteOutput {
@@ -64,15 +82,20 @@ impl RouteOutput {
             .serialize_cost_info()
             .map_err(|e| e.to_string())?;
 
+        let default_summary_ops = SummaryOp::default_summary_ops();
         let mut traversal_summary = serde_json::Map::new();
         for (i, (name, feature)) in si.state_model.indexed_iter() {
-            let op = summary_ops.get(name).cloned().unwrap_or_else(|| {
-                if feature.is_accumulator() {
-                    SummaryOp::Last
-                } else {
-                    SummaryOp::Sum
-                }
-            });
+            let op = summary_ops
+                .get(name)
+                .cloned()
+                .or_else(|| default_summary_ops.get(name).cloned())
+                .unwrap_or_else(|| {
+                    if feature.is_accumulator() {
+                        SummaryOp::Last
+                    } else {
+                        SummaryOp::Sum
+                    }
+                });
 
             let value = match op {
                 SummaryOp::Sum => route
@@ -120,3 +143,4 @@ impl RouteOutput {
         Ok(result)
     }
 }
+
