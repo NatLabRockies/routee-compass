@@ -7,6 +7,20 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
 
+#[derive(thiserror::Error, Debug)]
+pub enum RouteOutputError {
+    #[error("failed to generate route output: {0}")]
+    OutputGenerationFailed(String),
+    #[error("cannot find result route state when route is empty")]
+    EmptyRoute,
+    #[error("failed serializing final trip state: {0}")]
+    StateSerialization(String),
+    #[error("failed serializing cost info: {0}")]
+    CostSerialization(String),
+    #[error("failed serializing state variable: {0}")]
+    StateVariableSerialization(String),
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SummaryOp {
@@ -45,25 +59,23 @@ impl RouteOutput {
         si: &SearchInstance,
         output_format: &TraversalOutputFormat,
         summary_ops: &HashMap<String, SummaryOp>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, RouteOutputError> {
         if route.is_empty() {
             return Ok(serde_json::json!({
-                "path": output_format.generate_route_output(route, si.map_model.clone(), si.state_model.clone()).map_err(|e| e.to_string())?,
+                "path": output_format.generate_route_output(route, si.map_model.clone(), si.state_model.clone()).map_err(|e| RouteOutputError::OutputGenerationFailed(e.to_string()))?,
                 "traversal_summary": serde_json::Map::new(),
                 "final_state": serde_json::Value::Null,
                 "cost": serde_json::Value::Null,
             }));
         }
-        let last_edge = route
-            .last()
-            .ok_or_else(|| String::from("cannot find result route state when route is empty"))?;
+        let last_edge = route.last().ok_or(RouteOutputError::EmptyRoute)?;
         let path_json = output_format
             .generate_route_output(route, si.map_model.clone(), si.state_model.clone())
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| RouteOutputError::OutputGenerationFailed(e.to_string()))?;
         let final_state = si
             .state_model
             .serialize_state(&last_edge.result_state, true)
-            .map_err(|e| format!("failed serializing final trip state: {e}"))?;
+            .map_err(|e| RouteOutputError::StateSerialization(e.to_string()))?;
 
         let state_model = si.state_model.serialize_state_model();
 
@@ -80,7 +92,7 @@ impl RouteOutput {
         let cost_model = si
             .cost_model
             .serialize_cost_info()
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| RouteOutputError::CostSerialization(e.to_string()))?;
 
         let default_summary_ops = SummaryOp::default_summary_ops();
         let mut traversal_summary = serde_json::Map::new();
@@ -128,7 +140,7 @@ impl RouteOutput {
             };
             let serialized = feature
                 .serialize_variable(&value)
-                .map_err(|e| e.to_string())?;
+                .map_err(|e| RouteOutputError::StateVariableSerialization(e.to_string()))?;
             let unit = feature.get_unit_name();
             let summary_entry = json!({
                 "value": serialized,

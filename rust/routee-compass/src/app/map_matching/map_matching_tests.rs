@@ -354,10 +354,6 @@ fn test_map_matching_simple_single_point() {
 
     // Execute map match
     let result = app.map_match(&queries).unwrap();
-    println!(
-        "DEBUG SINGLE POINT RESPONSE: {}",
-        serde_json::to_string_pretty(&result).unwrap()
-    );
 
     // Verify result matches Edge 0
     assert_eq!(result.len(), 1);
