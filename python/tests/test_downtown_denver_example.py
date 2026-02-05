@@ -65,8 +65,8 @@ class TestDowntownDenverExample(TestCase):
             f"Balanced result missing route key. \nerror: {c_opt_result.get('error')}\nresponse: {json.dumps(c_opt_result, indent=2)}",
         )
 
-        t_opt_time = t_opt_result["route"]["traversal_summary"]["trip_time"]
-        c_opt_time = c_opt_result["route"]["traversal_summary"]["trip_time"]
+        t_opt_time = t_opt_result["route"]["traversal_summary"]["trip_time"]["value"]
+        c_opt_time = c_opt_result["route"]["traversal_summary"]["trip_time"]["value"]
         t_opt_cost = t_opt_result["route"]["cost"]["total_cost"]
         c_opt_cost = c_opt_result["route"]["cost"]["total_cost"]
 
@@ -103,8 +103,10 @@ class TestDowntownDenverExample(TestCase):
             weight_results.append(
                 {
                     "p": p,
-                    "time": result["route"]["traversal_summary"]["trip_time"],
-                    "dist": result["route"]["traversal_summary"]["trip_distance"],
+                    "time": result["route"]["traversal_summary"]["trip_time"]["value"],
+                    "dist": result["route"]["traversal_summary"]["trip_distance"][
+                        "value"
+                    ],
                 }
             )
 
@@ -205,16 +207,16 @@ class TestDowntownDenverExample(TestCase):
             f"Balanced result missing route key. \nerror: {c_opt_result.get('error')}\nresponse: {json.dumps(c_opt_result, indent=2)}",
         )
 
-        t_opt_time = t_opt_result["route"]["traversal_summary"]["trip_time"]
+        t_opt_time = t_opt_result["route"]["traversal_summary"]["trip_time"]["value"]
         t_opt_energy = t_opt_result["route"]["traversal_summary"][
             "trip_energy_electric"
-        ]
+        ]["value"]
         t_opt_cost = t_opt_result["route"]["cost"]["total_cost"]
 
-        e_opt_time = e_opt_result["route"]["traversal_summary"]["trip_time"]
+        e_opt_time = e_opt_result["route"]["traversal_summary"]["trip_time"]["value"]
         e_opt_energy = e_opt_result["route"]["traversal_summary"][
             "trip_energy_electric"
-        ]
+        ]["value"]
         e_opt_cost = e_opt_result["route"]["cost"]["total_cost"]
 
         c_opt_cost = c_opt_result["route"]["cost"]["total_cost"]
@@ -274,10 +276,10 @@ class TestDowntownDenverExample(TestCase):
             weight_results.append(
                 {
                     "p": p,
-                    "time": result["route"]["traversal_summary"]["trip_time"],
+                    "time": result["route"]["traversal_summary"]["trip_time"]["value"],
                     "energy": result["route"]["traversal_summary"][
                         "trip_energy_electric"
-                    ],
+                    ]["value"],
                 }
             )
 

@@ -79,7 +79,8 @@ impl MapModel {
         si: &SearchInstance,
     ) -> Result<(), MapError> {
         self.matching_type.process_origin(query, si)?;
-        match self.matching_type.process_destination(query, si)? {
+        let result = self.matching_type.process_destination(query, si)?;
+        match result {
             MapInputResult::NotFound if !self.queries_without_destinations => {
                 Err(MapError::DestinationsRequired(self.matching_type.clone()))
             }

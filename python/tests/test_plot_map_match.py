@@ -22,19 +22,20 @@ class TestMapMatchPlot(unittest.TestCase):
 
     def test_plot_with_geometry(self) -> None:
         query = self.query.copy()
-        query["include_geometry"] = True
         result = self.app.map_match(query)
         # Should not raise error
         assert isinstance(result, dict)
         m = plot_matched_path_folium(result)
         self.assertIsNotNone(m)
 
-    def test_plot_without_geometry_error(self) -> None:
+    def test_plot_wrong_format_error(self) -> None:
         query = self.query.copy()
-        query["include_geometry"] = False
+        query["output_format"] = "edge_id"
         result = self.app.map_match(query)
         assert isinstance(result, dict)
-        with self.assertRaisesRegex(ValueError, "is missing geometry"):
+        with self.assertRaisesRegex(
+            ValueError, "matched_path must be a GeoJSON FeatureCollection"
+        ):
             plot_matched_path_folium(result)
 
     def test_missing_matched_path_error(self) -> None:

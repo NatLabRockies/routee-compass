@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use crate::model::unit::Cost;
 
 /// the cost of an edge traversal.
-#[derive(Serialize, Deserialize, Default, Clone, Debug, Allocative)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug, Allocative, PartialEq)]
 pub struct TraversalCost {
     /// the cost components with user-defined weighting objectives applied
     pub objective_cost: Cost,

@@ -112,6 +112,31 @@ impl StateVariableConfig {
         }
     }
 
+    pub fn get_unit_name(&self) -> String {
+        match self {
+            StateVariableConfig::Distance { output_unit, .. } => output_unit.map_or_else(
+                || format!("{}", DistanceUnit::default()),
+                |u| format!("{}", u),
+            ),
+            StateVariableConfig::Time { output_unit, .. } => {
+                output_unit.map_or_else(|| format!("{}", TimeUnit::default()), |u| format!("{}", u))
+            }
+            StateVariableConfig::Speed { output_unit, .. } => output_unit
+                .map_or_else(|| format!("{}", SpeedUnit::default()), |u| format!("{}", u)),
+            StateVariableConfig::Energy { output_unit, .. } => output_unit.map_or_else(
+                || format!("{}", EnergyUnit::default()),
+                |u| format!("{}", u),
+            ),
+            StateVariableConfig::Ratio { output_unit, .. } => output_unit
+                .map_or_else(|| format!("{}", RatioUnit::default()), |u| format!("{}", u)),
+            StateVariableConfig::Temperature { output_unit, .. } => output_unit.map_or_else(
+                || format!("{}", TemperatureUnit::default()),
+                |u| format!("{}", u),
+            ),
+            StateVariableConfig::Custom { custom_type, .. } => custom_type.clone(),
+        }
+    }
+
     pub fn get_feature_type(&self) -> String {
         match self {
             StateVariableConfig::Distance { .. } => "distance".to_string(),

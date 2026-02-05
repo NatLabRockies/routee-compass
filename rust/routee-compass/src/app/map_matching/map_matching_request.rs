@@ -1,4 +1,7 @@
+use crate::app::search::SummaryOp;
+use crate::plugin::output::default::traversal::TraversalOutputFormat;
 use serde::Deserialize;
+use std::collections::HashMap;
 
 /// JSON-deserializable request for map matching.
 #[derive(Debug, Clone, Deserialize)]
@@ -8,13 +11,20 @@ pub struct MapMatchingRequest {
     /// Optional search configuration to override defaults.
     #[serde(default)]
     pub search_parameters: Option<serde_json::Value>,
-    /// Whether to include the geometry of the matched path in the response.
-    #[serde(default = "default_include_geometry")]
-    pub include_geometry: bool,
+    /// The format to return the matched path in.
+    #[serde(default = "default_output_format")]
+    pub output_format: TraversalOutputFormat,
+    /// Operations to perform on the search state for the final summary.
+    #[serde(default = "default_summary_ops")]
+    pub summary_ops: HashMap<String, SummaryOp>,
 }
 
-fn default_include_geometry() -> bool {
-    true
+fn default_output_format() -> TraversalOutputFormat {
+    TraversalOutputFormat::GeoJson
+}
+
+fn default_summary_ops() -> HashMap<String, SummaryOp> {
+    HashMap::new()
 }
 
 /// A single GPS point in the request trace.
@@ -59,7 +69,8 @@ mod tests {
         let request = MapMatchingRequest {
             trace: vec![],
             search_parameters: None,
-            include_geometry: false,
+            output_format: TraversalOutputFormat::Json,
+            summary_ops: HashMap::new(),
         };
         assert!(request.validate().is_err());
     }

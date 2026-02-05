@@ -313,11 +313,19 @@ impl CompassApp {
                 .match_trace(&trace, &search_instance)
                 .map_err(|e| MapMatchingAppError::AlgorithmError { source: e })?;
 
+            // Recalculate the path to get correct accumulated state
+            let matched_path = search_instance
+                .recalculate_path(&result.matched_path)
+                .map_err(|e| MapMatchingAppError::AlgorithmError {
+                    source: routee_compass_core::algorithm::map_matching::map_matching_error::MapMatchingError::SearchError(e),
+                })?;
+
             // Convert result to response format
             let response = map_matching_ops::convert_result_to_response(
                 result,
-                &self.search_app.map_model,
-                request.include_geometry,
+                matched_path,
+                &search_instance,
+                &request,
             );
             let response_json = serde_json::to_value(response)?;
             results.push(response_json);

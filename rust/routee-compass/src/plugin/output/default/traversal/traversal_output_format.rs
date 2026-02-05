@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use wkb::writer::WriteOptions;
 use wkt::ToWkt;
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum TraversalOutputFormat {
     // concatenates all LINESTRINGS and returns the geometry as a WKT

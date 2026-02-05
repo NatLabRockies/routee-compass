@@ -89,17 +89,9 @@ pub fn create_geojson_feature(
         })?;
     let serialized_cost = json![t.cost];
 
-    let serialized_traversal = match serde_json::to_value(t).map(|v| v.as_object().cloned()) {
-        Ok(Some(obj)) => Ok(json![obj]),
-        Ok(None) => Err(OutputPluginError::InternalError(format!(
-            "serialized EdgeTraversal was not a JSON object for {t}"
-        ))),
-        Err(err) => Err(OutputPluginError::JsonError { source: err }),
-    }?;
     let mut properties = Map::new();
     properties.insert(String::from("edge_id"), json![t.edge_id]);
     properties.insert(String::from("edge_list_id"), json![t.edge_list_id]);
-    properties.insert(String::from("traversal"), serialized_traversal);
     properties.insert(String::from("state"), serialized_state);
     properties.insert(String::from("cost"), serialized_cost);
 

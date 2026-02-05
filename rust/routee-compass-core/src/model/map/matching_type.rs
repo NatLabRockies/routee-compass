@@ -79,6 +79,7 @@ impl FromStr for MatchingType {
     }
 }
 
+#[derive(Debug)]
 pub enum MapInputResult {
     Found,
     NotFound,
@@ -208,8 +209,10 @@ impl MatchingType {
             MT::Combined(vec) => {
                 let mut errors = vec![];
                 for matching_type in vec.iter() {
-                    match matching_type.process_destination(query, si) {
-                        Ok(_) => return Ok(MapInputResult::Found),
+                    let result = matching_type.process_destination(query, si);
+                    match result {
+                        Ok(MapInputResult::Found) => return Ok(MapInputResult::Found),
+                        Ok(MapInputResult::NotFound) => continue,
                         Err(e) => {
                             let mit = serde_json::to_string(matching_type).unwrap_or_default();
                             let msg = format!("no destination {mit} on input query: {e}");

@@ -1,7 +1,6 @@
-use super::{
-    plugin::{SummaryOp, TraversalPlugin},
-    traversal_output_format::TraversalOutputFormat,
-};
+use super::plugin::TraversalPlugin;
+use super::traversal_output_format::TraversalOutputFormat;
+use crate::app::search::SummaryOp;
 use crate::{
     app::compass::CompassComponentError,
     plugin::{
