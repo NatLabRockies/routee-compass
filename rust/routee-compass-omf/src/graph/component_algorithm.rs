@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 use itertools::Itertools;
 use kdam::tqdm;
 use routee_compass_core::model::network::{
-    Edge, EdgeId, EdgeList, EdgeListId, Graph, Vertex, VertexId,
+    Edge, EdgeId, EdgeList, EdgeListId, Vertex, VertexId,
 };
 
 use crate::collection::OvertureMapsCollectionError;
@@ -26,8 +26,8 @@ pub fn island_detection_alogirthm(
     // Note 2: Because we are considering "weak" connectivity, a node is part of an island iff all the in and out edges are in an island
     // Note 3: All edge lists as one? I think yes
 
-    let mut visited = HashSet::<usize>::new();
-    let mut islands = HashSet::<usize>::new();
+    let visited = HashSet::<usize>::new();
+    let islands = HashSet::<usize>::new();
 
     // for edge in edges {
     //     // If we have not visited this edge
@@ -60,7 +60,7 @@ fn visit_edge_parallel(
     while counter < distance_threshold_meters {
         if let Some(current_edge) = visit_queue.pop_front() {
             // Skip if we already visited
-            if let Some(_) = visited.get(&(current_edge.edge_list_id, current_edge.edge_id)) {
+            if visited.get(&(current_edge.edge_list_id, current_edge.edge_id)).is_some() {
                 continue;
             }
             visited.insert((current_edge.edge_list_id, current_edge.edge_id));
