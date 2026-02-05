@@ -46,6 +46,9 @@ class TestFromGraph(TestCase):
             "weights": {"trip_distance": 1, "trip_time": 0},
         }
         result = app.run(query)
+        assert isinstance(result, dict)
         self.assertNotIn("error", result)
         self.assertIn("route", result)
-        self.assertNotIn("trip_energy_electric", result["route"]["traversal_summary"])
+        route = result["route"]
+        assert isinstance(route, dict)
+        self.assertNotIn("trip_energy_electric", route["traversal_summary"])

@@ -188,7 +188,7 @@ class CompassApp:
         cls,
         query: OSMNXQuery,
         network_type: str = "drive",
-        **kwargs,
+        **kwargs: Any,
     ) -> CompassApp:
         """
         Build a CompassApp from a place
@@ -220,7 +220,7 @@ class CompassApp:
         cls,
         polygon: Union["Polygon" | "MultiPolygon"],
         network_type: str = "drive",
-        **kwargs,
+        **kwargs: Any,
     ) -> CompassApp:
         """
         Build a CompassApp from a polygon

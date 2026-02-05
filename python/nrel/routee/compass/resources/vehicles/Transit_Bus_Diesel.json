@@ -1,0 +1,39 @@
+{
+  "name": "Transit_Bus_Diesel",
+  "type": "ice",
+  "mass_estimate_lbs": 30000,
+  "model_input_file": "../models/Transit_Bus_Diesel.bin",
+  "distance_unit": "miles",
+  "energy_rate_unit": "gallons diesel/mile",
+  "real_world_energy_adjustment": 1.0,
+  "a_star_heuristic_energy_rate": 0.133,
+  "input_features": [
+    {
+      "type": "speed",
+      "name": "edge_speed",
+      "unit": "mph"
+    },
+    {
+      "type": "ratio",
+      "name": "edge_grade",
+      "unit": "percent"
+    }
+  ],
+  "model_type": {
+    "interpolate": {
+      "underlying_model_type": "smartcore",
+      "feature_bounds": {
+        "edge_speed": {
+          "lower_bound": 0,
+          "upper_bound": 100,
+          "num_bins": 101
+        },
+        "edge_grade": {
+          "lower_bound": -20,
+          "upper_bound": 20,
+          "num_bins": 41
+        }
+      }
+    }
+  }
+}

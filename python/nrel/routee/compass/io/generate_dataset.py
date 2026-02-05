@@ -210,13 +210,11 @@ def generate_compass_dataset(
         base_config_files = [
             "osm_default_distance.toml",
             "osm_default_speed.toml",
-            "osm_default_map_matching.toml",
         ]
         if GeneratePipelinePhase.POWERTRAIN in phases:
             base_config_files.extend(
                 [
                     "osm_default_energy.toml",
-                    "osm_default_energy_all_vehicles.toml",
                     "osm_default_temperature.toml",
                 ]
             )
