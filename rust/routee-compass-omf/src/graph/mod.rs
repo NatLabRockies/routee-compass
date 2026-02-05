@@ -1,3 +1,4 @@
+mod component_algorithm;
 mod connector_in_segment;
 mod omf_graph;
 mod segment_split;
