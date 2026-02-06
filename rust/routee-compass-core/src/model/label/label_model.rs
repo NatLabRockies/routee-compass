@@ -1,5 +1,5 @@
 use crate::model::{
-    label::{label_enum::Label, label_model_error::LabelModelError},
+    label::{Label, LabelModelError},
     network::VertexId,
     state::{StateModel, StateVariable},
 };
@@ -55,4 +55,24 @@ pub trait LabelModel: Send + Sync {
         state: &[StateVariable],
         state_model: &StateModel,
     ) -> Result<Label, LabelModelError>;
+
+    /// Test whether a new label dominates over a previous label stored
+    /// at the same vertex in a `SearchTree`.
+    ///
+    /// Uses [`std::cmp::Ordering`] with the following convention:
+    ///   - [`Ordering::Greater`] — `next` label dominates `prev` (the new label is better)
+    ///   - [`Ordering::Equal`] — `prev` and `next` labels are equivalent
+    ///   - [`Ordering::Less`] — `prev` label dominates `next` (the existing label is better)
+    ///
+    /// This allows for pruning of the label state space during `SearchTree` insertion.
+    ///
+    /// # Arguments
+    /// * `prev` - the existing label already stored at the vertex
+    /// * `next` - the new label being considered for insertion
+    ///
+    /// # Result
+    ///
+    /// The comparison result between `prev` and `next` according to this label model's
+    /// dominance rules, following the convention described above.
+    fn compare(&self, prev: &Label, next: &Label) -> Result<std::cmp::Ordering, LabelModelError>;
 }

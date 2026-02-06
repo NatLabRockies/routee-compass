@@ -3,7 +3,7 @@ use serde::Serialize;
 
 use crate::{
     algorithm::search::{Direction, EdgeTraversal},
-    model::label::Label,
+    model::{cost::TraversalCost, label::Label},
 };
 
 /// A node in the search tree containing parent/child relationships and traversal data
@@ -63,6 +63,13 @@ impl SearchTreeNode {
         match self {
             SearchTreeNode::Root { direction } => *direction,
             SearchTreeNode::Branch { direction, .. } => *direction,
+        }
+    }
+
+    pub fn traversal_cost(&self) -> Option<&TraversalCost> {
+        match self {
+            SearchTreeNode::Root { .. } => None,
+            SearchTreeNode::Branch { incoming_edge, .. } => Some(&incoming_edge.cost),
         }
     }
 }
