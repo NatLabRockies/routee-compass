@@ -187,13 +187,16 @@ impl TerminationModel {
 
 #[cfg(test)]
 mod tests {
-    use std::{sync::Arc, time::{Duration, Instant}};
+    use std::{
+        sync::Arc,
+        time::{Duration, Instant},
+    };
 
     use crate::{
         algorithm::search::{Direction, EdgeTraversal, SearchTree},
         model::{
             cost::TraversalCost,
-            label::{Label, default::vertex_label_model::VertexLabelModel},
+            label::{default::vertex_label_model::VertexLabelModel, Label},
             network::{EdgeId, EdgeListId, VertexId},
             termination::MemoryUnit,
             unit::Cost,
@@ -396,7 +399,7 @@ mod tests {
                 Label::Vertex(VertexId(idx)),
                 edge_traversal,
                 Label::Vertex(VertexId(idx + 1)),
-                Arc::new(VertexLabelModel {})
+                Arc::new(VertexLabelModel {}),
             )
             .expect("test invariant failed")
         }

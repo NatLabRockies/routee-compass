@@ -12,8 +12,8 @@ mod termination_behavior;
 
 pub mod a_star;
 pub mod ksp;
-pub mod util;
 pub mod search_pruning;
+pub mod util;
 pub use direction::Direction;
 pub use edge_traversal::EdgeTraversal;
 pub use search_algorithm::SearchAlgorithm;

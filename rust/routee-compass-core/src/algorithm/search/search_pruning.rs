@@ -1,7 +1,12 @@
 use std::sync::Arc;
 
-use crate::{algorithm::search::{EdgeTraversal, SearchTree, SearchTreeError}, model::{label::{Label, LabelModel, LabelModelError}, unit::Cost}};
-
+use crate::{
+    algorithm::search::{EdgeTraversal, SearchTree, SearchTreeError},
+    model::{
+        label::{Label, LabelModel, LabelModelError},
+        unit::Cost,
+    },
+};
 
 /// allow the new label to remove any old labels which are dominated both
 /// by cost and by their LabelModel's definition of "dominated".
@@ -72,8 +77,12 @@ fn next_label_dominates_prev(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::{label::Label, network::VertexId, state::{StateModel, StateVariable}, unit::Cost};
-
+    use crate::model::{
+        label::Label,
+        network::VertexId,
+        state::{StateModel, StateVariable},
+        unit::Cost,
+    };
 
     #[test]
     fn test_not_pareto_dominated() {
@@ -123,7 +132,7 @@ mod tests {
         assert!(is_dominated);
     }
 
-        fn build_soc_label_model() -> Arc<dyn LabelModel> {
+    fn build_soc_label_model() -> Arc<dyn LabelModel> {
         struct SocLabelModel {}
         impl LabelModel for SocLabelModel {
             fn label_from_state(
