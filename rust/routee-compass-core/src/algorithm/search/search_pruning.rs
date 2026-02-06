@@ -8,8 +8,17 @@ use crate::{
     },
 };
 
-/// allow the new label to remove any old labels which are dominated both
-/// by cost and by their LabelModel's definition of "dominated".
+/// Prune labels from the search tree that are Pareto-dominated by the new label.
+///
+/// A label is dominated if the new label is at least as good on all objectives
+/// (cost and label state) and strictly better on at least one.
+///
+/// For label state comparison via `LabelModel::compare(prev, next)`:
+/// - `Ordering::Less` means prev has lower (worse) state than next
+/// - `Ordering::Equal` means states are equivalent  
+/// - `Ordering::Greater` means prev has higher (better) state than next
+///
+/// We seek to maximize label state while minimizing cost.
 pub fn prune_tree(
     tree: &mut SearchTree,
     next_label: &Label,
@@ -32,7 +41,7 @@ pub fn prune_tree(
         .collect::<Result<Vec<_>, SearchTreeError>>()?;
 
     for (prev_label, prev_cost) in prev_entries.into_iter() {
-        let remove = next_label_dominates_prev(
+        let remove = test_dominates(
             &prev_label,
             prev_cost,
             next_label,
@@ -51,10 +60,16 @@ pub fn prune_tree(
     Ok(())
 }
 
-/// remove previous label only if it is dominated by the new label
-/// in a Pareto sense: new is at least as good on all objectives
-/// (label state and cost) and strictly better on at least one.
-fn next_label_dominates_prev(
+/// Test whether the next label Pareto-dominates the previous label.
+///
+/// Returns true if next dominates prev, meaning:
+/// - next is at least as good on all objectives (cost and state)
+/// - next is strictly better on at least one objective
+///
+/// Objectives:
+/// - Maximize label state (higher is better)
+/// - Minimize cost (lower is better)
+fn test_dominates(
     prev_label: &Label,
     prev_cost: Cost,
     next_label: &Label,
@@ -63,12 +78,11 @@ fn next_label_dominates_prev(
 ) -> Result<bool, LabelModelError> {
     let label_comparison = label_model.compare(prev_label, next_label)?;
     let dominates = match label_comparison {
-        // prev_label is worse in label state than the new label; new must
-        // also be no worse in cost to dominate.
+        // prev < next: next has better (higher) state, so next dominates if cost is no worse
         std::cmp::Ordering::Less => next_cost <= prev_cost,
-        // label states are equivalent; new must be strictly cheaper to dominate.
+        // prev == next: states are equal, so next dominates only if strictly cheaper
         std::cmp::Ordering::Equal => next_cost < prev_cost,
-        // prev_label is better in label state; new cannot dominate regardless of cost.
+        // prev > next: prev has better (higher) state, so next cannot dominate
         std::cmp::Ordering::Greater => false,
     };
     Ok(dominates)
@@ -97,7 +111,7 @@ mod tests {
             state: 80,
         };
         let next_cost = Cost::new(70.0);
-        let is_dominated = next_label_dominates_prev(
+        let is_dominated = test_dominates(
             &prev_label,
             prev_cost,
             &next_label,
@@ -121,7 +135,7 @@ mod tests {
             state: 80,
         };
         let next_cost = Cost::new(40.0);
-        let is_dominated = next_label_dominates_prev(
+        let is_dominated = test_dominates(
             &prev_label,
             prev_cost,
             &next_label,
