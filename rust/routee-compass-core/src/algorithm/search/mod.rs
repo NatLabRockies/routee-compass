@@ -1,7 +1,5 @@
-pub mod a_star;
 mod direction;
 mod edge_traversal;
-pub mod ksp;
 mod search_algorithm;
 mod search_algorithm_config;
 mod search_algorithm_result;
@@ -11,8 +9,11 @@ mod search_result;
 mod search_tree;
 mod search_tree_node;
 mod termination_behavior;
-pub mod util;
 
+pub mod a_star;
+pub mod ksp;
+pub mod util;
+pub mod search_pruning;
 pub use direction::Direction;
 pub use edge_traversal::EdgeTraversal;
 pub use search_algorithm::SearchAlgorithm;
