@@ -56,12 +56,15 @@ class CompassApp:
     def from_config_file(
         cls,
         config_file: Union[str, Path],
+        parallelism: Optional[int] = None,
     ) -> CompassApp:
         """
         Build a CompassApp from a config file
 
         Args:
             config_file: Path to the config file
+            parallelism: optional number of threads to use for parallel
+                query execution. Overrides the value in the config file.
 
         Returns:
             app: A CompassApp object
@@ -76,11 +79,14 @@ class CompassApp:
         with open(config_path) as f:
             toml_config = tomlkit.load(f)
 
-        return cls.from_dict(toml_config, config_path)
+        return cls.from_dict(toml_config, config_path, parallelism=parallelism)
 
     @classmethod
     def from_dict(
-        cls, config: tomlkit.TOMLDocument, working_dir: Optional[Path] = None
+        cls,
+        config: tomlkit.TOMLDocument,
+        working_dir: Optional[Path] = None,
+        parallelism: Optional[int] = None,
     ) -> CompassApp:
         """
         Build a CompassApp from a configuration object
@@ -88,6 +94,8 @@ class CompassApp:
         Args:
             config: Configuration dictionary
             working_dir: optional path to working directory
+            parallelism: optional number of threads to use for parallel
+                query execution. Overrides the value in the config.
 
         Returns:
             app: a CompassApp object
@@ -97,6 +105,8 @@ class CompassApp:
             >>> conf = { "parallelism": 2 }
             >>> app = CompassApp.from_config(conf)
         """
+        if parallelism is not None:
+            config["parallelism"] = parallelism
         path_str = str(working_dir.absolute()) if working_dir is not None else ""
         toml_string = tomlkit.dumps(config)
         app = cls.get_constructor()._from_config_toml_string(toml_string, path_str)
@@ -114,6 +124,7 @@ class CompassApp:
         phases: List[GeneratePipelinePhase] = GeneratePipelinePhase.default(),
         raster_resolution_arc_seconds: Union[str, int] = 1,
         vehicle_models: Optional[List[str]] = None,
+        parallelism: Optional[int] = None,
     ) -> CompassApp:
         """
         Build a CompassApp from a networkx graph.
@@ -153,6 +164,8 @@ class CompassApp:
                 ``["2017_CHEVROLET_Bolt", "2016_TOYOTA_Camry_4cyl_2WD"]``).
                 Use :func:`list_available_vehicle_models` to see valid names.
                 When ``None`` (the default) all available models are included.
+            parallelism: optional number of threads to use for parallel
+                query execution. Overrides the value in the config file.
 
         Returns:
             CompassApp: a CompassApp object
@@ -188,13 +201,14 @@ class CompassApp:
                 "Make sure the requested phases generated this config."
             )
 
-        return cls.from_config_file(config_path)
+        return cls.from_config_file(config_path, parallelism=parallelism)
 
     @classmethod
     def from_place(
         cls,
         query: OSMNXQuery,
         network_type: str = "drive",
+        parallelism: Optional[int] = None,
         **kwargs: Any,
     ) -> CompassApp:
         """
@@ -205,6 +219,8 @@ class CompassApp:
                 polygon(s)
             network_type: what type of street network. Default to drive
                 List of options: ["all", "all_public", "bike", "drive", "drive_service", "walk"]
+            parallelism: optional number of threads to use for parallel
+                query execution. Overrides the value in the config file.
             **kwargs: additional arguments to pass to `from_graph` and `generate_compass_dataset`
 
         Returns:
@@ -220,13 +236,14 @@ class CompassApp:
             raise ImportError("requires osmnx to be installed. Try 'pip install osmnx'")
 
         graph = ox.graph_from_place(query, network_type=network_type)
-        return cls.from_graph(graph, **kwargs)
+        return cls.from_graph(graph, parallelism=parallelism, **kwargs)
 
     @classmethod
     def from_polygon(
         cls,
         polygon: Union["Polygon" | "MultiPolygon"],
         network_type: str = "drive",
+        parallelism: Optional[int] = None,
         **kwargs: Any,
     ) -> CompassApp:
         """
@@ -237,6 +254,8 @@ class CompassApp:
                 should be in unprojected latitude-longitude degrees
             network_type: what type of street network. Default to drive
                 List of options: ["all", "all_public", "bike", "drive", "drive_service", "walk"]
+            parallelism: optional number of threads to use for parallel
+                query execution. Overrides the value in the config file.
             **kwargs: additional arguments to pass to `from_graph` and `generate_compass_dataset`
 
         Returns:
@@ -259,7 +278,7 @@ class CompassApp:
             raise ImportError("requires osmnx to be installed. Try 'pip install osmnx'")
 
         graph = ox.graph_from_polygon(polygon, network_type=network_type)
-        return cls.from_graph(graph, **kwargs)
+        return cls.from_graph(graph, parallelism=parallelism, **kwargs)
 
     def run(
         self,
