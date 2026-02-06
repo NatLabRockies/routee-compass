@@ -113,6 +113,7 @@ class CompassApp:
         agg: Optional[Callable[[Any], Any]] = None,
         phases: List[GeneratePipelinePhase] = GeneratePipelinePhase.default(),
         raster_resolution_arc_seconds: Union[str, int] = 1,
+        vehicle_models: Optional[List[str]] = None,
     ) -> CompassApp:
         """
         Build a CompassApp from a networkx graph.
@@ -147,6 +148,11 @@ class CompassApp:
             raster_resolution_arc_seconds: If grade is added, the
                 resolution (in arc-seconds) of the tiles to download
                 (either 1 or 1/3). Defaults to 1.
+            vehicle_models: If provided, only download and configure
+                the listed vehicle models (by name, e.g.
+                ``["2017_CHEVROLET_Bolt", "2016_TOYOTA_Camry_4cyl_2WD"]``).
+                Use :func:`list_available_vehicle_models` to see valid names.
+                When ``None`` (the default) all available models are included.
 
         Returns:
             CompassApp: a CompassApp object
@@ -166,6 +172,7 @@ class CompassApp:
             phases=phases,
             raster_resolution_arc_seconds=raster_resolution_arc_seconds,
             default_config=True,
+            vehicle_models=vehicle_models,
         )
 
         if config_file is None:

@@ -20,6 +20,7 @@ import json
 
 from nrel.routee.compass import CompassApp
 from nrel.routee.compass.io import generate_compass_dataset, results_to_geopandas
+from nrel.routee.compass.io.generate_dataset import GeneratePipelinePhase
 from nrel.routee.compass.plot import plot_route_folium, plot_routes_folium
 # %%
 
@@ -52,7 +53,13 @@ So, we recommend that you include grade information in your graph but want to be
 """
 
 # %%
-generate_compass_dataset(g, output_directory="denver_co")
+pipeline_phases = [
+    GeneratePipelinePhase.CONFIG,
+    GeneratePipelinePhase.GRAPH,
+    GeneratePipelinePhase.POWERTRAIN,
+    GeneratePipelinePhase.CHARGING_STATIONS,
+]
+generate_compass_dataset(g, output_directory="denver_co", phases=pipeline_phases)
 # %%
 
 
