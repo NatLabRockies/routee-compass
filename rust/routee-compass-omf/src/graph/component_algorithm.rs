@@ -80,7 +80,7 @@ fn is_component_island_parallel(
             // Retirieve current edge information
             let current_edge = edge_lists.get(current_edge_list_id.0)
                                                             .and_then(|el| el.get(current_edge_id))
-                                                            .ok_or(OvertureMapsCollectionError::InternalError(format!("edge list {:?} or edge {:?} not found during island detection starting at edge {:?}", current_edge_list_id, current_edge_id, edge)))?;
+                                                            .ok_or(OvertureMapsCollectionError::InternalError(format!("edge list {current_edge_list_id:?} or edge {current_edge_id:?} not found during island detection starting at edge {edge:?}")))?;
 
             // Expand queue
             let outward_edges: Vec<&(EdgeListId, EdgeId)> =

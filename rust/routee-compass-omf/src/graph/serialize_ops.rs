@@ -345,7 +345,7 @@ pub fn clean_omf_edge_list(omf_list: OmfEdgeList, mask: Vec<bool>) -> OmfEdgeLis
 
     OmfEdgeList {
         edge_list_id: omf_list.edge_list_id,
-        edges: edges,
+        edges,
         geometries,
         classes,
         speeds,
