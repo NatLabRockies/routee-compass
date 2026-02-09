@@ -17,6 +17,28 @@ use routee_compass_core::config::ConfigJsonExtensions;
 use routee_compass_core::util::progress;
 use serde_json::Value;
 use std::sync::{Arc, Mutex};
+
+/// Creates a shared progress bar wrapped in Arc<Mutex<>> for parallel processing.
+///
+/// # Arguments
+///
+/// * `total` - Total number of items to process
+/// * `desc` - Description to show on the progress bar
+///
+/// # Returns
+///
+/// A progress bar wrapped in Arc<Mutex<>> for thread-safe updates
+pub fn create_progress_bar(total: usize, desc: &str) -> Result<Arc<Mutex<Bar>>, CompassAppError> {
+    let pb = Bar::builder()
+        .total(total)
+        .animation("fillup")
+        .desc(desc)
+        .build()
+        .map_err(|e| {
+            CompassAppError::InternalError(format!("could not build progress bar: {e}"))
+        })?;
+    Ok(Arc::new(Mutex::new(pb)))
+}
 /// applies the weight balancing policy set by the LoadBalancerPlugin InputPlugin.
 ///
 /// # Arguments

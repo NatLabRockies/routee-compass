@@ -82,12 +82,13 @@ pub fn pybindings(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 CompassAppBindings::run_queries(self, queries, config)
                     .map_err(|e| PyException::new_err(format!("Error while running queries: {}", e)))
             }
-            #[pyo3(signature = (queries))]
+            #[pyo3(signature = (queries, config=None))]
             pub fn _map_match(
                 &self,
                 queries: Vec<String>,
+                config: Option<String>,
             ) -> PyResult<Vec<String>> {
-                CompassAppBindings::map_match(self, queries)
+                CompassAppBindings::map_match(self, queries, config)
                     .map_err(|e| PyException::new_err(format!("Error while running map matching: {}", e)))
             }
         }

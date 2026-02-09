@@ -200,7 +200,7 @@ fn run_map_match_test(app: &CompassApp, trace: TestTrace, label: &str) {
     });
     let queries = vec![query];
 
-    let result = app.map_match(&queries).unwrap();
+    let result = app.map_match(&queries, None).unwrap();
     assert_eq!(result.len(), 1, "{}: Expected 1 result", label);
 
     let point_matches = result[0]
@@ -329,7 +329,7 @@ fn test_map_match_json() {
     let queries = vec![query];
 
     // Execute map match
-    let result = app.map_match(&queries).unwrap();
+    let result = app.map_match(&queries, None).unwrap();
 
     // Verify result structure
     assert_eq!(result.len(), 1);
@@ -353,7 +353,7 @@ fn test_map_matching_simple_single_point() {
     let queries = vec![query];
 
     // Execute map match
-    let result = app.map_match(&queries).unwrap();
+    let result = app.map_match(&queries, None).unwrap();
     println!(
         "DEBUG SINGLE POINT RESPONSE: {}",
         serde_json::to_string_pretty(&result).unwrap()
@@ -413,7 +413,7 @@ fn test_map_matching_simple_long_trace() {
     });
     let queries = vec![query];
 
-    let result = app.map_match(&queries).unwrap();
+    let result = app.map_match(&queries, None).unwrap();
     assert_eq!(result.len(), 1);
 
     let point_matches = result[0]
@@ -477,7 +477,7 @@ fn test_map_matching_with_geometry() {
     let queries = vec![query];
 
     // Execute map match
-    let result = app.map_match(&queries).unwrap();
+    let result = app.map_match(&queries, None).unwrap();
 
     // Verify result has geometry
     assert_eq!(result.len(), 1);
@@ -531,7 +531,7 @@ fn test_map_matching_with_geometry() {
         ],
         "output_format": "edge_id"
     });
-    let result_no_geom = app.map_match(&vec![query_no_geom]).unwrap();
+    let result_no_geom = app.map_match(&[query_no_geom], None).unwrap();
     let matched_path_no_geom = result_no_geom[0]
         .get("matched_path")
         .unwrap()
@@ -559,7 +559,7 @@ fn test_map_matching_formats_and_summaries() {
     let queries = vec![query];
 
     // Execute map match
-    let result = app.map_match(&queries).unwrap();
+    let result = app.map_match(&queries, None).unwrap();
     assert_eq!(result.len(), 1);
     let first_result = &result[0];
 
@@ -595,7 +595,7 @@ fn test_map_matching_formats_and_summaries() {
         ],
         "output_format": "geo_json"
     });
-    let result_geojson = app.map_match(&vec![query_geojson]).unwrap();
+    let result_geojson = app.map_match(&[query_geojson], None).unwrap();
     let matched_path_geojson = result_geojson[0]
         .get("matched_path")
         .expect("should have matched_path")

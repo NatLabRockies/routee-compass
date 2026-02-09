@@ -13,6 +13,7 @@ use chrono::Local;
 
 use kdam::Bar;
 use rayon::current_num_threads;
+use rayon::prelude::*;
 use routee_compass_core::algorithm::search::SearchAlgorithm;
 use routee_compass_core::model::cost::cost_model_service::CostModelService;
 use routee_compass_core::model::map::MapModel;
@@ -271,67 +272,149 @@ impl CompassApp {
 }
 
 impl CompassApp {
-    /// Runs map matching on a batch of requests, returning a JSON response for each.
+    /// Runs map matching on a batch of requests in parallel, returning a JSON response for each.
     ///
     /// # Arguments
     ///
     /// * `queries` - List of map matching requests as JSON values
+    /// * `config` - Optional configuration for this run batch (e.g., parallelism override)
     ///
     /// # Returns
     ///
     /// A list of `MapMatchingResponse` objects as JSON values.
-    pub fn map_match(&self, queries: &Vec<Value>) -> Result<Vec<Value>, CompassAppError> {
-        let mut results = Vec::with_capacity(queries.len());
-
-        for query in queries {
-            let request: MapMatchingRequest = serde_json::from_value(query.clone())?;
-            // Validate the request
-            request
-                .validate()
-                .map_err(MapMatchingAppError::InvalidRequest)?;
-
-            // Convert request to internal trace format
-            let trace = map_matching_ops::convert_request_to_trace(&request);
-
-            // Build a search instance for this query
-            let mut query_config = self.map_matching_algorithm.search_parameters();
-            if let Some(search_overrides) = &request.search_parameters {
-                if let Some(obj) = search_overrides.as_object() {
-                    for (k, v) in obj {
-                        query_config[k] = v.clone();
-                    }
-                }
-            }
-            let search_instance = self
-                .search_app
-                .build_search_instance(&query_config)
-                .map_err(|e| MapMatchingAppError::BuildFailure(e.to_string()))?;
-
-            // Run the algorithm
-            let result = self
-                .map_matching_algorithm
-                .match_trace(&trace, &search_instance)
-                .map_err(|e| MapMatchingAppError::AlgorithmError { source: e })?;
-
-            // Recalculate the path to get correct accumulated state
-            let matched_path = search_instance
-                .recalculate_path(&result.matched_path)
-                .map_err(|e| MapMatchingAppError::AlgorithmError {
-                    source: routee_compass_core::algorithm::map_matching::map_matching_error::MapMatchingError::SearchError(e),
-                })?;
-
-            // Convert result to response format
-            let response = map_matching_ops::convert_result_to_response(
-                result,
-                matched_path,
-                &search_instance,
-                &request,
-            );
-            let response_json = serde_json::to_value(response)?;
-            results.push(response_json);
+    pub fn map_match(
+        &self,
+        queries: &[Value],
+        config: Option<&Value>,
+    ) -> Result<Vec<Value>, CompassAppError> {
+        if queries.is_empty() {
+            return Ok(vec![]);
         }
 
+        let override_config_opt: Option<CompassAppSystemParameters> = match config {
+            Some(c) => serde_json::from_value(c.clone())?,
+            None => None,
+        };
+
+        let parallelism = override_config_opt
+            .as_ref()
+            .and_then(|c| c.parallelism)
+            .or(self.system_parameters.parallelism)
+            .unwrap_or(1);
+
+        log::info!(
+            "running {} map match queries with parallelism {} across {} threads",
+            queries.len(),
+            parallelism,
+            current_num_threads(),
+        );
+
+        // Create progress bar
+        let pb = ops::create_progress_bar(queries.len(), "map matching")?;
+
+        // Determine chunk size for parallel processing
+        let tasks_per_thread = queries.len() as f64 / parallelism as f64;
+        let chunk_size = std::cmp::max(1, tasks_per_thread.ceil() as usize);
+
+        // Process queries in parallel
+        let results: Vec<Value> = queries
+            .par_chunks(chunk_size)
+            .flat_map(|chunk| {
+                chunk
+                    .iter()
+                    .map(|query| {
+                        let result = self.run_single_map_match(query);
+                        if let Ok(mut pb_local) = pb.lock() {
+                            let _ = kdam::BarExt::update(&mut *pb_local, 1);
+                        }
+                        result
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect();
+
+        eprintln!();
         Ok(results)
+    }
+
+    /// Helper function that runs map matching on a single query and returns a JSON response.
+    ///
+    /// This function:
+    /// 1. Validates the request
+    /// 2. Converts request to internal trace format
+    /// 3. Builds a search instance with any overrides
+    /// 4. Runs the map matching algorithm
+    /// 5. Recalculates the path for correct accumulated state
+    /// 6. Converts result to response format
+    ///
+    /// # Arguments
+    ///
+    /// * `query` - A single map matching query as a JSON value
+    ///
+    /// # Returns
+    ///
+    /// A JSON value containing either the successful response or an error response
+    fn run_single_map_match(&self, query: &Value) -> Value {
+        match self.run_single_map_match_inner(query) {
+            Ok(response) => response,
+            Err(e) => {
+                // Package error with original query for context
+                serde_json::json!({
+                    "request": query,
+                    "error": e.to_string()
+                })
+            }
+        }
+    }
+
+    /// Inner implementation of single map match that returns Result for easier error handling
+    fn run_single_map_match_inner(&self, query: &Value) -> Result<Value, CompassAppError> {
+        let request: MapMatchingRequest = serde_json::from_value(query.clone())?;
+
+        // Validate the request
+        request
+            .validate()
+            .map_err(MapMatchingAppError::InvalidRequest)?;
+
+        // Convert request to internal trace format
+        let trace = map_matching_ops::convert_request_to_trace(&request);
+
+        // Build a search instance for this query
+        let mut query_config = self.map_matching_algorithm.search_parameters();
+        if let Some(search_overrides) = &request.search_parameters {
+            if let Some(obj) = search_overrides.as_object() {
+                for (k, v) in obj {
+                    query_config[k] = v.clone();
+                }
+            }
+        }
+        let search_instance = self
+            .search_app
+            .build_search_instance(&query_config)
+            .map_err(|e| MapMatchingAppError::BuildFailure(e.to_string()))?;
+
+        // Run the algorithm
+        let result = self
+            .map_matching_algorithm
+            .match_trace(&trace, &search_instance)
+            .map_err(|e| MapMatchingAppError::AlgorithmError { source: e })?;
+
+        // Recalculate the path to get correct accumulated state
+        let matched_path = search_instance
+            .recalculate_path(&result.matched_path)
+            .map_err(|e| MapMatchingAppError::AlgorithmError {
+                source: routee_compass_core::algorithm::map_matching::map_matching_error::MapMatchingError::SearchError(e),
+            })?;
+
+        // Convert result to response format
+        let response = map_matching_ops::convert_result_to_response(
+            result,
+            matched_path,
+            &search_instance,
+            &request,
+        );
+        let response_json = serde_json::to_value(response)?;
+        Ok(response_json)
     }
 }
 
