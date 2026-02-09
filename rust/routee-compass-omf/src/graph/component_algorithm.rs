@@ -2,84 +2,102 @@ use std::collections::{HashSet, VecDeque};
 
 use geo::{line_string, Haversine, Length, Point};
 use indexmap::IndexMap;
-use itertools::Itertools;
 use kdam::tqdm;
-use routee_compass_core::model::network::{
-    Edge, EdgeId, EdgeList, EdgeListId, Vertex, VertexId,
+use rayon::prelude::*;
+use routee_compass_core::model::{
+    network::{Edge, EdgeId, EdgeList, EdgeListId, Vertex, VertexId},
+    unit::DistanceUnit,
 };
+use uom::si::f64::Length as uom_length;
 
 use crate::collection::OvertureMapsCollectionError;
 
 pub type DenseAdjacencyList = Box<[IndexMap<(EdgeListId, EdgeId), VertexId>]>;
 
-pub fn island_detection_alogirthm(
-    edge_lists: &[EdgeList],
+pub fn island_detection_algorithm(
+    edge_lists: &[&EdgeList],
     vertices: &[Vertex],
-) -> Result<(), OvertureMapsCollectionError> {
-    let forward_adjacency = build_adjacency(edge_lists, vertices.len(), true).map_err(|s| {
+    distance_threshold: f64,
+    distance_threshold_unit: DistanceUnit,
+) -> Result<Vec<(EdgeListId, EdgeId)>, OvertureMapsCollectionError> {
+    let forward_adjacency: DenseAdjacencyList = build_adjacency(edge_lists, vertices.len(), true)
+        .map_err(|s| {
         OvertureMapsCollectionError::InternalError(format!(
             "failed to compute adjacency matrix for island detection algorithm: {s}"
         ))
     })?;
 
-    // Note 1: An edge is in an island iif every other edge in the connected component is in an island
-    // Note 2: Because we are considering "weak" connectivity, a node is part of an island iff all the in and out edges are in an island
-    // Note 3: All edge lists as one? I think yes
+    let result = edge_lists
+        .par_iter()
+        .flat_map(|&el| el.0.par_iter())
+        .map(|edge| {
+            let should_delete: Result<bool, _> = is_component_island_parallel(
+                edge,
+                distance_threshold,
+                distance_threshold_unit,
+                edge_lists,
+                vertices,
+                &forward_adjacency,
+            );
 
-    let visited = HashSet::<usize>::new();
-    let islands = HashSet::<usize>::new();
+            should_delete.map(|del| del.then_some((edge.edge_list_id, edge.edge_id)))
+        })
+        .collect::<Result<Vec<_>, OvertureMapsCollectionError>>()?
+        .iter()
+        .flatten()
+        .copied()
+        .collect();
 
-    // for edge in edges {
-    //     // If we have not visited this edge
-    //     // New component
-    //     //  Visit all out edges of the dst vertex
-
-    //     // find the routable distance of a component at most X deep
-    //     // mark all edges in the component as visited
-    //     // if distance < thr => island, tag for removal
-    // }
-
-    todo!()
+    Ok(result)
 }
 
 /// parallelizable implementation
-fn visit_edge_parallel(
+fn is_component_island_parallel(
     edge: &Edge,
-    distance_threshold_meters: f32,
-    edge_lists: &[EdgeList],
+    distance_threshold: f64,
+    distance_threshold_unit: DistanceUnit,
+    edge_lists: &[&EdgeList],
     vertices: &[Vertex],
     adjacency: &DenseAdjacencyList,
 ) -> Result<bool, OvertureMapsCollectionError> {
-    let mut visited = HashSet::<(EdgeListId, EdgeId)>::new();
-    let mut visit_queue: VecDeque<&Edge> = VecDeque::new();
-    visit_queue.push_back(edge);
+    let mut visited = HashSet::<(&EdgeListId, &EdgeId)>::new();
+    let mut visit_queue: VecDeque<(&EdgeListId, &EdgeId)> = VecDeque::new();
+    visit_queue.push_back((&edge.edge_list_id, &edge.edge_id));
 
-    let mut counter: f32 = 0.;
     let edge_midpoint = compute_midpoint(edge, vertices);
+    let mut counter = uom_length::new::<uom::si::length::meter>(0 as f64);
+    let threshold_uom = distance_threshold_unit.to_uom(distance_threshold);
 
-    while counter < distance_threshold_meters {
-        if let Some(current_edge) = visit_queue.pop_front() {
+    while counter < threshold_uom {
+        if let Some((current_edge_list_id, current_edge_id)) = visit_queue.pop_front() {
             // Skip if we already visited
-            if visited.get(&(current_edge.edge_list_id, current_edge.edge_id)).is_some() {
+            if visited
+                .get(&(current_edge_list_id, current_edge_id))
+                .is_some()
+            {
                 continue;
             }
-            visited.insert((current_edge.edge_list_id, current_edge.edge_id));
+            visited.insert((current_edge_list_id, current_edge_id));
+
+            // Retirieve current edge information
+            let current_edge = edge_lists.get(current_edge_list_id.0)
+                                                            .and_then(|el| el.get(current_edge_id))
+                                                            .ok_or(OvertureMapsCollectionError::InternalError(format!("edge list {:?} or edge {:?} not found during island detection starting at edge {:?}", current_edge_list_id, current_edge_id, edge)))?;
 
             // Expand queue
             let outward_edges: Vec<&(EdgeListId, EdgeId)> =
                 adjacency[current_edge.dst_vertex_id.0].keys().collect();
             for (edge_list_id, edge_id) in outward_edges {
-                visit_queue.push_back(edge_lists[edge_list_id.0].get(edge_id).ok_or(
-                    OvertureMapsCollectionError::InternalError(format!(
-                        "Failed to get edge id {} from edge list {}",
-                        edge_id.0, edge_list_id.0
-                    )),
-                )?);
+                visit_queue.push_back((edge_list_id, edge_id));
             }
+
             // Update counter
             let current_midpoint = compute_midpoint(current_edge, vertices);
-            counter =
-                counter.max(Haversine.length(&line_string![edge_midpoint.0, current_midpoint.0]));
+            let current_distance_to_start_meters =
+                Haversine.length(&line_string![edge_midpoint.0, current_midpoint.0]);
+            let current_distance_uom =
+                uom_length::new::<uom::si::length::meter>(current_distance_to_start_meters as f64);
+            counter = counter.max(current_distance_uom);
         } else {
             // Ran out of edges
             return Ok(true);
@@ -90,6 +108,8 @@ fn visit_edge_parallel(
     Ok(false)
 }
 
+// Given an edge, compute the midpoint of the straight line
+// between beginning and end vertices
 fn compute_midpoint(edge: &Edge, vertices: &[Vertex]) -> Point<f32> {
     let src_vertex = vertices[edge.src_vertex_id.0];
     let dst_vertex = vertices[edge.dst_vertex_id.0];
@@ -101,7 +121,7 @@ fn compute_midpoint(edge: &Edge, vertices: &[Vertex]) -> Point<f32> {
 
 /// build the outgoing adjacency matrix
 fn build_adjacency(
-    edge_lists: &[EdgeList],
+    edge_lists: &[&EdgeList],
     n_vertices: usize,
     forward: bool,
 ) -> Result<DenseAdjacencyList, String> {
@@ -236,7 +256,12 @@ mod tests {
         let edge_lists = vec![edge_list];
 
         // Build adjacency matrix for traversal
-        let adjacency = build_adjacency(&edge_lists, vertices.len(), true).unwrap();
+        let adjacency = build_adjacency(
+            &edge_lists.iter().collect::<Vec<&EdgeList>>(),
+            vertices.len(),
+            true,
+        )
+        .unwrap();
 
         (vertices, edge_lists, adjacency)
     }
@@ -265,8 +290,15 @@ mod tests {
         // are within the small square, well under 10 meters from the starting edge midpoint
         // Note: The threshold in visit_edge_parallel is 10 meters, and our small square
         // has edges that are all very close to each other (within ~75m total)
-        let result =
-            visit_edge_parallel(island_edge, 100., &edge_lists, &vertices, &adjacency).unwrap();
+        let result = is_component_island_parallel(
+            island_edge,
+            100.,
+            DistanceUnit::Meters,
+            &edge_lists.iter().collect::<Vec<&EdgeList>>(),
+            &vertices,
+            &adjacency,
+        )
+        .unwrap();
         assert!(
             result,
             "Small square component should be detected as an island"
@@ -284,8 +316,15 @@ mod tests {
         // This should return false (not an island) because the traversal will reach
         // edges that are more than 10 meters away from the starting edge midpoint
         // (the linear chain extends over many kilometers)
-        let result =
-            visit_edge_parallel(non_island_edge, 100., &edge_lists, &vertices, &adjacency).unwrap();
+        let result = is_component_island_parallel(
+            non_island_edge,
+            100.,
+            DistanceUnit::Meters,
+            &edge_lists.iter().collect::<Vec<&EdgeList>>(),
+            &vertices,
+            &adjacency,
+        )
+        .unwrap();
         assert!(
             !result,
             "Large linear component should not be detected as an island"
