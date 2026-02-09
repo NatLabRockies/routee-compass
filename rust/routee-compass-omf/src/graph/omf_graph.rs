@@ -195,7 +195,7 @@ impl OmfGraphVectorized {
                         .edges
                         .0
                         .iter()
-                        .map(|edge| edges_to_remove.contains(&edge.edge_id))
+                        .map(|edge| !edges_to_remove.contains(&edge.edge_id))
                         .collect::<Vec<bool>>();
 
                     clean_omf_edge_list(omf_list, mask)
