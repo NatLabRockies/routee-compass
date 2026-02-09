@@ -77,7 +77,7 @@ fn is_component_island_parallel(
             }
             visited.insert((current_edge_list_id, current_edge_id));
 
-            // Retirieve current edge information
+            // Retrieve current edge information
             let current_edge = edge_lists.get(current_edge_list_id.0)
                                                             .and_then(|el| el.get(current_edge_id))
                                                             .ok_or(OvertureMapsCollectionError::InternalError(format!("edge list {current_edge_list_id:?} or edge {current_edge_id:?} not found during island detection starting at edge {edge:?}")))?;
@@ -285,7 +285,7 @@ mod tests {
         let island_edge = edge_lists[0].get(&EdgeId(0)).unwrap();
 
         // This should return true (is an island) because all connected edges
-        // are within the small square, well under 10 meters from the starting edge midpoint
+        // are within the small square, well under 100 meters from the starting edge midpoint
         // Note: The threshold in visit_edge_parallel is 10 meters, and our small square
         // has edges that are all very close to each other (within ~75m total)
         let result = is_component_island_parallel(

@@ -79,11 +79,11 @@ impl OmfOperation {
                     })?;
                 let island_algorithm_configuration = config
                     .get::<Option<IslandDetectionAlgorithmConfiguration>>(
-                        "island_algoritm_configuration",
+                        "island_algorithm_configuration",
                     )
                     .map_err(|e| {
                         let msg = format!(
-                            "error reading 'edge_lists' key in '{configuration_file}': {e}"
+                            "error reading 'island_algorithm_configuration' key in '{configuration_file}': {e}"
                         );
                         OvertureMapsCollectionError::InvalidUserInput(msg)
                     })?;
