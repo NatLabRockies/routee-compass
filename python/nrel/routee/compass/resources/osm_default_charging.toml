@@ -36,7 +36,7 @@ type = "soc"
 input_file = "edges-compass.csv.gz"
 
 [mapping.tolerance]
-distance = 100.0
+distance = 500.0
 unit = "meters"
 
 [label.soc_label_config]

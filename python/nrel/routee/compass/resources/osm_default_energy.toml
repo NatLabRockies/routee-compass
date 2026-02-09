@@ -7,7 +7,7 @@ vertex_list_input_file = "vertices-compass.csv.gz"
 type = "edge"
 queries_without_destinations = false
 spatial_index_type = "edge"
-tolerance.distance = 100.0
+tolerance.distance = 500.0
 tolerance.unit = "meters"
 matching_type = ["point", "vertex_id", "edge_id"]
 

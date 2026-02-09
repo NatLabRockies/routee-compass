@@ -33,7 +33,7 @@ geometry_input_file = "edges-geometries-enumerated.txt.gz"
 input_file = "edges-compass.csv.gz"
 
 [mapping.tolerance]
-distance = 100.0
+distance = 500.0
 unit = "meters"
 
 [search.constraint]
