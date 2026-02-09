@@ -27,28 +27,26 @@ pub fn island_detection_algorithm(
         ))
     })?;
 
-    let result = edge_lists
+    let island_edges: Result<Vec<_>, _> = edge_lists
         .par_iter()
         .flat_map(|&el| el.0.par_iter())
-        .map(|edge| {
-            let should_delete: Result<bool, _> = is_component_island_parallel(
+        .filter_map(|edge| {
+            match is_component_island_parallel(
                 edge,
                 distance_threshold,
                 distance_threshold_unit,
                 edge_lists,
                 vertices,
                 &forward_adjacency,
-            );
-
-            should_delete.map(|del| del.then_some((edge.edge_list_id, edge.edge_id)))
+            ) {
+                Ok(true) => Some(Ok((edge.edge_list_id, edge.edge_id))),
+                Ok(false) => None,
+                Err(e) => Some(Err(e)),
+            }
         })
-        .collect::<Result<Vec<_>, OvertureMapsCollectionError>>()?
-        .iter()
-        .flatten()
-        .copied()
         .collect();
 
-    Ok(result)
+    island_edges
 }
 
 /// parallelizable implementation
@@ -65,10 +63,10 @@ fn is_component_island_parallel(
     visit_queue.push_back((&edge.edge_list_id, &edge.edge_id));
 
     let edge_midpoint = compute_midpoint(edge, vertices);
-    let mut counter = uom_length::new::<uom::si::length::meter>(0 as f64);
+    let mut max_distance_reached = uom_length::new::<uom::si::length::meter>(0 as f64);
     let threshold_uom = distance_threshold_unit.to_uom(distance_threshold);
 
-    while counter < threshold_uom {
+    while max_distance_reached < threshold_uom {
         if let Some((current_edge_list_id, current_edge_id)) = visit_queue.pop_front() {
             // Skip if we already visited
             if visited
@@ -97,7 +95,7 @@ fn is_component_island_parallel(
                 Haversine.length(&line_string![edge_midpoint.0, current_midpoint.0]);
             let current_distance_uom =
                 uom_length::new::<uom::si::length::meter>(current_distance_to_start_meters as f64);
-            counter = counter.max(current_distance_uom);
+            max_distance_reached = max_distance_reached.max(current_distance_uom);
         } else {
             // Ran out of edges
             return Ok(true);
