@@ -1,18 +1,24 @@
-use std::{collections::HashMap, path::Path};
+use std::{
+    collections::{HashMap, HashSet},
+    path::Path,
+};
 
 use super::serialize_ops as ops;
 use crate::{
-    app::network::NetworkEdgeListConfiguration,
+    app::network::{IslandDetectionAlgorithmConfiguration, NetworkEdgeListConfiguration},
     collection::{
         record::SegmentHeading, OvertureMapsCollectionError, SegmentAccessRestrictionWhen,
         SegmentFullType, TransportationCollection, TransportationSegmentRecord,
     },
-    graph::{segment_ops, vertex_serializable::VertexSerializable},
+    graph::{
+        component_algorithm::island_detection_algorithm, segment_ops,
+        serialize_ops::clean_omf_edge_list, vertex_serializable::VertexSerializable,
+    },
 };
 use geo::LineString;
 use kdam::tqdm;
 use rayon::prelude::*;
-use routee_compass_core::model::network::{EdgeConfig, EdgeList, EdgeListId, Vertex};
+use routee_compass_core::model::network::{EdgeConfig, EdgeId, EdgeList, EdgeListId, Vertex};
 use wkt::ToWkt;
 
 pub const COMPASS_VERTEX_FILENAME: &str = "vertices-compass.csv.gz";
@@ -32,6 +38,7 @@ pub struct OmfGraphVectorized {
 }
 
 pub struct OmfEdgeList {
+    pub edge_list_id: EdgeListId,
     pub edges: EdgeList,
     pub geometries: Vec<LineString<f32>>,
     pub classes: Vec<SegmentFullType>,
@@ -45,6 +52,7 @@ impl OmfGraphVectorized {
     pub fn new(
         collection: &TransportationCollection,
         configuration: &[NetworkEdgeListConfiguration],
+        island_detection_configuration: Option<IslandDetectionAlgorithmConfiguration>,
     ) -> Result<Self, OvertureMapsCollectionError> {
         // process all connectors into vertices
         let (mut vertices, mut vertex_lookup) =
@@ -142,6 +150,7 @@ impl OmfGraphVectorized {
             speed_lookup.insert(String::from("_global_"), global_speed);
 
             let edge_list = OmfEdgeList {
+                edge_list_id,
                 edges: EdgeList(edges.into_boxed_slice()),
                 geometries,
                 classes,
@@ -151,6 +160,48 @@ impl OmfGraphVectorized {
             };
             edge_lists.push(edge_list);
         }
+
+        // Compute islands in resulting edge lists and remove island edges
+        if let Some(algorithm_config) = island_detection_configuration {
+            let ref_edge_lists = edge_lists
+                .iter()
+                .map(|e| &e.edges)
+                .collect::<Vec<&EdgeList>>();
+            let island_edges = island_detection_algorithm(
+                &ref_edge_lists,
+                &vertices,
+                algorithm_config.min_distance,
+                algorithm_config.distance_unit,
+            )?;
+
+            // Refactor Vec into Hashmap
+            let mut edges_lookup: HashMap<EdgeListId, Vec<EdgeId>> = HashMap::new();
+            for (a, b) in island_edges {
+                edges_lookup.entry(a).or_default().push(b);
+            }
+
+            // Clean the edge lists
+            edge_lists = edge_lists
+                .into_iter()
+                .map(|omf_list| {
+                    let empty_vec = vec![];
+                    let edges_to_remove: HashSet<&EdgeId> = edges_lookup
+                        .get(&omf_list.edge_list_id)
+                        .unwrap_or(&empty_vec)
+                        .iter()
+                        .collect();
+
+                    let mask = omf_list
+                        .edges
+                        .0
+                        .iter()
+                        .map(|edge| !edges_to_remove.contains(&edge.edge_id))
+                        .collect::<Vec<bool>>();
+
+                    clean_omf_edge_list(omf_list, mask)
+                })
+                .collect::<Vec<OmfEdgeList>>();
+        };
 
         let result = Self {
             vertices,

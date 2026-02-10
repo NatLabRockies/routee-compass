@@ -2,7 +2,7 @@ use geo::{Bearing, Coord, Haversine, LineString};
 use itertools::Itertools;
 use kdam::{tqdm, Bar, BarExt};
 use rayon::prelude::*;
-use routee_compass_core::model::network::{Edge, EdgeId, EdgeListId, Vertex};
+use routee_compass_core::model::network::{Edge, EdgeId, EdgeList, EdgeListId, Vertex};
 use std::{
     collections::{HashMap, HashSet},
     sync::{Arc, Mutex},
@@ -13,7 +13,7 @@ use crate::{
         OvertureMapsCollectionError, SegmentAccessRestrictionWhen, SegmentFullType,
         TransportationConnectorRecord, TransportationSegmentRecord,
     },
-    graph::{segment_split::SegmentSplit, ConnectorInSegment},
+    graph::{omf_graph::OmfEdgeList, segment_split::SegmentSplit, ConnectorInSegment},
 };
 
 /// serializes the Connector records into Vertices and creates a GERS id -> index mapping.
@@ -301,4 +301,57 @@ pub fn bearing_deg_from_geometries(
             Ok(Haversine.bearing(p0.into(), p1.into()) as f64)
         })
         .collect()
+}
+
+/// Given an OmfEdgeList and a boolean mask, returns an updated edge list
+/// with the mask applied.
+pub fn clean_omf_edge_list(omf_list: OmfEdgeList, mask: Vec<bool>) -> OmfEdgeList {
+    let edges = EdgeList(
+        omf_list
+            .edges
+            .0
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, edge)| mask[idx].then_some(*edge))
+            .collect::<Vec<Edge>>()
+            .into_boxed_slice(),
+    );
+
+    let geometries = omf_list
+        .geometries
+        .into_iter()
+        .enumerate()
+        .filter_map(|(idx, ls)| mask[idx].then_some(ls))
+        .collect();
+
+    let classes = omf_list
+        .classes
+        .into_iter()
+        .enumerate()
+        .filter_map(|(idx, cls)| mask[idx].then_some(cls))
+        .collect();
+
+    let speeds = omf_list
+        .speeds
+        .into_iter()
+        .enumerate()
+        .filter_map(|(idx, s)| mask[idx].then_some(s))
+        .collect();
+
+    let bearings = omf_list
+        .bearings
+        .into_iter()
+        .enumerate()
+        .filter_map(|(idx, b)| mask[idx].then_some(b))
+        .collect();
+
+    OmfEdgeList {
+        edge_list_id: omf_list.edge_list_id,
+        edges,
+        geometries,
+        classes,
+        speeds,
+        speed_lookup: omf_list.speed_lookup,
+        bearings,
+    }
 }

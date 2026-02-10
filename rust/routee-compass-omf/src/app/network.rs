@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use routee_compass_core::model::unit::DistanceUnit;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -17,6 +18,7 @@ use crate::{
 pub struct NetworkEdgeListConfiguration {
     pub mode: String,
     pub filter: Vec<TravelModeFilter>,
+    pub island_algorithm_config: Option<IslandDetectionAlgorithmConfiguration>,
 }
 
 impl From<&NetworkEdgeListConfiguration> for SegmentAccessRestrictionWhen {
@@ -33,6 +35,12 @@ impl From<&NetworkEdgeListConfiguration> for SegmentAccessRestrictionWhen {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct IslandDetectionAlgorithmConfiguration {
+    pub min_distance: f64,
+    pub distance_unit: DistanceUnit,
+}
+
 /// runs an OMF network import using the provided configuration.
 pub fn run(
     bbox: Option<&CliBoundingBox>,
@@ -40,6 +48,7 @@ pub fn run(
     output_directory: &Path,
     local_source: Option<&Path>,
     write_json: bool,
+    island_detection_configuration: Option<IslandDetectionAlgorithmConfiguration>,
 ) -> Result<(), OvertureMapsCollectionError> {
     let collection: TransportationCollection = match local_source {
         Some(src_path) => read_local(src_path),
@@ -51,7 +60,8 @@ pub fn run(
         collection.to_json(output_directory)?;
     }
 
-    let vectorized_graph = OmfGraphVectorized::new(&collection, modes)?;
+    let vectorized_graph =
+        OmfGraphVectorized::new(&collection, modes, island_detection_configuration)?;
     vectorized_graph.write_compass(output_directory, true)?;
 
     Ok(())
