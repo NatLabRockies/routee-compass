@@ -159,12 +159,19 @@ def match_result_to_geopandas(
     Convert map matching results into a GeoPandas GeoDataFrame.
     Uses the 'matched_path' field of the result.
 
+    Note:
+        This function only works with results that have GeoJSON output format
+        (output_format="json", which is the default). Results with other output
+        formats (e.g., "edge_id", "wkt") will be skipped with a warning.
+
     Args:
         results: A single map matching result or a list of results
 
     Returns:
         A GeoPandas GeoDataFrame containing the matched path edges and their geometries
     """
+    import warnings
+
     try:
         import geopandas as gpd
         from shapely.geometry import LineString
@@ -190,7 +197,14 @@ def match_result_to_geopandas(
             isinstance(matched_path, dict)
             and matched_path.get("type") == "FeatureCollection"
         ):
-            raise ValueError("matched_path must be a GeoJSON FeatureCollection")
+            warnings.warn(
+                f"Result {i}: matched_path is not a GeoJSON FeatureCollection. "
+                "This function only supports results with output_format='json'. "
+                "Skipping this result.",
+                UserWarning,
+                stacklevel=2,
+            )
+            continue
         else:
             features = matched_path.get("features", [])
             for edge_idx, feature in enumerate(features):

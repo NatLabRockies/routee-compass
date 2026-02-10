@@ -1,7 +1,7 @@
 use super::json_extensions::TraversalJsonField;
 use super::traversal_output_format::TraversalOutputFormat;
 use crate::app::compass::CompassAppError;
-use crate::app::search::{RouteOutput, SearchAppResult, SummaryOp};
+use crate::app::search::{RouteOutput, RouteOutputError, SearchAppResult, SummaryOp};
 use crate::plugin::output::output_plugin::OutputPlugin;
 use crate::plugin::output::OutputPluginError;
 use routee_compass_core::algorithm::search::SearchInstance;
@@ -61,8 +61,13 @@ impl OutputPlugin for TraversalPlugin {
                 .routes
                 .iter()
                 .map(|route| RouteOutput::generate(route, si, &route_args, &summary_ops))
-                .collect::<Result<Vec<_>, _>>()
-                .map_err(OutputPluginError::OutputPluginFailed)?;
+                .collect::<Result<Vec<_>, RouteOutputError>>()
+                .map_err(|e| {
+                    OutputPluginError::OutputPluginFailed(format!(
+                        "failed to generate route output: {}",
+                        e
+                    ))
+                })?;
 
             // vary the type of value stored at the route key. if there is
             // no route, store 'null'. if one, store an output object. if
