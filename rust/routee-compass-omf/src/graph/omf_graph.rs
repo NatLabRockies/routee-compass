@@ -166,7 +166,7 @@ impl OmfGraphVectorized {
     /// write the graph to disk in vectorized Compass format.
     pub fn write_compass(
         &self,
-        stats: &OmfGraphSummary,
+        _stats: &OmfGraphSummary,
         output_directory: &Path,
         overwrite: bool,
     ) -> Result<(), OvertureMapsCollectionError> {

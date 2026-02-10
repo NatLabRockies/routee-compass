@@ -84,7 +84,7 @@ impl OmfOperation {
                 };
                 let local = local_source.as_ref().map(Path::new);
                 crate::app::network::run(
-                    &name,
+                    name,
                     bbox.as_ref(),
                     &network_config,
                     outdir,

@@ -18,7 +18,6 @@ use super::record::OvertureRecord;
 use super::record::OvertureRecordType;
 use super::OvertureMapsCollectionError;
 use super::OvertureMapsCollectorConfig;
-use super::ReleaseVersion;
 use super::RowFilter;
 use super::RowFilterConfig;
 
