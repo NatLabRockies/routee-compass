@@ -303,6 +303,8 @@ pub fn bearing_deg_from_geometries(
         .collect()
 }
 
+/// Given an OmfEdgeList and a boolean mask, returns an updated edge list
+/// with the mask applied.
 pub fn clean_omf_edge_list(omf_list: OmfEdgeList, mask: Vec<bool>) -> OmfEdgeList {
     let edges = EdgeList(
         omf_list

@@ -14,6 +14,9 @@ use crate::collection::OvertureMapsCollectionError;
 
 pub type DenseAdjacencyList = Box<[IndexMap<(EdgeListId, EdgeId), VertexId>]>;
 
+/// compute potential islands in a set of edge lists based on a radius distance
+/// extension of each component. Returns the list of edges that need to be removed because they
+/// belong to an island
 pub fn island_detection_algorithm(
     edge_lists: &[&EdgeList],
     vertices: &[Vertex],
