@@ -7,7 +7,7 @@ use crate::{
         record::SegmentHeading, OvertureMapsCollectionError, SegmentAccessRestrictionWhen,
         SegmentFullType, TransportationCollection, TransportationSegmentRecord,
     },
-    graph::{segment_ops, vertex_serializable::VertexSerializable},
+    graph::{segment_ops, vertex_serializable::VertexSerializable, OmfGraphSummary},
 };
 use geo::LineString;
 use kdam::tqdm;
@@ -22,6 +22,7 @@ pub const SPEEDS_FILENAME: &str = "edges-speeds-mph-enumerated.txt.gz";
 pub const CLASSES_FILENAME: &str = "edges-classes-enumerated.txt.gz";
 pub const SPEED_MAPPING_FILENAME: &str = "edges-classes-speed-mapping.csv.gz";
 pub const BEARINGS_FILENAME: &str = "edges-bearings-enumerated.txt.gz";
+pub const GLOBAL_AVG_SPEED_KEY: &str = "_global_";
 
 pub struct OmfGraphVectorized {
     pub vertices: Vec<Vertex>,
@@ -139,7 +140,7 @@ impl OmfGraphVectorized {
                 .iter()
                 .map(|(&k, v)| (k.as_str(), *v))
                 .collect::<HashMap<String, f64>>();
-            speed_lookup.insert(String::from("_global_"), global_speed);
+            speed_lookup.insert(String::from(GLOBAL_AVG_SPEED_KEY), global_speed);
 
             let edge_list = OmfEdgeList {
                 edges: EdgeList(edges.into_boxed_slice()),
@@ -165,6 +166,7 @@ impl OmfGraphVectorized {
     /// write the graph to disk in vectorized Compass format.
     pub fn write_compass(
         &self,
+        stats: &OmfGraphSummary,
         output_directory: &Path,
         overwrite: bool,
     ) -> Result<(), OvertureMapsCollectionError> {

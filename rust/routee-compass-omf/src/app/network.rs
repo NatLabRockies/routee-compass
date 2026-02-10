@@ -5,11 +5,9 @@ use serde::{Deserialize, Serialize};
 use crate::{
     app::CliBoundingBox,
     collection::{
-        filter::TravelModeFilter, ObjectStoreSource, OvertureMapsCollectionError,
-        OvertureMapsCollectorConfig, ReleaseVersion, SegmentAccessRestrictionWhen,
-        TransportationCollection,
+        ObjectStoreSource, OvertureMapsCollectionError, OvertureMapsCollectorConfig, ReleaseVersion, SegmentAccessRestrictionWhen, TransportationCollection, filter::TravelModeFilter
     },
-    graph::OmfGraphVectorized,
+    graph::{OmfGraphSource, OmfGraphStats, OmfGraphSummary, OmfGraphVectorized},
     util,
 };
 
@@ -52,7 +50,22 @@ pub fn run(
     }
 
     let vectorized_graph = OmfGraphVectorized::new(&collection, modes)?;
-    vectorized_graph.write_compass(output_directory, true)?;
+    let stats = OmfGraphStats::try_from(&vectorized_graph)?;
+    let uri = match local_source {
+        Some(local) => format!("file://{}", local.to_str().unwrap_or_default()),
+        None => collection.uri.clone(),
+    };
+    let source = OmfGraphSource::new(
+        &uri,
+        ,
+        bbox.as_ref()
+    );
+    let summary = OmfGraphSummary {
+        source,
+        stats,
+    };
+
+    vectorized_graph.write_compass(&summary, output_directory, true)?;
 
     Ok(())
 }

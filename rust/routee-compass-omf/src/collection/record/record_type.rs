@@ -11,7 +11,7 @@ pub enum OvertureRecordType {
 }
 
 impl OvertureRecordType {
-    pub fn format_url(&self, release_str: String) -> String {
+    pub fn format_url(&self, release_str: &str) -> String {
         match self {
             OvertureRecordType::Places => {
                 format!("release/{release_str}/theme=places/type=place/").to_owned()
