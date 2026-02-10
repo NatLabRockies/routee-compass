@@ -5,7 +5,9 @@ use serde::{Deserialize, Serialize};
 use crate::{
     app::CliBoundingBox,
     collection::{
-        ObjectStoreSource, OvertureMapsCollectionError, OvertureMapsCollectorConfig, ReleaseVersion, SegmentAccessRestrictionWhen, TransportationCollection, filter::TravelModeFilter
+        filter::TravelModeFilter, ObjectStoreSource, OvertureMapsCollectionError,
+        OvertureMapsCollectorConfig, ReleaseVersion, SegmentAccessRestrictionWhen,
+        TransportationCollection,
     },
     graph::{OmfGraphSource, OmfGraphStats, OmfGraphSummary, OmfGraphVectorized},
     util,
@@ -33,6 +35,7 @@ impl From<&NetworkEdgeListConfiguration> for SegmentAccessRestrictionWhen {
 
 /// runs an OMF network import using the provided configuration.
 pub fn run(
+    name: &str,
     bbox: Option<&CliBoundingBox>,
     modes: &[NetworkEdgeListConfiguration],
     output_directory: &Path,
@@ -50,24 +53,36 @@ pub fn run(
     }
 
     let vectorized_graph = OmfGraphVectorized::new(&collection, modes)?;
-    let stats = OmfGraphStats::try_from(&vectorized_graph)?;
+
+    // summarize imported graph
     let uri = match local_source {
         Some(local) => format!("file://{}", local.to_str().unwrap_or_default()),
         None => collection.uri.clone(),
     };
-    let source = OmfGraphSource::new(
-        &uri,
-        ,
-        bbox.as_ref()
-    );
-    let summary = OmfGraphSummary {
-        source,
-        stats,
-    };
+    let stats = OmfGraphStats::try_from(&vectorized_graph)?;
+    let source = OmfGraphSource::new(&uri, name, bbox);
+    let summary = OmfGraphSummary { source, stats };
+    write_summary(output_directory, &summary)?;
 
     vectorized_graph.write_compass(&summary, output_directory, true)?;
 
     Ok(())
+}
+
+fn write_summary(
+    output_directory: &Path,
+    summary: &OmfGraphSummary,
+) -> Result<(), OvertureMapsCollectionError> {
+    let summary_toml = toml::to_string_pretty(&summary).map_err(|e| {
+        OvertureMapsCollectionError::InternalError(format!("failure serializing summary TOML: {e}"))
+    })?;
+    let summary_path = output_directory.join("summary.toml");
+    std::fs::write(&summary_path, &summary_toml).map_err(|e| {
+        OvertureMapsCollectionError::WriteError {
+            path: summary_path,
+            message: e.to_string(),
+        }
+    })
 }
 
 fn read_local(path: &Path) -> Result<TransportationCollection, OvertureMapsCollectionError> {
