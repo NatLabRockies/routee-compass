@@ -9,7 +9,7 @@ use crate::collection::{
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TransportationCollection {
-    pub uri: String,
+    pub release: String,
     pub connectors: Vec<TransportationConnectorRecord>,
     pub segments: Vec<TransportationSegmentRecord>,
 }
@@ -61,7 +61,7 @@ impl TransportationCollection {
             .collect::<Result<Vec<TransportationSegmentRecord>, OvertureMapsCollectionError>>()?;
 
         Ok(Self {
-            uri,
+            release: uri,
             connectors,
             segments,
         })

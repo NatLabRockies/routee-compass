@@ -55,34 +55,17 @@ pub fn run(
     let vectorized_graph = OmfGraphVectorized::new(&collection, modes)?;
 
     // summarize imported graph
-    let uri = match local_source {
+    let release = match local_source {
         Some(local) => format!("file://{}", local.to_str().unwrap_or_default()),
-        None => collection.uri.clone(),
+        None => collection.release.clone(),
     };
     let stats = OmfGraphStats::try_from(&vectorized_graph)?;
-    let source = OmfGraphSource::new(&uri, name, bbox);
+    let source = OmfGraphSource::new(&release, name, bbox);
     let summary = OmfGraphSummary { source, stats };
-    write_summary(output_directory, &summary)?;
 
     vectorized_graph.write_compass(&summary, output_directory, true)?;
 
     Ok(())
-}
-
-fn write_summary(
-    output_directory: &Path,
-    summary: &OmfGraphSummary,
-) -> Result<(), OvertureMapsCollectionError> {
-    let summary_toml = toml::to_string_pretty(&summary).map_err(|e| {
-        OvertureMapsCollectionError::InternalError(format!("failure serializing summary TOML: {e}"))
-    })?;
-    let summary_path = output_directory.join("summary.toml");
-    std::fs::write(&summary_path, &summary_toml).map_err(|e| {
-        OvertureMapsCollectionError::WriteError {
-            path: summary_path,
-            message: e.to_string(),
-        }
-    })
 }
 
 fn read_local(path: &Path) -> Result<TransportationCollection, OvertureMapsCollectionError> {

@@ -166,7 +166,7 @@ impl OmfGraphVectorized {
     /// write the graph to disk in vectorized Compass format.
     pub fn write_compass(
         &self,
-        _stats: &OmfGraphSummary,
+        summary: &OmfGraphSummary,
         output_directory: &Path,
         overwrite: bool,
     ) -> Result<(), OvertureMapsCollectionError> {
@@ -178,6 +178,9 @@ impl OmfGraphVectorized {
         crate::util::fs::create_dirs(output_directory)?;
         use crate::util::fs::serialize_into_csv;
         use crate::util::fs::serialize_into_enumerated_txt;
+
+        // write the TOML summary file
+        write_summary(output_directory, summary)?;
 
         // write vertices
         serialize_into_csv(
@@ -270,4 +273,20 @@ impl OmfGraphVectorized {
 
         Ok(())
     }
+}
+
+fn write_summary(
+    output_directory: &Path,
+    summary: &OmfGraphSummary,
+) -> Result<(), OvertureMapsCollectionError> {
+    let summary_toml = toml::to_string_pretty(&summary).map_err(|e| {
+        OvertureMapsCollectionError::InternalError(format!("failure serializing summary TOML: {e}"))
+    })?;
+    let summary_path = output_directory.join("summary.toml");
+    std::fs::write(&summary_path, &summary_toml).map_err(|e| {
+        OvertureMapsCollectionError::WriteError {
+            path: summary_path,
+            message: e.to_string(),
+        }
+    })
 }

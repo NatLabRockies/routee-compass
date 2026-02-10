@@ -24,8 +24,8 @@ pub struct OmfGraphSummary {
 #[serde(rename_all = "snake_case")]
 pub struct OmfGraphSource {
     /// location of imported OMF dataset. this should either be
-    /// an official OMF storage location or a local file path.
-    pub uri: String,
+    /// an official OMF release identifier or a local file path.
+    pub release: String,
     /// user-provided name for the network
     pub study_region: String,
     /// date and time this network was created
@@ -75,10 +75,10 @@ struct ClassStatsAcc {
 }
 
 impl OmfGraphSource {
-    pub fn new(uri: &str, study_region: &str, bbox: Option<&CliBoundingBox>) -> Self {
+    pub fn new(release: &str, study_region: &str, bbox: Option<&CliBoundingBox>) -> Self {
         let created = chrono::Utc::now().to_rfc3339();
         Self {
-            uri: uri.to_string(),
+            release: release.to_string(),
             study_region: study_region.to_string(),
             created,
             bbox: bbox.cloned(),
