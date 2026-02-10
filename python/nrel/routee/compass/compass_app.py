@@ -500,3 +500,47 @@ class CompassApp:
         if single_query and len(results) == 1:
             return results[0]
         return results
+
+    def run_calculate_path(
+        self,
+        query: Union[CompassQuery, List[CompassQuery]],
+        config: Optional[Config] = None,
+    ) -> Union[Result, Results]:
+        """
+        Run a path evaluation query (or multiple queries) against the CompassApp
+
+        Args:
+            query: A query or list of queries to run. Each query must have 'path'.
+            config: optional configuration
+
+        Returns:
+            results: A list of results (or a single result if a single query was passed)
+
+        Example:
+            >>> from nrel.routee.compass import CompassApp
+            >>> app = CompassApp.from_config_file("config.toml")
+            >>> query = {
+                    "path": [{"edge_id": 0}, {"edge_id": 2}],
+                }
+            >>> result = app.run_calculate_path(query)
+        """
+        if isinstance(query, dict):
+            queries = [query]
+            single_query = True
+        elif isinstance(query, list):
+            queries = query
+            single_query = False
+        else:
+            raise ValueError(
+                f"Query must be a dict or list of dicts, not {type(query)}"
+            )
+
+        queries_str = list(map(json.dumps, queries))
+        config_str = json.dumps(config) if config is not None else None
+
+        results_json: List[str] = self._app._run_calculate_path(queries_str, config_str)
+
+        results: Results = list(map(json.loads, results_json))
+        if single_query and len(results) == 1:
+            return results[0]
+        return results

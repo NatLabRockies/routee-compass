@@ -91,6 +91,15 @@ pub fn pybindings(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 CompassAppBindings::map_match(self, queries, config)
                     .map_err(|e| PyException::new_err(format!("Error while running map matching: {}", e)))
             }
+            #[pyo3(signature = (queries, config=None))]
+            pub fn _run_calculate_path(
+                &self,
+                queries: Vec<String>,
+                config: Option<String>,
+            ) -> PyResult<Vec<String>> {
+                CompassAppBindings::run_calculate_path(self, queries, config)
+                    .map_err(|e| PyException::new_err(format!("Error while running calculate path: {}", e)))
+            }
         }
     };
 

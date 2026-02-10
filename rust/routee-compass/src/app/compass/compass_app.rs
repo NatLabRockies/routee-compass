@@ -17,7 +17,7 @@ use rayon::prelude::*;
 use routee_compass_core::algorithm::search::SearchAlgorithm;
 use routee_compass_core::model::cost::cost_model_service::CostModelService;
 use routee_compass_core::model::map::MapModel;
-use routee_compass_core::model::network::Graph;
+use routee_compass_core::model::network::{EdgeId, EdgeListId, Graph};
 use routee_compass_core::model::state::StateModel;
 use routee_compass_core::util::duration_extension::DurationExtension;
 use serde_json::Value;
@@ -401,7 +401,7 @@ impl CompassApp {
 
         // Recalculate the path to get correct accumulated state
         let matched_path = search_instance
-            .recalculate_path(&result.matched_path)
+            .compute_path(&result.matched_path)
             .map_err(|e| MapMatchingAppError::AlgorithmError {
                 source: routee_compass_core::algorithm::map_matching::map_matching_error::MapMatchingError::SearchError(e),
             })?;
@@ -415,6 +415,142 @@ impl CompassApp {
         );
         let response_json = serde_json::to_value(response)?;
         Ok(response_json)
+    }
+
+    /// Runs a batch of path evaluation queries in parallel.
+    ///
+    /// # Arguments
+    ///
+    /// * `queries` - List of path evaluation requests as JSON values. Each request must have an `edge_ids` field.
+    /// * `config` - Optional configuration for this run batch
+    ///
+    /// # Returns
+    ///
+    /// A list of search results as JSON values.
+    pub fn run_calculate_path(
+        &self,
+        queries: &[Value],
+        config: Option<&Value>,
+    ) -> Result<Vec<Value>, CompassAppError> {
+        if queries.is_empty() {
+            return Ok(vec![]);
+        }
+
+        let override_config_opt: Option<CompassAppSystemParameters> = match config {
+            Some(c) => serde_json::from_value(c.clone())?,
+            None => None,
+        };
+
+        let parallelism = override_config_opt
+            .as_ref()
+            .and_then(|c| c.parallelism)
+            .or(self.system_parameters.parallelism)
+            .unwrap_or(1);
+
+        // Create progress bar
+        let pb = ops::create_progress_bar(queries.len(), "calculating paths")?;
+
+        // Determine chunk size for parallel processing
+        let tasks_per_thread = queries.len() as f64 / parallelism as f64;
+        let chunk_size = std::cmp::max(1, tasks_per_thread.ceil() as usize);
+
+        // Process queries in parallel
+        let results: Vec<Value> = queries
+            .par_chunks(chunk_size)
+            .flat_map(|chunk| {
+                chunk
+                    .iter()
+                    .map(|query| {
+                        let result = self.run_single_calculate_path(query);
+                        if let Ok(mut pb_local) = pb.lock() {
+                            let _ = kdam::BarExt::update(&mut *pb_local, 1);
+                        }
+                        result
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect();
+
+        eprintln!();
+        Ok(results)
+    }
+
+    /// Helper function that runs path evaluation on a single query and returns a JSON response.
+    fn run_single_calculate_path(&self, query: &Value) -> Value {
+        match self.run_single_calculate_path_inner(query) {
+            Ok(response) => response,
+            Err(e) => {
+                // Package error with original query for context
+                serde_json::json!({
+                    "request": query,
+                    "error": e.to_string()
+                })
+            }
+        }
+    }
+
+    /// Inner implementation of single path evaluation that returns Result for easier error handling
+    fn run_single_calculate_path_inner(&self, query: &Value) -> Result<Value, CompassAppError> {
+        let edges = query
+            .get("path")
+            .ok_or_else(|| CompassAppError::InternalError("query missing 'path'".to_string()))?
+            .as_array()
+            .ok_or_else(|| CompassAppError::InternalError("'path' must be an array".to_string()))?;
+
+        let path = edges
+            .iter()
+            .map(|v| {
+                let edge_id_val = v.get("edge_id").ok_or_else(|| {
+                    CompassAppError::InternalError("edge object missing 'edge_id'".to_string())
+                })?;
+                let edge_id = edge_id_val.as_u64().ok_or_else(|| {
+                    CompassAppError::InternalError("edge_id must be a number".to_string())
+                })?;
+
+                let edge_list_id = match v.get("edge_list_id") {
+                    Some(id_val) => {
+                        let id = id_val.as_u64().ok_or_else(|| {
+                            CompassAppError::InternalError(
+                                "edge_list_id must be a number".to_string(),
+                            )
+                        })?;
+                        EdgeListId(id as usize)
+                    }
+                    None => EdgeListId::default(),
+                };
+
+                Ok((edge_list_id, EdgeId(edge_id as usize)))
+            })
+            .collect::<Result<Vec<_>, CompassAppError>>()?;
+
+        let si = self.search_app.build_search_instance(query)?;
+        let start_time = Local::now();
+
+        let edge_traversals = si
+            .compute_path(&path)
+            .map_err(CompassAppError::SearchFailure)?;
+
+        let end_time = Local::now();
+        let runtime = (end_time - start_time)
+            .to_std()
+            .unwrap_or(std::time::Duration::ZERO);
+
+        let search_app_result = crate::app::search::SearchAppResult {
+            routes: vec![edge_traversals],
+            trees: vec![],
+            search_executed_time: start_time.to_rfc3339(),
+            search_runtime: runtime,
+            iterations: 0,
+            terminated: None,
+        };
+
+        let response = ops::apply_output_processing(
+            query,
+            Ok((search_app_result, si)),
+            &self.search_app,
+            &self.output_plugins,
+        );
+        Ok(response)
     }
 }
 
@@ -514,5 +650,49 @@ mod tests {
         // path [1] is distance-optimal; path [0, 2] is time-optimal
         let expected_path = serde_json::json!(vec![0, 2]);
         assert_eq!(path_0, &expected_path);
+    }
+
+    #[test]
+    fn test_run_calculate_path() {
+        let conf_file_test = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src")
+            .join("app")
+            .join("compass")
+            .join("test")
+            .join("speeds_test")
+            .join("speeds_test.toml");
+
+        let app = CompassApp::try_from(conf_file_test.as_path()).unwrap();
+
+        // Path [0, 2] is a valid path from 0 to 2
+        let query = serde_json::json!({
+            "path": [
+                {"edge_id": 0},
+                {"edge_id": 2}
+            ]
+        });
+        let queries = vec![query];
+        let results = app
+            .run_calculate_path(&queries, None)
+            .expect("run_calculate_path failed");
+
+        assert_eq!(results.len(), 1, "expected one result");
+        let result = &results[0];
+
+        let route = result.get("route").expect("result should have route");
+        let path = route.get("path").expect("route should have path");
+        assert_eq!(path, &serde_json::json!(vec![0, 2]));
+
+        let traversal_summary = route
+            .get("traversal_summary")
+            .expect("route should have traversal_summary");
+        assert!(
+            traversal_summary.get("edge_distance").is_some(),
+            "summary should have edge_distance"
+        );
+        assert!(
+            traversal_summary.get("edge_time").is_some(),
+            "summary should have edge_time"
+        );
     }
 }
