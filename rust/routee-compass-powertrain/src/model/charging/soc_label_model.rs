@@ -43,6 +43,19 @@ impl LabelModel for SOCLabelModel {
             state: soc_bin,
         })
     }
+
+    fn compare(&self, prev: &Label, next: &Label) -> Result<std::cmp::Ordering, LabelModelError> {
+        match (prev, next) {
+            (
+                Label::VertexWithIntState { state: s1, .. },
+                Label::VertexWithIntState { state: s2, .. },
+            ) => Ok(s1.cmp(s2)),
+            _ => Err(LabelModelError::MismatchLabelTypes(
+                prev.clone(),
+                next.clone(),
+            )),
+        }
+    }
 }
 
 impl LabelModelService for SOCLabelModel {

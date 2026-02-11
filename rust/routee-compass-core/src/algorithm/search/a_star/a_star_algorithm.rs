@@ -121,7 +121,6 @@ pub fn run_vertex_oriented(
 
             let next_edge = (*edge_list_id, *edge_id);
             let et = EdgeTraversal::new(next_edge, &solution, &f.prev_state, si)?;
-
             let key_label = si.label_model.label_from_state(
                 key_vertex_id,
                 &et.result_state,
@@ -138,7 +137,12 @@ pub fn run_vertex_oriented(
             if tentative_gscore < existing_gscore {
                 // accept this traversal, updating search state
                 traversal_costs.insert(key_label.clone(), tentative_gscore);
-                solution.insert(terminal_label, et.clone(), key_label.clone())?;
+                solution.insert(
+                    terminal_label,
+                    et.clone(),
+                    key_label.clone(),
+                    si.label_model.clone(),
+                )?;
 
                 let dst_h_cost = match (target, a_star) {
                     (Some(target), true) => {
@@ -235,7 +239,6 @@ mod tests {
     use crate::model::cost::CostAggregation;
     use crate::model::cost::CostModel;
     use crate::model::cost::VehicleCostRate;
-
     use crate::model::label::default::vertex_label_model::VertexLabelModel;
     use crate::model::map::MapModel;
     use crate::model::map::MapModelConfig;
