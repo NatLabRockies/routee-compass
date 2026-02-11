@@ -3221,7 +3221,7 @@ packages:
 - pypi: ./
   name: nrel-routee-compass
   version: 0.17.1
-  sha256: 60231218af59da2c9acfc7265708cbdbb5d79d61fcd0d81d13bdf33742a7d1cc
+  sha256: b574e27c33437025eaeb68b4f116d022c110204596e6afd4d12ba63f631f2ac0
   requires_dist:
   - tomlkit>=0.11.0,<1.0
   - pytest>=8.0,<9.0 ; extra == 'dev'
@@ -4222,19 +4222,19 @@ packages:
   - pytest-cov>=2.2.0 ; extra == 'test'
   - pytest>=2.8.2 ; extra == 'test'
   - shapely ; extra == 'test'
-  - sphinx-click ; extra == 'all'
   - pytest>=2.8.2 ; extra == 'all'
-  - boto3>=1.2.4 ; extra == 'all'
-  - shapely ; extra == 'all'
-  - ghp-import ; extra == 'all'
-  - numpydoc ; extra == 'all'
-  - sphinx ; extra == 'all'
   - pytest-cov>=2.2.0 ; extra == 'all'
+  - sphinx ; extra == 'all'
+  - sphinx-click ; extra == 'all'
   - ipython>=2.0 ; extra == 'all'
-  - matplotlib ; extra == 'all'
+  - numpydoc ; extra == 'all'
+  - ghp-import ; extra == 'all'
+  - shapely ; extra == 'all'
   - hypothesis ; extra == 'all'
-  - sphinx-rtd-theme ; extra == 'all'
   - packaging ; extra == 'all'
+  - boto3>=1.2.4 ; extra == 'all'
+  - matplotlib ; extra == 'all'
+  - sphinx-rtd-theme ; extra == 'all'
   - fsspec ; extra == 'all'
   requires_python: '>=3.9'
 - conda: https://conda.anaconda.org/conda-forge/linux-64/readline-8.2-h8c095d6_2.conda
