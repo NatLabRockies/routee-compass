@@ -21,7 +21,7 @@ pub fn copy_default_config(output_directory: &Path) -> Result<(), OvertureMapsCo
         path: dst,
         message: format!(
             "unable to copy default TOML from '{}': {e}",
-            src.to_str().unwrap_or_else(|| "?")
+            src.to_str().unwrap_or("?")
         ),
     })?;
     Ok(())
