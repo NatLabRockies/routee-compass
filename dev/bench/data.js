@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1770139564549,
+  "lastUpdate": 1770842727657,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -2549,6 +2549,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2880889,
             "range": "± 254010",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "98bd9e8384e9dbed80bc56aad7240810e0263de7",
+          "message": "Merge pull request #465 from NatLabRockies/dependabot/cargo/rust/pyo3-0.28.0\n\nUpdate pyo3 requirement from 0.27.1 to 0.28.0 in /rust",
+          "timestamp": "2026-02-11T13:41:11-07:00",
+          "tree_id": "c68a8b8baa554ad040a1b31f1f171b1781125746",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/98bd9e8384e9dbed80bc56aad7240810e0263de7"
+        },
+        "date": 1770842727162,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2892235,
+            "range": "± 105918",
             "unit": "ns/iter"
           }
         ]
