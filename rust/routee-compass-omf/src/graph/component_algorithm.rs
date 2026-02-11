@@ -101,7 +101,9 @@ pub fn island_detection_algorithm(
                     max_distance_reached = max_distance_reached.max(current_distance_uom);
 
                     // Update bar
-                    if let Err(e) = pb.update(1) { log::warn!("error during update of progress bar: {e}") };
+                    if let Err(e) = pb.update(1) {
+                        log::warn!("error during update of progress bar: {e}")
+                    };
                 } else {
                     break;
                 };
