@@ -182,6 +182,9 @@ impl OmfGraphVectorized {
         // write the TOML summary file
         write_summary(output_directory, summary)?;
 
+        // copy default configuration file into the output directory
+        crate::util::fs::copy_default_config(output_directory)?;
+
         // write vertices
         serialize_into_csv(
             self.vertices.iter().map(|v| VertexSerializable::from(*v)),
