@@ -36,6 +36,7 @@ geozero = { workspace = true }
 hex = { workspace = true }
 itertools = { workspace = true }
 kdam = { workspace = true }
+indexmap = { workspace = true }
 log = { workspace = true }
 object_store = { workspace = true }
 opening-hours-syntax = { workspace = true }

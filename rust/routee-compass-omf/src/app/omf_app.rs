@@ -5,7 +5,11 @@ use config::{Config, File};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    app::{cli_bbox::parse_bbox, network::NetworkEdgeListConfiguration, CliBoundingBox},
+    app::{
+        cli_bbox::parse_bbox,
+        network::{IslandDetectionAlgorithmConfiguration, NetworkEdgeListConfiguration},
+        CliBoundingBox,
+    },
     collection::OvertureMapsCollectionError,
 };
 
@@ -78,6 +82,16 @@ impl OmfOperation {
                         );
                         OvertureMapsCollectionError::InvalidUserInput(msg)
                     })?;
+                let island_algorithm_configuration = config
+                    .get::<Option<IslandDetectionAlgorithmConfiguration>>(
+                        "island_algorithm_configuration",
+                    )
+                    .map_err(|e| {
+                        let msg = format!(
+                            "error reading 'island_algorithm_configuration' key in '{configuration_file}': {e}"
+                        );
+                        OvertureMapsCollectionError::InvalidUserInput(msg)
+                    })?;
                 let outdir = match output_directory {
                     Some(out) => Path::new(out),
                     None => Path::new(""),
@@ -90,6 +104,7 @@ impl OmfOperation {
                     outdir,
                     local,
                     *store_raw,
+                    island_algorithm_configuration,
                 )
             }
         }
