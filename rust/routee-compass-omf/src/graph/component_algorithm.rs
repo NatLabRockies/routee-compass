@@ -76,6 +76,7 @@ pub fn island_detection_algorithm(
             queue.push_back((start_edge.edge_list_id, start_edge.edge_id));
             let mut max_distance_reached = uom_length::new::<uom::si::length::meter>(0.0);
             let mut component = Vec::<(EdgeListId, EdgeId)>::new();
+            let start_midpoint = compute_midpoint(start_edge, vertices);
 
             // Loop through the queue (explore the component)
             loop {
@@ -88,7 +89,7 @@ pub fn island_detection_algorithm(
 
                     let current_distance = is_component_island_sequential(
                         &current_edge,
-                        compute_midpoint(start_edge, vertices),
+                        start_midpoint,
                         &mut visited,
                         &mut queue,
                         vertices,
