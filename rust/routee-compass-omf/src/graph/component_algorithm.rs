@@ -74,7 +74,7 @@ pub fn island_detection_algorithm(
 
             // Initialize the component
             queue.push_back((start_edge.edge_list_id, start_edge.edge_id));
-            let mut max_distance_reached = uom_length::new::<uom::si::length::meter>(0 as f64);
+            let mut max_distance_reached = uom_length::new::<uom::si::length::meter>(0.0);
             let mut component = Vec::<(EdgeListId, EdgeId)>::new();
 
             // Loop through the queue (explore the component)
