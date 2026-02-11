@@ -137,7 +137,7 @@ impl Label {
     /// if not, then its type has a greater cardinality than the vertex set and so
     /// we will want to prune any dominated labels with matching VertexId.
     pub fn does_not_require_pruning(&self) -> bool {
-        !matches!(self, Label::Vertex(_))
+        matches!(self, Label::Vertex(_))
     }
 }
 
