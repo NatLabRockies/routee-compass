@@ -1,13 +1,18 @@
+use crate::app::compass::CompassAppError;
 use crate::app::map_matching::{
-    MapMatchingRequest, MapMatchingResponse, PointMatchResponse, TracePoint,
+    MapMatchingAppError, MapMatchingRequest, MapMatchingResponse, PointMatchResponse, TracePoint,
 };
 use crate::app::search::generate_route_output;
+use crate::app::search::SearchApp;
 use crate::plugin::output::default::traversal::TraversalOutputFormat;
 use geo::Point;
+use routee_compass_core::algorithm::map_matching::MapMatchingAlgorithm;
 use routee_compass_core::algorithm::map_matching::{
     MapMatchingPoint, MapMatchingResult, MapMatchingTrace,
 };
 use routee_compass_core::algorithm::search::{EdgeTraversal, SearchInstance};
+use serde_json::Value;
+use std::sync::Arc;
 
 /// Converts a JSON request to the internal trace format.
 pub fn convert_request_to_trace(request: &MapMatchingRequest) -> MapMatchingTrace {
@@ -79,4 +84,51 @@ pub fn convert_result_to_response(
     }
 
     MapMatchingResponse::new(point_matches, path_json, traversal_summary)
+}
+
+/// Inner implementation of single map match that returns Result for easier error handling
+pub fn run_single_map_match(
+    query: &Value,
+    search_app: &SearchApp,
+    map_matching_algorithm: &Arc<dyn MapMatchingAlgorithm>,
+) -> Result<Value, CompassAppError> {
+    let request: MapMatchingRequest = serde_json::from_value(query.clone())?;
+
+    // Validate the request
+    request
+        .validate()
+        .map_err(MapMatchingAppError::InvalidRequest)?;
+
+    // Convert request to internal trace format
+    let trace = convert_request_to_trace(&request);
+
+    // Build a search instance for this query
+    let mut query_config = map_matching_algorithm.search_parameters();
+    if let Some(search_overrides) = &request.search_parameters {
+        if let Some(obj) = search_overrides.as_object() {
+            for (k, v) in obj {
+                query_config[k] = v.clone();
+            }
+        }
+    }
+    let search_instance = search_app
+        .build_search_instance(&query_config)
+        .map_err(|e| MapMatchingAppError::BuildFailure(e.to_string()))?;
+
+    // Run the algorithm
+    let result = map_matching_algorithm
+        .match_trace(&trace, &search_instance)
+        .map_err(|e| MapMatchingAppError::AlgorithmError { source: e })?;
+
+    // Recalculate the path to get correct accumulated state
+    let matched_path = search_instance
+        .compute_path(&result.matched_path)
+        .map_err(|e| MapMatchingAppError::AlgorithmError {
+            source: routee_compass_core::algorithm::map_matching::map_matching_error::MapMatchingError::SearchError(e),
+        })?;
+
+    // Convert result to response format
+    let response = convert_result_to_response(result, matched_path, &search_instance, &request);
+    let response_json = serde_json::to_value(response)?;
+    Ok(response_json)
 }

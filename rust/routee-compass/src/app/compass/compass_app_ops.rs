@@ -1,4 +1,4 @@
-use super::CompassAppError;
+use crate::app::compass::CompassAppError;
 use crate::app::{
     compass::response::response_sink::ResponseSink,
     search::{SearchApp, SearchAppResult},
@@ -8,12 +8,15 @@ use crate::plugin::{
     output::{output_plugin_ops as out_ops, OutputPlugin},
     PluginError,
 };
+use chrono::Local;
 use itertools::Itertools;
 use kdam::{Bar, BarExt};
 use ordered_float::OrderedFloat;
 use rayon::prelude::*;
 use routee_compass_core::algorithm::search::SearchInstance;
 use routee_compass_core::config::ConfigJsonExtensions;
+use routee_compass_core::model::network::{EdgeId, EdgeListId};
+use routee_compass_core::util::duration_extension::DurationExtension;
 use routee_compass_core::util::progress;
 use serde_json::Value;
 use std::sync::{Arc, Mutex};
@@ -283,6 +286,139 @@ pub fn apply_output_processing(
     }
 
     initial
+}
+
+/// Runs a batch of queries in parallel, updating a progress bar.
+///
+/// # Arguments
+///
+/// * `queries` - List of queries to process
+/// * `parallelism` - Number of parallel threads to use
+/// * `pb_desc` - Description for the progress bar
+/// * `f` - Function to apply to each query
+///
+/// # Returns
+///
+/// A list of results from the function application
+pub fn run_batch<F>(
+    queries: &[Value],
+    parallelism: usize,
+    pb_desc: &str,
+    f: F,
+) -> Result<Vec<Value>, CompassAppError>
+where
+    F: Fn(&Value) -> Value + Sync + Send,
+{
+    if queries.is_empty() {
+        return Ok(vec![]);
+    }
+
+    let pb = create_progress_bar(queries.len(), pb_desc)?;
+
+    let tasks_per_thread = queries.len() as f64 / parallelism as f64;
+    let chunk_size = std::cmp::max(1, tasks_per_thread.ceil() as usize);
+
+    let results: Vec<Value> = queries
+        .par_chunks(chunk_size)
+        .flat_map(|chunk| {
+            chunk
+                .iter()
+                .map(|query| {
+                    let result = f(query);
+                    if let Ok(mut pb_local) = pb.lock() {
+                        let _ = kdam::BarExt::update(&mut *pb_local, 1);
+                    }
+                    result
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect();
+
+    eprintln!();
+    Ok(results)
+}
+
+/// helper function to wrap some lambda with runtime logging
+pub fn with_timing<T>(
+    name: &str,
+    thunk: impl Fn() -> Result<T, CompassAppError>,
+) -> Result<T, CompassAppError> {
+    let start = Local::now();
+    let result = thunk();
+    let duration = (Local::now() - start)
+        .to_std()
+        .map_err(|e| CompassAppError::InternalError(e.to_string()))?;
+    log::info!(
+        "finished reading {name} with duration {}",
+        duration.hhmmss()
+    );
+    result
+}
+
+/// Inner implementation of single path evaluation that returns Result for easier error handling
+pub fn run_single_calculate_path(
+    query: &Value,
+    search_app: &SearchApp,
+    output_plugins: &[Arc<dyn OutputPlugin>],
+) -> Result<Value, CompassAppError> {
+    let edges = query
+        .get("path")
+        .ok_or_else(|| CompassAppError::InternalError("query missing 'path'".to_string()))?
+        .as_array()
+        .ok_or_else(|| CompassAppError::InternalError("'path' must be an array".to_string()))?;
+
+    let path = edges
+        .iter()
+        .map(|v| {
+            let edge_id_val = v.get("edge_id").ok_or_else(|| {
+                CompassAppError::InternalError("edge object missing 'edge_id'".to_string())
+            })?;
+            let edge_id = edge_id_val.as_u64().ok_or_else(|| {
+                CompassAppError::InternalError("edge_id must be a number".to_string())
+            })?;
+
+            let edge_list_id = match v.get("edge_list_id") {
+                Some(id_val) => {
+                    let id = id_val.as_u64().ok_or_else(|| {
+                        CompassAppError::InternalError("edge_list_id must be a number".to_string())
+                    })?;
+                    EdgeListId(id as usize)
+                }
+                None => EdgeListId::default(),
+            };
+
+            Ok((edge_list_id, EdgeId(edge_id as usize)))
+        })
+        .collect::<Result<Vec<_>, CompassAppError>>()?;
+
+    let si = search_app.build_search_instance(query)?;
+    let start_time = Local::now();
+
+    let edge_traversals = si
+        .compute_path(&path)
+        .map_err(CompassAppError::SearchFailure)?;
+
+    let end_time = Local::now();
+    let runtime = (end_time - start_time)
+        .to_std()
+        .unwrap_or(std::time::Duration::ZERO);
+
+    let search_app_result = crate::app::search::SearchAppResult {
+        routes: vec![edge_traversals],
+        trees: vec![],
+        search_executed_time: start_time.to_rfc3339(),
+        search_runtime: runtime,
+        iterations: 0,
+        terminated: None,
+    };
+
+    let response = apply_output_processing(
+        query,
+        Ok((search_app_result, si)),
+        search_app,
+        output_plugins,
+    );
+    Ok(response)
 }
 
 #[cfg(test)]
