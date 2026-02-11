@@ -347,7 +347,7 @@ impl SegmentSplit {
 /// helper function which confirms that speed data exists and that it matches the current heading
 fn has_max_speed_for_heading(s: &SegmentSpeedLimit, heading: &SegmentHeading) -> bool {
     // no max speed? return early
-    if let None = s.max_speed.as_ref() {
+    if s.max_speed.as_ref().is_none() {
         return false;
     }
 
