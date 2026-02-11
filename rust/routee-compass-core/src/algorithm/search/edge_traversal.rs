@@ -9,7 +9,7 @@ use allocative::Allocative;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-#[derive(Clone, Debug, Serialize, Deserialize, Allocative, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, Allocative)]
 pub struct EdgeTraversal {
     pub edge_list_id: EdgeListId,
     pub edge_id: EdgeId,

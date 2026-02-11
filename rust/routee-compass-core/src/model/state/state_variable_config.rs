@@ -94,7 +94,7 @@ impl StateVariableConfig {
 
     /// the stringified name of the variable's output unit, if set by user.
     /// if None, it implies the output unit is the Default implementation of the Unit type.
-    pub fn output_unit_name(&self) -> Option<String> {
+    pub fn get_unit_name(&self) -> Option<String> {
         match self {
             StateVariableConfig::Distance { output_unit, .. } => {
                 output_unit.map(|u| format!("{}", u))
@@ -112,7 +112,7 @@ impl StateVariableConfig {
         }
     }
 
-    pub fn get_unit_name(&self) -> String {
+    pub fn get_unit_name_or_default(&self) -> String {
         match self {
             StateVariableConfig::Distance { output_unit, .. } => output_unit.map_or_else(
                 || format!("{}", DistanceUnit::default()),

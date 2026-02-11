@@ -664,7 +664,7 @@ fn deduplicate(features: &[(String, StateVariableConfig)]) -> HashMap<String, St
     for (name, next) in features.iter() {
         map.entry(name.clone())
             .and_modify(|prev| {
-                match (prev.output_unit_name(), next.output_unit_name()) {
+                match (prev.get_unit_name(), next.get_unit_name()) {
                     (Some(prev_unit), Some(next_unit)) => {
                         log::warn!("{}", duplicate_message(name, &prev_unit, &next_unit));
                     }

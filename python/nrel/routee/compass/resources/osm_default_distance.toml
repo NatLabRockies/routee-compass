@@ -31,7 +31,14 @@ input_plugins = [
     { type = "grid_search" },
     { type = "load_balancer", weight_heuristic = { type = "haversine" } },
 ]
-output_plugins = [
-    { type = "summary" },
-    { type = "traversal", route = "geo_json" },
-]
+
+[[plugin.output_plugins]]
+type = "summary"
+
+[[plugin.output_plugins]]
+type = "traversal"
+route = "geo_json"
+
+[plugin.output_plugins.summary_ops]
+edge_distance = "sum"
+trip_distance = "last"

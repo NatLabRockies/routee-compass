@@ -29,6 +29,23 @@ type = "traversal"
 route = "geo_json"
 geometry_input_file = "edges-geometries-enumerated.txt.gz"
 
+[plugin.output_plugins.summary_ops]
+edge_distance = "sum"
+trip_distance = "last"
+edge_speed = "avg"
+edge_time = "sum"
+trip_time = "last"
+edge_turn_delay = "sum"
+edge_grade = "avg"
+trip_elevation_gain = "last"
+trip_elevation_loss = "last"
+edge_energy_liquid = "sum"
+trip_energy_liquid = "last"
+edge_energy_electric = "sum"
+trip_energy_electric = "last"
+trip_soc = "last"
+battery_capacity = "last"
+
 [label]
 type = "soc"
 
