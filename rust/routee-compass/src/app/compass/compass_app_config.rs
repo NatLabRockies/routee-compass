@@ -15,7 +15,7 @@ use serde_json::Value;
 
 use crate::{
     app::compass::{CompassAppError, CompassAppSystemParameters, CompassBuilderInventory},
-    plugin::PluginConfig, 
+    plugin::PluginConfig,
 };
 
 /// high-level application configuration that orchestrates together

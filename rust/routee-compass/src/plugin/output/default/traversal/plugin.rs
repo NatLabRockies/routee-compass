@@ -1,7 +1,7 @@
 use super::json_extensions::TraversalJsonField;
 use super::traversal_output_format::TraversalOutputFormat;
 use crate::app::compass::CompassAppError;
-use crate::app::search::{RouteOutput, RouteOutputError, SearchAppResult, SummaryOp};
+use crate::app::search::{generate_route_output, RouteOutputError, SearchAppResult, SummaryOp};
 use crate::plugin::output::output_plugin::OutputPlugin;
 use crate::plugin::output::OutputPluginError;
 use routee_compass_core::algorithm::search::SearchInstance;
@@ -60,7 +60,7 @@ impl OutputPlugin for TraversalPlugin {
             let routes_serialized = result
                 .routes
                 .iter()
-                .map(|route| RouteOutput::generate(route, si, &route_args, &summary_ops))
+                .map(|route| generate_route_output(route, si, &route_args, &summary_ops))
                 .collect::<Result<Vec<_>, RouteOutputError>>()
                 .map_err(|e| {
                     OutputPluginError::OutputPluginFailed(format!(

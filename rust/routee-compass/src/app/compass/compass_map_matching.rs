@@ -1,7 +1,7 @@
 use crate::app::map_matching::{
     MapMatchingRequest, MapMatchingResponse, PointMatchResponse, TracePoint,
 };
-use crate::app::search::RouteOutput;
+use crate::app::search::generate_route_output;
 use crate::plugin::output::default::traversal::TraversalOutputFormat;
 use geo::Point;
 use routee_compass_core::algorithm::map_matching::{
@@ -44,7 +44,7 @@ pub fn convert_result_to_response(
     let summary_ops = &request.summary_ops;
 
     let (mut path_json, traversal_summary) =
-        match RouteOutput::generate(&matched_path, si, &output_format, summary_ops) {
+        match generate_route_output(&matched_path, si, &output_format, summary_ops) {
             Ok(output) => {
                 let path = output
                     .get("path")
