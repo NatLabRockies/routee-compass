@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1770842727657,
+  "lastUpdate": 1770850231644,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -2579,6 +2579,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2892235,
             "range": "± 105918",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3ef48dc2dfeccc34680849d124fae356fd406e38",
+          "message": "Rjf/label dominates (#448)\n\n* compare labels and costs to prune states\n\n* cargo fmt; cargo clippy --fix\n\n* checkpoint: label domination\n\n* Bump actions/upload-artifact from 5 to 6\n\nBumps [actions/upload-artifact](https://github.com/actions/upload-artifact) from 5 to 6.\n- [Release notes](https://github.com/actions/upload-artifact/releases)\n- [Commits](https://github.com/actions/upload-artifact/compare/v5...v6)\n\n---\nupdated-dependencies:\n- dependency-name: actions/upload-artifact\n  dependency-version: '6'\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\n\n* Bump actions/download-artifact from 6 to 7\n\nBumps [actions/download-artifact](https://github.com/actions/download-artifact) from 6 to 7.\n- [Release notes](https://github.com/actions/download-artifact/releases)\n- [Commits](https://github.com/actions/download-artifact/compare/v6...v7)\n\n---\nupdated-dependencies:\n- dependency-name: actions/download-artifact\n  dependency-version: '7'\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\n\n* handle output files in config file normalization\n\n* fix osm_default_charging config file\n\n* revert back to including input/output suffix key in file normalization\n\n* just apply normalization to input files\n\n* minor comment update for normalize_file_paths\n\n* add method to pretty print config\n\n* use previous label from the search tree\n\n* Revert \"use previous label from the search tree\"\n\nThis reverts commit 7e0b3d4b85a1788f2981d8d509d6fd9a914335b4.\n\n* remove redundant check for a star termination\n\n* store cost components as arc of string\n\n* don't keep track of cost components in search tree\n\n* remove unused search tree components\n\n* allow trip state variables to be optional\n\n* store the label state vec on the heap to reduce label enum memory overhead\n\n* don't double store labels if they're just the vertex id variant\n\n* store is_accumulator on cost feature to prevent repeated lookup\n\n* encode road classes as a u8\n\n* add test for mixed vertex labels\n\n* cargo sort\n\n* add cost test back in; parse include trip energy better;\n\n* add cost component tracking as an optional feature\n\n* update traversal output plugin to add summary ops\n\n* Error for query road classes that are not expected\n\n* fix road class tests\n\n* fix pareto comparison + tests\n\n* fmt\n\n* cargo clippy --fix\n\n* Update rust/routee-compass-core/src/model/label/label_model.rs\n\nCo-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>\n\n* tree.remove label method on pareto dominant label insert\n\n* cargo fmt\n\n* put edge case predicate for Label::Vertex instances in method Label::needs_vertex_map_storage\n\n* refine copilot rule for unwrap/panic/expect as \"never use except *in tests*\" to avoid invalid copilot complaints about test code\n\n* skip pruning logic when using Label::Vertex labels\n\n* fmt\n\n* allow parallelism and output file to be set at CLI\n\n* expand test coverage for new file override function\n\n* Update to use an output directory rather than an output file override.\n\n* Fix denver bench test case\n\n* version patch 0.17.1\n\n* Update ndarray requirement from =0.17.1 to =0.17.2 in /rust\n\nUpdates the requirements on [ndarray](https://github.com/rust-ndarray/ndarray) to permit the latest version.\n- [Release notes](https://github.com/rust-ndarray/ndarray/releases)\n- [Changelog](https://github.com/rust-ndarray/ndarray/blob/master/RELEASES.md)\n- [Commits](https://github.com/rust-ndarray/ndarray/compare/0.17.1...0.17.2)\n\n---\nupdated-dependencies:\n- dependency-name: ndarray\n  dependency-version: 0.17.2\n  dependency-type: direct:production\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\n\n* traversal model code generation tooling for compass\n\n* cargo fmt\n\n* cargo clippy --fix\n\n* cargo sort\n\n* add heck for string case transforms\n\n* copilot review fixes\n\n* cargo fmt\n\n* basic map matching structure\n\n* add map matching to the compass app\n\n* move some ops out of the compass app main file\n\n* update map match to take json in&out\n\n* expand map matching test for longer traces\n\n* add hmm map matching implementation\n\n* Add more in depth tests for HMM algorithm\n\n* use builder pattern for map matching algorithm\n\n* add LCSS map matching implementation\n\n* expose map matching via python bindings\n\n* add ability to specify search parameters for map matching\n\n* fix spatial index threshold\n\n* include geometry in map matching results\n\n* add plotting function for map match results; optimze lcss edge matching\n\n* add in some simple utils for loading traces and converting map match results\n\n* clippy\n\n* fmt\n\n* fix bug in lcss algorithm\n\n* fix e2e test\n\n* fmt\n\n* more clippy fixes\n\n* fix mypy errors\n\n* fix mypy errors\n\n* pull out trace timestamps for future work\n\n* remove the simple map matching algorithm\n\n* remove hmm implementation\n\n* compute LCSS distance more efficiently\n\n* add functino to \"compress\" cutting points\n\n* use vertex oriented search for lcss\n\n* properly grab nearest edge\n\n* move lcss ops into separate files\n\n* use uom throughout lcss code\n\n* proper unit deserialization\n\n* Add more context to doc strings\n\n* move pruning into the search tree insert\n\n* cargo fmt\n\n* fn name, comments\n\n* remove bool negation\n\n---------\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>\nCo-authored-by: Nicholas Reinicke <Nicholas.Reinicke@nrel.gov>\nCo-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>",
+          "timestamp": "2026-02-11T15:46:17-07:00",
+          "tree_id": "7023689058d0da13fdecfb0618f631534089197d",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/3ef48dc2dfeccc34680849d124fae356fd406e38"
+        },
+        "date": 1770850230641,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2953506,
+            "range": "± 155622",
             "unit": "ns/iter"
           }
         ]
