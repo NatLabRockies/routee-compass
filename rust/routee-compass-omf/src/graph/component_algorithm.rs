@@ -88,7 +88,7 @@ pub fn island_detection_algorithm(
 
                     let current_distance = is_component_island_sequential(
                         &current_edge,
-                        compute_midpoint(&start_edge, vertices),
+                        compute_midpoint(start_edge, vertices),
                         &mut visited,
                         &mut queue,
                         vertices,
@@ -101,10 +101,7 @@ pub fn island_detection_algorithm(
                     max_distance_reached = max_distance_reached.max(current_distance_uom);
 
                     // Update bar
-                    match pb.update(1) {
-                        Err(e) => log::warn!("error during update of progress bar: {e}"),
-                        _ => {}
-                    };
+                    if let Err(e) = pb.update(1) { log::warn!("error during update of progress bar: {e}") };
                 } else {
                     break;
                 };
@@ -149,7 +146,7 @@ fn is_component_island_sequential(
     // mark as visited
     visited.insert((edge_list_id, edge_id));
 
-    return current_distance_to_start_meters;
+    current_distance_to_start_meters
 }
 
 /// parallelizable implementation
