@@ -39,6 +39,7 @@ impl From<&NetworkEdgeListConfiguration> for SegmentAccessRestrictionWhen {
 pub struct IslandDetectionAlgorithmConfiguration {
     pub min_distance: f64,
     pub distance_unit: DistanceUnit,
+    pub parallel_execution: bool,
 }
 
 /// runs an OMF network import using the provided configuration.

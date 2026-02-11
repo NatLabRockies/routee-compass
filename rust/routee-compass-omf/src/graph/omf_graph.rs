@@ -172,6 +172,7 @@ impl OmfGraphVectorized {
                 &vertices,
                 algorithm_config.min_distance,
                 algorithm_config.distance_unit,
+                algorithm_config.parallel_execution,
             )?;
 
             // Refactor Vec into Hashmap
