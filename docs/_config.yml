@@ -2,7 +2,7 @@
 # Learn more at https://jupyterbook.org/customize/config.html
 
 title: RouteE Compass
-author: National Renewable Energy Laboratory
+author: National Laboratory of the Rockies
 logo: images/routeelogo.png
 
 # Force re-execution of notebooks on each build.

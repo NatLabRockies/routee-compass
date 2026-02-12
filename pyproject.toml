@@ -8,8 +8,8 @@ version = "0.17.1"
 description = "An eco-routing tool build upon RouteE-Powertrain"
 readme = "README.md"
 requires-python = ">=3.10,<3.14"
-authors = [{ name = "National Renewable Energy Laboratory" }]
-license = { text = "BSD 3-Clause License Copyright (c) 2023, Alliance for Sustainable Energy, LLC" }
+authors = [{ name = "National Laboratory of the Rockies" }]
+license = { text = "BSD 3-Clause License Copyright (c) 2023, Alliance for Energy Innovation, LLC" }
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",

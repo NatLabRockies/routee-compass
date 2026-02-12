@@ -19,7 +19,7 @@ Please see the [documentation](https://docs.rs/routee-compass-powertrain/latest/
 
 ## License
 
-Copyright 2023 Alliance for Sustainable Energy, LLC
+Copyright 2023 Alliance for Energy Innovation, LLC
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
