@@ -30,7 +30,7 @@
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
-    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=9c3e77be" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
@@ -50,7 +50,7 @@
     <script>let toggleHintShow = 'Click to show';</script>
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="_static/togglebutton.js?v=1ae7504c"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="_static/design-tabs.js?v=f930bc37"></script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
@@ -411,6 +411,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.compass_app.CompassApp.graph_edge_origin"><code class="docutils literal notranslate"><span class="pre">CompassApp.graph_edge_origin()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.compass_app.CompassApp.graph_get_in_edge_ids"><code class="docutils literal notranslate"><span class="pre">CompassApp.graph_get_in_edge_ids()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.compass_app.CompassApp.graph_get_out_edge_ids"><code class="docutils literal notranslate"><span class="pre">CompassApp.graph_get_out_edge_ids()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.compass_app.CompassApp.map_match"><code class="docutils literal notranslate"><span class="pre">CompassApp.map_match()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.compass_app.CompassApp.run"><code class="docutils literal notranslate"><span class="pre">CompassApp.run()</span></code></a></li>
 </ul>
 </li>
@@ -418,7 +419,9 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.io.generate_dataset.generate_compass_dataset"><code class="docutils literal notranslate"><span class="pre">generate_compass_dataset()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.io.utils.TileResolution"><code class="docutils literal notranslate"><span class="pre">TileResolution</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.io.utils.add_grade_to_graph"><code class="docutils literal notranslate"><span class="pre">add_grade_to_graph()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.plot.plot_folium.matched_path_to_coords"><code class="docutils literal notranslate"><span class="pre">matched_path_to_coords()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.plot.plot_folium.plot_coords_folium"><code class="docutils literal notranslate"><span class="pre">plot_coords_folium()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.plot.plot_folium.plot_matched_path_folium"><code class="docutils literal notranslate"><span class="pre">plot_matched_path_folium()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.plot.plot_folium.plot_route_folium"><code class="docutils literal notranslate"><span class="pre">plot_route_folium()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.plot.plot_folium.plot_routes_folium"><code class="docutils literal notranslate"><span class="pre">plot_routes_folium()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.plot.plot_folium.result_dict_to_coords"><code class="docutils literal notranslate"><span class="pre">result_dict_to_coords()</span></code></a></li>
@@ -690,6 +693,35 @@ the original python methods.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="nrel.routee.compass.compass_app.CompassApp.map_match">
+<span class="sig-name descname"><span class="pre">map_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CompassQuery</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">CompassQuery</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Result</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Results</span></span></span><a class="reference internal" href="_modules/nrel/routee/compass/compass_app.html#CompassApp.map_match"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nrel.routee.compass.compass_app.CompassApp.map_match" title="Link to this definition">#</a></dt>
+<dd><p>Run a map matching query (or multiple queries) against the CompassApp</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>query</strong> -- A query or list of queries to run</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of results (or a single result if a single query was passed)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>results</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompassApp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">&quot;config.toml&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
+<span class="go">        &quot;trace&quot;: [</span>
+<span class="go">            {&quot;x&quot;: -105.1710052, &quot;y&quot;: 39.7402804},</span>
+<span class="go">            {&quot;x&quot;: -105.1710052, &quot;y&quot;: 39.7402804}</span>
+<span class="go">        ]</span>
+<span class="go">    }</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">map_match</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="nrel.routee.compass.compass_app.CompassApp.run">
 <span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CompassQuery</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">CompassQuery</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Config</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Result</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Results</span></span></span><a class="reference internal" href="_modules/nrel/routee/compass/compass_app.html#CompassApp.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nrel.routee.compass.compass_app.CompassApp.run" title="Link to this definition">#</a></dt>
 <dd><p>Run a query (or multiple queries) against the CompassApp</p>
@@ -816,6 +848,23 @@ None will use USGS raster elevation tiles</p></li>
 </dd></dl>
 
 <dl class="py function" id="module-nrel.routee.compass.plot.plot_folium">
+<dt class="sig sig-object py" id="nrel.routee.compass.plot.plot_folium.matched_path_to_coords">
+<span class="sig-prename descclassname"><span class="pre">nrel.routee.compass.plot.plot_folium.</span></span><span class="sig-name descname"><span class="pre">matched_path_to_coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matched_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/nrel/routee/compass/plot/plot_folium.html#matched_path_to_coords"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nrel.routee.compass.plot.plot_folium.matched_path_to_coords" title="Link to this definition">#</a></dt>
+<dd><p>Converts the matched path from a map matching query to coords to be sent to the folium map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>matched_path</strong> (<em>Sequence</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) -- A matched path from a map matching query</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A sequence of latitude and longitude tuples.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Sequence[(float, float)]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="nrel.routee.compass.plot.plot_folium.plot_coords_folium">
 <span class="sig-prename descclassname"><span class="pre">nrel.routee.compass.plot.plot_folium.</span></span><span class="sig-name descname"><span class="pre">plot_coords_folium</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folium_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Map</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Map</span></span></span><a class="reference internal" href="_modules/nrel/routee/compass/plot/plot_folium.html#plot_coords_folium"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nrel.routee.compass.plot.plot_folium.plot_coords_folium" title="Link to this definition">#</a></dt>
 <dd><p>Plots a sequence of pairs of latitude and longitude on a folium map as a route.</p>
@@ -846,6 +895,27 @@ Defaults to None.</p></li>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">plot_coords_folium</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="nrel.routee.compass.plot.plot_folium.plot_matched_path_folium">
+<span class="sig-prename descclassname"><span class="pre">nrel.routee.compass.plot.plot_folium.</span></span><span class="sig-name descname"><span class="pre">plot_matched_path_folium</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folium_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Map</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Map</span></span></span><a class="reference internal" href="_modules/nrel/routee/compass/plot/plot_folium.html#plot_matched_path_folium"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nrel.routee.compass.plot.plot_folium.plot_matched_path_folium" title="Link to this definition">#</a></dt>
+<dd><p>Plots the matched path from a map matching query on a folium map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result_dict</strong> -- A result dictionary from a CompassApp map_match query</p></li>
+<li><p><strong>line_kwargs</strong> -- A dictionary of keyword arguments to pass to the folium Polyline</p></li>
+<li><p><strong>folium_map</strong> -- A existing folium map to plot the route on.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A folium map with the route plotted on it</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>folium_map</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -1015,6 +1085,7 @@ Defaults to None.</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.compass_app.CompassApp.graph_edge_origin"><code class="docutils literal notranslate"><span class="pre">CompassApp.graph_edge_origin()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.compass_app.CompassApp.graph_get_in_edge_ids"><code class="docutils literal notranslate"><span class="pre">CompassApp.graph_get_in_edge_ids()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.compass_app.CompassApp.graph_get_out_edge_ids"><code class="docutils literal notranslate"><span class="pre">CompassApp.graph_get_out_edge_ids()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.compass_app.CompassApp.map_match"><code class="docutils literal notranslate"><span class="pre">CompassApp.map_match()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.compass_app.CompassApp.run"><code class="docutils literal notranslate"><span class="pre">CompassApp.run()</span></code></a></li>
 </ul>
 </li>
@@ -1022,7 +1093,9 @@ Defaults to None.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.io.generate_dataset.generate_compass_dataset"><code class="docutils literal notranslate"><span class="pre">generate_compass_dataset()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.io.utils.TileResolution"><code class="docutils literal notranslate"><span class="pre">TileResolution</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.io.utils.add_grade_to_graph"><code class="docutils literal notranslate"><span class="pre">add_grade_to_graph()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.plot.plot_folium.matched_path_to_coords"><code class="docutils literal notranslate"><span class="pre">matched_path_to_coords()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.plot.plot_folium.plot_coords_folium"><code class="docutils literal notranslate"><span class="pre">plot_coords_folium()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.plot.plot_folium.plot_matched_path_folium"><code class="docutils literal notranslate"><span class="pre">plot_matched_path_folium()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.plot.plot_folium.plot_route_folium"><code class="docutils literal notranslate"><span class="pre">plot_route_folium()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.plot.plot_folium.plot_routes_folium"><code class="docutils literal notranslate"><span class="pre">plot_routes_folium()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nrel.routee.compass.plot.plot_folium.result_dict_to_coords"><code class="docutils literal notranslate"><span class="pre">result_dict_to_coords()</span></code></a></li>
@@ -1040,7 +1113,7 @@ Defaults to None.</p></li>
   <div class="footer-item">
     
 <p class="component-author">
-By National Renewable Energy Laboratory
+By National Laboratory of the Rockies
 </p>
 
   </div>

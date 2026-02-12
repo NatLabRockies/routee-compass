@@ -30,7 +30,7 @@
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=9c3e77be" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
@@ -50,7 +50,7 @@
     <script>let toggleHintShow = 'Click to show';</script>
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../_static/togglebutton.js?v=1ae7504c"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
@@ -443,23 +443,11 @@ that includes charging station data and the charging station traversal model.</p
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">Exception</span><span class="g g-Whitespace">                                 </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
-<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">&quot;./denver_co/osm_default_charging.toml&quot;</span><span class="p">)</span>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>graph edge list 0: /home/runner/work/routee-compass/routee-compass/docs/examples/denver_co/edges-compass.csv.gz: 48526it [00:00, 1596559.62it/s]
 
-<span class="nn">File /usr/share/miniconda/envs/test/lib/python3.11/site-packages/nrel/routee/compass/compass_app.py:79,</span> in <span class="ni">CompassApp.from_config_file</span><span class="nt">(cls, config_file)</span>
-<span class="g g-Whitespace">     </span><span class="mi">76</span> <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-<span class="g g-Whitespace">     </span><span class="mi">77</span>     <span class="n">toml_config</span> <span class="o">=</span> <span class="n">tomlkit</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-<span class="ne">---&gt; </span><span class="mi">79</span> <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">toml_config</span><span class="p">,</span> <span class="n">config_path</span><span class="p">)</span>
 
-<span class="nn">File /usr/share/miniconda/envs/test/lib/python3.11/site-packages/nrel/routee/compass/compass_app.py:102,</span> in <span class="ni">CompassApp.from_dict</span><span class="nt">(cls, config, working_dir)</span>
-<span class="g g-Whitespace">    </span><span class="mi">100</span> <span class="n">path_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">working_dir</span><span class="o">.</span><span class="n">absolute</span><span class="p">())</span> <span class="k">if</span> <span class="n">working_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-<span class="g g-Whitespace">    </span><span class="mi">101</span> <span class="n">toml_string</span> <span class="o">=</span> <span class="n">tomlkit</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-<span class="ne">--&gt; </span><span class="mi">102</span> <span class="n">app</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_constructor</span><span class="p">()</span><span class="o">.</span><span class="n">_from_config_toml_string</span><span class="p">(</span><span class="n">toml_string</span><span class="p">,</span> <span class="n">path_str</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">103</span> <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
-
-<span class="ne">Exception</span>: Error while creating CompassApp from config toml string: failure due to JSON: unknown variant `dijkstra`, expected one of `dijkstras`, `a*`, `svp`, `yens`
+building adjacencies: 100%|██████████| 48526/48526 [00:00&lt;00:00, 4010989.00it/s]
+building adjacencies: 100%|██████████| 48526/48526 [00:00&lt;00:00, 4005887.00it/s]
 </pre></div>
 </div>
 </div>
@@ -484,11 +472,36 @@ any special charging considerations and search for the shortest time route.</p>
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The search failed due to traversal model error. The traversal model performs edge traversals by updating the various search dimensions, based on the state and cost models. Please review the [traversal] section of your Compass Configuration. Source: failure building traversal model: the following state variables are required by traversal models but missing: {battery_capacity}
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 2590.68it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 907441.00it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 10196.59it/s]
+</pre></div>
+</div>
+</div>
 </div>
 <p>Let's examine the route traversal summary to understand the basic route characteristics.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;route&quot;</span><span class="p">][</span><span class="s2">&quot;traversal_summary&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">KeyError</span><span class="g g-Whitespace">                                  </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
+<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;route&quot;</span><span class="p">][</span><span class="s2">&quot;traversal_summary&quot;</span><span class="p">]</span>
+
+<span class="ne">KeyError</span>: &#39;route&#39;
 </pre></div>
 </div>
 </div>
@@ -701,7 +714,7 @@ charging infrastructure on our map.</p>
   <div class="footer-item">
     
 <p class="component-author">
-By National Renewable Energy Laboratory
+By National Laboratory of the Rockies
 </p>
 
   </div>

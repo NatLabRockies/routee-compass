@@ -29,7 +29,7 @@
 
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/togglebutton.css?v=9c3e77be" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-thebe.css?v=4fa983c6" />
@@ -49,7 +49,7 @@
     <script>let toggleHintShow = 'Click to show';</script>
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../../../../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../../../../_static/togglebutton.js?v=1ae7504c"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
@@ -767,6 +767,52 @@ document.write(`
 <span class="sd">            edges: the edge ids of edges arriving at this vertex</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app</span><span class="o">.</span><span class="n">graph_get_in_edge_ids</span><span class="p">(</span><span class="n">vertex_id</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="CompassApp.map_match">
+<a class="viewcode-back" href="../../../../python_api_docs.html#nrel.routee.compass.compass_app.CompassApp.map_match">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">map_match</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">query</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">CompassQuery</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">CompassQuery</span><span class="p">]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Result</span><span class="p">,</span> <span class="n">Results</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run a map matching query (or multiple queries) against the CompassApp</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            query: A query or list of queries to run</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            results: A list of results (or a single result if a single query was passed)</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; from nrel.routee.compass import CompassApp</span>
+<span class="sd">            &gt;&gt;&gt; app = CompassApp.from_config_file(&quot;config.toml&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; query = {</span>
+<span class="sd">                    &quot;trace&quot;: [</span>
+<span class="sd">                        {&quot;x&quot;: -105.1710052, &quot;y&quot;: 39.7402804},</span>
+<span class="sd">                        {&quot;x&quot;: -105.1710052, &quot;y&quot;: 39.7402804}</span>
+<span class="sd">                    ]</span>
+<span class="sd">                }</span>
+<span class="sd">            &gt;&gt;&gt; result = app.map_match(query)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">queries</span> <span class="o">=</span> <span class="p">[</span><span class="n">query</span><span class="p">]</span>
+            <span class="n">single_query</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">queries</span> <span class="o">=</span> <span class="n">query</span>
+            <span class="n">single_query</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Query must be a dict or list of dicts, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">queries_str</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">,</span> <span class="n">queries</span><span class="p">))</span>
+        <span class="n">results_json</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app</span><span class="o">.</span><span class="n">_map_match</span><span class="p">(</span><span class="n">queries_str</span><span class="p">)</span>
+
+        <span class="n">results</span><span class="p">:</span> <span class="n">Results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">,</span> <span class="n">results_json</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">single_query</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">results</span></div>
 </div>
 
 </pre></div>
@@ -797,7 +843,7 @@ document.write(`
   <div class="footer-item">
     
 <p class="component-author">
-By National Renewable Energy Laboratory
+By National Laboratory of the Rockies
 </p>
 
   </div>

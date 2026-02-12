@@ -29,7 +29,7 @@
 
     <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/togglebutton.css?v=9c3e77be" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-thebe.css?v=4fa983c6" />
@@ -49,7 +49,7 @@
     <script>let toggleHintShow = 'Click to show';</script>
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../../../../../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../../../../../_static/togglebutton.js?v=1ae7504c"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../../../../../_static/design-tabs.js?v=f930bc37"></script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
@@ -356,15 +356,14 @@ document.write(`
   <h1>Source code for nrel.routee.compass.plot.plot_folium</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">folium</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass.utils.type_alias</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">Result</span> <span class="k">as</span> <span class="n">QueryResult</span><span class="p">,</span>
-    <span class="n">Results</span> <span class="k">as</span> <span class="n">QueryResults</span><span class="p">,</span>
-<span class="p">)</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass.plot.plot_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">ColormapCircularIterator</span><span class="p">,</span> <span class="n">rgba_to_hex</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass.utils.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">ROUTE_KEY</span><span class="p">,</span> <span class="n">geometry_from_route</span>
+
+<span class="n">MATCHED_PATH_KEY</span> <span class="o">=</span> <span class="s2">&quot;matched_path&quot;</span>
+<span class="n">GEOMETRY_KEY</span> <span class="o">=</span> <span class="s2">&quot;geometry&quot;</span>
 
 <span class="n">DEFAULT_LINE_KWARGS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span>
@@ -375,7 +374,9 @@ document.write(`
 
 <div class="viewcode-block" id="result_dict_to_coords">
 <a class="viewcode-back" href="../../../../../python_api_docs.html#nrel.routee.compass.plot.plot_folium.result_dict_to_coords">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">result_dict_to_coords</span><span class="p">(</span><span class="n">result_dict</span><span class="p">:</span> <span class="n">QueryResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">result_dict_to_coords</span><span class="p">(</span>
+    <span class="n">result_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Converts the CompassApp results to coords to be sent to the folium map.</span>
 
@@ -423,7 +424,9 @@ document.write(`
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_calculate_folium_args</span><span class="p">(</span><span class="n">fit_coords</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_calculate_folium_args</span><span class="p">(</span>
+    <span class="n">fit_coords</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculates where the center of the map and the bounds that the map</span>
 <span class="sd">    should fit.</span>
@@ -455,7 +458,9 @@ document.write(`
     <span class="p">}</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_create_empty_folium_map</span><span class="p">(</span><span class="n">fit_coords</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">folium</span><span class="o">.</span><span class="n">Map</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_empty_folium_map</span><span class="p">(</span>
+    <span class="n">fit_coords</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">folium</span><span class="o">.</span><span class="n">Map</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Creates an empty folium.Map calculating the center and the fit_bounds</span>
 <span class="sd">    using _calculate_folium_args.</span>
@@ -491,8 +496,8 @@ document.write(`
 <div class="viewcode-block" id="plot_route_folium">
 <a class="viewcode-back" href="../../../../../python_api_docs.html#nrel.routee.compass.plot.plot_folium.plot_route_folium">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_route_folium</span><span class="p">(</span>
-    <span class="n">result_dict</span><span class="p">:</span> <span class="n">QueryResult</span><span class="p">,</span>
-    <span class="n">line_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">QueryResult</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">result_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">line_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">folium_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">folium</span><span class="o">.</span><span class="n">Map</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">folium</span><span class="o">.</span><span class="n">Map</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -587,8 +592,8 @@ document.write(`
 <div class="viewcode-block" id="plot_routes_folium">
 <a class="viewcode-back" href="../../../../../python_api_docs.html#nrel.routee.compass.plot.plot_folium.plot_routes_folium">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_routes_folium</span><span class="p">(</span>
-    <span class="n">results</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">QueryResult</span><span class="p">,</span> <span class="n">QueryResults</span><span class="p">],</span>
-    <span class="n">value_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">QueryResult</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;request&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">),</span>
+    <span class="n">results</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span>
+    <span class="n">value_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;request&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">),</span>
     <span class="n">color_map</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;viridis&quot;</span><span class="p">,</span>
     <span class="n">folium_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">folium</span><span class="o">.</span><span class="n">Map</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">folium</span><span class="o">.</span><span class="n">Map</span><span class="p">:</span>
@@ -653,6 +658,65 @@ document.write(`
         <span class="n">folium_map</span> <span class="o">=</span> <span class="n">plot_coords_folium</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">line_kwargs</span><span class="p">,</span> <span class="n">folium_map</span><span class="o">=</span><span class="n">folium_map</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">folium_map</span></div>
 
+
+
+<div class="viewcode-block" id="matched_path_to_coords">
+<a class="viewcode-back" href="../../../../../python_api_docs.html#nrel.routee.compass.plot.plot_folium.matched_path_to_coords">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">matched_path_to_coords</span><span class="p">(</span>
+    <span class="n">matched_path</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts the matched path from a map matching query to coords to be sent to the folium map.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        matched_path (Sequence[Dict[str, Any]]): A matched path from a map matching query</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Sequence[(float, float)]: A sequence of latitude and longitude tuples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">matched_path</span><span class="p">:</span>
+        <span class="n">geometry</span> <span class="o">=</span> <span class="n">edge</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">GEOMETRY_KEY</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">geometry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Edge </span><span class="si">{</span><span class="n">edge</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;edge_id&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> is missing geometry. &quot;</span>
+                <span class="s2">&quot;Make sure &#39;include_geometry&#39; is set to True in the map matching request.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">geometry</span><span class="p">:</span>
+            <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">point</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span> <span class="n">point</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">coords</span></div>
+
+
+
+<div class="viewcode-block" id="plot_matched_path_folium">
+<a class="viewcode-back" href="../../../../../python_api_docs.html#nrel.routee.compass.plot.plot_folium.plot_matched_path_folium">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_matched_path_folium</span><span class="p">(</span>
+    <span class="n">result_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">line_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">folium_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">folium</span><span class="o">.</span><span class="n">Map</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">folium</span><span class="o">.</span><span class="n">Map</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plots the matched path from a map matching query on a folium map.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        result_dict: A result dictionary from a CompassApp map_match query</span>
+<span class="sd">        line_kwargs: A dictionary of keyword arguments to pass to the folium Polyline</span>
+<span class="sd">        folium_map: A existing folium map to plot the route on.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        folium_map: A folium map with the route plotted on it</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">matched_path</span> <span class="o">=</span> <span class="n">result_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">MATCHED_PATH_KEY</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">matched_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Could not find &#39;</span><span class="si">{</span><span class="n">MATCHED_PATH_KEY</span><span class="si">}</span><span class="s2">&#39; in result. &quot;</span>
+            <span class="s2">&quot;Make sure this is a result from a map matching query.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">matched_path_to_coords</span><span class="p">(</span><span class="n">matched_path</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">plot_coords_folium</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">line_kwargs</span><span class="p">,</span> <span class="n">folium_map</span><span class="p">)</span></div>
+
 </pre></div>
 
                 </article>
@@ -681,7 +745,7 @@ document.write(`
   <div class="footer-item">
     
 <p class="component-author">
-By National Renewable Energy Laboratory
+By National Laboratory of the Rockies
 </p>
 
   </div>

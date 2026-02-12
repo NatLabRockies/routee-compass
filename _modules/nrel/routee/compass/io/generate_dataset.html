@@ -29,7 +29,7 @@
 
     <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/togglebutton.css?v=9c3e77be" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-thebe.css?v=4fa983c6" />
@@ -49,7 +49,7 @@
     <script>let toggleHintShow = 'Click to show';</script>
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../../../../../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../../../../../_static/togglebutton.js?v=1ae7504c"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../../../../../_static/design-tabs.js?v=f930bc37"></script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
@@ -571,6 +571,7 @@ document.write(`
         <span class="n">base_config_files</span> <span class="o">=</span> <span class="p">[</span>
             <span class="s2">&quot;osm_default_distance.toml&quot;</span><span class="p">,</span>
             <span class="s2">&quot;osm_default_speed.toml&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;osm_default_map_matching.toml&quot;</span><span class="p">,</span>
         <span class="p">]</span>
         <span class="k">if</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">POWERTRAIN</span> <span class="ow">in</span> <span class="n">phases</span><span class="p">:</span>
             <span class="n">base_config_files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
@@ -591,7 +592,7 @@ document.write(`
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_directory</span> <span class="o">/</span> <span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tomlkit</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">init_toml</span><span class="p">))</span>
 
-    <span class="c1"># DOWLOAD ROUTEE ENERGY MODEL CATALOG</span>
+    <span class="c1"># DOWLOAD ROUTEE ENERGY MODEL CATALOG AND VEHICLE CONFIGS</span>
     <span class="k">if</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">POWERTRAIN</span> <span class="ow">in</span> <span class="n">phases</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;downloading the default RouteE Powertrain models&quot;</span><span class="p">)</span>
         <span class="n">model_output_directory</span> <span class="o">=</span> <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;models&quot;</span>
@@ -618,6 +619,20 @@ document.write(`
                         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">download_response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
                 <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">cached_model_destination</span><span class="p">,</span> <span class="n">model_destination</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;copying vehicle configuration files&quot;</span><span class="p">)</span>
+        <span class="n">vehicle_output_directory</span> <span class="o">=</span> <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;vehicles&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">vehicle_output_directory</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">vehicle_output_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">path</span><span class="p">(</span>
+            <span class="s2">&quot;nrel.routee.compass.resources&quot;</span><span class="p">,</span> <span class="s2">&quot;vehicles&quot;</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">vehicles_dir</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">vehicles_dir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">vehicle_file</span> <span class="ow">in</span> <span class="n">vehicles_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.json&quot;</span><span class="p">):</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span>
+                        <span class="n">vehicle_file</span><span class="p">,</span> <span class="n">vehicle_output_directory</span> <span class="o">/</span> <span class="n">vehicle_file</span><span class="o">.</span><span class="n">name</span>
+                    <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">CHARGING_STATIONS</span> <span class="ow">in</span> <span class="n">phases</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Downloading EV charging stations for the road network bounding box.&quot;</span><span class="p">)</span>
@@ -690,7 +705,7 @@ document.write(`
   <div class="footer-item">
     
 <p class="component-author">
-By National Renewable Energy Laboratory
+By National Laboratory of the Rockies
 </p>
 
   </div>

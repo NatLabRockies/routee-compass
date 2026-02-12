@@ -1,7 +1,7 @@
 Traceback (most recent call last):
   File "/usr/share/miniconda/envs/test/lib/python3.11/site-packages/jupyter_cache/executors/utils.py", line 58, in single_nb_execution
     executenb(
-  File "/usr/share/miniconda/envs/test/lib/python3.11/site-packages/nbclient/client.py", line 1319, in execute
+  File "/usr/share/miniconda/envs/test/lib/python3.11/site-packages/nbclient/client.py", line 1323, in execute
     return NotebookClient(nb=nb, resources=resources, km=km, **kwargs).execute()
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/usr/share/miniconda/envs/test/lib/python3.11/site-packages/jupyter_core/utils/__init__.py", line 165, in wrapped
@@ -19,26 +19,15 @@ Traceback (most recent call last):
 nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
 ------------------
 
-app = CompassApp.from_config_file("./denver_co/osm_default_charging.toml")
+result["route"]["traversal_summary"]
 
 ------------------
 
 
 [31m---------------------------------------------------------------------------[39m
-[31mException[39m                                 Traceback (most recent call last)
-[36mCell[39m[36m [39m[32mIn[2][39m[32m, line 1[39m
-[32m----> [39m[32m1[39m app = [43mCompassApp[49m[43m.[49m[43mfrom_config_file[49m[43m([49m[33;43m"[39;49m[33;43m./denver_co/osm_default_charging.toml[39;49m[33;43m"[39;49m[43m)[49m
+[31mKeyError[39m                                  Traceback (most recent call last)
+[36mCell[39m[36m [39m[32mIn[4][39m[32m, line 1[39m
+[32m----> [39m[32m1[39m [43mresult[49m[43m[[49m[33;43m"[39;49m[33;43mroute[39;49m[33;43m"[39;49m[43m][49m[[33m"[39m[33mtraversal_summary[39m[33m"[39m]
 
-[36mFile [39m[32m/usr/share/miniconda/envs/test/lib/python3.11/site-packages/nrel/routee/compass/compass_app.py:79[39m, in [36mCompassApp.from_config_file[39m[34m(cls, config_file)[39m
-[32m     76[39m [38;5;28;01mwith[39;00m [38;5;28mopen[39m(config_path) [38;5;28;01mas[39;00m f:
-[32m     77[39m     toml_config = tomlkit.load(f)
-[32m---> [39m[32m79[39m [38;5;28;01mreturn[39;00m [38;5;28;43mcls[39;49m[43m.[49m[43mfrom_dict[49m[43m([49m[43mtoml_config[49m[43m,[49m[43m [49m[43mconfig_path[49m[43m)[49m
-
-[36mFile [39m[32m/usr/share/miniconda/envs/test/lib/python3.11/site-packages/nrel/routee/compass/compass_app.py:102[39m, in [36mCompassApp.from_dict[39m[34m(cls, config, working_dir)[39m
-[32m    100[39m path_str = [38;5;28mstr[39m(working_dir.absolute()) [38;5;28;01mif[39;00m working_dir [38;5;129;01mis[39;00m [38;5;129;01mnot[39;00m [38;5;28;01mNone[39;00m [38;5;28;01melse[39;00m [33m"[39m[33m"[39m
-[32m    101[39m toml_string = tomlkit.dumps(config)
-[32m--> [39m[32m102[39m app = [38;5;28;43mcls[39;49m[43m.[49m[43mget_constructor[49m[43m([49m[43m)[49m[43m.[49m[43m_from_config_toml_string[49m[43m([49m[43mtoml_string[49m[43m,[49m[43m [49m[43mpath_str[49m[43m)[49m
-[32m    103[39m [38;5;28;01mreturn[39;00m [38;5;28mcls[39m(app, config)
-
-[31mException[39m: Error while creating CompassApp from config toml string: failure due to JSON: unknown variant `dijkstra`, expected one of `dijkstras`, `a*`, `svp`, `yens`
+[31mKeyError[39m: 'route'
 
