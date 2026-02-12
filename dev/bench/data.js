@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1770850231644,
+  "lastUpdate": 1770913293661,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -2609,6 +2609,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2953506,
             "range": "± 155622",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nreinicke@users.noreply.github.com",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "372cd591720af93194d74c735631b8388a7ccc54",
+          "message": "Update organization names in README and License (#467)\n\n* Update organization names in README and License\n\n* more name change; revert copyright year",
+          "timestamp": "2026-02-12T09:14:55-07:00",
+          "tree_id": "911fa35a0c96d56f80eeee4c84caecfb0b2fadde",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/372cd591720af93194d74c735631b8388a7ccc54"
+        },
+        "date": 1770913293049,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 3035220,
+            "range": "± 229466",
             "unit": "ns/iter"
           }
         ]
