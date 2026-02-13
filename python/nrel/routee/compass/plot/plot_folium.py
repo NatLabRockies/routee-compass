@@ -293,27 +293,32 @@ def plot_routes_folium(
 
 
 def matched_path_to_coords(
-    matched_path: Sequence[dict[str, Any]],
+    matched_path: dict[str, Any],
 ) -> Sequence[Tuple[float, float]]:
     """
     Converts the matched path from a map matching query to coords to be sent to the folium map.
 
     Args:
-        matched_path (Sequence[Dict[str, Any]]): A matched path from a map matching query
+        matched_path (Dict[str, Any]): A matched path from a map matching query (GeoJSON FeatureCollection)
 
     Returns:
         Sequence[(float, float)]: A sequence of latitude and longitude tuples.
     """
+    if (
+        not isinstance(matched_path, dict)
+        or matched_path.get("type") != "FeatureCollection"
+    ):
+        raise ValueError("matched_path must be a GeoJSON FeatureCollection")
+
     coords = []
-    for edge in matched_path:
-        geometry = edge.get(GEOMETRY_KEY)
+    for feature in matched_path.get("features", []):
+        geometry = feature.get(GEOMETRY_KEY)
         if geometry is None:
-            raise ValueError(
-                f"Edge {edge.get('edge_id')} is missing geometry. "
-                "Make sure 'include_geometry' is set to True in the map matching request."
-            )
-        for point in geometry:
-            coords.append((point["y"], point["x"]))
+            continue
+
+        if geometry.get("type") == "LineString":
+            for lon, lat in geometry.get("coordinates", []):
+                coords.append((lat, lon))
     return coords
 
 

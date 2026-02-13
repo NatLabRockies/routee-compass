@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from tempfile import TemporaryDirectory
 
 from pathlib import Path
@@ -23,6 +22,7 @@ if TYPE_CHECKING:
         Result,
         Results,
     )
+    import networkx as nx
 
 import tomlkit
 import json
@@ -56,12 +56,15 @@ class CompassApp:
     def from_config_file(
         cls,
         config_file: Union[str, Path],
+        parallelism: Optional[int] = None,
     ) -> CompassApp:
         """
         Build a CompassApp from a config file
 
         Args:
             config_file: Path to the config file
+            parallelism: optional number of threads to use for parallel
+                query execution. Overrides the value in the config file.
 
         Returns:
             app: A CompassApp object
@@ -76,11 +79,24 @@ class CompassApp:
         with open(config_path) as f:
             toml_config = tomlkit.load(f)
 
-        return cls.from_dict(toml_config, config_path)
+        return cls.from_dict(toml_config, config_path, parallelism=parallelism)
+
+    @classmethod
+    def _get_default_config_file(cls, phases: List[GeneratePipelinePhase]) -> str:
+        """
+        Internal helper to get the default config file name based on the phases.
+        """
+        if GeneratePipelinePhase.POWERTRAIN in phases:
+            return "osm_default_energy.toml"
+        else:
+            return "osm_default_speed.toml"
 
     @classmethod
     def from_dict(
-        cls, config: tomlkit.TOMLDocument, working_dir: Optional[Path] = None
+        cls,
+        config: tomlkit.TOMLDocument,
+        working_dir: Optional[Path] = None,
+        parallelism: Optional[int] = None,
     ) -> CompassApp:
         """
         Build a CompassApp from a configuration object
@@ -88,6 +104,8 @@ class CompassApp:
         Args:
             config: Configuration dictionary
             working_dir: optional path to working directory
+            parallelism: optional number of threads to use for parallel
+                query execution. Overrides the value in the config.
 
         Returns:
             app: a CompassApp object
@@ -97,34 +115,41 @@ class CompassApp:
             >>> conf = { "parallelism": 2 }
             >>> app = CompassApp.from_config(conf)
         """
+        if parallelism is not None:
+            config["parallelism"] = parallelism
         path_str = str(working_dir.absolute()) if working_dir is not None else ""
         toml_string = tomlkit.dumps(config)
         app = cls.get_constructor()._from_config_toml_string(toml_string, path_str)
         return cls(app, config)
 
     @classmethod
-    def from_place(
+    def from_graph(
         cls,
-        query: OSMNXQuery,
+        graph: nx.MultiDiGraph,
+        config_file: Optional[str] = None,
         cache_dir: Optional[Union[str, Path]] = None,
-        network_type: str = "drive",
         hwy_speeds: Optional[dict[str, Any]] = None,
         fallback: Optional[float] = None,
         agg: Optional[Callable[[Any], Any]] = None,
         phases: List[GeneratePipelinePhase] = GeneratePipelinePhase.default(),
         raster_resolution_arc_seconds: Union[str, int] = 1,
+        vehicle_models: Optional[List[str]] = None,
+        parallelism: Optional[int] = None,
+        overwrite: bool = False,
     ) -> CompassApp:
         """
-        Build a CompassApp from a place
+        Build a CompassApp from a networkx graph.
 
         Args:
-            query: the query or queries to geocode to get place boundary
-                polygon(s)
+            graph: the networkx graph to build the CompassApp from.
+                This is assumed to be the direct output of an osmnx download.
+            config_file: optional name of the config file to load from the
+                generated dataset. If not set, it will default to
+                'osm_default_energy.toml' if the powertrain phase is included,
+                otherwise 'osm_default_speed.toml'.
             cache_dir: optional path to save necessary files to build the
                 CompassApp. If not set, TemporaryDirectory will be used
                 instead. Defaults to None.
-            network_type: what type of street network. Default to drive
-                List of options: ["all", "all_public", "bike", "drive", "drive_service", "walk"]
             hwy_speeds: OSM highway types and values = typical speeds (km
                 per hour) to assign to edges of that highway type for any
                 edges missing speed data. Any edges with highway type not
@@ -139,11 +164,85 @@ class CompassApp:
                 observed values. The default is numpy.mean, but you might
                 also consider for example numpy.median, numpy.nanmedian,
                 or your own custom function. Defaults to numpy.mean.
-            phases (List[GeneratePipelinePhase]): of the overall generate pipeline, which phases of the pipeline to run.
+            phases (List[GeneratePipelinePhase]): of the overall generate pipeline,
+                which phases of the pipeline to run.
                 Defaults to all (["graph", "grade", "config", "powertrain"])
             raster_resolution_arc_seconds: If grade is added, the
                 resolution (in arc-seconds) of the tiles to download
                 (either 1 or 1/3). Defaults to 1.
+            vehicle_models: If provided, only download and configure
+                the listed vehicle models (by name, e.g.
+                ``["2017_CHEVROLET_Bolt", "2016_TOYOTA_Camry_4cyl_2WD"]``).
+                Use :func:`list_available_vehicle_models` to see valid names.
+                When ``None`` (the default) all available models are included.
+            parallelism: optional number of threads to use for parallel
+                query execution. Overrides the value in the config file.
+            overwrite: if True, will overwrite any existing files in the
+                cache_dir. Defaults to False.
+
+        Returns:
+            CompassApp: a CompassApp object
+        """
+        if cache_dir is None:
+            temp_dir = TemporaryDirectory()
+            cache_dir = Path(temp_dir.name)
+        else:
+            cache_dir = Path(cache_dir)
+
+        if config_file is None:
+            config_file = cls._get_default_config_file(phases)
+
+        config_path = cache_dir / config_file
+
+        if not overwrite and config_path.exists():
+            log.info(f"Using existing dataset found in {cache_dir}")
+        else:
+            generate_compass_dataset(
+                graph,
+                output_directory=cache_dir,
+                hwy_speeds=hwy_speeds,
+                fallback=fallback,
+                agg=agg,
+                phases=phases,
+                raster_resolution_arc_seconds=raster_resolution_arc_seconds,
+                default_config=True,
+                vehicle_models=vehicle_models,
+            )
+
+        if not config_path.exists():
+            raise FileNotFoundError(
+                f"Config file {config_file} not found in {cache_dir}. "
+                "Make sure the requested phases generated this config."
+            )
+
+        return cls.from_config_file(config_path, parallelism=parallelism)
+
+    @classmethod
+    def from_place(
+        cls,
+        query: OSMNXQuery,
+        network_type: str = "drive",
+        parallelism: Optional[int] = None,
+        cache_dir: Optional[Union[str, Path]] = None,
+        overwrite: bool = False,
+        **kwargs: Any,
+    ) -> CompassApp:
+        """
+        Build a CompassApp from a place
+
+        Args:
+            query: the query or queries to geocode to get place boundary
+                polygon(s)
+            network_type: what type of street network. Default to drive
+                List of options: ["all", "all_public", "bike", "drive", "drive_service", "walk"]
+            parallelism: optional number of threads to use for parallel
+                query execution. Overrides the value in the config file.
+            cache_dir: optional path to save necessary files to build the
+                CompassApp. If not set, TemporaryDirectory will be used
+                instead. Defaults to None.
+            overwrite: if True, will overwrite any existing files in the
+                cache_dir. Defaults to False.
+            **kwargs: additional arguments to pass to `from_graph` and `generate_compass_dataset`
 
         Returns:
             CompassApp: a CompassApp object
@@ -152,44 +251,41 @@ class CompassApp:
             >>> from nrel.routee.compass import CompassApp
             >>> app = CompassApp.from_place("Denver, Colorado, USA")
         """
-        # temp_dir will not be used but is needed to keep the Temporary Directory active until
-        # CompassApp is built
+        if cache_dir is not None:
+            cache_path = Path(cache_dir)
+            config_file = kwargs.get("config_file")
+            if config_file is None:
+                phases = kwargs.get("phases", GeneratePipelinePhase.default())
+                config_file = cls._get_default_config_file(phases)
+
+            config_path = cache_path / config_file
+            if not overwrite and config_path.exists():
+                log.info(f"Using existing dataset found in {cache_dir}")
+                return cls.from_config_file(config_path, parallelism=parallelism)
+
         try:
             import osmnx as ox
         except ImportError:
             raise ImportError("requires osmnx to be installed. Try 'pip install osmnx'")
-        if cache_dir is None:
-            temp_dir = TemporaryDirectory()
-            cache_dir = temp_dir.name
-        else:
-            cache_dir = Path(cache_dir)
 
         graph = ox.graph_from_place(query, network_type=network_type)
-        generate_compass_dataset(
+        return cls.from_graph(
             graph,
-            output_directory=cache_dir,
-            hwy_speeds=hwy_speeds,
-            fallback=fallback,
-            agg=agg,
-            phases=phases,
-            raster_resolution_arc_seconds=raster_resolution_arc_seconds,
-            default_config=True,
+            parallelism=parallelism,
+            cache_dir=cache_dir,
+            overwrite=overwrite,
+            **kwargs,
         )
-        app = cls.from_config_file(os.path.join(cache_dir, "osm_default_energy.toml"))
-
-        return app
 
     @classmethod
     def from_polygon(
         cls,
         polygon: Union["Polygon" | "MultiPolygon"],
-        cache_dir: Optional[Union[str, Path]] = None,
         network_type: str = "drive",
-        hwy_speeds: Optional[dict[str, Any]] = None,
-        fallback: Optional[float] = None,
-        agg: Optional[Callable[[Any], Any]] = None,
-        phases: List[GeneratePipelinePhase] = GeneratePipelinePhase.default(),
-        raster_resolution_arc_seconds: Union[str, int] = 1,
+        parallelism: Optional[int] = None,
+        cache_dir: Optional[Union[str, Path]] = None,
+        overwrite: bool = False,
+        **kwargs: Any,
     ) -> CompassApp:
         """
         Build a CompassApp from a polygon
@@ -197,30 +293,16 @@ class CompassApp:
         Args:
             polygon: the shape to get network data within. coordinates
                 should be in unprojected latitude-longitude degrees
+            network_type: what type of street network. Default to drive
+                List of options: ["all", "all_public", "bike", "drive", "drive_service", "walk"]
+            parallelism: optional number of threads to use for parallel
+                query execution. Overrides the value in the config file.
             cache_dir: optional path to save necessary files to build the
                 CompassApp. If not set, TemporaryDirectory will be used
                 instead. Defaults to None.
-            network_type: what type of street network. Default to drive
-                List of options: ["all", "all_public", "bike", "drive", "drive_service", "walk"]
-            hwy_speeds: OSM highway types and values = typical speeds (km
-                per hour) to assign to edges of that highway type for any
-                edges missing speed data. Any edges with highway type not
-                in `hwy_speeds` will be assigned the mean preexisting
-                speed value of all edges of that highway type.
-                Defaults to None.
-            fallback: Default speed value (km per hour) to assign to edges
-                whose highway type did not appear in `hwy_speeds` and had
-                no preexisting speed values on any edge.
-                Defaults to None.
-            agg: Aggregation function to impute missing values from
-                observed values. The default is numpy.mean, but you might
-                also consider for example numpy.median, numpy.nanmedian,
-                or your own custom function. Defaults to numpy.mean.
-            phases (List[GeneratePipelinePhase]): of the overall generate pipeline, which phases of the pipeline to run.
-                Defaults to all (["graph", "grade", "config", "powertrain"])
-            raster_resolution_arc_seconds: If grade is added, the
-                resolution (in arc-seconds) of the tiles to download
-                (either 1 or 1/3). Defaults to 1.
+            overwrite: if True, will overwrite any existing files in the
+                cache_dir. Defaults to False.
+            **kwargs: additional arguments to pass to `from_graph` and `generate_compass_dataset`
 
         Returns:
             CompassApp: a CompassApp object
@@ -236,33 +318,31 @@ class CompassApp:
             >>> poly = geometry.Polygon(pointList)
             >>> app = CompassApp.from_polygon(poly)
         """
-        # temp_dir will not be used but is needed to keep the Temporary Directory active until
-        # CompassApp is built
+        if cache_dir is not None:
+            cache_path = Path(cache_dir)
+            config_file = kwargs.get("config_file")
+            if config_file is None:
+                phases = kwargs.get("phases", GeneratePipelinePhase.default())
+                config_file = cls._get_default_config_file(phases)
+
+            config_path = cache_path / config_file
+            if not overwrite and config_path.exists():
+                log.info(f"Using existing dataset found in {cache_dir}")
+                return cls.from_config_file(config_path, parallelism=parallelism)
+
         try:
             import osmnx as ox
         except ImportError:
             raise ImportError("requires osmnx to be installed. Try 'pip install osmnx'")
-        if cache_dir is None:
-            temp_dir = TemporaryDirectory()
-            cache_dir = temp_dir.name
-        else:
-            cache_dir = Path(cache_dir)
 
         graph = ox.graph_from_polygon(polygon, network_type=network_type)
-        generate_compass_dataset(
+        return cls.from_graph(
             graph,
-            output_directory=cache_dir,
-            hwy_speeds=hwy_speeds,
-            fallback=fallback,
-            agg=agg,
-            phases=phases,
-            raster_resolution_arc_seconds=raster_resolution_arc_seconds,
-            default_config=True,
+            parallelism=parallelism,
+            cache_dir=cache_dir,
+            overwrite=overwrite,
+            **kwargs,
         )
-
-        app = cls.from_config_file(os.path.join(cache_dir, "osm_default_energy.toml"))
-
-        return app
 
     def run(
         self,
@@ -415,6 +495,50 @@ class CompassApp:
 
         queries_str = list(map(json.dumps, queries))
         results_json: List[str] = self._app._map_match(queries_str)
+
+        results: Results = list(map(json.loads, results_json))
+        if single_query and len(results) == 1:
+            return results[0]
+        return results
+
+    def run_calculate_path(
+        self,
+        query: Union[CompassQuery, List[CompassQuery]],
+        config: Optional[Config] = None,
+    ) -> Union[Result, Results]:
+        """
+        Run a path evaluation query (or multiple queries) against the CompassApp
+
+        Args:
+            query: A query or list of queries to run. Each query must have 'path'.
+            config: optional configuration
+
+        Returns:
+            results: A list of results (or a single result if a single query was passed)
+
+        Example:
+            >>> from nrel.routee.compass import CompassApp
+            >>> app = CompassApp.from_config_file("config.toml")
+            >>> query = {
+                    "path": [{"edge_id": 0}, {"edge_id": 2}],
+                }
+            >>> result = app.run_calculate_path(query)
+        """
+        if isinstance(query, dict):
+            queries = [query]
+            single_query = True
+        elif isinstance(query, list):
+            queries = query
+            single_query = False
+        else:
+            raise ValueError(
+                f"Query must be a dict or list of dicts, not {type(query)}"
+            )
+
+        queries_str = list(map(json.dumps, queries))
+        config_str = json.dumps(config) if config is not None else None
+
+        results_json: List[str] = self._app._run_calculate_path(queries_str, config_str)
 
         results: Results = list(map(json.loads, results_json))
         if single_query and len(results) == 1:

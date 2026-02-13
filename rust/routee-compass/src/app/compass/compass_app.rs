@@ -9,7 +9,6 @@ use crate::{
     app::{compass::CompassAppError, search::SearchApp},
     plugin::{input::InputPlugin, output::OutputPlugin},
 };
-use chrono::Local;
 
 use kdam::Bar;
 use rayon::current_num_threads;
@@ -18,14 +17,12 @@ use routee_compass_core::model::cost::cost_model_service::CostModelService;
 use routee_compass_core::model::map::MapModel;
 use routee_compass_core::model::network::Graph;
 use routee_compass_core::model::state::StateModel;
-use routee_compass_core::util::duration_extension::DurationExtension;
 use serde_json::Value;
 use std::{
     path::Path,
     sync::{Arc, Mutex},
 };
 
-use crate::app::map_matching::{MapMatchingAppError, MapMatchingRequest};
 use routee_compass_core::algorithm::map_matching::MapMatchingAlgorithm;
 
 /// Instance of RouteE Compass as an application.
@@ -98,17 +95,17 @@ impl CompassApp {
         log::info!("app termination model: {:?}", config.termination);
 
         // build selected components for search behaviors
-        let traversal_model_services = with_timing("traversal models", || {
+        let traversal_model_services = ops::with_timing("traversal models", || {
             config.build_traversal_model_services(builder)
         })?;
-        let constraint_model_services = with_timing("constraint models", || {
+        let constraint_model_services = ops::with_timing("constraint models", || {
             config.build_constraint_model_services(builder)
         })?;
 
         // build graph
-        let graph = with_timing("graph", || Ok(Arc::new(Graph::try_from(&config.graph)?)))?;
+        let graph = ops::with_timing("graph", || Ok(Arc::new(Graph::try_from(&config.graph)?)))?;
 
-        let map_model = with_timing("map model", || {
+        let map_model = ops::with_timing("map model", || {
             let mm = MapModel::new(graph.clone(), &config.mapping).map_err(|e| {
                 CompassAppError::BuildFailure(format!("unable to load MapModel from config: {e}"))
             })?;
@@ -131,14 +128,14 @@ impl CompassApp {
             config.system.default_edge_list,
         ));
 
-        let input_plugins = with_timing("input plugins", || {
+        let input_plugins = ops::with_timing("input plugins", || {
             Ok(builder.build_input_plugins(&config.plugin.input_plugins)?)
         })?;
-        let output_plugins = with_timing("output plugins", || {
+        let output_plugins = ops::with_timing("output plugins", || {
             Ok(builder.build_output_plugins(&config.plugin.output_plugins)?)
         })?;
 
-        let map_matching_algorithm = with_timing("map matching algorithm", || {
+        let map_matching_algorithm = ops::with_timing("map matching algorithm", || {
             Ok(builder.build_map_matching_algorithm(&config.map_matching)?)
         })?;
 
@@ -271,77 +268,74 @@ impl CompassApp {
 }
 
 impl CompassApp {
-    /// Runs map matching on a batch of requests, returning a JSON response for each.
-    ///
-    /// # Arguments
-    ///
-    /// * `queries` - List of map matching requests as JSON values
-    ///
-    /// # Returns
-    ///
-    /// A list of `MapMatchingResponse` objects as JSON values.
-    pub fn map_match(&self, queries: &Vec<Value>) -> Result<Vec<Value>, CompassAppError> {
-        let mut results = Vec::with_capacity(queries.len());
-
-        for query in queries {
-            let request: MapMatchingRequest = serde_json::from_value(query.clone())?;
-            // Validate the request
-            request
-                .validate()
-                .map_err(MapMatchingAppError::InvalidRequest)?;
-
-            // Convert request to internal trace format
-            let trace = map_matching_ops::convert_request_to_trace(&request);
-
-            // Build a search instance for this query
-            let mut query_config = self.map_matching_algorithm.search_parameters();
-            if let Some(search_overrides) = &request.search_parameters {
-                if let Some(obj) = search_overrides.as_object() {
-                    for (k, v) in obj {
-                        query_config[k] = v.clone();
-                    }
-                }
-            }
-            let search_instance = self
-                .search_app
-                .build_search_instance(&query_config)
-                .map_err(|e| MapMatchingAppError::BuildFailure(e.to_string()))?;
-
-            // Run the algorithm
-            let result = self
-                .map_matching_algorithm
-                .match_trace(&trace, &search_instance)
-                .map_err(|e| MapMatchingAppError::AlgorithmError { source: e })?;
-
-            // Convert result to response format
-            let response = map_matching_ops::convert_result_to_response(
-                result,
-                &self.search_app.map_model,
-                request.include_geometry,
-            );
-            let response_json = serde_json::to_value(response)?;
-            results.push(response_json);
-        }
-
-        Ok(results)
+    pub fn map_match(
+        &self,
+        queries: &[Value],
+        config: Option<&Value>,
+    ) -> Result<Vec<Value>, CompassAppError> {
+        let parallelism = self.get_parallelism(config)?;
+        log::info!(
+            "running {} map match queries with parallelism {} across {} threads",
+            queries.len(),
+            parallelism,
+            current_num_threads(),
+        );
+        ops::run_batch(queries, parallelism, "map matching", |q| {
+            self.run_single_map_match(q)
+        })
     }
-}
 
-/// helper function to wrap some lambda with runtime logging
-fn with_timing<T>(
-    name: &str,
-    thunk: impl Fn() -> Result<T, CompassAppError>,
-) -> Result<T, CompassAppError> {
-    let start = Local::now();
-    let result = thunk();
-    let duration = (Local::now() - start)
-        .to_std()
-        .map_err(|e| CompassAppError::InternalError(e.to_string()))?;
-    log::info!(
-        "finished reading {name} with duration {}",
-        duration.hhmmss()
-    );
-    result
+    /// Runs a batch of path evaluation queries in parallel.
+    pub fn run_calculate_path(
+        &self,
+        queries: &[Value],
+        config: Option<&Value>,
+    ) -> Result<Vec<Value>, CompassAppError> {
+        let parallelism = self.get_parallelism(config)?;
+        ops::run_batch(queries, parallelism, "calculating paths", |q| {
+            self.run_single_calculate_path(q)
+        })
+    }
+
+    /// Helper function that runs map matching on a single query and returns a JSON response.
+    fn run_single_map_match(&self, query: &Value) -> Value {
+        match map_matching_ops::run_single_map_match(
+            query,
+            &self.search_app,
+            &self.map_matching_algorithm,
+        ) {
+            Ok(response) => response,
+            Err(e) => serde_json::json!({
+                "request": query,
+                "error": e.to_string()
+            }),
+        }
+    }
+
+    /// Helper function that runs path evaluation on a single query and returns a JSON response.
+    fn run_single_calculate_path(&self, query: &Value) -> Value {
+        match ops::run_single_calculate_path(query, &self.search_app, &self.output_plugins) {
+            Ok(response) => response,
+            Err(e) => serde_json::json!({
+                "request": query,
+                "error": e.to_string()
+            }),
+        }
+    }
+
+    /// Helper to get parallelism from config or system parameters
+    fn get_parallelism(&self, config: Option<&Value>) -> Result<usize, CompassAppError> {
+        let override_config_opt: Option<CompassAppSystemParameters> = match config {
+            Some(c) => serde_json::from_value(c.clone())?,
+            None => None,
+        };
+        let parallelism = override_config_opt
+            .as_ref()
+            .and_then(|c| c.parallelism)
+            .or(self.system_parameters.parallelism)
+            .unwrap_or(1);
+        Ok(parallelism)
+    }
 }
 
 #[cfg(test)]
@@ -423,5 +417,49 @@ mod tests {
         // path [1] is distance-optimal; path [0, 2] is time-optimal
         let expected_path = serde_json::json!(vec![0, 2]);
         assert_eq!(path_0, &expected_path);
+    }
+
+    #[test]
+    fn test_run_calculate_path() {
+        let conf_file_test = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src")
+            .join("app")
+            .join("compass")
+            .join("test")
+            .join("speeds_test")
+            .join("speeds_test.toml");
+
+        let app = CompassApp::try_from(conf_file_test.as_path()).unwrap();
+
+        // Path [0, 2] is a valid path from 0 to 2
+        let query = serde_json::json!({
+            "path": [
+                {"edge_id": 0},
+                {"edge_id": 2}
+            ]
+        });
+        let queries = vec![query];
+        let results = app
+            .run_calculate_path(&queries, None)
+            .expect("run_calculate_path failed");
+
+        assert_eq!(results.len(), 1, "expected one result");
+        let result = &results[0];
+
+        let route = result.get("route").expect("result should have route");
+        let path = route.get("path").expect("route should have path");
+        assert_eq!(path, &serde_json::json!(vec![0, 2]));
+
+        let traversal_summary = route
+            .get("traversal_summary")
+            .expect("route should have traversal_summary");
+        assert!(
+            traversal_summary.get("edge_distance").is_some(),
+            "summary should have edge_distance"
+        );
+        assert!(
+            traversal_summary.get("edge_time").is_some(),
+            "summary should have edge_time"
+        );
     }
 }

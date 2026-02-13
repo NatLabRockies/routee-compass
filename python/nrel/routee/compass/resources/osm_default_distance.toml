@@ -6,7 +6,7 @@ edge_list = { input_file = "edges-compass.csv.gz" }
 
 [mapping]
 type = "edge"
-tolerance.distance = 15.0
+tolerance.distance = 500.0
 tolerance.unit = "meters"
 queries_without_destinations = false
 matching_type = ["point", "vertex_id", "edge_id"]
@@ -31,7 +31,14 @@ input_plugins = [
     { type = "grid_search" },
     { type = "load_balancer", weight_heuristic = { type = "haversine" } },
 ]
-output_plugins = [
-    { type = "summary" },
-    { type = "traversal", route = "geo_json" },
-]
+
+[[plugin.output_plugins]]
+type = "summary"
+
+[[plugin.output_plugins]]
+type = "traversal"
+route = "geo_json"
+
+[plugin.output_plugins.summary_ops]
+edge_distance = "sum"
+trip_distance = "last"

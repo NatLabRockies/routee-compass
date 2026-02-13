@@ -1,27 +1,12 @@
 use super::json_extensions::TraversalJsonField;
 use super::traversal_output_format::TraversalOutputFormat;
 use crate::app::compass::CompassAppError;
-use crate::app::search::SearchAppResult;
+use crate::app::search::{generate_route_output, RouteOutputError, SearchAppResult, SummaryOp};
 use crate::plugin::output::output_plugin::OutputPlugin;
 use crate::plugin::output::OutputPluginError;
-use routee_compass_core::algorithm::search::EdgeTraversal;
 use routee_compass_core::algorithm::search::SearchInstance;
-use routee_compass_core::model::cost::TraversalCost;
-use routee_compass_core::model::state::StateVariable;
-use serde::Deserialize;
 use serde_json::json;
 use std::collections::HashMap;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum SummaryOp {
-    Sum,
-    Avg,
-    Last,
-    First,
-    Min,
-    Max,
-}
 
 pub struct TraversalPlugin {
     route: Option<TraversalOutputFormat>,
@@ -62,15 +47,27 @@ impl OutputPlugin for TraversalPlugin {
 
         // output route if configured
         if let Some(route_args) = self.route {
+            let mut summary_ops = self.summary_ops.clone();
+            let query_summary_ops: Option<HashMap<String, SummaryOp>> = output
+                .get("request")
+                .and_then(|r| r.get("summary_ops"))
+                .and_then(|s| serde_json::from_value(s.clone()).ok());
+
+            if let Some(query_ops) = query_summary_ops {
+                summary_ops.extend(query_ops);
+            }
+
             let routes_serialized = result
                 .routes
                 .iter()
-                .map(|route| {
-                    // construct_route_output(route, si, &route_args, &self.geoms)
-                    construct_route_output(route, si, &route_args, &self.summary_ops)
-                })
-                .collect::<Result<Vec<_>, _>>()
-                .map_err(OutputPluginError::OutputPluginFailed)?;
+                .map(|route| generate_route_output(route, si, &route_args, &summary_ops))
+                .collect::<Result<Vec<_>, RouteOutputError>>()
+                .map_err(|e| {
+                    OutputPluginError::OutputPluginFailed(format!(
+                        "failed to generate route output: {}",
+                        e
+                    ))
+                })?;
 
             // vary the type of value stored at the route key. if there is
             // no route, store 'null'. if one, store an output object. if
@@ -107,93 +104,4 @@ impl OutputPlugin for TraversalPlugin {
 
         Ok(())
     }
-}
-
-/// creates the JSON output for a route.
-fn construct_route_output(
-    route: &Vec<EdgeTraversal>,
-    si: &SearchInstance,
-    output_format: &TraversalOutputFormat,
-    summary_ops: &HashMap<String, SummaryOp>,
-) -> Result<serde_json::Value, String> {
-    let last_edge = route
-        .last()
-        .ok_or_else(|| String::from("cannot find result route state when route is empty"))?;
-    let path_json = output_format
-        .generate_route_output(route, si.map_model.clone(), si.state_model.clone())
-        .map_err(|e| e.to_string())?;
-    let final_state = si
-        .state_model
-        .serialize_state(&last_edge.result_state, true)
-        .map_err(|e| format!("failed serializing final trip state: {e}"))?;
-
-    log::debug!("state model: {:?}", si.state_model);
-    log::debug!("final state: {final_state:?}");
-    log::debug!("result state: {:?}", last_edge.result_state);
-
-    let state_model = si.state_model.serialize_state_model();
-
-    // Compute total route cost by summing all edge costs
-    let route_cost = route
-        .iter()
-        .fold(TraversalCost::default(), |mut acc, edge| {
-            acc.total_cost += edge.cost.total_cost;
-            acc.objective_cost += edge.cost.objective_cost;
-            acc
-        });
-
-    let cost = json![route_cost];
-    let cost_model = si
-        .cost_model
-        .serialize_cost_info()
-        .map_err(|e| e.to_string())?;
-
-    let mut traversal_summary = serde_json::Map::new();
-    for (i, (name, feature)) in si.state_model.indexed_iter() {
-        let op = summary_ops.get(name).cloned().unwrap_or_else(|| {
-            if feature.is_accumulator() {
-                SummaryOp::Last
-            } else {
-                SummaryOp::Sum
-            }
-        });
-
-        let value = match op {
-            SummaryOp::Sum => route.iter().map(|e| e.result_state[i]).sum(),
-            SummaryOp::Avg => {
-                let sum: StateVariable = route.iter().map(|e| e.result_state[i]).sum();
-                let count = route.len() as f64;
-                StateVariable(sum.0 / count)
-            }
-            SummaryOp::Last => last_edge.result_state[i],
-            SummaryOp::First => route
-                .first()
-                .map(|e| e.result_state[i])
-                .unwrap_or(StateVariable::ZERO),
-            SummaryOp::Min => route
-                .iter()
-                .map(|e| e.result_state[i])
-                .min_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal))
-                .unwrap_or(StateVariable::ZERO),
-            SummaryOp::Max => route
-                .iter()
-                .map(|e| e.result_state[i])
-                .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal))
-                .unwrap_or(StateVariable::ZERO),
-        };
-        let serialized = feature
-            .serialize_variable(&value)
-            .map_err(|e| e.to_string())?;
-        traversal_summary.insert(name.clone(), serialized);
-    }
-
-    let result = serde_json::json![{
-        "final_state": final_state,
-        "state_model": state_model,
-        "cost_model": cost_model,
-        "cost": cost,
-        "path": path_json,
-        "traversal_summary": traversal_summary
-    }];
-    Ok(result)
 }

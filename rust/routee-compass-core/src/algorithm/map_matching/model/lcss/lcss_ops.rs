@@ -118,10 +118,13 @@ pub(crate) fn run_shortest_path(
 ) -> Result<Vec<(EdgeListId, EdgeId)>, MapMatchingError> {
     match run_vertex_oriented(start, Some(end), &Direction::Forward, true, si) {
         Ok(search_result) => match search_result.tree.backtrack(end) {
-            Ok(path) => Ok(path
-                .iter()
-                .map(|et| (et.edge_list_id, et.edge_id))
-                .collect()),
+            Ok(path) => {
+                let edge_ids = path
+                    .into_iter()
+                    .map(|et| (et.edge_list_id, et.edge_id))
+                    .collect();
+                Ok(edge_ids)
+            }
             Err(e) => Err(MapMatchingError::SearchTreeError(e)),
         },
         Err(SearchError::NoPathExistsBetweenVertices(_, _, _)) => Ok(Vec::new()),

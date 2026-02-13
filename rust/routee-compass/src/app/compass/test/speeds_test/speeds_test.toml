@@ -29,7 +29,16 @@ type = "raw"
 
 [plugin]
 input_plugins = []
-output_plugins = [
-    { type = "summary" },
-    { type = "traversal", route = "edge_id" },
-]
+[[plugin.output_plugins]]
+type = "summary"
+
+[[plugin.output_plugins]]
+type = "traversal"
+route = "edge_id"
+
+[plugin.output_plugins.summary_ops]
+edge_distance = "sum"
+trip_distance = "last"
+edge_speed = "avg"
+edge_time = "sum"
+trip_time = "last"

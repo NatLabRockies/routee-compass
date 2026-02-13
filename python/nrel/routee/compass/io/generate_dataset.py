@@ -40,7 +40,30 @@ class GeneratePipelinePhase(enum.Enum):
 
     @classmethod
     def default(cls) -> List[GeneratePipelinePhase]:
-        return list(cls)
+        return [cls.GRAPH, cls.CONFIG, cls.POWERTRAIN]
+
+
+def list_available_vehicle_models() -> List[str]:
+    """
+    Return the list of all available vehicle model names that can be used
+    with the ``vehicle_models`` parameter of :func:`generate_compass_dataset`
+    and :meth:`CompassApp.from_graph`.
+
+    Each name corresponds to a vehicle configuration JSON shipped with the
+    package (filename stem, e.g. ``"2017_CHEVROLET_Bolt"``).
+
+    Returns:
+        names: sorted list of available vehicle model name strings
+
+    Example:
+        >>> from nrel.routee.compass import list_available_vehicle_models
+        >>> models = list_available_vehicle_models()
+        >>> print(models[:3])
+    """
+    with importlib.resources.path(
+        "nrel.routee.compass.resources", "vehicles"
+    ) as vehicles_dir:
+        return sorted(p.stem for p in vehicles_dir.glob("*.json"))
 
 
 def generate_compass_dataset(
@@ -54,6 +77,7 @@ def generate_compass_dataset(
     default_config: bool = True,
     requests_kwds: Optional[Dict[Any, Any]] = None,
     afdc_api_key: str = "DEMO_KEY",
+    vehicle_models: Optional[List[str]] = None,
 ) -> None:
     """
     Processes a graph downloaded via OSMNx, generating the set of input
@@ -80,6 +104,11 @@ def generate_compass_dataset(
         default_config (bool, optional): If true, copy default configuration files into the output directory. Defaults to True.
         requests_kwds (Optional[Dict], optional): Keyword arguments to pass to the `requests` Python library for HTTP configuration. Defaults to None.
         afdc_api_key (str, optional): API key for the AFDC API to download EV charging stations. Defaults to "DEMO_KEY". See https://developer.nrel.gov/docs/transportation/alt-fuel-stations-v1/all/ for more information.
+        vehicle_models (Optional[List[str]]): If provided, only download and
+            configure the listed vehicle models (by name, e.g.
+            ``["2017_CHEVROLET_Bolt", "2016_TOYOTA_Camry_4cyl_2WD"]``).
+            Use :func:`list_available_vehicle_models` to see valid names.
+            When ``None`` (the default) all available models are included.
     Example:
         >>> import osmnx as ox
         >>> g = ox.graph_from_place("Denver, Colorado, USA")
@@ -210,13 +239,11 @@ def generate_compass_dataset(
         base_config_files = [
             "osm_default_distance.toml",
             "osm_default_speed.toml",
-            "osm_default_map_matching.toml",
         ]
         if GeneratePipelinePhase.POWERTRAIN in phases:
             base_config_files.extend(
                 [
                     "osm_default_energy.toml",
-                    "osm_default_energy_all_vehicles.toml",
                     "osm_default_temperature.toml",
                 ]
             )
@@ -228,6 +255,13 @@ def generate_compass_dataset(
             ) as init_toml_path:
                 with init_toml_path.open() as f:
                     init_toml: dict[str, Any] = tomlkit.load(f)
+
+            # When a vehicle subset is requested, rewrite the
+            # vehicle_input_files list in the energy traversal model
+            # so the app only tries to load files that were downloaded.
+            if vehicle_models is not None:
+                _filter_vehicle_input_files(init_toml, vehicle_models)
+
             with open(output_directory / filename, "w") as f:
                 f.write(tomlkit.dumps(init_toml))
 
@@ -244,7 +278,19 @@ def generate_compass_dataset(
             with model_link_path.open() as f:
                 model_links = json.load(f)
 
-            for model_name, model_link in model_links.items():
+            # Determine which model .bin files need to be downloaded.
+            # When vehicle_models is set we resolve the required .bin names
+            # from the vehicle JSON configs (handles PHEVs that reference
+            # two separate models).  Otherwise download everything.
+            if vehicle_models is not None:
+                required_bin_names = _resolve_required_model_bins(vehicle_models)
+                filtered_links = {
+                    k: v for k, v in model_links.items() if k in required_bin_names
+                }
+            else:
+                filtered_links = model_links
+
+            for model_name, model_link in filtered_links.items():
                 model_destination = model_output_directory / f"{model_name}.bin"
 
                 cached_model_destination = CACHE_DIR / f"{model_name}.bin"
@@ -269,9 +315,11 @@ def generate_compass_dataset(
         ) as vehicles_dir:
             if vehicles_dir.is_dir():
                 for vehicle_file in vehicles_dir.glob("*.json"):
-                    shutil.copy(
-                        vehicle_file, vehicle_output_directory / vehicle_file.name
-                    )
+                    if vehicle_models is None or vehicle_file.stem in vehicle_models:
+                        shutil.copy(
+                            vehicle_file,
+                            vehicle_output_directory / vehicle_file.name,
+                        )
 
     if GeneratePipelinePhase.CHARGING_STATIONS in phases:
         log.info("Downloading EV charging stations for the road network bounding box.")
@@ -315,3 +363,69 @@ def generate_compass_dataset(
             index=False,
             compression="gzip",
         )
+
+
+def _resolve_required_model_bins(vehicle_models: List[str]) -> set[str]:
+    """
+    Given a list of vehicle model names (JSON file stems), determine the set
+    of ``.bin`` model names that need to be downloaded.
+
+    For simple ICE/BEV vehicles, the bin name equals the ``model_input_file``
+    stem in the JSON.  For PHEVs, there are two bins (Charge_Depleting and
+    Charge_Sustaining) nested inside the JSON.
+    """
+    required: set[str] = set()
+    with importlib.resources.path(
+        "nrel.routee.compass.resources", "vehicles"
+    ) as vehicles_dir:
+        for name in vehicle_models:
+            vehicle_file = vehicles_dir / f"{name}.json"
+            if not vehicle_file.exists():
+                available = sorted(p.stem for p in vehicles_dir.glob("*.json"))
+                raise ValueError(
+                    f"Vehicle model '{name}' not found. "
+                    f"Use list_available_vehicle_models() to see valid names. "
+                    f"Available: {available}"
+                )
+            with vehicle_file.open() as f:
+                vehicle_cfg = json.load(f)
+
+            vtype = vehicle_cfg.get("type", "")
+            if vtype == "phev":
+                # PHEV vehicles reference two separate model files
+                for sub_key in ("charge_depleting", "charge_sustaining"):
+                    sub = vehicle_cfg.get(sub_key, {})
+                    model_path = sub.get("model_input_file", "")
+                    if model_path:
+                        required.add(Path(model_path).stem)
+            else:
+                model_path = vehicle_cfg.get("model_input_file", "")
+                if model_path:
+                    required.add(Path(model_path).stem)
+    return required
+
+
+def _filter_vehicle_input_files(
+    toml_config: dict[str, Any], vehicle_models: List[str]
+) -> None:
+    """
+    Walk through a parsed TOML config and rewrite any
+    ``vehicle_input_files`` arrays so they only reference vehicle JSON
+    files present in the *vehicle_models* list.
+    """
+    vehicle_set = set(vehicle_models)
+
+    def _matches(vehicle_path: str) -> bool:
+        """Return True if the vehicle path stem is in the requested set."""
+        return Path(vehicle_path).stem in vehicle_set
+
+    # The vehicle_input_files list lives inside [[search.traversal.models]]
+    # entries with type = "energy".
+    search = toml_config.get("search", {})
+    traversal = search.get("traversal", {})
+    models = traversal.get("models", [])
+    for model in models:
+        if model.get("type") == "energy" and "vehicle_input_files" in model:
+            model["vehicle_input_files"] = [
+                p for p in model["vehicle_input_files"] if _matches(p)
+            ]
