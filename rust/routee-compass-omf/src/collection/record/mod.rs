@@ -19,7 +19,7 @@ pub use transportation_segment::{
     SegmentAccessType, SegmentClass, SegmentDestination, SegmentFullType, SegmentHeading,
     SegmentLengthUnit, SegmentMode, SegmentRecognized, SegmentSpeedLimit, SegmentSpeedUnit,
     SegmentSubclass, SegmentSubtype, SegmentUnit, SegmentUsing, SegmentVehicleComparator,
-    SegmentVehicleDimension, TransportationSegmentRecord,
+    SegmentVehicleDimension, SpeedLimitWithUnit, TransportationSegmentRecord,
 };
 
 // Common structs and functions for many record types

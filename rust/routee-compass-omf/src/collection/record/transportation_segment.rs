@@ -921,8 +921,8 @@ impl SegmentSpeedLimit {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SpeedLimitWithUnit {
-    value: i32,
-    unit: SegmentSpeedUnit,
+    pub value: i32,
+    pub unit: SegmentSpeedUnit,
 }
 
 impl SpeedLimitWithUnit {
