@@ -200,24 +200,24 @@ We'll use gge as our unit and convert the electrical energy using a factor of 33
 # %%
 
 bolt_rows = gdf["request.model_name"] == "2017_CHEVROLET_Bolt"
-bolt_energy = gdf.loc[bolt_rows, "route.traversal_summary.trip_energy_electric"]
+bolt_energy = gdf.loc[bolt_rows, "route.traversal_summary.trip_energy_electric.value"]
 gdf.loc[bolt_rows, "gge"] = bolt_energy * (1 / 33.694)
 
 volt_rows = gdf["request.model_name"] == "2016_CHEVROLET_Volt"
 volt_elec = gdf.loc[
     volt_rows,
-    "route.traversal_summary.trip_energy_electric",
+    "route.traversal_summary.trip_energy_electric.value",
 ]
 volt_liq = gdf.loc[
     volt_rows,
-    "route.traversal_summary.trip_energy_liquid",
+    "route.traversal_summary.trip_energy_liquid.value",
 ]
 gdf.loc[volt_rows, "gge"] = volt_elec * (1 / 33.694) + volt_liq
 
 camry_rows = gdf["request.model_name"] == "2016_TOYOTA_Camry_4cyl_2WD"
 camry_energy = gdf.loc[
     camry_rows,
-    "route.traversal_summary.trip_energy_liquid",
+    "route.traversal_summary.trip_energy_liquid.value",
 ]
 gdf.loc[camry_rows, "gge"] = camry_energy
 
@@ -230,7 +230,7 @@ Next, we can look at the energy usage versus the route time, broken out by power
 
 sns.scatterplot(
     gdf,
-    x="route.traversal_summary.trip_time",
+    x="route.traversal_summary.trip_time.value",
     y="gge",
     hue="request.model_name",
     style="request.name",
@@ -255,7 +255,7 @@ We could also look at the estimated cost based on our assumptions of:
 sns.scatterplot(
     data=gdf,
     y="route.cost.total_cost",
-    x="route.traversal_summary.trip_time",
+    x="route.traversal_summary.trip_time.value",
     hue="request.model_name",
     style="request.name",
 )

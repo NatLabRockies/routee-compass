@@ -91,8 +91,8 @@ With the results, we can convert them into a geodataframe and plot the time vs e
 bev_gdf = results_to_geopandas(bev_results)
 bev_ax = sns.scatterplot(
     data=bev_gdf,
-    x="route.traversal_summary.trip_time",
-    y="route.traversal_summary.trip_energy_electric",
+    x="route.traversal_summary.trip_time.value",
+    y="route.traversal_summary.trip_energy_electric.value",
     hue="request.weights.trip_energy_electric",
 )
 bev_ax.set(
@@ -110,7 +110,7 @@ Between 23 and 24 minutes of travel time, the energy consmption decreses signifi
 Let's take a look at what those actual routes look like:
 """
 # %%
-bev_gdf.explore(column="route.traversal_summary.trip_energy_electric")
+bev_gdf.explore(column="route.traversal_summary.trip_energy_electric.value")
 
 """
 Something that stands out is that the routes that have higher energy consumption use the highway to gain a lower travel time at the expense of increased energy consumption.
@@ -142,8 +142,8 @@ ice_gdf = results_to_geopandas(ice_results)
 # ⛏️
 ice_ax = sns.scatterplot(
     data=ice_gdf,
-    x="route.traversal_summary.trip_time",
-    y="route.traversal_summary.trip_energy_liquid",
+    x="route.traversal_summary.trip_time.value",
+    y="route.traversal_summary.trip_energy_liquid.value",
     hue="request.weights.trip_energy_liquid",
 )
 ice_ax.set(
@@ -162,7 +162,7 @@ Lastly, let's take a look at the routes for the Toyota Camry:
 """
 
 # %%
-ice_gdf.explore(column="route.traversal_summary.trip_energy_liquid")
+ice_gdf.explore(column="route.traversal_summary.trip_energy_liquid.value")
 
 """
 Here we notice, similarly to the Chevy Bolt, that the routes that minimize time and have larger energy consumption use the highway, while the routes that minimize energy consumption use the local roads.

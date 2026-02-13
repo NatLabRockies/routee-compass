@@ -91,14 +91,10 @@ impl TrajectorySegment {
 
         // Precompute distances
         let mut distances = vec![vec![Length::new::<meter>(0.0); m]; n];
-        for (j, path_edge) in self.path.iter().enumerate() {
+        for (j, (next_el, next_e)) in self.path.iter().enumerate() {
             for (i, trace_point) in self.trace.points.iter().enumerate() {
-                distances[j][i] = lcss_ops::compute_distance_to_edge(
-                    &trace_point.coord,
-                    &path_edge.0,
-                    &path_edge.1,
-                    si,
-                );
+                distances[j][i] =
+                    lcss_ops::compute_distance_to_edge(&trace_point.coord, next_el, next_e, si);
             }
         }
 
@@ -304,10 +300,10 @@ pub(crate) fn join_segments(
             let prev_path = &segments[i - 1].path;
             let curr_path = &segments[i].path;
             if !prev_path.is_empty() && !curr_path.is_empty() {
-                let prev_end = prev_path[prev_path.len() - 1];
-                let curr_start = curr_path[0];
+                let prev_end = &prev_path[prev_path.len() - 1];
+                let curr_start = &curr_path[0];
 
-                if prev_end != curr_start {
+                if prev_end.0 != curr_start.0 || prev_end.1 != curr_start.1 {
                     // Check if they are connected
                     let prev_dst_v = si
                         .graph
