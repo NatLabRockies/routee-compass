@@ -8,7 +8,6 @@ This builds off of the [Open Street Maps Example](01_open_street_maps_example) a
 
 
 def main():
-    # %%
     import seaborn as sns
 
     from nrel.routee.compass import CompassApp
@@ -21,8 +20,6 @@ def main():
 
     Here, we'll load our application from the config file that was built in the [Open Street Maps Example](01_open_street_maps_example)
     """
-
-    # %%
 
     app = CompassApp.from_config_file("denver_co/osm_default_energy.toml")
 
@@ -43,8 +40,6 @@ def main():
     But, for the PHEV model, we use a combination of liquid and electric energy.
     By default, the PHEV will run using battery energy exclusively (starting at `starting_soc_percent`) and when the battery runs out, the vehicle will switch to it's hybrid mode, using primarily gasoline energy.
     """
-
-    # %%
 
     query = [
         {
@@ -162,15 +157,15 @@ def main():
         },
     ]
 
-    # %%
-
     result = app.run(query)
+
+    for r in result:
+        if "error" in r:
+            raise ValueError(r["error"])
 
     """
     First, let's review the state model to see what energy units we're using.
     """
-
-    # %%
 
     result[0]["route"]["state_model"]
 
@@ -179,8 +174,6 @@ def main():
     First let's convert the results into a dataframe
     """
 
-    # %%
-
     gdf = results_to_geopandas(result)
 
     """
@@ -188,27 +181,28 @@ def main():
     We'll use gge as our unit and convert the electrical energy using a factor of 33.694 kwh/gge
     """
 
-    # %%
-
     bolt_rows = gdf["request.model_name"] == "2017_CHEVROLET_Bolt"
-    bolt_energy = gdf.loc[bolt_rows, "route.traversal_summary.trip_energy_electric"]
+
+    bolt_energy = gdf.loc[
+        bolt_rows, "route.traversal_summary.trip_energy_electric.value"
+    ]
     gdf.loc[bolt_rows, "gge"] = bolt_energy * (1 / 33.694)
 
     volt_rows = gdf["request.model_name"] == "2016_CHEVROLET_Volt"
     volt_elec = gdf.loc[
         volt_rows,
-        "route.traversal_summary.trip_energy_electric",
+        "route.traversal_summary.trip_energy_electric.value",
     ]
     volt_liq = gdf.loc[
         volt_rows,
-        "route.traversal_summary.trip_energy_liquid",
+        "route.traversal_summary.trip_energy_liquid.value",
     ]
     gdf.loc[volt_rows, "gge"] = volt_elec * (1 / 33.694) + volt_liq
 
     camry_rows = gdf["request.model_name"] == "2016_TOYOTA_Camry_4cyl_2WD"
     camry_energy = gdf.loc[
         camry_rows,
-        "route.traversal_summary.trip_energy_liquid",
+        "route.traversal_summary.trip_energy_liquid.value",
     ]
     gdf.loc[camry_rows, "gge"] = camry_energy
 
@@ -216,11 +210,9 @@ def main():
     Next, we can look at the energy usage versus the route time, broken out by powertrain and route objective
     """
 
-    # %%
-
     sns.scatterplot(
         gdf,
-        x="route.traversal_summary.trip_time",
+        x="route.traversal_summary.trip_time.value",
         y="gge",
         hue="request.model_name",
         style="request.name",
@@ -231,19 +223,17 @@ def main():
 
     We could also look at the estimated cost based on our assumptions of:
 
-     - distance: \\\\$ 0.655 per mile
-     - time: \\\\$ 0.33 per minute (\\\\$ 20 per hour)
-     - gasoline: \\\\$ 3.1 per gallon
-     - electric: \\\\$ 0.5 per kilowatt-hour
+    - distance: \\$ 0.655 per mile
+    - time: \\$ 0.33 per minute (\\$ 20 per hour)
+    - gasoline: \\$ 3.1 per gallon
+    - electric: \\$ 0.5 per kilowatt-hour
 
     """
-
-    # %%
 
     sns.scatterplot(
         data=gdf,
         y="route.cost.total_cost",
-        x="route.traversal_summary.trip_time",
+        x="route.traversal_summary.trip_time.value",
         hue="request.model_name",
         style="request.name",
     )
@@ -255,11 +245,7 @@ def main():
     Lastly, we can plot the results
     """
 
-    # %%
-
     gdf.plot(column="gge", legend=True)
-
-    # %%
 
 
 if __name__ == "__main__":

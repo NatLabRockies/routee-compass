@@ -8,21 +8,19 @@ This builds off the [Open Street Maps Example](01_open_street_maps_example) and 
 
 
 def main():
-    # %%
     import seaborn as sns
     import numpy as np
     import matplotlib.pyplot as plt
 
     from nrel.routee.compass import CompassApp
     from nrel.routee.compass.io.convert_results import results_to_geopandas
-    # %%
 
     """
     First, we'll load the application from the pre-built configuration file.
     """
 
     app = CompassApp.from_config_file("denver_co/osm_default_energy.toml")
-    # %%
+
     """
     ## Build Time and Energy Weights
 
@@ -53,12 +51,12 @@ def main():
     """
     Let's take a quick look at the weights we've generated.
     """
-    # %%
+
     plt.plot(np.linspace(0, 1, 100), time_weights, label="Time Weight")
     plt.plot(np.linspace(0, 1, 100), energy_weights, label="Energy Weight")
     plt.legend()
     plt.title("Time and Energy Weights")
-    # %%
+
     """
     ## Run Queries
 
@@ -66,7 +64,7 @@ def main():
 
     First, the Chevy Bolt:
     """
-    # %%
+
     bev_query = {
         "origin_x": -104.9256,
         "origin_y": 39.6638949,
@@ -85,14 +83,19 @@ def main():
 
     bev_results = app.run(bev_query)
 
+    for result in bev_results:
+        if "error" in result:
+            raise ValueError(result["error"])
+
     """
     With the results, we can convert them into a geodataframe and plot the time vs energy consumption.
     """
+
     bev_gdf = results_to_geopandas(bev_results)
     bev_ax = sns.scatterplot(
         data=bev_gdf,
-        x="route.traversal_summary.trip_time",
-        y="route.traversal_summary.trip_energy_electric",
+        x="route.traversal_summary.trip_time.value",
+        y="route.traversal_summary.trip_energy_electric.value",
         hue="request.weights.trip_energy_electric",
     )
     bev_ax.set(
@@ -109,8 +112,8 @@ def main():
 
     Let's take a look at what those actual routes look like:
     """
-    # %%
-    bev_gdf.explore(column="route.traversal_summary.trip_energy_electric")
+
+    bev_gdf.explore(column="route.traversal_summary.trip_energy_electric.value")
 
     """
     Something that stands out is that the routes that have higher energy consumption use the highway to gain a lower travel time at the expense of increased energy consumption.
@@ -118,7 +121,7 @@ def main():
 
     Next, let's take a look at the 2016 Toyota Corolla:
     """
-    # %%
+
     ice_query = {
         "origin_x": -104.9256,
         "origin_y": 39.6638949,
@@ -137,13 +140,17 @@ def main():
 
     ice_results = app.run(ice_query)
 
+    for result in ice_results:
+        if "error" in result:
+            raise ValueError(result["error"])
+
     ice_gdf = results_to_geopandas(ice_results)
 
     # ⛏️
     ice_ax = sns.scatterplot(
         data=ice_gdf,
-        x="route.traversal_summary.trip_time",
-        y="route.traversal_summary.trip_energy_liquid",
+        x="route.traversal_summary.trip_time.value",
+        y="route.traversal_summary.trip_energy_liquid.value",
         hue="request.weights.trip_energy_liquid",
     )
     ice_ax.set(
@@ -161,14 +168,12 @@ def main():
     Lastly, let's take a look at the routes for the Toyota Camry:
     """
 
-    # %%
-    ice_gdf.explore(column="route.traversal_summary.trip_energy_liquid")
+    ice_gdf.explore(column="route.traversal_summary.trip_energy_liquid.value")
 
     """
     Here we notice, similarly to the Chevy Bolt, that the routes that minimize time and have larger energy consumption use the highway, while the routes that minimize energy consumption use the local roads.
     But, there are much fewer local alternatives for the Toyota Camry than there were for the Chevy Bolt.
     """
-    # %%
 
 
 if __name__ == "__main__":
