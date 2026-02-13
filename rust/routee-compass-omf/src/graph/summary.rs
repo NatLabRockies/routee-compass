@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -39,8 +40,8 @@ pub struct OmfGraphSource {
 pub struct OmfGraphStats {
     /// number of vertices in the network
     pub vertices: usize,
-    /// details for each edge list
-    pub edge_list: HashMap<String, EdgeListStats>,
+    /// details for each edge list.
+    pub edge_list: IndexMap<String, EdgeListStats>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -53,7 +54,7 @@ pub struct EdgeListStats {
     /// average speed of all segments in this edge list
     pub avg_speed_mph: Option<f64>,
     /// count and mileage of roadways by road class
-    pub road_class_stats: HashMap<String, ClassStats>,
+    pub road_class_stats: IndexMap<String, ClassStats>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -91,7 +92,7 @@ impl TryFrom<&OmfGraphVectorized> for OmfGraphStats {
 
     fn try_from(value: &OmfGraphVectorized) -> Result<Self, Self::Error> {
         let edge_list_iter = value.edge_list_config.iter().zip(value.edge_lists.iter());
-        let mut edge_list = HashMap::new();
+        let mut edge_list = IndexMap::new();
         for (c, e) in edge_list_iter {
             let key = c.mode.clone();
             let value = EdgeListStats::try_from(e)?;
@@ -134,7 +135,7 @@ impl TryFrom<&OmfEdgeList> for EdgeListStats {
                 }
             }
         }
-        let road_class_stats: HashMap<String, ClassStats> = class_stats_accumulators
+        let road_class_stats: IndexMap<String, ClassStats> = class_stats_accumulators
             .into_iter()
             .map(|(k, v)| {
                 // this fully-qualified road class label may or may not be represented in the

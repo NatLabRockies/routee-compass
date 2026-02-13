@@ -66,7 +66,7 @@ pub fn run(
 
     // summarize imported graph
     let release = match local_source {
-        Some(local) => format!("file://{}", local.to_str().unwrap_or_default()),
+        Some(local) => format!("file://{}", local.to_string_lossy()),
         None => collection.release.clone(),
     };
     let stats = OmfGraphStats::try_from(&vectorized_graph)?;

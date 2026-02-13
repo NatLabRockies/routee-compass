@@ -3,6 +3,7 @@ name = "bambam-omf"
 version = "0.2.3"
 edition = "2021"
 license = "BSD-3-Clause"
+include = ["src/util/bambam-config-omf.toml"]
 exclude = ["test", "**/.DS_Store", "target/"]
 readme = "README.md"
 repository = "https://github.com/NREL/bambam"

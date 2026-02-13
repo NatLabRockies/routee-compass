@@ -46,7 +46,7 @@ traversal.models = [
 frontier.type = "combined"
 frontier.models = [
     { type = "time_limit", time_limit = { time = 40.0, time_unit = "minutes" }},
-    { type = "multimodal", this_mode = "walk", constraints = [], available_modes = ["walk", "bike", "drive"], available_route_ids = [], use_route_ids = false, max_trip_legs = 5 }
+    { type = "multimodal", this_mode = "walk", constraints = [], available_modes = ["walk", "bike", "drive"], available_route_ids = [], max_trip_legs = 5 }
 ]
 
 ###
@@ -64,7 +64,7 @@ traversal.models = [
 frontier.type = "combined"
 frontier.models = [
     { type = "time_limit", time_limit = { time = 40.0, time_unit = "minutes" }},
-    { type = "multimodal", this_mode = "bike", constraints = [], available_modes = ["walk", "bike", "drive"], available_route_ids = [], use_route_ids = false, max_trip_legs = 5 }
+    { type = "multimodal", this_mode = "bike", constraints = [], available_modes = ["walk", "bike", "drive"], available_route_ids = [], max_trip_legs = 5 }
 ]
 
 ###
@@ -74,7 +74,7 @@ frontier.models = [
 traversal.type = "combined"
 traversal.models = [
     { type = "distance", distance_unit = "miles" }, 
-    { type = "speed", name = "drive", speed_unit = "kph", speed_table_input_file = "drive/edges-speeds-mph-enumerated.txt.gz" },
+    { type = "speed", name = "drive", speed_unit = "mph", speed_table_input_file = "drive/edges-speeds-mph-enumerated.txt.gz" },
     { type = "time", time_unit = "minutes" },
     { type = "multimodal", this_mode = "drive", available_modes = ["walk", "bike", "drive"], available_route_ids = [], use_route_ids = false, max_trip_legs = 5 }
 ]
@@ -82,7 +82,7 @@ traversal.models = [
 frontier.type = "combined"
 frontier.models = [
     { type = "time_limit", time_limit = { time = 40.0, time_unit = "minutes" }},
-    { type = "multimodal", this_mode = "drive", constraints = [], available_modes = ["walk", "bike", "drive"], available_route_ids = [], use_route_ids = false, max_trip_legs = 5 }
+    { type = "multimodal", this_mode = "drive", constraints = [], available_modes = ["walk", "bike", "drive"], available_route_ids = [], max_trip_legs = 5 }
 ]
 
 
