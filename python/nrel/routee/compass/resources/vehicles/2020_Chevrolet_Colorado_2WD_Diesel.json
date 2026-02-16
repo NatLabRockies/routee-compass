@@ -3,7 +3,6 @@
   "type": "ice",
   "mass_estimate_lbs": 4500,
   "model_input_file": "../models/2020_Chevrolet_Colorado_2WD_Diesel.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "gallons diesel/mile",
   "real_world_energy_adjustment": 1.166,
   "a_star_heuristic_energy_rate": 0.04,

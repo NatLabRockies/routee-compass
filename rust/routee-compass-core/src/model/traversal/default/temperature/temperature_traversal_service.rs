@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::model::traversal::{
     default::temperature::{
-        ambient_temperature_config::AmbientTemperatureConfig, TemperatureTraversalModel,
+        temperature_traversal_config::AmbientTemperatureConfig, TemperatureTraversalModel,
     },
     TraversalModel, TraversalModelError, TraversalModelService,
 };

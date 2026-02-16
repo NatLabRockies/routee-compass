@@ -9,9 +9,20 @@ use routee_compass_core::{
         unit::{EnergyRateUnit, EnergyUnit},
     },
 };
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::sync::Arc;
 use uom::{si::f64::Energy, ConstZero};
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct IceEnergyModelConfig {
+    #[serde(rename = "type")]
+    pub r#type: String,
+    #[serde(flatten)]
+    pub prediction_model: PredictionModelConfig,
+    pub include_trip_energy: Option<bool>,
+}
 
 #[derive(Clone)]
 pub struct IceEnergyModel {
@@ -44,21 +55,14 @@ impl TryFrom<&Value> for IceEnergyModel {
     type Error = TraversalModelError;
 
     fn try_from(value: &Value) -> Result<Self, Self::Error> {
-        let config: PredictionModelConfig = serde_json::from_value(value.clone()).map_err(|e| {
+        let config: IceEnergyModelConfig = serde_json::from_value(value.clone()).map_err(|e| {
             TraversalModelError::BuildError(format!(
-                "failure reading prediction model configuration: {e}"
+                "failure reading ICE energy configuration: {e}"
             ))
         })?;
-        let prediction_model = PredictionModelRecord::try_from(&config)?;
-        let include_trip_energy = match value.get("include_trip_energy") {
-            Some(v) => {
-                v.as_bool().ok_or_else(|| {
-                    TraversalModelError::BuildError("Failed to parse the parameter `include_trip_energy` as a boolean when building the ICE Energy model".to_string())
-                })?
-            },
-            None => true
-        };
-        let ice_model = IceEnergyModel::new(prediction_model, include_trip_energy)?;
+        let prediction_model = PredictionModelRecord::try_from(&config.prediction_model)?;
+        let ice_model =
+            IceEnergyModel::new(prediction_model, config.include_trip_energy.unwrap_or(true))?;
         Ok(ice_model)
     }
 }

@@ -1,14 +1,14 @@
-use indexmap::IndexMap;
-
 use super::{
-    vehicle_restriction_model::VehicleRestrictionConstraintModel, VehicleParameter,
-    VehicleParameterConfig, VehicleParameterType, VehicleRestriction,
+    vehicle_restriction_model::VehicleRestrictionConstraintModel,
+    vehicle_restriction_query::VehicleRestrictionQuery, VehicleParameter, VehicleParameterType,
+    VehicleRestriction,
 };
 use crate::model::{
     constraint::{ConstraintModel, ConstraintModelError, ConstraintModelService},
     network::EdgeId,
     state::StateModel,
 };
+use indexmap::IndexMap;
 use std::{collections::HashMap, sync::Arc};
 
 #[derive(Clone)]
@@ -24,18 +24,14 @@ impl ConstraintModelService for VehicleRestrictionFrontierService {
         _state_model: Arc<StateModel>,
     ) -> Result<Arc<dyn ConstraintModel>, ConstraintModelError> {
         let service: Arc<VehicleRestrictionFrontierService> = Arc::new(self.clone());
-        let vp_json = query.get("vehicle_parameters").ok_or_else(|| {
-            ConstraintModelError::BuildError(
-                "Missing field `vehicle_parameters` in query".to_string(),
-            )
-        })?;
-        let vehicle_parameter_configs: Vec<VehicleParameterConfig> =
-            serde_json::from_value(vp_json.clone()).map_err(|e| {
+        let restriction_query: VehicleRestrictionQuery = serde_json::from_value(query.clone())
+            .map_err(|e| {
                 ConstraintModelError::BuildError(format!(
-                    "Unable to deserialize `vehicle_parameters` key: {e}"
+                    "Unable to deserialize vehicle restriction query: {e}"
                 ))
             })?;
-        let vehicle_parameters: Vec<VehicleParameter> = vehicle_parameter_configs
+        let vehicle_parameters: Vec<VehicleParameter> = restriction_query
+            .vehicle_parameters
             .into_iter()
             .map(|vpc| vpc.into())
             .collect();

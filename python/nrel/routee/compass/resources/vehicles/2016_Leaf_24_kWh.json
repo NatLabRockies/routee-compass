@@ -3,7 +3,6 @@
   "type": "bev",
   "mass_estimate_lbs": 3300,
   "model_input_file": "../models/2016_Leaf_24_kWh.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "kWh/mile",
   "battery_capacity": 24,
   "battery_capacity_unit": "kilowatt_hours",

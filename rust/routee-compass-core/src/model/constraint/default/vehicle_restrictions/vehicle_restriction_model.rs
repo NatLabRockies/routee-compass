@@ -118,6 +118,7 @@ mod test {
     fn build_model(restriction_filename: &str, query_filename: &str) -> Arc<dyn ConstraintModel> {
         let restriction_file = test_filepath(restriction_filename);
         let conf = json!({
+            "type": "vehicle_restriction",
             "vehicle_restriction_input_file": restriction_file,
         });
         let query = read_json_file(query_filename);

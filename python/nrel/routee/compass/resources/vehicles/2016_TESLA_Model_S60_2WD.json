@@ -3,7 +3,6 @@
   "type": "bev",
   "mass_estimate_lbs": 4600,
   "model_input_file": "../models/2016_TESLA_Model_S60_2WD.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "kWh/mile",
   "battery_capacity": 60,
   "battery_capacity_unit": "kilowatt_hours",

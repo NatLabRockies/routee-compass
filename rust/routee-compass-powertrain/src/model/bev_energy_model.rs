@@ -12,12 +12,25 @@ use routee_compass_core::{
         unit::{EnergyRateUnit, EnergyUnit, RatioUnit},
     },
 };
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::sync::Arc;
 use uom::{
     si::f64::{Energy, Ratio},
     ConstZero,
 };
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct BevEnergyModelConfig {
+    #[serde(rename = "type")]
+    pub r#type: String,
+    #[serde(flatten)]
+    pub prediction_model: PredictionModelConfig,
+    pub battery_capacity: f64,
+    pub battery_capacity_unit: EnergyUnit,
+    pub include_trip_energy: Option<bool>,
+}
 
 // CONSTANT: Energy (kWh) required to lift 1 kg by 1 meter.
 // Derived from: 9.81 (gravity) / 3,600,000 (Joules per kWh)
@@ -79,43 +92,20 @@ impl TryFrom<&Value> for BevEnergyModel {
     type Error = TraversalModelError;
 
     fn try_from(value: &Value) -> Result<Self, Self::Error> {
-        let config: PredictionModelConfig = serde_json::from_value(value.clone()).map_err(|e| {
+        let config: BevEnergyModelConfig = serde_json::from_value(value.clone()).map_err(|e| {
             TraversalModelError::BuildError(format!(
-                "failure reading prediction model configuration: {e}"
+                "failure reading BEV energy configuration: {e}"
             ))
         })?;
-        let prediction_model = PredictionModelRecord::try_from(&config)?;
-        let battery_capacity_conf = value.get("battery_capacity").ok_or_else(|| {
-            TraversalModelError::BuildError(String::from("missing key 'battery_capacity'"))
-        })?;
-        let battery_energy_unit_conf = value.get("battery_capacity_unit").ok_or_else(|| {
-            TraversalModelError::BuildError(String::from("missing key 'battery_energy_unit'"))
-        })?;
-        let battery_capacity = serde_json::from_value::<f64>(battery_capacity_conf.clone())
-            .map_err(|e| {
-                TraversalModelError::BuildError(format!("failed to parse battery capacity: {e}"))
-            })?;
-        let battery_energy_unit = serde_json::from_value::<EnergyUnit>(
-            battery_energy_unit_conf.clone(),
-        )
-        .map_err(|e| {
-            TraversalModelError::BuildError(format!("failed to parse battery capacity unit: {e}"))
-        })?;
 
-        let include_trip_energy = match value.get("include_trip_energy") {
-            Some(v) => {
-                v.as_bool().ok_or_else(|| {
-                    TraversalModelError::BuildError("Failed to parse the parameter `include_trip_energy` as a boolean when building the BEV Energy model".to_string())
-                })?
-            },
-            None => true
-        };
+        let prediction_model = PredictionModelRecord::try_from(&config.prediction_model)?;
+        let battery_capacity = config.battery_capacity_unit.to_uom(config.battery_capacity);
 
         let bev = BevEnergyModel::new(
             Arc::new(prediction_model),
-            battery_energy_unit.to_uom(battery_capacity),
-            battery_energy_unit.to_uom(battery_capacity),
-            include_trip_energy,
+            battery_capacity,
+            battery_capacity,
+            config.include_trip_energy.unwrap_or(true),
         )?;
         Ok(bev)
     }

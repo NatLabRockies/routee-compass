@@ -3,7 +3,6 @@
   "type": "bev",
   "mass_estimate_lbs": 4700,
   "model_input_file": "../models/2023_Volvo_C40_Recharge.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "kWh/mile",
   "battery_capacity": 75,
   "battery_capacity_unit": "kilowatt_hours",

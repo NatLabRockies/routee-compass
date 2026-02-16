@@ -4,8 +4,8 @@
 //! This module does not perform per-edge temperature lookups; instead,
 //! the same temperature is applied to all edges in the traversal.
 
-mod ambient_temperature_config;
 mod temperature_traversal_builder;
+mod temperature_traversal_config;
 mod temperature_traversal_model;
 mod temperature_traversal_service;
 

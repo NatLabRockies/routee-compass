@@ -3,7 +3,6 @@
   "type": "ice",
   "mass_estimate_lbs": 3300,
   "model_input_file": "../models/2016_TOYOTA_Camry_4cyl_2WD.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "gallons gasoline/mile",
   "real_world_energy_adjustment": 1.166,
   "a_star_heuristic_energy_rate": 0.028,
