@@ -1,10 +1,11 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::algorithm::search::{
     ksp::KspTerminationCriteria, util::RouteSimilarityFunction, TerminationFailurePolicy,
 };
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "snake_case", tag = "type")]
 pub enum SearchAlgorithmConfig {
     /// Edgard Dijkstra's breadth first search algorithm, implemented as

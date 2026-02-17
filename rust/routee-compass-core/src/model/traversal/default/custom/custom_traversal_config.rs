@@ -1,8 +1,9 @@
 use super::CustomInputFormat;
 use crate::model::state::CustomVariableConfig;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct CustomTraversalConfig {
     /// file containing custom values for each edge id
     pub input_file: String,

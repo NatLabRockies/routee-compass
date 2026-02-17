@@ -3,6 +3,7 @@ use crate::model::{
     state::{CustomVariableType, StateModel, StateVariable},
     unit::{Cost, DistanceUnit, EnergyUnit, RatioUnit, SpeedUnit, TemperatureUnit, TimeUnit},
 };
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use uom::si::f64::*;
 /// a mapping for how to transform vehicle state values into a Cost.
@@ -10,7 +11,7 @@ use uom::si::f64::*;
 ///
 /// when multiple mappings are specified they are applied sequentially (in user-defined order)
 /// to the state value.
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, JsonSchema)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum VehicleCostRate {
     /// no cost rate, effectively zeroes out a state variable's impact

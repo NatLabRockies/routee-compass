@@ -10,18 +10,22 @@ use routee_compass_core::{
         traversal::TraversalModelService,
     },
 };
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
-    app::compass::{CompassAppError, CompassAppSystemParameters, CompassBuilderInventory},
+    app::compass::{
+        edge_list_search_config::EdgeListSearchConfig, CompassAppError, CompassAppSystemParameters,
+        CompassBuilderInventory,
+    },
     plugin::PluginConfig,
 };
 
 /// high-level application configuration that orchestrates together
 /// configuration requirements for the various components making up a
 /// [`CompassApp`].
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct CompassAppConfig {
     pub algorithm: SearchAlgorithmConfig,
     pub state: Option<Vec<(String, StateVariableConfig)>>,
@@ -30,19 +34,11 @@ pub struct CompassAppConfig {
     pub mapping: MapModelConfig,
     pub graph: GraphConfig,
     /// section containing a single search config or an array of search configs (OneOrMany).
-    pub search: OneOrMany<SearchConfig>,
+    pub search: OneOrMany<EdgeListSearchConfig>,
     pub plugin: PluginConfig,
     pub termination: TerminationModel,
     pub system: CompassAppSystemParameters,
     pub map_matching: Value,
-}
-
-/// sub-section of [`CompassAppConfig`] where the [`TraversalModelService`], [`AccessModelService`], and [`ConstraintModelService`] components
-/// for an [`EdgeList`] are specified.
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct SearchConfig {
-    pub traversal: Value,
-    pub constraint: Value,
 }
 
 impl CompassAppConfig {
@@ -118,7 +114,10 @@ impl CompassAppConfig {
         let result = self
             .search
             .iter()
-            .map(|el| builders.build_traversal_model_service(&el.traversal))
+            .map(|el| {
+                let conf = el.get_traversal_config();
+                builders.build_traversal_model_service(conf)
+            })
             .collect::<Result<Vec<_>, _>>()?;
         Ok(result)
     }
@@ -130,7 +129,10 @@ impl CompassAppConfig {
         let result = self
             .search
             .iter()
-            .map(|el| builders.build_constraint_model_service(&el.constraint))
+            .map(|el| {
+                let conf = el.get_constraint_config();
+                builders.build_constraint_model_service(conf)
+            })
             .collect::<Result<Vec<_>, _>>()?;
         Ok(result)
     }

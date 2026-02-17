@@ -1,8 +1,9 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::str::FromStr;
 use uom::si::f64::Velocity;
 
-#[derive(Debug, Clone, PartialEq, Eq, Copy, Hash, PartialOrd, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Copy, Hash, PartialOrd, Default, JsonSchema)]
 pub enum SpeedUnit {
     KPH,
     #[default]

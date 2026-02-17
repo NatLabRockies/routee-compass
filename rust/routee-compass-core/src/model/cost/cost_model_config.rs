@@ -4,10 +4,11 @@ use crate::model::cost::{
     network::{NetworkCostRate, NetworkCostRateBuilder},
     CostAggregation, CostModelError, VehicleCostRate,
 };
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// configuration for a cost model set at app initialization time.
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, JsonSchema)]
 pub struct CostModelConfig {
     pub displayed_costs: Option<HashSet<String>>,
     pub vehicle_rates: Option<HashMap<String, VehicleCostRate>>,

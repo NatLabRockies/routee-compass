@@ -1,12 +1,13 @@
 use super::{mapping::file_mapping::FileMapping, response_output_format_json as json_ops};
 use crate::app::compass::CompassAppError;
+use indexmap::IndexMap;
 use itertools::Itertools;
-use ordered_hash_map::OrderedHashMap;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "snake_case", tag = "type")]
 pub enum ResponseOutputFormat {
     /// writes outputs to a JSON file as either ECMA-404 JSON or as newline-delimited
@@ -16,11 +17,11 @@ pub enum ResponseOutputFormat {
     /// order matches the order of keys in the map, unless "sorted" is true, in which
     /// case the fields are sorted lexicagraphically.
     Csv {
-        mapping: OrderedHashMap<String, FileMapping>,
+        mapping: IndexMap<String, FileMapping>,
         sorted: bool,
     },
     Parquet {
-        mapping: Option<OrderedHashMap<String, FileMapping>>,
+        mapping: Option<IndexMap<String, FileMapping>>,
     },
 }
 

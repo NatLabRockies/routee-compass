@@ -1,9 +1,12 @@
 use std::str::FromStr;
 
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use uom::si::f64::ThermodynamicTemperature;
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Copy, Hash, PartialOrd, Default)]
+#[derive(
+    Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Copy, Hash, PartialOrd, Default, JsonSchema,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum TemperatureUnit {
     Fahrenheit,

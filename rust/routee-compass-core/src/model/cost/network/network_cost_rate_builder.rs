@@ -5,10 +5,11 @@ use crate::{
     model::cost::network::network_edge_cost_row::NetworkEdgeCostRow, util::fs::read_utils,
 };
 use kdam::Bar;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(tag = "type")]
 pub enum NetworkCostRateBuilder {
     #[serde(rename = "edge_id")]

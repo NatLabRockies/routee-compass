@@ -2,7 +2,7 @@ use super::mapping::file_mapping::FileMapping;
 use crate::app::compass::CompassAppError;
 use arrow::datatypes::{DataType, Field, Schema};
 use arrow::json::{reader::infer_json_schema, ReaderBuilder};
-use ordered_hash_map::OrderedHashMap;
+use indexmap::IndexMap;
 use parquet::arrow::ArrowWriter;
 use parquet::file::properties::WriterProperties;
 use serde_json::json;
@@ -16,14 +16,14 @@ pub struct ParquetPartitionWriter {
     buffer: Vec<serde_json::Value>,
     buffer_limit: usize,
     schema: Option<arrow::datatypes::SchemaRef>,
-    mapping: Option<OrderedHashMap<String, FileMapping>>,
+    mapping: Option<IndexMap<String, FileMapping>>,
 }
 
 impl ParquetPartitionWriter {
     pub fn new(
         filename: String,
         buffer_limit: usize,
-        mapping: Option<OrderedHashMap<String, FileMapping>>,
+        mapping: Option<IndexMap<String, FileMapping>>,
     ) -> Self {
         Self {
             filename,
@@ -171,7 +171,7 @@ impl ParquetPartitionWriter {
 
 fn apply_overrides(
     schema: Schema,
-    mapping: &OrderedHashMap<String, FileMapping>,
+    mapping: &IndexMap<String, FileMapping>,
 ) -> Result<Schema, CompassAppError> {
     let mut new_fields = Vec::new();
     for field in schema.fields() {

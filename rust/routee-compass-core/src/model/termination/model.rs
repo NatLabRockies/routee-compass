@@ -3,13 +3,14 @@ use crate::{
     algorithm::search::SearchTree,
     util::duration_extension::{deserialize_duration, DurationExtension},
 };
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 
 /// the termination model for the application should be evaluated at the top of each iteration
 /// of a search. if it returns true, an error response should be created for the user using the
 /// explain method.
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(tag = "type")]
 pub enum TerminationModel {
     /// terminates a query if the runtime exceeds some limit.

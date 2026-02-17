@@ -1,8 +1,9 @@
 use std::fmt::Display;
 
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case", tag = "type")]
 pub enum KspTerminationCriteria {
     /// for a given k-shortest paths search, run exactly k iterations

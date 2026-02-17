@@ -44,19 +44,20 @@ geo = { workspace = true }
 geo-traits = { workspace = true }
 geo-types = { workspace = true }
 geojson = { workspace = true }
+indexmap = { workspace = true }
 indoc = { workspace = true }
 inventory = { workspace = true }
 itertools = { workspace = true }
 kdam = { workspace = true }
 log = { workspace = true }
 ordered-float = { workspace = true }
-ordered_hash_map = { workspace = true }
 parquet = { workspace = true }
 rand = { workspace = true }
 rayon = { workspace = true }
 routee-compass-core = { path = "../routee-compass-core", version = "0.17.1" }
 routee-compass-powertrain = { path = "../routee-compass-powertrain", version = "0.17.1" }
 rstar = { workspace = true }
+schemars = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_repr = { workspace = true }

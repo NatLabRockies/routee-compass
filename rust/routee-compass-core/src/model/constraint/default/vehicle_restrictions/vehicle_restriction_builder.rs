@@ -1,7 +1,7 @@
 use super::{
     RestrictionRow, VehicleParameterType, VehicleRestriction, VehicleRestrictionFrontierService,
 };
-use crate::config::{CompassConfigurationField, ConfigJsonExtensions};
+use crate::model::constraint::default::vehicle_restrictions::config::VehicleRestrictionConfig;
 use crate::{
     model::{
         constraint::{ConstraintModelBuilder, ConstraintModelError, ConstraintModelService},
@@ -11,7 +11,7 @@ use crate::{
 };
 use indexmap::IndexMap;
 use kdam::Bar;
-use std::{collections::HashMap, path::PathBuf, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 
 pub struct VehicleRestrictionBuilder {}
 
@@ -20,21 +20,14 @@ impl ConstraintModelBuilder for VehicleRestrictionBuilder {
         &self,
         parameters: &serde_json::Value,
     ) -> Result<Arc<dyn ConstraintModelService>, ConstraintModelError> {
-        let constraint_key = CompassConfigurationField::Constraint.to_string();
-        let vehicle_restriction_input_file_key = String::from("vehicle_restriction_input_file");
-
-        let vehicle_restriction_input_file = parameters
-            .get_config_path(&vehicle_restriction_input_file_key, &constraint_key)
-            .map_err(|e| {
-                ConstraintModelError::BuildError(format!(
-                    "configuration error due to {}: {}",
-                    vehicle_restriction_input_file_key.clone(),
-                    e
-                ))
+        let config: VehicleRestrictionConfig =
+            serde_json::from_value(parameters.clone()).map_err(|e| {
+                let msg = format!("failure reading vehicle restriction config: {e}");
+                ConstraintModelError::BuildError(msg)
             })?;
 
         let vehicle_restriction_lookup =
-            vehicle_restriction_lookup_from_file(&vehicle_restriction_input_file)?;
+            vehicle_restriction_lookup_from_file(&config.vehicle_restriction_input_file)?;
 
         let m = VehicleRestrictionFrontierService {
             vehicle_restriction_lookup: Arc::new(vehicle_restriction_lookup),
@@ -45,7 +38,7 @@ impl ConstraintModelBuilder for VehicleRestrictionBuilder {
 }
 
 pub fn vehicle_restriction_lookup_from_file(
-    vehicle_restriction_input_file: &PathBuf,
+    vehicle_restriction_input_file: &str,
 ) -> Result<HashMap<EdgeId, IndexMap<VehicleParameterType, VehicleRestriction>>, ConstraintModelError>
 {
     let rows: Vec<RestrictionRow> = read_utils::from_csv(

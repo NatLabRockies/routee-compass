@@ -2,9 +2,10 @@ use crate::model::{
     constraint::default::vehicle_restrictions::VehicleParameter,
     unit::{DistanceUnit, WeightUnit},
 };
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum VehicleParameterConfig {
     Height { value: f64, unit: DistanceUnit },

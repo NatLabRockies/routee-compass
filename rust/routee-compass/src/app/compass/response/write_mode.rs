@@ -1,12 +1,13 @@
 use crate::app::compass::CompassAppError;
 use routee_compass_core::config::CompassConfigurationError;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{File, OpenOptions},
     path::Path,
 };
 
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum WriteMode {
     /// default write mode which accommodates the Compass chunking API. expects we can continue to append to a file.

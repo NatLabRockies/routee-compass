@@ -1,9 +1,12 @@
 use crate::util::serde::serde_ops::string_deserialize;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use uom::si::f64::Ratio;
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Copy, Hash, PartialOrd, Default)]
+#[derive(
+    Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Copy, Hash, PartialOrd, Default, JsonSchema,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum RatioUnit {
     Percent,

@@ -2,11 +2,12 @@ use crate::{
     algorithm::search::{edge_traversal::EdgeTraversal, search_error::SearchError, SearchInstance},
     model::network::{EdgeId, EdgeListId},
 };
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 /// finds the similarity between two paths during a ksp algorithm.
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case", tag = "type")]
 pub enum RouteSimilarityFunction {
     #[default]

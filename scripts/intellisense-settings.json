@@ -1,0 +1,14 @@
+{
+  "evenBetterToml.schema.associations": {
+    "*.compass.toml": "docs/compass-config-schema.json"
+  },
+  "json.schemas": [
+    {
+      "fileMatch": ["*.compass.json"],
+      "url": "./docs/compass-config-schema.json"
+    }
+  ],
+  "yaml.schemas": {
+    "docs/compass-config-schema.json": "*.compass.yaml"
+  }
+}

@@ -1,3 +1,4 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use uom::si::f64::Energy;
@@ -15,7 +16,9 @@ unit! {
     @liter_diesel: 3.829_023_6E7; "LDE", "Liters diesel equivalent", "L diesel equivalent";
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Copy, Hash, PartialOrd, Default)]
+#[derive(
+    Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Copy, Hash, PartialOrd, Default, JsonSchema,
+)]
 #[serde(rename_all = "snake_case", try_from = "String")]
 pub enum EnergyUnit {
     KilowattHours,
