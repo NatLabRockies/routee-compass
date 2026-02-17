@@ -53,7 +53,14 @@ pub fn prune_tree(
         })?;
         if remove {
             // new label is pareto-dominant over this previous label.
-            let _ = tree.remove(&prev_label);
+            // we only remove the previous label if it is prunable (has no children)
+            let prunable = tree
+                .get(&prev_label)
+                .map(|n| n.is_prunable())
+                .unwrap_or_default();
+            if prunable {
+                let _ = tree.remove(&prev_label);
+            }
         }
     }
 
