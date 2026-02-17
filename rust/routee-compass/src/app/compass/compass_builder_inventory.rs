@@ -23,7 +23,7 @@ use routee_compass_core::model::{
             combined::combined_builder::CombinedConstraintModelBuilder,
             no_restriction_builder::NoRestrictionBuilder,
             road_class::road_class_builder::RoadClassBuilder,
-            turn_restrictions::turn_restriction_builder::TurnRestrictionBuilder,
+            turn_restrictions::TurnRestrictionBuilder,
             vehicle_restrictions::VehicleRestrictionBuilder,
         },
         ConstraintModelBuilder, ConstraintModelService,

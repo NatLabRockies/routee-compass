@@ -12,3 +12,4 @@ mod temperature_traversal_service;
 pub use temperature_traversal_builder::TemperatureTraversalBuilder;
 pub use temperature_traversal_model::TemperatureTraversalModel;
 pub use temperature_traversal_service::TemperatureTraversalService;
+pub use ambient_temperature_config::AmbientTemperatureConfig;

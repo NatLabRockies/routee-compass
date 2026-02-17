@@ -1,9 +1,10 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
 use crate::model::traversal::TraversalModelError;
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Turn {
     NoTurn,

@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
-    app::compass::{CompassAppError, CompassAppSystemParameters, CompassBuilderInventory},
+    app::compass::{CompassAppError, CompassAppSystemParameters, CompassBuilderInventory, edge_list_search_config::EdgeListSearchConfig},
     plugin::PluginConfig,
 };
 
@@ -31,19 +31,11 @@ pub struct CompassAppConfig {
     pub mapping: MapModelConfig,
     pub graph: GraphConfig,
     /// section containing a single search config or an array of search configs (OneOrMany).
-    pub search: OneOrMany<SearchConfig>,
+    pub search: OneOrMany<EdgeListSearchConfig>,
     pub plugin: PluginConfig,
     pub termination: TerminationModel,
     pub system: CompassAppSystemParameters,
     pub map_matching: Value,
-}
-
-/// sub-section of [`CompassAppConfig`] where the [`TraversalModelService`], [`AccessModelService`], and [`ConstraintModelService`] components
-/// for an [`EdgeList`] are specified.
-#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
-pub struct SearchConfig {
-    pub traversal: Value,
-    pub constraint: Value,
 }
 
 impl CompassAppConfig {

@@ -5,7 +5,7 @@ use crate::model::{
 };
 use std::sync::Arc;
 
-use super::turn_restriction_service::{RestrictedEdgePair, TurnRestrictionFrontierService};
+use super::{RestrictionRecord, TurnRestrictionFrontierService};
 
 pub struct TurnRestrictionConstraintModel {
     pub service: Arc<TurnRestrictionFrontierService>,
@@ -21,7 +21,7 @@ impl ConstraintModel for TurnRestrictionConstraintModel {
     ) -> Result<bool, ConstraintModelError> {
         match previous_edge {
             Some(previous_edge) => {
-                let edge_pair = RestrictedEdgePair {
+                let edge_pair = RestrictionRecord {
                     prev_edge_id: previous_edge.edge_id,
                     next_edge_id: edge.edge_id,
                 };

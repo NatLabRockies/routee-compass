@@ -1,21 +1,13 @@
 use super::turn_restriction_model::TurnRestrictionConstraintModel;
 use crate::model::{
-    constraint::{ConstraintModel, ConstraintModelError, ConstraintModelService},
-    network::EdgeId,
+    constraint::{ConstraintModel, ConstraintModelError, ConstraintModelService, default::turn_restrictions::RestrictionRecord},
     state::StateModel,
 };
-use serde::Deserialize;
 use std::{collections::HashSet, sync::Arc};
-
-#[derive(Eq, PartialEq, Hash, Deserialize, Clone)]
-pub struct RestrictedEdgePair {
-    pub prev_edge_id: EdgeId,
-    pub next_edge_id: EdgeId,
-}
 
 #[derive(Clone)]
 pub struct TurnRestrictionFrontierService {
-    pub restricted_edge_pairs: Arc<HashSet<RestrictedEdgePair>>,
+    pub restricted_edge_pairs: Arc<HashSet<RestrictionRecord>>,
 }
 
 impl ConstraintModelService for TurnRestrictionFrontierService {

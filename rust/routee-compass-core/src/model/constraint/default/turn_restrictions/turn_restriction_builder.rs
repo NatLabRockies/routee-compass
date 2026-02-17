@@ -1,5 +1,6 @@
-use super::turn_restriction_service::{RestrictedEdgePair, TurnRestrictionFrontierService};
+use super::{TurnRestrictionFrontierService, RestrictionRecord};
 use crate::config::{CompassConfigurationField, ConfigJsonExtensions};
+use crate::model::constraint::default::turn_restrictions::TurnRestrictionConstraintConfig;
 use crate::{
     model::constraint::{ConstraintModelBuilder, ConstraintModelError, ConstraintModelService},
     util::fs::read_utils,
@@ -14,29 +15,22 @@ impl ConstraintModelBuilder for TurnRestrictionBuilder {
         &self,
         parameters: &serde_json::Value,
     ) -> Result<Arc<dyn ConstraintModelService>, ConstraintModelError> {
-        let constraint_key = CompassConfigurationField::Constraint.to_string();
-        let turn_restriction_file_key = String::from("turn_restriction_input_file");
-
-        let turn_restriction_file = parameters
-            .get_config_path(&turn_restriction_file_key, &constraint_key)
+        let config: TurnRestrictionConstraintConfig = serde_json::from_value(parameters.clone())
             .map_err(|e| {
-                ConstraintModelError::BuildError(format!(
-                    "configuration error due to {}: {}",
-                    turn_restriction_file_key.clone(),
-                    e
-                ))
+                let msg = format!("failure reading turn restriction constraint model config: {e}");
+                ConstraintModelError::BuildError(msg)
             })?;
 
-        let restricted_edges: HashSet<RestrictedEdgePair> = read_utils::from_csv(
-            &turn_restriction_file,
+        let restricted_edges: HashSet<RestrictionRecord> = read_utils::from_csv(
+            &config.turn_restriction_input_file,
             true,
             Some(Bar::builder().desc("turn restrictions")),
             None,
         )
         .map_err(|e| {
             ConstraintModelError::BuildError(format!(
-                "configuration error due to {}: {}",
-                turn_restriction_file_key.clone(),
+                "failure reading {}: {}",
+                config.turn_restriction_input_file,
                 e
             ))
         })?
@@ -47,7 +41,7 @@ impl ConstraintModelBuilder for TurnRestrictionBuilder {
         log::debug!(
             "Loaded {} turn restrictions from {:?}.",
             restricted_edges.len(),
-            turn_restriction_file
+            config.turn_restriction_input_file
         );
 
         let m: Arc<dyn ConstraintModelService> = Arc::new(TurnRestrictionFrontierService {
