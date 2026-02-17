@@ -1,0 +1,271 @@
+[graph]
+edge_list = [
+    { input_file = "walk/edges-compass.csv.gz" },
+    { input_file = "bike/edges-compass.csv.gz" },
+    { input_file = "drive/edges-compass.csv.gz" },
+]
+vertex_list_input_file = "vertices-compass.csv.gz"
+
+[mapping]
+type = "edge"
+geometry = [
+    { type = "from_linestrings", geometry_input_file = "walk/edges-geometries-enumerated.txt.gz" },
+    { type = "from_linestrings", geometry_input_file = "bike/edges-geometries-enumerated.txt.gz" },
+    { type = "from_linestrings", geometry_input_file = "drive/edges-geometries-enumerated.txt.gz" },
+]
+tolerance.distance = 15.0
+tolerance.unit = "meters"
+queries_without_destinations = false
+matching_type = ["point", "vertex_id", "edge_id"]
+
+[algorithm]
+type = "a*"
+
+# cut off searches that exceed these termination policies. 
+[termination]
+type = "solution_size"
+limit = 1_000_000
+
+# use a time-optimal routing strategy
+[cost]
+weights.trip_time = 1.0
+vehicle_rates.trip_time.type = "raw"
+
+###
+### WALK TOPOLOGY
+###
+[[search]] 
+traversal.type = "combined"
+traversal.models = [
+    { type = "distance", distance_unit = "miles" }, 
+    { type = "fixed_speed", name = "walk", speed = 5.0, speed_unit = "kph" },
+    { type = "time", time_unit = "minutes" },
+    { type = "multimodal", this_mode = "walk", available_modes = ["walk", "bike", "drive"], available_route_ids = [], use_route_ids = false, max_trip_legs = 5 }
+]
+
+frontier.type = "combined"
+frontier.models = [
+    { type = "time_limit", time_limit = { time = 40.0, time_unit = "minutes" }},
+    { type = "multimodal", this_mode = "walk", constraints = [], available_modes = ["walk", "bike", "drive"], available_route_ids = [], max_trip_legs = 5 }
+]
+
+###
+### BIKE TOPOLOGY
+###
+[[search]] 
+traversal.type = "combined"
+traversal.models = [
+    { type = "distance", distance_unit = "miles" }, 
+    { type = "fixed_speed", name = "bike", speed = 16.0, speed_unit = "kph" },
+    { type = "time", time_unit = "minutes" },
+    { type = "multimodal", this_mode = "bike", available_modes = ["walk", "bike", "drive"], available_route_ids = [], use_route_ids = false, max_trip_legs = 5 }
+]
+
+frontier.type = "combined"
+frontier.models = [
+    { type = "time_limit", time_limit = { time = 40.0, time_unit = "minutes" }},
+    { type = "multimodal", this_mode = "bike", constraints = [], available_modes = ["walk", "bike", "drive"], available_route_ids = [], max_trip_legs = 5 }
+]
+
+###
+### DRIVE TOPOLOGY
+###
+[[search]] 
+traversal.type = "combined"
+traversal.models = [
+    { type = "distance", distance_unit = "miles" }, 
+    { type = "speed", name = "drive", speed_unit = "mph", speed_table_input_file = "drive/edges-speeds-mph-enumerated.txt.gz" },
+    { type = "time", time_unit = "minutes" },
+    { type = "multimodal", this_mode = "drive", available_modes = ["walk", "bike", "drive"], available_route_ids = [], use_route_ids = false, max_trip_legs = 5 }
+]
+
+frontier.type = "combined"
+frontier.models = [
+    { type = "time_limit", time_limit = { time = 40.0, time_unit = "minutes" }},
+    { type = "multimodal", this_mode = "drive", constraints = [], available_modes = ["walk", "bike", "drive"], available_route_ids = [], max_trip_legs = 5 }
+]
+
+
+[[plugin.input_plugins]]
+type = "grid"
+extent_format = "wkt"
+grid = { type = "h3", resolution = 8 }
+[plugin.input_plugins.population_source]
+type = "acs"
+acs_type = "five_year"
+acs_year = 2022
+acs_resolution = "census_tract"
+acs_categories = ["B01001_001E"]
+
+[[plugin.input_plugins]]
+type = "inject"
+format = "key_value"
+write_mode = "overwrite"
+key = "grid_search"
+value.mode = ["walk", "bike", "drive"]
+
+[[plugin.output_plugins]]
+type = "traversal"
+tree = "geo_json"
+
+[[plugin.output_plugins]]
+type = "summary"
+
+[[plugin.output_plugins]]
+type = "isochrone"
+time_bin = { type = "list", times = [10, 20, 30, 40] }
+isochrone_algorithm = { type = "k_nearest_concave_hull", k = 3 }
+destination_point_generator = { type = "destination_point" }
+isochrone_output_format = "wkb"
+
+### MEP OPPORTUNITY DATA CONFIGURATION #################################
+# assigns opportunities to search results based on a file or api data source
+# and a taxonomy for MEP activity types.
+# this example shows data loaded from the census LODES online file repository
+# assigning activity types by NAICS sector id. 
+[[plugin.output_plugins]]
+type = "opportunity"
+collect_format = "aggregate"
+
+[plugin.output_plugins.model]
+type = "combined"
+
+[[plugin.output_plugins.model.models]]
+type = "api"
+vertex_input_file = "vertices-compass.csv.gz"
+activity_column_names = ["entertainment", "food", "retail", "healthcare", "services", "jobs"]
+table_orientation = "destination_vertex_oriented"
+
+[plugin.output_plugins.model.models.opportunity_source]
+type = "lodes"
+
+# denver metro region coverage. replace this with a list of geoids for your study area.
+# alternatively, study_region = national for job coverage across the US. 
+# for information on year availability of data, see <https://lehd.ces.census.gov/data/lodes/LODES8/LODESTechDoc8.4.pdf>.
+study_region = { type = "census", geoids = [
+    "08001", # Adams County
+    "08005", # Arapahoe County
+    "08013", # Boulder County
+    "08014", # Broomfield County
+    "08031", # Denver County
+    "08035", # Douglas County
+    "08039", # Elbert County
+    "08059", # Jefferson County
+    "08123", # Weld County
+] }
+
+# collect LODES data at the tract level. while it is available at the block,
+# the download + processing time is 10x that of census tracts. other possible values
+# are `block`, `county` or `state`.
+data_granularity = "census_tract"
+# different editions of the dataset, we are choosing LODES v 8.0.
+edition = "LODES8"
+# Job Type, can have a value of “JT00” for All Jobs, “JT01” for Primary Jobs, “JT02” for All
+# Private Jobs, “JT03” for Private Primary Jobs, “JT04” for All Federal Jobs, or “JT05” for
+# Federal Primary Jobs
+job_type = "JT00"
+# Segment of the workforce, can have the values of:
+# - S000: Total number of jobs (default)
+# - SA01: Number of jobs of workers age 29 or younger
+# - SA02: Number of jobs for workers age 30 to 54
+# - SA03: Number of jobs for workers age 55 or older 
+# - SE01: Number of jobs with earnings $1250/month or less
+# - SE02: Number of jobs with earnings $1251/month to $3333/month
+# - SE03: Number of jobs with earnings greater than $3333/month
+# - SI01: Number of jobs in Goods Producing industry sectors
+# - SI02: Number of jobs in Trade, Transportation, and Utilities industry sectors
+# - SI03: Number of jobs in All Other Services industry sectors
+segment = "S000"
+
+# most recent year with all states. Alaska has no coverage from 2017-2022. we may
+# want a "continental" variant which could support 2022.
+year = 2022
+
+[plugin.output_plugins.model.models.opportunity_source.activity_mapping]
+# see https://lehd.ces.census.gov/lodes/LODES8/LODESTechDoc8.0.pdf
+CNS01 = ["jobs"] # 11 (Agriculture, Forestry, Fishing and Hunting)
+CNS02 = ["jobs"] # 21 (Mining, Quarrying, and Oil and Gas Extraction)
+CNS03 = ["jobs"] # 22 (Utilities)
+CNS04 = ["jobs"] # 23 (Construction)
+CNS05 = ["jobs"] # 31-33 (Manufacturing)
+CNS06 = ["jobs"] # 42 (Wholesale Trade)
+CNS07 = ["jobs", "retail"] # 44-45 (Retail Trade)
+CNS08 = ["jobs"] # 48-49 (Transportation and Warehousing)
+CNS09 = ["jobs"] # 51 (Information)
+CNS10 = ["jobs"] # 52 (Finance and Insurance)
+CNS11 = ["jobs"] # 53 (Real Estate and Rental and Leasing)
+CNS12 = ["jobs", "services"] # 54 (Professional, Scientific, and Technical Services)
+CNS13 = ["jobs"] # 55 (Management of Companies and Enterprises)
+CNS14 = ["jobs"] # 56 (Admin/Support/Waste Mgmt/Remediation Services)
+CNS15 = ["jobs"] # 61 (Educational Services)
+CNS16 = ["jobs", "healthcare"] # 62 (Health Care and Social Assistance)
+CNS17 = ["jobs", "entertainment"] # 71 (Arts, Entertainment, and Recreation)
+CNS18 = ["jobs", "food"] # 72 (Accommodation and Food Services)
+CNS19 = ["jobs"] # 81 (Other Services [except Public Administration])
+CNS20 = ["jobs"] # 92 (Public Administration)
+
+[system]
+parallelism = 8
+response_persistence_policy = "persist_response_in_memory"
+
+[system.response_output_policy]
+type = "combined"
+
+[[system.response_output_policy.policies]]
+type = "file"
+filename = "result.json"
+[system.response_output_policy.policies.format]
+type = "json"
+newline_delimited = false
+
+[[system.response_output_policy.policies]]
+type = "file"
+filename = "result.csv"
+[system.response_output_policy.policies.format]
+type = "csv"
+sorted = true
+[system.response_output_policy.policies.format.mapping]
+grid_id = "request.grid_id"
+lon = "request.origin_x"
+lat = "request.origin_y"
+mode = "request.mode"
+runtime = "search_runtime"
+error = "error"
+
+opps_entertainment_total = "opportunity_totals.entertainment"
+opps_retail_total = "opportunity_totals.retail"
+opps_healthcare_total = "opportunity_totals.healthcare"
+opps_services_total = "opportunity_totals.services"
+opps_food_total = "opportunity_totals.food"
+opps_jobs_total = "opportunity_totals.jobs"
+
+opps_entertainment_10 = "bin.10.opportunities.entertainment"
+opps_retail_10 = "bin.10.opportunities.retail"
+opps_healthcare_10 = "bin.10.opportunities.healthcare"
+opps_services_10 = "bin.10.opportunities.services"
+opps_food_10 = "bin.10.opportunities.food"
+opps_jobs_10 = "bin.10.opportunities.jobs"
+opps_entertainment_20 = "bin.20.opportunities.entertainment"
+opps_retail_20 = "bin.20.opportunities.retail"
+opps_healthcare_20 = "bin.20.opportunities.healthcare"
+opps_services_20 = "bin.20.opportunities.services"
+opps_food_20 = "bin.20.opportunities.food"
+opps_jobs_20 = "bin.20.opportunities.jobs"
+opps_entertainment_30 = "bin.30.opportunities.entertainment"
+opps_retail_30 = "bin.30.opportunities.retail"
+opps_healthcare_30 = "bin.30.opportunities.healthcare"
+opps_services_30 = "bin.30.opportunities.services"
+opps_food_30 = "bin.30.opportunities.food"
+opps_jobs_30 = "bin.30.opportunities.jobs"
+opps_entertainment_40 = "bin.40.opportunities.entertainment"
+opps_retail_40 = "bin.40.opportunities.retail"
+opps_healthcare_40 = "bin.40.opportunities.healthcare"
+opps_services_40 = "bin.40.opportunities.services"
+opps_food_40 = "bin.40.opportunities.food"
+opps_jobs_40 = "bin.40.opportunities.jobs"
+
+isochrone_10 = "bin.10.isochrone"
+isochrone_20 = "bin.20.isochrone"
+isochrone_30 = "bin.30.isochrone"
+isochrone_40 = "bin.40.isochrone"
+

@@ -10,7 +10,7 @@ use crate::{
         OvertureMapsCollectorConfig, ReleaseVersion, SegmentAccessRestrictionWhen,
         TransportationCollection,
     },
-    graph::OmfGraphVectorized,
+    graph::{OmfGraphSource, OmfGraphStats, OmfGraphSummary, OmfGraphVectorized},
     util,
 };
 
@@ -43,6 +43,7 @@ pub struct IslandDetectionAlgorithmConfiguration {
 
 /// runs an OMF network import using the provided configuration.
 pub fn run(
+    name: &str,
     bbox: Option<&CliBoundingBox>,
     modes: &[NetworkEdgeListConfiguration],
     output_directory: &Path,
@@ -62,7 +63,17 @@ pub fn run(
 
     let vectorized_graph =
         OmfGraphVectorized::new(&collection, modes, island_detection_configuration)?;
-    vectorized_graph.write_compass(output_directory, true)?;
+
+    // summarize imported graph
+    let release = match local_source {
+        Some(local) => format!("file://{}", local.to_string_lossy()),
+        None => collection.release.clone(),
+    };
+    let stats = OmfGraphStats::try_from(&vectorized_graph)?;
+    let source = OmfGraphSource::new(&release, name, bbox);
+    let summary = OmfGraphSummary { source, stats };
+
+    vectorized_graph.write_compass(&summary, output_directory, true)?;
 
     Ok(())
 }

@@ -13,6 +13,7 @@ use crate::{
     graph::{
         component_algorithm::island_detection_algorithm, segment_ops,
         serialize_ops::clean_omf_edge_list, vertex_serializable::VertexSerializable,
+        OmfGraphSummary,
     },
 };
 use geo::LineString;
@@ -28,6 +29,7 @@ pub const SPEEDS_FILENAME: &str = "edges-speeds-mph-enumerated.txt.gz";
 pub const CLASSES_FILENAME: &str = "edges-classes-enumerated.txt.gz";
 pub const SPEED_MAPPING_FILENAME: &str = "edges-classes-speed-mapping.csv.gz";
 pub const BEARINGS_FILENAME: &str = "edges-bearings-enumerated.txt.gz";
+pub const GLOBAL_AVG_SPEED_KEY: &str = "_global_";
 
 pub struct OmfGraphVectorized {
     pub vertices: Vec<Vertex>,
@@ -147,7 +149,7 @@ impl OmfGraphVectorized {
                 .iter()
                 .map(|(&k, v)| (k.as_str(), *v))
                 .collect::<HashMap<String, f64>>();
-            speed_lookup.insert(String::from("_global_"), global_speed);
+            speed_lookup.insert(String::from(GLOBAL_AVG_SPEED_KEY), global_speed);
 
             let edge_list = OmfEdgeList {
                 edge_list_id,
@@ -216,6 +218,7 @@ impl OmfGraphVectorized {
     /// write the graph to disk in vectorized Compass format.
     pub fn write_compass(
         &self,
+        summary: &OmfGraphSummary,
         output_directory: &Path,
         overwrite: bool,
     ) -> Result<(), OvertureMapsCollectionError> {
@@ -227,6 +230,12 @@ impl OmfGraphVectorized {
         crate::util::fs::create_dirs(output_directory)?;
         use crate::util::fs::serialize_into_csv;
         use crate::util::fs::serialize_into_enumerated_txt;
+
+        // write the TOML summary file
+        write_summary(output_directory, summary)?;
+
+        // copy default configuration file into the output directory
+        crate::util::fs::copy_default_config(output_directory)?;
 
         // write vertices
         serialize_into_csv(
@@ -319,4 +328,20 @@ impl OmfGraphVectorized {
 
         Ok(())
     }
+}
+
+fn write_summary(
+    output_directory: &Path,
+    summary: &OmfGraphSummary,
+) -> Result<(), OvertureMapsCollectionError> {
+    let summary_toml = toml::to_string_pretty(&summary).map_err(|e| {
+        OvertureMapsCollectionError::InternalError(format!("failure serializing summary TOML: {e}"))
+    })?;
+    let summary_path = output_directory.join("summary.toml");
+    std::fs::write(&summary_path, &summary_toml).map_err(|e| {
+        OvertureMapsCollectionError::WriteError {
+            path: summary_path,
+            message: e.to_string(),
+        }
+    })
 }

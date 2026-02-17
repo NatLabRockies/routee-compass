@@ -1,4 +1,7 @@
-use std::{fs::File, path::Path};
+use std::{
+    fs::File,
+    path::{Path, PathBuf},
+};
 
 use csv::QuoteStyle;
 use flate2::{write::GzEncoder, Compression};
@@ -6,6 +9,23 @@ use kdam::tqdm;
 use serde::Serialize;
 
 use crate::collection::OvertureMapsCollectionError;
+
+/// copies bambam-config-omf.toml to the directory of an OMF import.
+pub fn copy_default_config(output_directory: &Path) -> Result<(), OvertureMapsCollectionError> {
+    let src = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("src")
+        .join("util")
+        .join("bambam-config-omf.toml");
+    let dst = output_directory.join("bambam.toml");
+    std::fs::copy(&src, &dst).map_err(|e| OvertureMapsCollectionError::WriteError {
+        path: dst,
+        message: format!(
+            "unable to copy default TOML from '{}': {e}",
+            src.to_str().unwrap_or("?")
+        ),
+    })?;
+    Ok(())
+}
 
 /// helper function to "mkdir -p path" - make all directories along a path
 pub fn create_dirs<P>(path: P) -> Result<(), OvertureMapsCollectionError>

@@ -9,6 +9,7 @@ use crate::collection::{
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TransportationCollection {
+    pub release: String,
     pub connectors: Vec<TransportationConnectorRecord>,
     pub segments: Vec<TransportationSegmentRecord>,
 }
@@ -21,9 +22,13 @@ impl TransportationCollection {
         release: ReleaseVersion,
         row_filter_config: Option<RowFilterConfig>,
     ) -> Result<Self, OvertureMapsCollectionError> {
+        let uri = match &release {
+            ReleaseVersion::Latest => collector.get_latest_release()?,
+            other => String::from(other),
+        };
         let connectors = collector
             .collect_from_release(
-                release.clone(),
+                &uri,
                 &OvertureRecordType::Connector,
                 row_filter_config.clone(),
             )?
@@ -40,7 +45,7 @@ impl TransportationCollection {
 
         let segments = collector
             .collect_from_release(
-                release.clone(),
+                &uri,
                 &OvertureRecordType::Segment,
                 row_filter_config.clone(),
             )?
@@ -56,6 +61,7 @@ impl TransportationCollection {
             .collect::<Result<Vec<TransportationSegmentRecord>, OvertureMapsCollectionError>>()?;
 
         Ok(Self {
+            release: uri,
             connectors,
             segments,
         })
