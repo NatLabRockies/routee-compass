@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771368042122,
+  "lastUpdate": 1771369167489,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -2699,6 +2699,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 3085683,
             "range": "± 123634",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nreinicke@users.noreply.github.com",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ecd3249d8332a9ab0e9dd1ed65e9abf74b89d5b6",
+          "message": "Stricter configs with serde (#470)\n\n* guard examples with main function; update conversion script\n\n* update examples based on latest changes\n\n* fix search pruning taking out parents\n\n* add hooks to generate_compass_dataset function\n\n* Stricter configs with serde\n\n* make test dependent on build for pixi",
+          "timestamp": "2026-02-17T15:54:13-07:00",
+          "tree_id": "4146899af755a3f4e9485190620e0eeaa2163e4c",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/ecd3249d8332a9ab0e9dd1ed65e9abf74b89d5b6"
+        },
+        "date": 1771369167145,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2964390,
+            "range": "± 147635",
             "unit": "ns/iter"
           }
         ]
