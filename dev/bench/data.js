@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771354972395,
+  "lastUpdate": 1771368042122,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -2669,6 +2669,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 3045465,
             "range": "± 110785",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nreinicke@users.noreply.github.com",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "80be43a4c8a739f6f0574cef4b67b49f6a89a7df",
+          "message": "Add hooks to generate_compass_dataset function (#469)\n\n* guard examples with main function; update conversion script\n\n* update examples based on latest changes\n\n* fix search pruning taking out parents\n\n* add hooks to generate_compass_dataset function\n\n* make hook parameter field names more verbose and add better doc string",
+          "timestamp": "2026-02-17T15:34:08-07:00",
+          "tree_id": "9a0456489ee5a39db8d03f2600d595fec76b68ff",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/80be43a4c8a739f6f0574cef4b67b49f6a89a7df"
+        },
+        "date": 1771368041328,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 3085683,
+            "range": "± 123634",
             "unit": "ns/iter"
           }
         ]
