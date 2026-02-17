@@ -1,0 +1,1842 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CompassAppConfig",
+  "description": "high-level application configuration that orchestrates together\nconfiguration requirements for the various components making up a\n[`CompassApp`].",
+  "type": "object",
+  "properties": {
+    "algorithm": {
+      "$ref": "#/$defs/SearchAlgorithmConfig"
+    },
+    "state": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          {
+            "type": "string"
+          },
+          {
+            "$ref": "#/$defs/StateVariableConfig"
+          }
+        ],
+        "minItems": 2,
+        "maxItems": 2
+      }
+    },
+    "cost": {
+      "$ref": "#/$defs/CostModelConfig"
+    },
+    "label": true,
+    "mapping": {
+      "$ref": "#/$defs/MapModelConfig"
+    },
+    "graph": {
+      "$ref": "#/$defs/GraphConfig"
+    },
+    "search": {
+      "description": "section containing a single search config or an array of search configs (OneOrMany).",
+      "$ref": "#/$defs/OneOrMany_EdgeListSearchConfig"
+    },
+    "plugin": {
+      "$ref": "#/$defs/PluginConfig"
+    },
+    "termination": {
+      "$ref": "#/$defs/TerminationModel"
+    },
+    "system": {
+      "$ref": "#/$defs/CompassAppSystemParameters"
+    },
+    "map_matching": true
+  },
+  "required": [
+    "algorithm",
+    "cost",
+    "label",
+    "mapping",
+    "graph",
+    "search",
+    "plugin",
+    "termination",
+    "system",
+    "map_matching"
+  ],
+  "$defs": {
+    "SearchAlgorithmConfig": {
+      "oneOf": [
+        {
+          "description": "Edgard Dijkstra's breadth first search algorithm, implemented as\nA* with a zero-valued cost estimate function.",
+          "type": "object",
+          "properties": {
+            "termination_behavior": {
+              "description": "optional argument to define handling of terminated searches",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TerminationFailurePolicy"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "dijkstras"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "description": "Classic best-first search algorithm.",
+          "type": "object",
+          "properties": {
+            "termination_behavior": {
+              "description": "optional argument to define handling of terminated searches",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TerminationFailurePolicy"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "a*"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "description": "K-shortest paths algorithm that relies on a novel bidirectional search algorithm\ncombined with a map-algebraic heuristic to identify midpoints on approximate ksp\npaths.\nTaken from the paper Häcker, Christian, et al. \"Most diverse near-shortest paths.\"\nProceedings of the 29th International Conference on Advances in\nGeographic Information Systems. 2021.",
+          "type": "object",
+          "properties": {
+            "k": {
+              "description": "number of alternative paths to attempt",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "underlying": {
+              "description": "path search algorithm to use",
+              "$ref": "#/$defs/SearchAlgorithmConfig"
+            },
+            "similarity": {
+              "description": "if provided, filters out potential solution paths based on their\nsimilarity to the paths in the stored result set",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/RouteSimilarityFunction"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "termination": {
+              "description": "termination criteria for the inner path search function",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/KspTerminationCriteria"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "svp"
+            }
+          },
+          "required": [
+            "type",
+            "k",
+            "underlying"
+          ]
+        },
+        {
+          "description": "K-shortest paths algorithm that relies on successive edge cuts to find alternatives\nto the true shortest path. Taken from the paper Yen, Jin Y. \"An algorithm for finding\nshortest routes from all source nodes to a given destination in general networks.\"\nQuarterly of applied mathematics 27.4 (1970): 526-530.",
+          "type": "object",
+          "properties": {
+            "k": {
+              "description": "number of alternative paths to attempt",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "underlying": {
+              "description": "path search algorithm to use",
+              "$ref": "#/$defs/SearchAlgorithmConfig"
+            },
+            "similarity": {
+              "description": "if provided, filters out potential solution paths based on their\nsimilarity to the paths in the stored result set",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/RouteSimilarityFunction"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "termination": {
+              "description": "termination criteria for the inner path search function",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/KspTerminationCriteria"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "yens"
+            }
+          },
+          "required": [
+            "type",
+            "k",
+            "underlying"
+          ]
+        }
+      ]
+    },
+    "TerminationFailurePolicy": {
+      "oneOf": [
+        {
+          "description": "treat any early-terminated search as a routing failure",
+          "type": "string",
+          "const": "all_terminations_fail"
+        },
+        {
+          "description": "treat early-terminated path searches as failures. if the query\nhas no destination (if the result is a tree), it is not a failure.\nused for reachability search, isochrone generation, etc.",
+          "type": "string",
+          "const": "allow_tree_termination"
+        }
+      ]
+    },
+    "RouteSimilarityFunction": {
+      "description": "finds the similarity between two paths during a ksp algorithm.",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "accept_all"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "description": "each edge id match between paths is counted. a path is \"similar\" if\nmatch count / total edges is greater than threshold.",
+          "type": "object",
+          "properties": {
+            "threshold": {
+              "type": "number",
+              "format": "double"
+            },
+            "type": {
+              "type": "string",
+              "const": "edge_id_cosine_similarity"
+            }
+          },
+          "required": [
+            "type",
+            "threshold"
+          ]
+        },
+        {
+          "description": "weights each match count by the edge distance. a path is \"similar\" if\nmatch distances / total distances is greater than threshold.",
+          "type": "object",
+          "properties": {
+            "threshold": {
+              "type": "number",
+              "format": "double"
+            },
+            "type": {
+              "type": "string",
+              "const": "distance_weighted_cosine_similarity"
+            }
+          },
+          "required": [
+            "type",
+            "threshold"
+          ]
+        }
+      ]
+    },
+    "KspTerminationCriteria": {
+      "oneOf": [
+        {
+          "description": "for a given k-shortest paths search, run exactly k iterations",
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "exact"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "description": "for a given k-shortest paths search, run up to $max solutions found when possible.",
+          "type": "object",
+          "properties": {
+            "max": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "max_iteration"
+            }
+          },
+          "required": [
+            "type",
+            "max"
+          ]
+        },
+        {
+          "description": "for a given k-shortest path search, run k * $factor solutions found when possible\nfactor * k should probably be greater than k (factor should be greater than 1).",
+          "type": "object",
+          "properties": {
+            "factor": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "factor"
+            }
+          },
+          "required": [
+            "type",
+            "factor"
+          ]
+        }
+      ]
+    },
+    "StateVariableConfig": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "distance"
+              ]
+            },
+            "initial": {
+              "type": "number"
+            },
+            "accumulator": {
+              "type": "boolean"
+            },
+            "output_unit": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DistanceUnit"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "initial",
+            "accumulator"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "time"
+              ]
+            },
+            "initial": {
+              "type": "number"
+            },
+            "accumulator": {
+              "type": "boolean"
+            },
+            "output_unit": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TimeUnit"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "initial",
+            "accumulator"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "speed"
+              ]
+            },
+            "initial": {
+              "type": "number"
+            },
+            "accumulator": {
+              "type": "boolean"
+            },
+            "output_unit": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SpeedUnit"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "initial",
+            "accumulator"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "energy"
+              ]
+            },
+            "initial": {
+              "type": "number"
+            },
+            "accumulator": {
+              "type": "boolean"
+            },
+            "output_unit": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/EnergyUnit"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "initial",
+            "accumulator"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "ratio"
+              ]
+            },
+            "initial": {
+              "type": "number"
+            },
+            "accumulator": {
+              "type": "boolean"
+            },
+            "output_unit": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/RatioUnit"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "initial",
+            "accumulator"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "temperature"
+              ]
+            },
+            "initial": {
+              "type": "number"
+            },
+            "accumulator": {
+              "type": "boolean"
+            },
+            "output_unit": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TemperatureUnit"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "initial",
+            "accumulator"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "custom"
+              ]
+            },
+            "custom_type": {
+              "type": "string"
+            },
+            "value": {
+              "$ref": "#/$defs/CustomVariableConfig"
+            },
+            "accumulator": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "custom_type",
+            "value",
+            "accumulator"
+          ]
+        }
+      ]
+    },
+    "DistanceUnit": {
+      "type": "string"
+    },
+    "TimeUnit": {
+      "type": "string",
+      "enum": [
+        "hours",
+        "minutes",
+        "seconds",
+        "milliseconds"
+      ]
+    },
+    "SpeedUnit": {
+      "type": "string",
+      "enum": [
+        "KPH",
+        "MPH",
+        "MPS"
+      ]
+    },
+    "EnergyUnit": {
+      "type": "string"
+    },
+    "RatioUnit": {
+      "type": "string",
+      "enum": [
+        "percent",
+        "decimal",
+        "millis"
+      ]
+    },
+    "TemperatureUnit": {
+      "type": "string",
+      "enum": [
+        "fahrenheit",
+        "celsius",
+        "kelvin"
+      ]
+    },
+    "CustomVariableConfig": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "floating_point"
+            },
+            "initial": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "type",
+            "initial"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "signed_integer"
+            },
+            "initial": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "type",
+            "initial"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "unsigned_integer"
+            },
+            "initial": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "type",
+            "initial"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "boolean"
+            },
+            "initial": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "initial"
+          ]
+        }
+      ]
+    },
+    "CostModelConfig": {
+      "description": "configuration for a cost model set at app initialization time.",
+      "type": "object",
+      "properties": {
+        "displayed_costs": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "vehicle_rates": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/VehicleCostRate"
+          }
+        },
+        "network_rates": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/NetworkCostRateBuilder"
+          }
+        },
+        "weights": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "cost_aggregation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CostAggregation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ignore_unknown_user_provided_weights": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "VehicleCostRate": {
+      "description": "a mapping for how to transform vehicle state values into a Cost.\nmappings can be a single instance of Raw, Factor, or Offset mapping.\n\nwhen multiple mappings are specified they are applied sequentially (in user-defined order)\nto the state value.",
+      "oneOf": [
+        {
+          "description": "no cost rate, effectively zeroes out a state variable's impact\non the cost of traversal.",
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "zero"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "raw"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "description": "use a distance value as a cost, optionally multiplied against a cost factor",
+          "type": "object",
+          "properties": {
+            "factor": {
+              "type": "number",
+              "format": "double"
+            },
+            "unit": {
+              "$ref": "#/$defs/DistanceUnit"
+            },
+            "type": {
+              "type": "string",
+              "const": "distance"
+            }
+          },
+          "required": [
+            "type",
+            "factor",
+            "unit"
+          ]
+        },
+        {
+          "description": "use a time value as a cost, optionally multiplied against a cost factor",
+          "type": "object",
+          "properties": {
+            "factor": {
+              "type": "number",
+              "format": "double"
+            },
+            "unit": {
+              "$ref": "#/$defs/TimeUnit"
+            },
+            "type": {
+              "type": "string",
+              "const": "time"
+            }
+          },
+          "required": [
+            "type",
+            "factor",
+            "unit"
+          ]
+        },
+        {
+          "description": "use a speed value as a cost, optionally multiplied against a cost factor",
+          "type": "object",
+          "properties": {
+            "factor": {
+              "type": "number",
+              "format": "double"
+            },
+            "unit": {
+              "$ref": "#/$defs/SpeedUnit"
+            },
+            "type": {
+              "type": "string",
+              "const": "speed"
+            }
+          },
+          "required": [
+            "type",
+            "factor",
+            "unit"
+          ]
+        },
+        {
+          "description": "use a energy value as a cost, optionally multiplied against a cost factor",
+          "type": "object",
+          "properties": {
+            "factor": {
+              "type": "number",
+              "format": "double"
+            },
+            "unit": {
+              "$ref": "#/$defs/EnergyUnit"
+            },
+            "type": {
+              "type": "string",
+              "const": "energy"
+            }
+          },
+          "required": [
+            "type",
+            "factor",
+            "unit"
+          ]
+        },
+        {
+          "description": "use a ratio value as a cost, optionally multiplied against a cost factor",
+          "type": "object",
+          "properties": {
+            "factor": {
+              "type": "number",
+              "format": "double"
+            },
+            "unit": {
+              "$ref": "#/$defs/RatioUnit"
+            },
+            "type": {
+              "type": "string",
+              "const": "ratio"
+            }
+          },
+          "required": [
+            "type",
+            "factor",
+            "unit"
+          ]
+        },
+        {
+          "description": "use a temperature value as a cost, optionally multiplied against a cost factor",
+          "type": "object",
+          "properties": {
+            "factor": {
+              "type": "number",
+              "format": "double"
+            },
+            "unit": {
+              "$ref": "#/$defs/TemperatureUnit"
+            },
+            "type": {
+              "type": "string",
+              "const": "temperature"
+            }
+          },
+          "required": [
+            "type",
+            "factor",
+            "unit"
+          ]
+        },
+        {
+          "description": "use a custom value as a cost, optionally multiplied against a cost factor",
+          "type": "object",
+          "properties": {
+            "variable_type": {
+              "$ref": "#/$defs/CustomVariableType"
+            },
+            "factor": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "type": {
+              "type": "string",
+              "const": "custom"
+            }
+          },
+          "required": [
+            "type",
+            "variable_type"
+          ]
+        }
+      ]
+    },
+    "CustomVariableType": {
+      "type": "string",
+      "enum": [
+        "floating_point",
+        "signed_integer",
+        "unsigned_integer",
+        "boolean"
+      ]
+    },
+    "NetworkCostRateBuilder": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "cost_input_file": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "edge_id"
+            }
+          },
+          "required": [
+            "type",
+            "cost_input_file"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "cost_input_file": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "vertex_id"
+            }
+          },
+          "required": [
+            "type",
+            "cost_input_file"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "combined"
+            }
+          },
+          "items": {
+            "$ref": "#/$defs/NetworkCostRateBuilder"
+          },
+          "required": [
+            "type"
+          ]
+        }
+      ]
+    },
+    "CostAggregation": {
+      "oneOf": [
+        {
+          "description": "sums all costs together",
+          "type": "string",
+          "const": "sum"
+        },
+        {
+          "description": "multiplies all costs together",
+          "type": "string",
+          "const": "mul"
+        }
+      ]
+    },
+    "MapModelConfig": {
+      "type": "object",
+      "properties": {
+        "tolerance": {
+          "description": "distance from coordinate to the nearest vertex required for map matching",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DistanceTolerance"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "spatial_index_type": {
+          "description": "geometries to place in the spatial index used for map matching.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SpatialIndexType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "matching_type": {
+          "description": "the [`MatchingType`]s supported",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "geometry": {
+          "description": "for each edge list, geometry configuration",
+          "$ref": "#/$defs/OneOrMany_MapModelGeometryConfig"
+        },
+        "queries_without_destinations": {
+          "description": "allow source-only queries for shortest path tree outputs",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "geometry",
+        "queries_without_destinations"
+      ]
+    },
+    "DistanceTolerance": {
+      "type": "object",
+      "properties": {
+        "distance": {
+          "type": "number",
+          "format": "double"
+        },
+        "unit": {
+          "$ref": "#/$defs/DistanceUnit"
+        }
+      },
+      "required": [
+        "distance",
+        "unit"
+      ]
+    },
+    "SpatialIndexType": {
+      "type": "string",
+      "enum": [
+        "vertex",
+        "edge"
+      ]
+    },
+    "OneOrMany_MapModelGeometryConfig": {
+      "description": "Either a single item or an array of items",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MapModelGeometryConfig"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MapModelGeometryConfig"
+          }
+        }
+      ]
+    },
+    "MapModelGeometryConfig": {
+      "description": "for a given EdgeList, the source of its geometries. this can be\n  - simply constructed by drawing lines between the vertices\n    used by each edge in this edgelist (from_vertices)\n  - a file containing LineStrings (from_linestrings)",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "from_vertices"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "geometry_input_file": {
+              "description": "file containing edge geometries for this [`EdgeList`]",
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "from_linestrings"
+            }
+          },
+          "required": [
+            "type",
+            "geometry_input_file"
+          ]
+        }
+      ]
+    },
+    "GraphConfig": {
+      "type": "object",
+      "properties": {
+        "vertex_list_input_file": {
+          "type": "string"
+        },
+        "edge_list": {
+          "$ref": "#/$defs/OneOrMany_EdgeListConfig"
+        }
+      },
+      "required": [
+        "vertex_list_input_file",
+        "edge_list"
+      ]
+    },
+    "OneOrMany_EdgeListConfig": {
+      "description": "Either a single item or an array of items",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EdgeListConfig"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EdgeListConfig"
+          }
+        }
+      ]
+    },
+    "EdgeListConfig": {
+      "type": "object",
+      "properties": {
+        "input_file": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "input_file"
+      ]
+    },
+    "OneOrMany_EdgeListSearchConfig": {
+      "description": "Either a single item or an array of items",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EdgeListSearchConfig"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EdgeListSearchConfig"
+          }
+        }
+      ]
+    },
+    "EdgeListSearchConfig": {
+      "description": "sub-section of [`CompassAppConfig`] where the [`TraversalModelService`], [`AccessModelService`], and [`ConstraintModelService`] components\nfor an [`EdgeList`] are specified.",
+      "type": "object",
+      "properties": {
+        "traversal": {
+          "$ref": "#/$defs/TraversalConfig"
+        },
+        "constraint": {
+          "$ref": "#/$defs/ConstraintConfig"
+        }
+      },
+      "required": [
+        "traversal",
+        "constraint"
+      ]
+    },
+    "TraversalConfig": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CustomTraversalConfig"
+        },
+        {
+          "$ref": "#/$defs/DistanceTraversalConfig"
+        },
+        {
+          "$ref": "#/$defs/GradeConfiguration"
+        },
+        {
+          "$ref": "#/$defs/SpeedConfiguration"
+        },
+        {
+          "$ref": "#/$defs/AmbientTemperatureConfig"
+        },
+        {
+          "$ref": "#/$defs/TimeTraversalConfig"
+        },
+        {
+          "$ref": "#/$defs/TurnDelayModelConfig"
+        }
+      ],
+      "$comment": "This schema shows default implementations. Users can extend by implementing the TraversalModel trait."
+    },
+    "CustomTraversalConfig": {
+      "type": "object",
+      "properties": {
+        "input_file": {
+          "description": "file containing custom values for each edge id",
+          "type": "string"
+        },
+        "file_format": {
+          "description": "whether the input data is dense (aka, an enumerated edge_id file) or\nsparse (aka, a CSV with key/value pairs)",
+          "$ref": "#/$defs/CustomInputFormat"
+        },
+        "custom_type": {
+          "description": "type name of the state variable, such as \"Dollars\" or \"RouteId\"",
+          "type": "string"
+        },
+        "variable_config": {
+          "description": "format and initial value of this feature",
+          "$ref": "#/$defs/CustomVariableConfig"
+        },
+        "accumulator": {
+          "description": "whether to accumulate values (via addition) or simply insert/set them",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "input_file",
+        "file_format",
+        "custom_type",
+        "variable_config",
+        "accumulator"
+      ]
+    },
+    "CustomInputFormat": {
+      "type": "string",
+      "enum": [
+        "Dense",
+        "Sparse"
+      ]
+    },
+    "DistanceTraversalConfig": {
+      "type": "object",
+      "properties": {
+        "distance_unit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DistanceUnit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "include_trip_distance": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": null
+        }
+      }
+    },
+    "GradeConfiguration": {
+      "description": "provides configuration for instantiating the grade engine used in grade modeling.",
+      "type": "object",
+      "properties": {
+        "grade_input_file": {
+          "description": "file with dense mapping from edge id to grade value",
+          "type": "string"
+        },
+        "grade_unit": {
+          "description": "type of grade values in file",
+          "$ref": "#/$defs/RatioUnit"
+        }
+      },
+      "required": [
+        "grade_input_file",
+        "grade_unit"
+      ]
+    },
+    "SpeedConfiguration": {
+      "type": "object",
+      "properties": {
+        "speed_table_input_file": {
+          "description": "file containing speed values for each edge id",
+          "type": "string"
+        },
+        "speed_unit": {
+          "description": "unit the speeds were recorded in",
+          "$ref": "#/$defs/SpeedUnit"
+        }
+      },
+      "required": [
+        "speed_table_input_file",
+        "speed_unit"
+      ]
+    },
+    "AmbientTemperatureConfig": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "format": "double"
+        },
+        "unit": {
+          "$ref": "#/$defs/TemperatureUnit"
+        }
+      },
+      "required": [
+        "value",
+        "unit"
+      ]
+    },
+    "TimeTraversalConfig": {
+      "type": "object",
+      "properties": {
+        "time_unit": {
+          "description": "time unit for state modeling",
+          "$ref": "#/$defs/TimeUnit"
+        },
+        "include_trip_time": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "time_unit"
+      ]
+    },
+    "TurnDelayModelConfig": {
+      "type": "object",
+      "properties": {
+        "table": {
+          "type": "object",
+          "properties": {
+            "left": {
+              "type": "number",
+              "format": "double"
+            },
+            "no_turn": {
+              "type": "number",
+              "format": "double"
+            },
+            "right": {
+              "type": "number",
+              "format": "double"
+            },
+            "sharp_left": {
+              "type": "number",
+              "format": "double"
+            },
+            "sharp_right": {
+              "type": "number",
+              "format": "double"
+            },
+            "slight_left": {
+              "type": "number",
+              "format": "double"
+            },
+            "slight_right": {
+              "type": "number",
+              "format": "double"
+            },
+            "u_turn": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false
+        },
+        "time_unit": {
+          "$ref": "#/$defs/TimeUnit"
+        }
+      },
+      "required": [
+        "table",
+        "time_unit"
+      ]
+    },
+    "ConstraintConfig": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RoadClassConstraintConfig"
+        },
+        {
+          "$ref": "#/$defs/TurnRestrictionConstraintConfig"
+        },
+        {
+          "$ref": "#/$defs/VehicleRestrictionConfig"
+        }
+      ],
+      "$comment": "This schema shows default implementations. Users can extend by implementing the ConstraintModel trait."
+    },
+    "RoadClassConstraintConfig": {
+      "type": "object",
+      "properties": {
+        "road_class_input_file": {
+          "description": "file containing class labels by edge id. each row index \ncorresponds to the EdgeId index.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "road_class_input_file"
+      ]
+    },
+    "TurnRestrictionConstraintConfig": {
+      "type": "object",
+      "properties": {
+        "turn_restriction_input_file": {
+          "description": "CSV file containing turn restrictions. matches [super::Turn]",
+          "type": "string"
+        }
+      },
+      "required": [
+        "turn_restriction_input_file"
+      ]
+    },
+    "VehicleRestrictionConfig": {
+      "type": "object",
+      "properties": {
+        "vehicle_restriction_input_file": {
+          "description": "CSV file containing rows of [super::RestrictionRow] values",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_restriction_input_file"
+      ]
+    },
+    "PluginConfig": {
+      "type": "object",
+      "properties": {
+        "input_plugins": {
+          "type": "array",
+          "items": true
+        },
+        "output_plugins": {
+          "type": "array",
+          "items": true
+        }
+      },
+      "required": [
+        "input_plugins",
+        "output_plugins"
+      ]
+    },
+    "TerminationModel": {
+      "description": "the termination model for the application should be evaluated at the top of each iteration\nof a search. if it returns true, an error response should be created for the user using the\nexplain method.",
+      "oneOf": [
+        {
+          "description": "terminates a query if the runtime exceeds some limit.\nonly checks at some provided iteration frequency, since the computation is expensive.",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "$ref": "#/$defs/Duration"
+            },
+            "frequency": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint64",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "query_runtime"
+            }
+          },
+          "required": [
+            "type",
+            "limit"
+          ]
+        },
+        {
+          "description": "terminates if the size of the solution exceeds (greater than) some limit",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "solution_size"
+            }
+          },
+          "required": [
+            "type",
+            "limit"
+          ]
+        },
+        {
+          "description": "terminates if the number of iterations exceeds (greater than) some limit\niterations begin at 0, so we add 1 to the iteration to make this comparison",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "iterations"
+            }
+          },
+          "required": [
+            "type",
+            "limit"
+          ]
+        },
+        {
+          "description": "terminates a query if the solution size exceeds some limit.\nonly checks at some provided iteration frequency, since the computation is expensive.",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "number",
+              "format": "double"
+            },
+            "unit": {
+              "$ref": "#/$defs/MemoryUnit"
+            },
+            "frequency": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint64",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "ram"
+            }
+          },
+          "required": [
+            "type",
+            "limit",
+            "unit"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "models": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TerminationModel"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "combined"
+            }
+          },
+          "required": [
+            "type",
+            "models"
+          ]
+        }
+      ]
+    },
+    "Duration": {
+      "type": "object",
+      "properties": {
+        "secs": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "secs",
+        "nanos"
+      ]
+    },
+    "MemoryUnit": {
+      "type": "string",
+      "enum": [
+        "MB",
+        "GB"
+      ]
+    },
+    "CompassAppSystemParameters": {
+      "type": "object",
+      "properties": {
+        "parallelism": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "default_edge_list": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "response_persistence_policy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResponsePersistencePolicy"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "response_output_policy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResponseOutputPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ResponsePersistencePolicy": {
+      "description": "declares a policy for search object response memory persistence.",
+      "type": "string",
+      "enum": [
+        "persist_response_in_memory",
+        "discard_response_from_memory"
+      ]
+    },
+    "ResponseOutputPolicy": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "none"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "filename": {
+              "description": "destination file. may be a standard file suffix, or, if terminates with '.gz' will be gzip-encrypted.",
+              "type": "string"
+            },
+            "format": {
+              "description": "file format to target",
+              "$ref": "#/$defs/ResponseOutputFormat"
+            },
+            "file_flush_rate": {
+              "description": "optional argument to specify the frequency (in rows) to flush data to the file",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint64",
+              "minimum": 0
+            },
+            "write_mode": {
+              "description": "optional argument to specify if we expect to open, append, or overwrite data.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/WriteMode"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "file"
+            }
+          },
+          "required": [
+            "type",
+            "filename",
+            "format"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ResponseOutputPolicy"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "combined"
+            }
+          },
+          "required": [
+            "type",
+            "policies"
+          ]
+        }
+      ]
+    },
+    "ResponseOutputFormat": {
+      "oneOf": [
+        {
+          "description": "writes outputs to a JSON file as either ECMA-404 JSON or as newline-delimited\nJSON.",
+          "type": "object",
+          "properties": {
+            "newline_delimited": {
+              "type": "boolean"
+            },
+            "type": {
+              "type": "string",
+              "const": "json"
+            }
+          },
+          "required": [
+            "type",
+            "newline_delimited"
+          ]
+        },
+        {
+          "description": "writes outputs to a CSV file given the specified mapping. by default, column\norder matches the order of keys in the map, unless \"sorted\" is true, in which\ncase the fields are sorted lexicagraphically.",
+          "type": "object",
+          "properties": {
+            "mapping": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/$defs/FileMapping"
+              }
+            },
+            "sorted": {
+              "type": "boolean"
+            },
+            "type": {
+              "type": "string",
+              "const": "csv"
+            }
+          },
+          "required": [
+            "type",
+            "mapping",
+            "sorted"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mapping": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": {
+                "$ref": "#/$defs/FileMapping"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "parquet"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        }
+      ]
+    },
+    "FileMapping": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sum": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FileMapping"
+              }
+            }
+          },
+          "required": [
+            "sum"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "optional": {
+              "$ref": "#/$defs/FileMapping"
+            },
+            "dtype": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "optional"
+          ]
+        }
+      ]
+    },
+    "WriteMode": {
+      "oneOf": [
+        {
+          "description": "default write mode which accommodates the Compass chunking API. expects we can continue to append to a file.",
+          "type": "string",
+          "const": "append"
+        },
+        {
+          "description": "if a file already exists, overwrite it. should NOT be used in chunking mode.",
+          "type": "string",
+          "const": "overwrite"
+        },
+        {
+          "description": "if a file already exists, produce an error. should NOT be used in chunking mode.",
+          "type": "string",
+          "const": "error"
+        }
+      ]
+    }
+  }
+}
