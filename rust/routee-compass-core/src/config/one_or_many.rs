@@ -1,3 +1,4 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// Helper type that can deserialize either a single item or a vector of items
@@ -56,5 +57,21 @@ impl<T: Clone> OneOrMany<T> {
             OneOrMany::One(item) => Box::new(std::iter::once(item)),
             OneOrMany::Many(items) => Box::new(items.iter()),
         }
+    }
+}
+
+impl<T> JsonSchema for OneOrMany<T> where T: JsonSchema + Clone {
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        format!("OneOrMany_{}", T::schema_name()).into()
+    }
+
+    fn json_schema(generator: &mut schemars::SchemaGenerator) -> schemars::Schema {
+        schemars::json_schema!({
+            "anyOf": [
+                generator.subschema_for::<T>(), 
+                generator.subschema_for::<Vec<T>>()
+            ],
+            "description": "Either a single item or an array of items"
+        })
     }
 }

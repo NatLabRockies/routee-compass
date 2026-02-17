@@ -1,9 +1,10 @@
 use crate::model::unit::{AsF64, Cost};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use super::cost_model_error::CostModelError;
 
-#[derive(Deserialize, Serialize, Clone, Copy, Debug, Default)]
+#[derive(Deserialize, Serialize, Clone, Copy, Debug, Default, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum CostAggregation {
     /// sums all costs together

@@ -6,11 +6,12 @@ use crate::{
     config::OneOrMany,
     model::{map::SpatialIndexType, unit::DistanceUnit},
 };
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use uom::si::f64::Length;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct MapModelConfig {
     /// distance from coordinate to the nearest vertex required for map matching
     pub tolerance: Option<DistanceTolerance>,
@@ -28,7 +29,7 @@ pub struct MapModelConfig {
 ///   - simply constructed by drawing lines between the vertices
 ///     used by each edge in this edgelist (from_vertices)
 ///   - a file containing LineStrings (from_linestrings)
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum MapModelGeometryConfig {
     FromVertices,
@@ -71,7 +72,7 @@ impl TryFrom<Option<&Value>> for MapModelConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct DistanceTolerance {
     pub distance: f64,
     pub unit: DistanceUnit,

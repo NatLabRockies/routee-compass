@@ -40,7 +40,7 @@ pub struct CompassAppConfig {
 
 /// sub-section of [`CompassAppConfig`] where the [`TraversalModelService`], [`AccessModelService`], and [`ConstraintModelService`] components
 /// for an [`EdgeList`] are specified.
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct SearchConfig {
     pub traversal: Value,
     pub constraint: Value,
