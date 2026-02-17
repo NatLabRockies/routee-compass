@@ -12,5 +12,3 @@ if ! diff -q docs/compass-config-schema.json "$TEMP_SCHEMA" > /dev/null; then
   echo "Schema is out of date. Run ./scripts/generate-compass-schema.sh"
   exit 1
 fi
-
-cp "$TEMP_SCHEMA" docs/compass-config-schema.json
