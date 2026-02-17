@@ -1,7 +1,6 @@
-use routee_compass_core::config::OneOrMany;
 use schemars::{JsonSchema, json_schema};
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
+use serde_json::Value;
 
 
 
@@ -9,23 +8,17 @@ use serde_json::{Value, json};
 /// for an [`EdgeList`] are specified.
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct EdgeListSearchConfig {
-    pub traversal: OneOrMany<TraversalConfig>,
-    pub constraint: OneOrMany<ConstraintConfig>,
+    pub traversal: TraversalConfig,
+    pub constraint: ConstraintConfig,
 }
 
 impl EdgeListSearchConfig {
-    pub fn get_traversal_config(&self) -> Value {
-        match &self.traversal {
-            OneOrMany::Many(items) => json!(items),
-            OneOrMany::One(item) => item.0.clone(),
-        }
+    pub fn get_traversal_config(&self) -> &Value {
+        &self.traversal.0
     }
 
-    pub fn get_constraint_config(&self) -> Value {
-        match &self.constraint {
-            OneOrMany::Many(items) => json!(items),
-            OneOrMany::One(item) => item.0.clone(),
-        }
+    pub fn get_constraint_config(&self) -> &Value {
+        &self.constraint.0
     }
 }
 
