@@ -38,12 +38,24 @@ AggFunc = Callable[[Any], Any]
 class HookParameters:
     """
     Parameters passed to hooks registered with generate_compass_dataset.
+
+    These parameters allow developers to access and modify the road network
+    data before the dataset generation process completes.
+
+    Attributes:
+        output_directory (Path): The directory where the dataset files are being written.
+        vertices (pd.DataFrame): A DataFrame containing the vertex (node) data
+            of the road network, including coordinates and IDs.
+        edges (geopandas.GeoDataFrame): A GeoDataFrame containing the edge (link)
+            data, including geometries and attributes like distance and speed.
+        graph (networkx.MultiDiGraph): The processed NetworkX graph object
+            representing the road network topology and attributes.
     """
 
     output_directory: Path
-    v: pd.DataFrame
-    e: geopandas.GeoDataFrame
-    g: networkx.MultiDiGraph
+    vertices: pd.DataFrame
+    edges: geopandas.GeoDataFrame
+    graph: networkx.MultiDiGraph
 
 
 DatasetHook = Callable[[HookParameters], None]
@@ -388,7 +400,12 @@ def generate_compass_dataset(
     # RUN HOOKS
     if hooks is not None:
         log.info(f"running {len(hooks)} dataset generation hooks")
-        params = HookParameters(output_directory, v, e, g1)
+        params = HookParameters(
+            output_directory=output_directory,
+            vertices=v,
+            edges=e,
+            graph=g1,
+        )
         for hook in hooks:
             hook(params)
 
