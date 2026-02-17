@@ -1,8 +1,6 @@
-use schemars::{JsonSchema, json_schema};
+use schemars::{json_schema, JsonSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-
-
 
 /// sub-section of [`CompassAppConfig`] where the [`TraversalModelService`], [`AccessModelService`], and [`ConstraintModelService`] components
 /// for an [`EdgeList`] are specified.

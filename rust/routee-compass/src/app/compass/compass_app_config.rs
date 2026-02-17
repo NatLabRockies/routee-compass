@@ -15,7 +15,10 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
-    app::compass::{CompassAppError, CompassAppSystemParameters, CompassBuilderInventory, edge_list_search_config::EdgeListSearchConfig},
+    app::compass::{
+        edge_list_search_config::EdgeListSearchConfig, CompassAppError, CompassAppSystemParameters,
+        CompassBuilderInventory,
+    },
     plugin::PluginConfig,
 };
 

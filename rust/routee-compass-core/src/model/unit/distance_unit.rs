@@ -3,7 +3,9 @@ use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use uom::si::f64::Length;
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Default, JsonSchema)]
+#[derive(
+    Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Default, JsonSchema,
+)]
 #[serde(rename_all = "snake_case", try_from = "String")]
 pub enum DistanceUnit {
     Meters,

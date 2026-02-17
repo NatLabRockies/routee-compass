@@ -8,11 +8,11 @@ mod compass_component_error;
 mod compass_input_field;
 mod compass_json_extensions;
 pub mod compass_map_matching;
-pub mod response;
 mod edge_list_search_config;
+pub mod response;
 
 pub use compass_app::CompassApp;
-pub use compass_app_config::{CompassAppConfig};
+pub use compass_app_config::CompassAppConfig;
 pub use compass_app_error::CompassAppError;
 pub use compass_app_system::CompassAppSystemParameters;
 pub use compass_builder_inventory::BuilderRegistration;

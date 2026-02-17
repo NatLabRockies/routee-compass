@@ -1,4 +1,4 @@
-use super::{TurnRestrictionFrontierService, RestrictionRecord};
+use super::{RestrictionRecord, TurnRestrictionFrontierService};
 use crate::config::{CompassConfigurationField, ConfigJsonExtensions};
 use crate::model::constraint::default::turn_restrictions::TurnRestrictionConstraintConfig;
 use crate::{
@@ -30,8 +30,7 @@ impl ConstraintModelBuilder for TurnRestrictionBuilder {
         .map_err(|e| {
             ConstraintModelError::BuildError(format!(
                 "failure reading {}: {}",
-                config.turn_restriction_input_file,
-                e
+                config.turn_restriction_input_file, e
             ))
         })?
         .iter()

@@ -31,8 +31,7 @@ impl ConstraintModelBuilder for RoadClassBuilder {
         .map_err(|e| {
             ConstraintModelError::BuildError(format!(
                 "failed to load file at {:?}: {}",
-                config.road_class_input_file,
-                e
+                config.road_class_input_file, e
             ))
         })?;
 

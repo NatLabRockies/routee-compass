@@ -20,12 +20,12 @@ impl ConstraintModelBuilder for VehicleRestrictionBuilder {
         &self,
         parameters: &serde_json::Value,
     ) -> Result<Arc<dyn ConstraintModelService>, ConstraintModelError> {
-        let config: VehicleRestrictionConfig = serde_json::from_value(parameters.clone())
-            .map_err(|e| {
+        let config: VehicleRestrictionConfig =
+            serde_json::from_value(parameters.clone()).map_err(|e| {
                 let msg = format!("failure reading vehicle restriction config: {e}");
                 ConstraintModelError::BuildError(msg)
             })?;
-        
+
         let vehicle_restriction_lookup =
             vehicle_restriction_lookup_from_file(&config.vehicle_restriction_input_file)?;
 

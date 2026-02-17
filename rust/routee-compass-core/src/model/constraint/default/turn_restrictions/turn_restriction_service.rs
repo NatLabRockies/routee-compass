@@ -1,6 +1,9 @@
 use super::turn_restriction_model::TurnRestrictionConstraintModel;
 use crate::model::{
-    constraint::{ConstraintModel, ConstraintModelError, ConstraintModelService, default::turn_restrictions::RestrictionRecord},
+    constraint::{
+        default::turn_restrictions::RestrictionRecord, ConstraintModel, ConstraintModelError,
+        ConstraintModelService,
+    },
     state::StateModel,
 };
 use std::{collections::HashSet, sync::Arc};

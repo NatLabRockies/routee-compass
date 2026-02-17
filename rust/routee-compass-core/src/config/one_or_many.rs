@@ -60,7 +60,10 @@ impl<T: Clone> OneOrMany<T> {
     }
 }
 
-impl<T> JsonSchema for OneOrMany<T> where T: JsonSchema + Clone {
+impl<T> JsonSchema for OneOrMany<T>
+where
+    T: JsonSchema + Clone,
+{
     fn schema_name() -> std::borrow::Cow<'static, str> {
         format!("OneOrMany_{}", T::schema_name()).into()
     }
@@ -68,7 +71,7 @@ impl<T> JsonSchema for OneOrMany<T> where T: JsonSchema + Clone {
     fn json_schema(generator: &mut schemars::SchemaGenerator) -> schemars::Schema {
         schemars::json_schema!({
             "anyOf": [
-                generator.subschema_for::<T>(), 
+                generator.subschema_for::<T>(),
                 generator.subschema_for::<Vec<T>>()
             ],
             "description": "Either a single item or an array of items"
