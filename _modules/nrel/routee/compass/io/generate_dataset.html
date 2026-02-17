@@ -398,7 +398,33 @@ document.write(`
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">default</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">GeneratePipelinePhase</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">cls</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">CONFIG</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">POWERTRAIN</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="list_available_vehicle_models">
+<a class="viewcode-back" href="../../../../../python_api_docs.html#nrel.routee.compass.io.generate_dataset.list_available_vehicle_models">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_available_vehicle_models</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the list of all available vehicle model names that can be used</span>
+<span class="sd">    with the ``vehicle_models`` parameter of :func:`generate_compass_dataset`</span>
+<span class="sd">    and :meth:`CompassApp.from_graph`.</span>
+
+<span class="sd">    Each name corresponds to a vehicle configuration JSON shipped with the</span>
+<span class="sd">    package (filename stem, e.g. ``&quot;2017_CHEVROLET_Bolt&quot;``).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        names: sorted list of available vehicle model name strings</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; from nrel.routee.compass import list_available_vehicle_models</span>
+<span class="sd">        &gt;&gt;&gt; models = list_available_vehicle_models()</span>
+<span class="sd">        &gt;&gt;&gt; print(models[:3])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">path</span><span class="p">(</span>
+        <span class="s2">&quot;nrel.routee.compass.resources&quot;</span><span class="p">,</span> <span class="s2">&quot;vehicles&quot;</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">vehicles_dir</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">stem</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">vehicles_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.json&quot;</span><span class="p">))</span></div>
 
 
 
@@ -415,6 +441,7 @@ document.write(`
     <span class="n">default_config</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">requests_kwds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">afdc_api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;DEMO_KEY&quot;</span><span class="p">,</span>
+    <span class="n">vehicle_models</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Processes a graph downloaded via OSMNx, generating the set of input</span>
@@ -441,6 +468,11 @@ document.write(`
 <span class="sd">        default_config (bool, optional): If true, copy default configuration files into the output directory. Defaults to True.</span>
 <span class="sd">        requests_kwds (Optional[Dict], optional): Keyword arguments to pass to the `requests` Python library for HTTP configuration. Defaults to None.</span>
 <span class="sd">        afdc_api_key (str, optional): API key for the AFDC API to download EV charging stations. Defaults to &quot;DEMO_KEY&quot;. See https://developer.nrel.gov/docs/transportation/alt-fuel-stations-v1/all/ for more information.</span>
+<span class="sd">        vehicle_models (Optional[List[str]]): If provided, only download and</span>
+<span class="sd">            configure the listed vehicle models (by name, e.g.</span>
+<span class="sd">            ``[&quot;2017_CHEVROLET_Bolt&quot;, &quot;2016_TOYOTA_Camry_4cyl_2WD&quot;]``).</span>
+<span class="sd">            Use :func:`list_available_vehicle_models` to see valid names.</span>
+<span class="sd">            When ``None`` (the default) all available models are included.</span>
 <span class="sd">    Example:</span>
 <span class="sd">        &gt;&gt;&gt; import osmnx as ox</span>
 <span class="sd">        &gt;&gt;&gt; g = ox.graph_from_place(&quot;Denver, Colorado, USA&quot;)</span>
@@ -571,13 +603,11 @@ document.write(`
         <span class="n">base_config_files</span> <span class="o">=</span> <span class="p">[</span>
             <span class="s2">&quot;osm_default_distance.toml&quot;</span><span class="p">,</span>
             <span class="s2">&quot;osm_default_speed.toml&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;osm_default_map_matching.toml&quot;</span><span class="p">,</span>
         <span class="p">]</span>
         <span class="k">if</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">POWERTRAIN</span> <span class="ow">in</span> <span class="n">phases</span><span class="p">:</span>
             <span class="n">base_config_files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
                 <span class="p">[</span>
                     <span class="s2">&quot;osm_default_energy.toml&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;osm_default_energy_all_vehicles.toml&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;osm_default_temperature.toml&quot;</span><span class="p">,</span>
                 <span class="p">]</span>
             <span class="p">)</span>
@@ -589,6 +619,13 @@ document.write(`
             <span class="p">)</span> <span class="k">as</span> <span class="n">init_toml_path</span><span class="p">:</span>
                 <span class="k">with</span> <span class="n">init_toml_path</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                     <span class="n">init_toml</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">tomlkit</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="c1"># When a vehicle subset is requested, rewrite the</span>
+            <span class="c1"># vehicle_input_files list in the energy traversal model</span>
+            <span class="c1"># so the app only tries to load files that were downloaded.</span>
+            <span class="k">if</span> <span class="n">vehicle_models</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">_filter_vehicle_input_files</span><span class="p">(</span><span class="n">init_toml</span><span class="p">,</span> <span class="n">vehicle_models</span><span class="p">)</span>
+
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_directory</span> <span class="o">/</span> <span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tomlkit</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">init_toml</span><span class="p">))</span>
 
@@ -605,7 +642,19 @@ document.write(`
             <span class="k">with</span> <span class="n">model_link_path</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">model_links</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
-            <span class="k">for</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">model_link</span> <span class="ow">in</span> <span class="n">model_links</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Determine which model .bin files need to be downloaded.</span>
+            <span class="c1"># When vehicle_models is set we resolve the required .bin names</span>
+            <span class="c1"># from the vehicle JSON configs (handles PHEVs that reference</span>
+            <span class="c1"># two separate models).  Otherwise download everything.</span>
+            <span class="k">if</span> <span class="n">vehicle_models</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">required_bin_names</span> <span class="o">=</span> <span class="n">_resolve_required_model_bins</span><span class="p">(</span><span class="n">vehicle_models</span><span class="p">)</span>
+                <span class="n">filtered_links</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">model_links</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required_bin_names</span>
+                <span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">filtered_links</span> <span class="o">=</span> <span class="n">model_links</span>
+
+            <span class="k">for</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">model_link</span> <span class="ow">in</span> <span class="n">filtered_links</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">model_destination</span> <span class="o">=</span> <span class="n">model_output_directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">.bin&quot;</span>
 
                 <span class="n">cached_model_destination</span> <span class="o">=</span> <span class="n">CACHE_DIR</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">.bin&quot;</span>
@@ -630,9 +679,11 @@ document.write(`
         <span class="p">)</span> <span class="k">as</span> <span class="n">vehicles_dir</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">vehicles_dir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
                 <span class="k">for</span> <span class="n">vehicle_file</span> <span class="ow">in</span> <span class="n">vehicles_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.json&quot;</span><span class="p">):</span>
-                    <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span>
-                        <span class="n">vehicle_file</span><span class="p">,</span> <span class="n">vehicle_output_directory</span> <span class="o">/</span> <span class="n">vehicle_file</span><span class="o">.</span><span class="n">name</span>
-                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">vehicle_models</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">vehicle_file</span><span class="o">.</span><span class="n">stem</span> <span class="ow">in</span> <span class="n">vehicle_models</span><span class="p">:</span>
+                        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span>
+                            <span class="n">vehicle_file</span><span class="p">,</span>
+                            <span class="n">vehicle_output_directory</span> <span class="o">/</span> <span class="n">vehicle_file</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">CHARGING_STATIONS</span> <span class="ow">in</span> <span class="n">phases</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Downloading EV charging stations for the road network bounding box.&quot;</span><span class="p">)</span>
@@ -677,6 +728,72 @@ document.write(`
             <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span>
         <span class="p">)</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_required_model_bins</span><span class="p">(</span><span class="n">vehicle_models</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given a list of vehicle model names (JSON file stems), determine the set</span>
+<span class="sd">    of ``.bin`` model names that need to be downloaded.</span>
+
+<span class="sd">    For simple ICE/BEV vehicles, the bin name equals the ``model_input_file``</span>
+<span class="sd">    stem in the JSON.  For PHEVs, there are two bins (Charge_Depleting and</span>
+<span class="sd">    Charge_Sustaining) nested inside the JSON.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">required</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">with</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">path</span><span class="p">(</span>
+        <span class="s2">&quot;nrel.routee.compass.resources&quot;</span><span class="p">,</span> <span class="s2">&quot;vehicles&quot;</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">vehicles_dir</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">vehicle_models</span><span class="p">:</span>
+            <span class="n">vehicle_file</span> <span class="o">=</span> <span class="n">vehicles_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.json&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">vehicle_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="n">available</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">stem</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">vehicles_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.json&quot;</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Vehicle model &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; not found. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Use list_available_vehicle_models() to see valid names. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Available: </span><span class="si">{</span><span class="n">available</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">with</span> <span class="n">vehicle_file</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">vehicle_cfg</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="n">vtype</span> <span class="o">=</span> <span class="n">vehicle_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">vtype</span> <span class="o">==</span> <span class="s2">&quot;phev&quot;</span><span class="p">:</span>
+                <span class="c1"># PHEV vehicles reference two separate model files</span>
+                <span class="k">for</span> <span class="n">sub_key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;charge_depleting&quot;</span><span class="p">,</span> <span class="s2">&quot;charge_sustaining&quot;</span><span class="p">):</span>
+                    <span class="n">sub</span> <span class="o">=</span> <span class="n">vehicle_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sub_key</span><span class="p">,</span> <span class="p">{})</span>
+                    <span class="n">model_path</span> <span class="o">=</span> <span class="n">sub</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_input_file&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">model_path</span><span class="p">:</span>
+                        <span class="n">required</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">model_path</span> <span class="o">=</span> <span class="n">vehicle_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_input_file&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">model_path</span><span class="p">:</span>
+                    <span class="n">required</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">required</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_filter_vehicle_input_files</span><span class="p">(</span>
+    <span class="n">toml_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">vehicle_models</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Walk through a parsed TOML config and rewrite any</span>
+<span class="sd">    ``vehicle_input_files`` arrays so they only reference vehicle JSON</span>
+<span class="sd">    files present in the *vehicle_models* list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">vehicle_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">vehicle_models</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matches</span><span class="p">(</span><span class="n">vehicle_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if the vehicle path stem is in the requested set.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">vehicle_path</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span> <span class="ow">in</span> <span class="n">vehicle_set</span>
+
+    <span class="c1"># The vehicle_input_files list lives inside [[search.traversal.models]]</span>
+    <span class="c1"># entries with type = &quot;energy&quot;.</span>
+    <span class="n">search</span> <span class="o">=</span> <span class="n">toml_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;search&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">traversal</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;traversal&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">models</span> <span class="o">=</span> <span class="n">traversal</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;models&quot;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;energy&quot;</span> <span class="ow">and</span> <span class="s2">&quot;vehicle_input_files&quot;</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
+            <span class="n">model</span><span class="p">[</span><span class="s2">&quot;vehicle_input_files&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">model</span><span class="p">[</span><span class="s2">&quot;vehicle_input_files&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">_matches</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="p">]</span>
 </pre></div>
 
                 </article>

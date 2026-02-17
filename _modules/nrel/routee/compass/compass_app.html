@@ -357,7 +357,6 @@ document.write(`
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tempfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">TemporaryDirectory</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
@@ -379,6 +378,7 @@ document.write(`
         <span class="n">Result</span><span class="p">,</span>
         <span class="n">Results</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">tomlkit</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
@@ -419,12 +419,15 @@ document.write(`
     <span class="k">def</span><span class="w"> </span><span class="nf">from_config_file</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">config_file</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
+        <span class="n">parallelism</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompassApp</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Build a CompassApp from a config file</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            config_file: Path to the config file</span>
+<span class="sd">            parallelism: optional number of threads to use for parallel</span>
+<span class="sd">                query execution. Overrides the value in the config file.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            app: A CompassApp object</span>
@@ -439,14 +442,27 @@ document.write(`
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">toml_config</span> <span class="o">=</span> <span class="n">tomlkit</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">toml_config</span><span class="p">,</span> <span class="n">config_path</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">toml_config</span><span class="p">,</span> <span class="n">config_path</span><span class="p">,</span> <span class="n">parallelism</span><span class="o">=</span><span class="n">parallelism</span><span class="p">)</span></div>
 
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_default_config_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">phases</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">GeneratePipelinePhase</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Internal helper to get the default config file name based on the phases.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">POWERTRAIN</span> <span class="ow">in</span> <span class="n">phases</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;osm_default_energy.toml&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;osm_default_speed.toml&quot;</span>
 
 <div class="viewcode-block" id="CompassApp.from_dict">
 <a class="viewcode-back" href="../../../../python_api_docs.html#nrel.routee.compass.compass_app.CompassApp.from_dict">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">tomlkit</span><span class="o">.</span><span class="n">TOMLDocument</span><span class="p">,</span> <span class="n">working_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">tomlkit</span><span class="o">.</span><span class="n">TOMLDocument</span><span class="p">,</span>
+        <span class="n">working_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">parallelism</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompassApp</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Build a CompassApp from a configuration object</span>
@@ -454,6 +470,8 @@ document.write(`
 <span class="sd">        Args:</span>
 <span class="sd">            config: Configuration dictionary</span>
 <span class="sd">            working_dir: optional path to working directory</span>
+<span class="sd">            parallelism: optional number of threads to use for parallel</span>
+<span class="sd">                query execution. Overrides the value in the config.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            app: a CompassApp object</span>
@@ -463,10 +481,110 @@ document.write(`
 <span class="sd">            &gt;&gt;&gt; conf = { &quot;parallelism&quot;: 2 }</span>
 <span class="sd">            &gt;&gt;&gt; app = CompassApp.from_config(conf)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">parallelism</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;parallelism&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parallelism</span>
         <span class="n">path_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">working_dir</span><span class="o">.</span><span class="n">absolute</span><span class="p">())</span> <span class="k">if</span> <span class="n">working_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
         <span class="n">toml_string</span> <span class="o">=</span> <span class="n">tomlkit</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="n">app</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_constructor</span><span class="p">()</span><span class="o">.</span><span class="n">_from_config_toml_string</span><span class="p">(</span><span class="n">toml_string</span><span class="p">,</span> <span class="n">path_str</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CompassApp.from_graph">
+<a class="viewcode-back" href="../../../../python_api_docs.html#nrel.routee.compass.compass_app.CompassApp.from_graph">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_graph</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">graph</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span><span class="p">,</span>
+        <span class="n">config_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">hwy_speeds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">fallback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">agg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">phases</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">GeneratePipelinePhase</span><span class="p">]</span> <span class="o">=</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">default</span><span class="p">(),</span>
+        <span class="n">raster_resolution_arc_seconds</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">vehicle_models</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">parallelism</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompassApp</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build a CompassApp from a networkx graph.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            graph: the networkx graph to build the CompassApp from.</span>
+<span class="sd">                This is assumed to be the direct output of an osmnx download.</span>
+<span class="sd">            config_file: optional name of the config file to load from the</span>
+<span class="sd">                generated dataset. If not set, it will default to</span>
+<span class="sd">                &#39;osm_default_energy.toml&#39; if the powertrain phase is included,</span>
+<span class="sd">                otherwise &#39;osm_default_speed.toml&#39;.</span>
+<span class="sd">            cache_dir: optional path to save necessary files to build the</span>
+<span class="sd">                CompassApp. If not set, TemporaryDirectory will be used</span>
+<span class="sd">                instead. Defaults to None.</span>
+<span class="sd">            hwy_speeds: OSM highway types and values = typical speeds (km</span>
+<span class="sd">                per hour) to assign to edges of that highway type for any</span>
+<span class="sd">                edges missing speed data. Any edges with highway type not</span>
+<span class="sd">                in `hwy_speeds` will be assigned the mean preexisting</span>
+<span class="sd">                speed value of all edges of that highway type.</span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">            fallback: Default speed value (km per hour) to assign to edges</span>
+<span class="sd">                whose highway type did not appear in `hwy_speeds` and had</span>
+<span class="sd">                no preexisting speed values on any edge.</span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">            agg: Aggregation function to impute missing values from</span>
+<span class="sd">                observed values. The default is numpy.mean, but you might</span>
+<span class="sd">                also consider for example numpy.median, numpy.nanmedian,</span>
+<span class="sd">                or your own custom function. Defaults to numpy.mean.</span>
+<span class="sd">            phases (List[GeneratePipelinePhase]): of the overall generate pipeline,</span>
+<span class="sd">                which phases of the pipeline to run.</span>
+<span class="sd">                Defaults to all ([&quot;graph&quot;, &quot;grade&quot;, &quot;config&quot;, &quot;powertrain&quot;])</span>
+<span class="sd">            raster_resolution_arc_seconds: If grade is added, the</span>
+<span class="sd">                resolution (in arc-seconds) of the tiles to download</span>
+<span class="sd">                (either 1 or 1/3). Defaults to 1.</span>
+<span class="sd">            vehicle_models: If provided, only download and configure</span>
+<span class="sd">                the listed vehicle models (by name, e.g.</span>
+<span class="sd">                ``[&quot;2017_CHEVROLET_Bolt&quot;, &quot;2016_TOYOTA_Camry_4cyl_2WD&quot;]``).</span>
+<span class="sd">                Use :func:`list_available_vehicle_models` to see valid names.</span>
+<span class="sd">                When ``None`` (the default) all available models are included.</span>
+<span class="sd">            parallelism: optional number of threads to use for parallel</span>
+<span class="sd">                query execution. Overrides the value in the config file.</span>
+<span class="sd">            overwrite: if True, will overwrite any existing files in the</span>
+<span class="sd">                cache_dir. Defaults to False.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            CompassApp: a CompassApp object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cache_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">temp_dir</span> <span class="o">=</span> <span class="n">TemporaryDirectory</span><span class="p">()</span>
+            <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">temp_dir</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">config_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config_file</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_default_config_file</span><span class="p">(</span><span class="n">phases</span><span class="p">)</span>
+
+        <span class="n">config_path</span> <span class="o">=</span> <span class="n">cache_dir</span> <span class="o">/</span> <span class="n">config_file</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">overwrite</span> <span class="ow">and</span> <span class="n">config_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using existing dataset found in </span><span class="si">{</span><span class="n">cache_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">generate_compass_dataset</span><span class="p">(</span>
+                <span class="n">graph</span><span class="p">,</span>
+                <span class="n">output_directory</span><span class="o">=</span><span class="n">cache_dir</span><span class="p">,</span>
+                <span class="n">hwy_speeds</span><span class="o">=</span><span class="n">hwy_speeds</span><span class="p">,</span>
+                <span class="n">fallback</span><span class="o">=</span><span class="n">fallback</span><span class="p">,</span>
+                <span class="n">agg</span><span class="o">=</span><span class="n">agg</span><span class="p">,</span>
+                <span class="n">phases</span><span class="o">=</span><span class="n">phases</span><span class="p">,</span>
+                <span class="n">raster_resolution_arc_seconds</span><span class="o">=</span><span class="n">raster_resolution_arc_seconds</span><span class="p">,</span>
+                <span class="n">default_config</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">vehicle_models</span><span class="o">=</span><span class="n">vehicle_models</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">config_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Config file </span><span class="si">{</span><span class="n">config_file</span><span class="si">}</span><span class="s2"> not found in </span><span class="si">{</span><span class="n">cache_dir</span><span class="si">}</span><span class="s2">. &quot;</span>
+                <span class="s2">&quot;Make sure the requested phases generated this config.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="n">parallelism</span><span class="o">=</span><span class="n">parallelism</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CompassApp.from_place">
@@ -475,13 +593,11 @@ document.write(`
     <span class="k">def</span><span class="w"> </span><span class="nf">from_place</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">query</span><span class="p">:</span> <span class="n">OSMNXQuery</span><span class="p">,</span>
-        <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">network_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;drive&quot;</span><span class="p">,</span>
-        <span class="n">hwy_speeds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">fallback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">agg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">phases</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">GeneratePipelinePhase</span><span class="p">]</span> <span class="o">=</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">default</span><span class="p">(),</span>
-        <span class="n">raster_resolution_arc_seconds</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">parallelism</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompassApp</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Build a CompassApp from a place</span>
@@ -489,30 +605,16 @@ document.write(`
 <span class="sd">        Args:</span>
 <span class="sd">            query: the query or queries to geocode to get place boundary</span>
 <span class="sd">                polygon(s)</span>
+<span class="sd">            network_type: what type of street network. Default to drive</span>
+<span class="sd">                List of options: [&quot;all&quot;, &quot;all_public&quot;, &quot;bike&quot;, &quot;drive&quot;, &quot;drive_service&quot;, &quot;walk&quot;]</span>
+<span class="sd">            parallelism: optional number of threads to use for parallel</span>
+<span class="sd">                query execution. Overrides the value in the config file.</span>
 <span class="sd">            cache_dir: optional path to save necessary files to build the</span>
 <span class="sd">                CompassApp. If not set, TemporaryDirectory will be used</span>
 <span class="sd">                instead. Defaults to None.</span>
-<span class="sd">            network_type: what type of street network. Default to drive</span>
-<span class="sd">                List of options: [&quot;all&quot;, &quot;all_public&quot;, &quot;bike&quot;, &quot;drive&quot;, &quot;drive_service&quot;, &quot;walk&quot;]</span>
-<span class="sd">            hwy_speeds: OSM highway types and values = typical speeds (km</span>
-<span class="sd">                per hour) to assign to edges of that highway type for any</span>
-<span class="sd">                edges missing speed data. Any edges with highway type not</span>
-<span class="sd">                in `hwy_speeds` will be assigned the mean preexisting</span>
-<span class="sd">                speed value of all edges of that highway type.</span>
-<span class="sd">                Defaults to None.</span>
-<span class="sd">            fallback: Default speed value (km per hour) to assign to edges</span>
-<span class="sd">                whose highway type did not appear in `hwy_speeds` and had</span>
-<span class="sd">                no preexisting speed values on any edge.</span>
-<span class="sd">                Defaults to None.</span>
-<span class="sd">            agg: Aggregation function to impute missing values from</span>
-<span class="sd">                observed values. The default is numpy.mean, but you might</span>
-<span class="sd">                also consider for example numpy.median, numpy.nanmedian,</span>
-<span class="sd">                or your own custom function. Defaults to numpy.mean.</span>
-<span class="sd">            phases (List[GeneratePipelinePhase]): of the overall generate pipeline, which phases of the pipeline to run.</span>
-<span class="sd">                Defaults to all ([&quot;graph&quot;, &quot;grade&quot;, &quot;config&quot;, &quot;powertrain&quot;])</span>
-<span class="sd">            raster_resolution_arc_seconds: If grade is added, the</span>
-<span class="sd">                resolution (in arc-seconds) of the tiles to download</span>
-<span class="sd">                (either 1 or 1/3). Defaults to 1.</span>
+<span class="sd">            overwrite: if True, will overwrite any existing files in the</span>
+<span class="sd">                cache_dir. Defaults to False.</span>
+<span class="sd">            **kwargs: additional arguments to pass to `from_graph` and `generate_compass_dataset`</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            CompassApp: a CompassApp object</span>
@@ -521,32 +623,31 @@ document.write(`
 <span class="sd">            &gt;&gt;&gt; from nrel.routee.compass import CompassApp</span>
 <span class="sd">            &gt;&gt;&gt; app = CompassApp.from_place(&quot;Denver, Colorado, USA&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># temp_dir will not be used but is needed to keep the Temporary Directory active until</span>
-        <span class="c1"># CompassApp is built</span>
+        <span class="k">if</span> <span class="n">cache_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cache_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span>
+            <span class="n">config_file</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;config_file&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">config_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">phases</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;phases&quot;</span><span class="p">,</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">default</span><span class="p">())</span>
+                <span class="n">config_file</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_default_config_file</span><span class="p">(</span><span class="n">phases</span><span class="p">)</span>
+
+            <span class="n">config_path</span> <span class="o">=</span> <span class="n">cache_path</span> <span class="o">/</span> <span class="n">config_file</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">overwrite</span> <span class="ow">and</span> <span class="n">config_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using existing dataset found in </span><span class="si">{</span><span class="n">cache_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="n">parallelism</span><span class="o">=</span><span class="n">parallelism</span><span class="p">)</span>
+
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">import</span><span class="w"> </span><span class="nn">osmnx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ox</span>
         <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;requires osmnx to be installed. Try &#39;pip install osmnx&#39;&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">cache_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">temp_dir</span> <span class="o">=</span> <span class="n">TemporaryDirectory</span><span class="p">()</span>
-            <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">temp_dir</span><span class="o">.</span><span class="n">name</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span>
 
         <span class="n">graph</span> <span class="o">=</span> <span class="n">ox</span><span class="o">.</span><span class="n">graph_from_place</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">network_type</span><span class="o">=</span><span class="n">network_type</span><span class="p">)</span>
-        <span class="n">generate_compass_dataset</span><span class="p">(</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_graph</span><span class="p">(</span>
             <span class="n">graph</span><span class="p">,</span>
-            <span class="n">output_directory</span><span class="o">=</span><span class="n">cache_dir</span><span class="p">,</span>
-            <span class="n">hwy_speeds</span><span class="o">=</span><span class="n">hwy_speeds</span><span class="p">,</span>
-            <span class="n">fallback</span><span class="o">=</span><span class="n">fallback</span><span class="p">,</span>
-            <span class="n">agg</span><span class="o">=</span><span class="n">agg</span><span class="p">,</span>
-            <span class="n">phases</span><span class="o">=</span><span class="n">phases</span><span class="p">,</span>
-            <span class="n">raster_resolution_arc_seconds</span><span class="o">=</span><span class="n">raster_resolution_arc_seconds</span><span class="p">,</span>
-            <span class="n">default_config</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">app</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">,</span> <span class="s2">&quot;osm_default_energy.toml&quot;</span><span class="p">))</span>
-
-        <span class="k">return</span> <span class="n">app</span></div>
+            <span class="n">parallelism</span><span class="o">=</span><span class="n">parallelism</span><span class="p">,</span>
+            <span class="n">cache_dir</span><span class="o">=</span><span class="n">cache_dir</span><span class="p">,</span>
+            <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CompassApp.from_polygon">
@@ -555,13 +656,11 @@ document.write(`
     <span class="k">def</span><span class="w"> </span><span class="nf">from_polygon</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">polygon</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;Polygon&quot;</span> <span class="o">|</span> <span class="s2">&quot;MultiPolygon&quot;</span><span class="p">],</span>
-        <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">network_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;drive&quot;</span><span class="p">,</span>
-        <span class="n">hwy_speeds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">fallback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">agg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">phases</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">GeneratePipelinePhase</span><span class="p">]</span> <span class="o">=</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">default</span><span class="p">(),</span>
-        <span class="n">raster_resolution_arc_seconds</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">parallelism</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompassApp</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Build a CompassApp from a polygon</span>
@@ -569,30 +668,16 @@ document.write(`
 <span class="sd">        Args:</span>
 <span class="sd">            polygon: the shape to get network data within. coordinates</span>
 <span class="sd">                should be in unprojected latitude-longitude degrees</span>
+<span class="sd">            network_type: what type of street network. Default to drive</span>
+<span class="sd">                List of options: [&quot;all&quot;, &quot;all_public&quot;, &quot;bike&quot;, &quot;drive&quot;, &quot;drive_service&quot;, &quot;walk&quot;]</span>
+<span class="sd">            parallelism: optional number of threads to use for parallel</span>
+<span class="sd">                query execution. Overrides the value in the config file.</span>
 <span class="sd">            cache_dir: optional path to save necessary files to build the</span>
 <span class="sd">                CompassApp. If not set, TemporaryDirectory will be used</span>
 <span class="sd">                instead. Defaults to None.</span>
-<span class="sd">            network_type: what type of street network. Default to drive</span>
-<span class="sd">                List of options: [&quot;all&quot;, &quot;all_public&quot;, &quot;bike&quot;, &quot;drive&quot;, &quot;drive_service&quot;, &quot;walk&quot;]</span>
-<span class="sd">            hwy_speeds: OSM highway types and values = typical speeds (km</span>
-<span class="sd">                per hour) to assign to edges of that highway type for any</span>
-<span class="sd">                edges missing speed data. Any edges with highway type not</span>
-<span class="sd">                in `hwy_speeds` will be assigned the mean preexisting</span>
-<span class="sd">                speed value of all edges of that highway type.</span>
-<span class="sd">                Defaults to None.</span>
-<span class="sd">            fallback: Default speed value (km per hour) to assign to edges</span>
-<span class="sd">                whose highway type did not appear in `hwy_speeds` and had</span>
-<span class="sd">                no preexisting speed values on any edge.</span>
-<span class="sd">                Defaults to None.</span>
-<span class="sd">            agg: Aggregation function to impute missing values from</span>
-<span class="sd">                observed values. The default is numpy.mean, but you might</span>
-<span class="sd">                also consider for example numpy.median, numpy.nanmedian,</span>
-<span class="sd">                or your own custom function. Defaults to numpy.mean.</span>
-<span class="sd">            phases (List[GeneratePipelinePhase]): of the overall generate pipeline, which phases of the pipeline to run.</span>
-<span class="sd">                Defaults to all ([&quot;graph&quot;, &quot;grade&quot;, &quot;config&quot;, &quot;powertrain&quot;])</span>
-<span class="sd">            raster_resolution_arc_seconds: If grade is added, the</span>
-<span class="sd">                resolution (in arc-seconds) of the tiles to download</span>
-<span class="sd">                (either 1 or 1/3). Defaults to 1.</span>
+<span class="sd">            overwrite: if True, will overwrite any existing files in the</span>
+<span class="sd">                cache_dir. Defaults to False.</span>
+<span class="sd">            **kwargs: additional arguments to pass to `from_graph` and `generate_compass_dataset`</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            CompassApp: a CompassApp object</span>
@@ -608,33 +693,31 @@ document.write(`
 <span class="sd">            &gt;&gt;&gt; poly = geometry.Polygon(pointList)</span>
 <span class="sd">            &gt;&gt;&gt; app = CompassApp.from_polygon(poly)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># temp_dir will not be used but is needed to keep the Temporary Directory active until</span>
-        <span class="c1"># CompassApp is built</span>
+        <span class="k">if</span> <span class="n">cache_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cache_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span>
+            <span class="n">config_file</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;config_file&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">config_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">phases</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;phases&quot;</span><span class="p">,</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">default</span><span class="p">())</span>
+                <span class="n">config_file</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_default_config_file</span><span class="p">(</span><span class="n">phases</span><span class="p">)</span>
+
+            <span class="n">config_path</span> <span class="o">=</span> <span class="n">cache_path</span> <span class="o">/</span> <span class="n">config_file</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">overwrite</span> <span class="ow">and</span> <span class="n">config_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using existing dataset found in </span><span class="si">{</span><span class="n">cache_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="n">parallelism</span><span class="o">=</span><span class="n">parallelism</span><span class="p">)</span>
+
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">import</span><span class="w"> </span><span class="nn">osmnx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ox</span>
         <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;requires osmnx to be installed. Try &#39;pip install osmnx&#39;&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">cache_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">temp_dir</span> <span class="o">=</span> <span class="n">TemporaryDirectory</span><span class="p">()</span>
-            <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">temp_dir</span><span class="o">.</span><span class="n">name</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span>
 
         <span class="n">graph</span> <span class="o">=</span> <span class="n">ox</span><span class="o">.</span><span class="n">graph_from_polygon</span><span class="p">(</span><span class="n">polygon</span><span class="p">,</span> <span class="n">network_type</span><span class="o">=</span><span class="n">network_type</span><span class="p">)</span>
-        <span class="n">generate_compass_dataset</span><span class="p">(</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_graph</span><span class="p">(</span>
             <span class="n">graph</span><span class="p">,</span>
-            <span class="n">output_directory</span><span class="o">=</span><span class="n">cache_dir</span><span class="p">,</span>
-            <span class="n">hwy_speeds</span><span class="o">=</span><span class="n">hwy_speeds</span><span class="p">,</span>
-            <span class="n">fallback</span><span class="o">=</span><span class="n">fallback</span><span class="p">,</span>
-            <span class="n">agg</span><span class="o">=</span><span class="n">agg</span><span class="p">,</span>
-            <span class="n">phases</span><span class="o">=</span><span class="n">phases</span><span class="p">,</span>
-            <span class="n">raster_resolution_arc_seconds</span><span class="o">=</span><span class="n">raster_resolution_arc_seconds</span><span class="p">,</span>
-            <span class="n">default_config</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">app</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">,</span> <span class="s2">&quot;osm_default_energy.toml&quot;</span><span class="p">))</span>
-
-        <span class="k">return</span> <span class="n">app</span></div>
+            <span class="n">parallelism</span><span class="o">=</span><span class="n">parallelism</span><span class="p">,</span>
+            <span class="n">cache_dir</span><span class="o">=</span><span class="n">cache_dir</span><span class="p">,</span>
+            <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CompassApp.run">
@@ -808,6 +891,53 @@ document.write(`
 
         <span class="n">queries_str</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">,</span> <span class="n">queries</span><span class="p">))</span>
         <span class="n">results_json</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app</span><span class="o">.</span><span class="n">_map_match</span><span class="p">(</span><span class="n">queries_str</span><span class="p">)</span>
+
+        <span class="n">results</span><span class="p">:</span> <span class="n">Results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">,</span> <span class="n">results_json</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">single_query</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+
+<div class="viewcode-block" id="CompassApp.run_calculate_path">
+<a class="viewcode-back" href="../../../../python_api_docs.html#nrel.routee.compass.compass_app.CompassApp.run_calculate_path">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_calculate_path</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">query</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">CompassQuery</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">CompassQuery</span><span class="p">]],</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Config</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Result</span><span class="p">,</span> <span class="n">Results</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run a path evaluation query (or multiple queries) against the CompassApp</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            query: A query or list of queries to run. Each query must have &#39;path&#39;.</span>
+<span class="sd">            config: optional configuration</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            results: A list of results (or a single result if a single query was passed)</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; from nrel.routee.compass import CompassApp</span>
+<span class="sd">            &gt;&gt;&gt; app = CompassApp.from_config_file(&quot;config.toml&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; query = {</span>
+<span class="sd">                    &quot;path&quot;: [{&quot;edge_id&quot;: 0}, {&quot;edge_id&quot;: 2}],</span>
+<span class="sd">                }</span>
+<span class="sd">            &gt;&gt;&gt; result = app.run_calculate_path(query)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">queries</span> <span class="o">=</span> <span class="p">[</span><span class="n">query</span><span class="p">]</span>
+            <span class="n">single_query</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">queries</span> <span class="o">=</span> <span class="n">query</span>
+            <span class="n">single_query</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Query must be a dict or list of dicts, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">queries_str</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">,</span> <span class="n">queries</span><span class="p">))</span>
+        <span class="n">config_str</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="n">results_json</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app</span><span class="o">.</span><span class="n">_run_calculate_path</span><span class="p">(</span><span class="n">queries_str</span><span class="p">,</span> <span class="n">config_str</span><span class="p">)</span>
 
         <span class="n">results</span><span class="p">:</span> <span class="n">Results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">,</span> <span class="n">results_json</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">single_query</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>

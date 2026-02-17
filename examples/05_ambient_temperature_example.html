@@ -443,11 +443,11 @@ that includes a traversal model that injects ambient temperature.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>graph edge list 0: /home/runner/work/routee-compass/routee-compass/docs/examples/denver_co/edges-compass.csv.gz: 48526it [00:00, 1611760.50it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>graph edge list 0: /home/runner/work/routee-compass/routee-compass/docs/examples/denver_co/edges-compass.csv.gz: 48526it [00:00, 1692576.75it/s]
 
 
-building adjacencies: 100%|██████████| 48526/48526 [00:00&lt;00:00, 3921798.00it/s]
-building adjacencies: 100%|██████████| 48526/48526 [00:00&lt;00:00, 3916246.00it/s]
+building adjacencies: 100%|██████████| 48526/48526 [00:00&lt;00:00, 3715495.25it/s]
+building adjacencies: 100%|██████████| 48526/48526 [00:00&lt;00:00, 3708977.00it/s]
 </pre></div>
 </div>
 </div>
@@ -467,45 +467,33 @@ mild ambient temperature considerations and search for the shortest time route.<
     <span class="s2">&quot;weights&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;trip_distance&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;trip_time&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;trip_energy_electric&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
     <span class="s2">&quot;ambient_temperature&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="mi">72</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;fahrenheit&quot;</span><span class="p">},</span>
 <span class="p">}</span>
+
 <span class="n">result</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+
 <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">])</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">elif</span> <span class="s2">&quot;route&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">result</span> <span class="ow">or</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;route&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No route found.&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;route&quot;</span><span class="p">][</span><span class="s2">&quot;traversal_summary&quot;</span><span class="p">][</span><span class="s2">&quot;trip_energy_electric&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Ambient Temperature: </span><span class="si">{</span><span class="n">query</span><span class="p">[</span><span class="s1">&#39;ambient_temperature&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> F, Trip Energy: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2"> kWh&quot;</span>
+    <span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Ambient Temperature: 72 F, Trip Energy: 2.028 kWh
+</pre></div>
+</div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 3098.26it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 2816.48it/s]
 
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 941619.56it/s]
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1074113.88it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 7.48it/s]
-</pre></div>
-</div>
-</div>
-</div>
-<p>Let's look at the energy consumption for the route.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">energy</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;route&quot;</span><span class="p">][</span><span class="s2">&quot;traversal_summary&quot;</span><span class="p">][</span><span class="s2">&quot;trip_energy_electric&quot;</span><span class="p">]</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">&quot;Ambient Temperature: </span><span class="si">{</span><span class="n">query</span><span class="p">[</span><span class="s1">&#39;ambient_temperature&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> F, Trip Energy: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2"> kWh&quot;</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">TypeError</span><span class="g g-Whitespace">                                 </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
-<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">energy</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;route&quot;</span><span class="p">][</span><span class="s2">&quot;traversal_summary&quot;</span><span class="p">][</span><span class="s2">&quot;trip_energy_electric&quot;</span><span class="p">]</span>
-<span class="g g-Whitespace">      </span><span class="mi">2</span> <span class="nb">print</span><span class="p">(</span>
-<span class="g g-Whitespace">      </span><span class="mi">3</span>     <span class="sa">f</span><span class="s2">&quot;Ambient Temperature: </span><span class="si">{</span><span class="n">query</span><span class="p">[</span><span class="s1">&#39;ambient_temperature&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> F, Trip Energy: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2"> kWh&quot;</span>
-<span class="g g-Whitespace">      </span><span class="mi">4</span> <span class="p">)</span>
-
-<span class="ne">TypeError</span>: &#39;NoneType&#39; object is not subscriptable
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.18it/s]
 </pre></div>
 </div>
 </div>
@@ -519,9 +507,13 @@ with different temperature settings.</p>
     <span class="n">query</span><span class="p">[</span><span class="s2">&quot;ambient_temperature&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">temp</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;fahrenheit&quot;</span><span class="p">}</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
     <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">])</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error for temperature </span><span class="si">{</span><span class="n">temp</span><span class="si">}</span><span class="s2"> F: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="s2">&quot;route&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">result</span> <span class="ow">or</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;route&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No route found for temperature </span><span class="si">{</span><span class="n">temp</span><span class="si">}</span><span class="s2"> F.&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">energy</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;route&quot;</span><span class="p">][</span><span class="s2">&quot;traversal_summary&quot;</span><span class="p">][</span><span class="s2">&quot;trip_energy_electric&quot;</span><span class="p">]</span>
+        <span class="n">energy</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;route&quot;</span><span class="p">][</span><span class="s2">&quot;traversal_summary&quot;</span><span class="p">][</span><span class="s2">&quot;trip_energy_electric&quot;</span><span class="p">][</span>
+            <span class="s2">&quot;value&quot;</span>
+        <span class="p">]</span>
         <span class="n">temp_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="p">{</span>
                 <span class="s2">&quot;ambient_temperature_f&quot;</span><span class="p">:</span> <span class="n">temp</span><span class="p">,</span>
@@ -532,8 +524,11 @@ with different temperature settings.</p>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ambient Temperature: </span><span class="si">{</span><span class="n">temp</span><span class="si">}</span><span class="s2"> F, Trip Energy: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2"> kWh&quot;</span><span class="p">)</span>
 
 <span class="n">plot_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">temp_results</span><span class="p">)</span>
+
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;ambient_temperature_f&quot;</span><span class="p">],</span> <span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;trip_energy_electric&quot;</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;ambient_temperature_f&quot;</span><span class="p">],</span> <span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;trip_energy_electric&quot;</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span>
+<span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Effect of Ambient Temperature on Trip Energy Consumption&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Ambient Temperature (F)&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Trip Energy (kWh)&quot;</span><span class="p">)</span>
@@ -541,6 +536,86 @@ with different temperature settings.</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 302480.34it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1366120.25it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.05it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 360360.38it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2169197.25it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.72it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 372439.47it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1536098.38it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.63it/s]
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Ambient Temperature: 0 F, Trip Energy: 2.902 kWh
+Ambient Temperature: 15 F, Trip Energy: 2.89 kWh
+Ambient Temperature: 32 F, Trip Energy: 2.601 kWh
+Ambient Temperature: 50 F, Trip Energy: 2.178 kWh
+Ambient Temperature: 72 F, Trip Energy: 2.028 kWh
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 349040.16it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1751313.50it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.60it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 366972.47it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2169197.25it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.42it/s]
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 316856.78it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2079002.25it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.04it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 303490.16it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2127659.50it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.58it/s]
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Ambient Temperature: 90 F, Trip Energy: 2.03 kWh
+Ambient Temperature: 110 F, Trip Energy: 2.07 kWh
+</pre></div>
+</div>
+<img alt="../_images/6f5b48e3760d09e829a2a6cff6a486dacc410a010b440296168f4ed0ca170cae.png" src="../_images/6f5b48e3760d09e829a2a6cff6a486dacc410a010b440296168f4ed0ca170cae.png" />
 </div>
 </div>
 <p>Next, let's take a look at the 2022 Tesla Model 3 and the 2020 Chevy Bolt and compare their energy consumption across the same range of ambient temperatures.</p>
@@ -555,9 +630,11 @@ with different temperature settings.</p>
         <span class="n">query</span><span class="p">[</span><span class="s2">&quot;ambient_temperature&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">temp</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;fahrenheit&quot;</span><span class="p">}</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
         <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">])</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error for temperature </span><span class="si">{</span><span class="n">temp</span><span class="si">}</span><span class="s2"> F: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">energy</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;route&quot;</span><span class="p">][</span><span class="s2">&quot;traversal_summary&quot;</span><span class="p">][</span><span class="s2">&quot;trip_energy_electric&quot;</span><span class="p">]</span>
+            <span class="n">energy</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;route&quot;</span><span class="p">][</span><span class="s2">&quot;traversal_summary&quot;</span><span class="p">][</span><span class="s2">&quot;trip_energy_electric&quot;</span><span class="p">][</span>
+                <span class="s2">&quot;value&quot;</span>
+            <span class="p">]</span>
             <span class="n">temp_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="p">{</span>
                     <span class="s2">&quot;ambient_temperature_f&quot;</span><span class="p">:</span> <span class="n">temp</span><span class="p">,</span>
@@ -570,6 +647,7 @@ with different temperature settings.</p>
             <span class="p">)</span>
 
 <span class="n">plot_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">temp_results</span><span class="p">)</span>
+
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;vehicle_model&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
     <span class="n">model_data</span> <span class="o">=</span> <span class="n">plot_df</span><span class="p">[</span><span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;vehicle_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">model</span><span class="p">]</span>
@@ -579,7 +657,9 @@ with different temperature settings.</p>
         <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
     <span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Effect of Ambient Temperature on Trip Energy Consumption by Vehicle Model&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span>
+    <span class="s2">&quot;Effect of Ambient Temperature on Trip Energy Consumption by Vehicle Model&quot;</span>
+<span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Ambient Temperature (F)&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Trip Energy (kWh)&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
@@ -587,6 +667,159 @@ with different temperature settings.</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 198019.81it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1751313.50it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 26.80it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 332778.69it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2079002.25it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.35it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 297973.78it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1109877.88it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.72it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 340599.44it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1956947.12it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.64it/s]
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 0 F, Trip Energy: 2.871 kWh
+Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 15 F, Trip Energy: 2.547 kWh
+Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 32 F, Trip Energy: 2.091 kWh
+Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 50 F, Trip Energy: 1.924 kWh
+Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 72 F, Trip Energy: 1.906 kWh
+Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 90 F, Trip Energy: 1.907 kWh
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 407331.97it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1218026.75it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.98it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 330578.50it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2169197.25it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.62it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 309981.41it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2169197.25it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.15it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 383877.16it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2320185.75it/s]
+
+
+
+search: 100%|█████��████| 1/1 [00:00&lt;00:00, 27.68it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 345303.84it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1814882.00it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.42it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 321957.50it/s]
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 110 F, Trip Energy: 1.976 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 0 F, Trip Energy: 2.965 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 15 F, Trip Energy: 2.939 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 32 F, Trip Energy: 2.562 kWh
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1468428.75it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.03it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 297000.28it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1996008.00it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.37it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 273522.97it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2123142.25it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.66it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 360360.38it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2036660.00it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.81it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 294464.06it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1996008.00it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.79it/s]
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 50 F, Trip Energy: 2.043 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 72 F, Trip Energy: 1.83 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 90 F, Trip Energy: 1.831 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 110 F, Trip Energy: 1.882 kWh
+</pre></div>
+</div>
+<img alt="../_images/51894dd959d4a380950aaa49bcd0ff0d1b5ca7a81b027706d5397770738caf91.png" src="../_images/51894dd959d4a380950aaa49bcd0ff0d1b5ca7a81b027706d5397770738caf91.png" />
 </div>
 </div>
 </section>

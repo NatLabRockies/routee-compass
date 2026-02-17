@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1770913293661,
+  "lastUpdate": 1771354972395,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -2639,6 +2639,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 3035220,
             "range": "± 229466",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nreinicke@users.noreply.github.com",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9fd966a82d73148a41948eed209ffec35a3d1374",
+          "message": "Add examples to actions check (#468)\n\n* guard examples with main function; update conversion script\n\n* update examples based on latest changes\n\n* fix search pruning taking out parents\n\n* add unit tests to FrontierInstance::pop_new",
+          "timestamp": "2026-02-17T11:58:46-07:00",
+          "tree_id": "a86a740961103c3e44a9fba445401c4c6da3b357",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/9fd966a82d73148a41948eed209ffec35a3d1374"
+        },
+        "date": 1771354972035,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 3045465,
+            "range": "± 110785",
             "unit": "ns/iter"
           }
         ]
