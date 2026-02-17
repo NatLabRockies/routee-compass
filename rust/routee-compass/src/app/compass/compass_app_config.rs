@@ -116,7 +116,7 @@ impl CompassAppConfig {
             .iter()
             .map(|el| {
                 let conf = el.get_traversal_config();
-                builders.build_traversal_model_service(&conf)
+                builders.build_traversal_model_service(conf)
             })
             .collect::<Result<Vec<_>, _>>()?;
         Ok(result)
@@ -131,7 +131,7 @@ impl CompassAppConfig {
             .iter()
             .map(|el| {
                 let conf = el.get_constraint_config();
-                builders.build_constraint_model_service(&conf)
+                builders.build_constraint_model_service(conf)
             })
             .collect::<Result<Vec<_>, _>>()?;
         Ok(result)

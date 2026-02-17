@@ -1,5 +1,4 @@
 use super::road_class_service::RoadClassFrontierService;
-use crate::config::{CompassConfigurationField, ConfigJsonExtensions};
 use crate::model::constraint::default::road_class::RoadClassConstraintConfig;
 use crate::{
     model::constraint::{ConstraintModelBuilder, ConstraintModelError, ConstraintModelService},

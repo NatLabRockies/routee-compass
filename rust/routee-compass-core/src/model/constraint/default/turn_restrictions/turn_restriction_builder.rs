@@ -1,5 +1,4 @@
 use super::{RestrictionRecord, TurnRestrictionFrontierService};
-use crate::config::{CompassConfigurationField, ConfigJsonExtensions};
 use crate::model::constraint::default::turn_restrictions::TurnRestrictionConstraintConfig;
 use crate::{
     model::constraint::{ConstraintModelBuilder, ConstraintModelError, ConstraintModelService},
