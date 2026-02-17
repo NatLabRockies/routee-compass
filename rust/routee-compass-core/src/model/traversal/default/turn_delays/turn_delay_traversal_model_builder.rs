@@ -1,13 +1,13 @@
 use super::{
-    EdgeHeading, TurnDelayModelConfig, TurnDelayTraversalModelEngine,
+    EdgeHeading, TurnDelayTraversalConfig, TurnDelayTraversalModelEngine,
     TurnDelayTraversalModelService,
 };
-use crate::config::ConfigJsonExtensions;
 use crate::{
     model::traversal::{TraversalModelBuilder, TraversalModelError, TraversalModelService},
     util::fs::read_utils,
 };
 use kdam::Bar;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 pub struct TurnDelayTraversalModelBuilder {}
@@ -17,13 +17,14 @@ impl TraversalModelBuilder for TurnDelayTraversalModelBuilder {
         &self,
         parameters: &serde_json::Value,
     ) -> Result<Arc<dyn TraversalModelService>, TraversalModelError> {
-        let file_path = parameters
-            .get_config_path(&"edge_heading_input_file", &"turn delay access model")
-            .map_err(|e| {
+        let config: TurnDelayTraversalConfig =
+            serde_json::from_value(parameters.clone()).map_err(|e| {
                 TraversalModelError::BuildError(format!(
-                    "failure reading 'edge_heading_input_file' from access model configuration: {e}"
+                    "failure reading turn delay traversal configuration: {e}"
                 ))
             })?;
+
+        let file_path = PathBuf::from(&config.edge_heading_input_file);
         let edge_headings = read_utils::from_csv::<EdgeHeading>(
             &file_path.as_path(),
             true,
@@ -35,33 +36,14 @@ impl TraversalModelBuilder for TurnDelayTraversalModelBuilder {
                 "error reading headings from file {file_path:?}: {e}"
             ))
         })?;
-        let turn_delay_model_config = parameters
-            .get_config_serde::<TurnDelayModelConfig>(
-                &"turn_delay_model",
-                &"turn delay access model",
-            )
-            .map_err(|e| {
-                TraversalModelError::BuildError(format!(
-                    "failure reading 'turn_delay_model' from access model configuration: {e}"
-                ))
-            })?;
-
-        let include_trip_time = parameters
-            .get_config_serde_optional::<bool>(&"include_trip_time", &"turn delay access model")
-            .map_err(|e| {
-                TraversalModelError::BuildError(format!(
-                    "failure reading 'include_trip_time' from access model configuration: {e}"
-                ))
-            })?
-            .unwrap_or(true);
 
         let engine = TurnDelayTraversalModelEngine {
             edge_headings,
-            turn_delay_model: turn_delay_model_config.into(),
+            turn_delay_model: config.turn_delay_model.into(),
         };
         let service = TurnDelayTraversalModelService {
             engine: Arc::new(engine),
-            include_trip_time,
+            include_trip_time: config.include_trip_time.unwrap_or(true),
         };
         Ok(Arc::new(service))
     }

@@ -1,11 +1,11 @@
+use super::road_class_builder_config::RoadClassBuilderConfig;
 use super::road_class_service::RoadClassFrontierService;
-use crate::config::{CompassConfigurationField, ConfigJsonExtensions};
 use crate::{
     model::constraint::{ConstraintModelBuilder, ConstraintModelError, ConstraintModelService},
     util::fs::{read_decoders, read_utils},
 };
 use kdam::Bar;
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 pub struct RoadClassBuilder {}
 
@@ -14,18 +14,14 @@ impl ConstraintModelBuilder for RoadClassBuilder {
         &self,
         parameters: &serde_json::Value,
     ) -> Result<Arc<dyn ConstraintModelService>, ConstraintModelError> {
-        let constraint_key = CompassConfigurationField::Constraint.to_string();
-        let road_class_file_key = String::from("road_class_input_file");
-
-        let road_class_file = parameters
-            .get_config_path(&road_class_file_key, &constraint_key)
-            .map_err(|e| {
+        let config: RoadClassBuilderConfig =
+            serde_json::from_value(parameters.clone()).map_err(|e| {
                 ConstraintModelError::BuildError(format!(
-                    "configuration error due to {}: {}",
-                    road_class_file_key.clone(),
-                    e
+                    "failed to read road class configuration: {e}"
                 ))
             })?;
+
+        let road_class_file = PathBuf::from(&config.road_class_input_file);
 
         let road_class_lookup: Box<[String]> = read_utils::read_raw_file(
             &road_class_file,
@@ -35,9 +31,8 @@ impl ConstraintModelBuilder for RoadClassBuilder {
         )
         .map_err(|e| {
             ConstraintModelError::BuildError(format!(
-                "failed to load file at {:?}: {}",
-                road_class_file.clone().to_str(),
-                e
+                "failed to load file at {file_path:?}: {e}",
+                file_path = road_class_file
             ))
         })?;
 

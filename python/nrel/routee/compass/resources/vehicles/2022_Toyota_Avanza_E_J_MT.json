@@ -3,7 +3,6 @@
   "type": "bev",
   "mass_estimate_lbs": 2500,
   "model_input_file": "../models/2022_Toyota_Avanza_E_J_MT.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "kWh/mile",
   "battery_capacity": 52,
   "battery_capacity_unit": "kilowatt_hours",

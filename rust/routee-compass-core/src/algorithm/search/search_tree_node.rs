@@ -12,6 +12,8 @@ pub enum SearchTreeNode {
     Root {
         /// Tree orientation this node belongs to
         direction: Direction,
+        /// Number of nodes in the tree that have this node as a parent
+        child_count: usize,
     },
     Branch {
         /// The edge traversal that led to this node (None for root)
@@ -20,6 +22,8 @@ pub enum SearchTreeNode {
         parent: Label,
         /// Tree orientation this node belongs to
         direction: Direction,
+        /// Number of nodes in the tree that have this node as a parent
+        child_count: usize,
     },
 }
 
@@ -27,6 +31,7 @@ impl SearchTreeNode {
     pub fn new_root(orientation: Direction) -> Self {
         Self::Root {
             direction: orientation,
+            child_count: 0,
         }
     }
 
@@ -35,6 +40,7 @@ impl SearchTreeNode {
             incoming_edge: edge_traversal,
             parent,
             direction,
+            child_count: 0,
         }
     }
 
@@ -61,7 +67,7 @@ impl SearchTreeNode {
 
     pub fn direction(&self) -> Direction {
         match self {
-            SearchTreeNode::Root { direction } => *direction,
+            SearchTreeNode::Root { direction, .. } => *direction,
             SearchTreeNode::Branch { direction, .. } => *direction,
         }
     }
@@ -71,5 +77,38 @@ impl SearchTreeNode {
             SearchTreeNode::Root { .. } => None,
             SearchTreeNode::Branch { incoming_edge, .. } => Some(&incoming_edge.cost),
         }
+    }
+
+    pub fn child_count(&self) -> usize {
+        match self {
+            SearchTreeNode::Root { child_count, .. } => *child_count,
+            SearchTreeNode::Branch { child_count, .. } => *child_count,
+        }
+    }
+
+    pub fn increment_child_count(&mut self) {
+        match self {
+            SearchTreeNode::Root { child_count, .. } => *child_count += 1,
+            SearchTreeNode::Branch { child_count, .. } => *child_count += 1,
+        }
+    }
+
+    pub fn decrement_child_count(&mut self) {
+        match self {
+            SearchTreeNode::Root { child_count, .. } => {
+                if *child_count > 0 {
+                    *child_count -= 1;
+                }
+            }
+            SearchTreeNode::Branch { child_count, .. } => {
+                if *child_count > 0 {
+                    *child_count -= 1;
+                }
+            }
+        }
+    }
+
+    pub fn is_prunable(&self) -> bool {
+        self.child_count() == 0
     }
 }

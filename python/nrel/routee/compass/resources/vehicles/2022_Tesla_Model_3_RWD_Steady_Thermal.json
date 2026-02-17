@@ -3,7 +3,6 @@
   "type": "bev",
   "mass_estimate_lbs": 3850,
   "model_input_file": "../models/2022_Tesla_Model_3_RWD_Steady_Thermal.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "kWh/mile",
   "battery_capacity": 58,
   "battery_capacity_unit": "kilowatt_hours",

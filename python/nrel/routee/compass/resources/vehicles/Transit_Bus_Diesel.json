@@ -3,7 +3,6 @@
   "type": "ice",
   "mass_estimate_lbs": 30000,
   "model_input_file": "../models/Transit_Bus_Diesel.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "gallons diesel/mile",
   "real_world_energy_adjustment": 1.0,
   "a_star_heuristic_energy_rate": 0.133,

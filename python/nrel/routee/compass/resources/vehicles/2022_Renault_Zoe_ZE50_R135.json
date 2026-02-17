@@ -3,7 +3,6 @@
   "type": "bev",
   "mass_estimate_lbs": 3300,
   "model_input_file": "../models/2022_Renault_Zoe_ZE50_R135.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "kWh/mile",
   "battery_capacity": 52,
   "battery_capacity_unit": "kilowatt_hours",

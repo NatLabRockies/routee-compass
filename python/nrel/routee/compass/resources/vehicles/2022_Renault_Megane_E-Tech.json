@@ -3,7 +3,6 @@
   "type": "bev",
   "mass_estimate_lbs": 3600,
   "model_input_file": "../models/2022_Renault_Megane_E-Tech.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "kWh/mile",
   "battery_capacity": 60,
   "battery_capacity_unit": "kilowatt_hours",

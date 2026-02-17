@@ -1,13 +1,12 @@
-use crate::model::unit::TimeUnit;
+use super::TurnDelayModelConfig;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
-pub struct TimeTraversalConfig {
+pub struct TurnDelayTraversalConfig {
     #[serde(rename = "type")]
     pub r#type: String,
-    /// time unit for state modeling
-    pub time_unit: TimeUnit,
-    #[serde(default)]
+    pub edge_heading_input_file: String,
+    pub turn_delay_model: TurnDelayModelConfig,
     pub include_trip_time: Option<bool>,
 }

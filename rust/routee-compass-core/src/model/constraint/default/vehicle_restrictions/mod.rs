@@ -4,7 +4,9 @@ mod vehicle_parameter_config;
 mod vehicle_parameter_type;
 mod vehicle_restriction;
 mod vehicle_restriction_builder;
+mod vehicle_restriction_builder_config;
 mod vehicle_restriction_model;
+mod vehicle_restriction_query;
 mod vehicle_restriction_row;
 mod vehicle_restriction_service;
 
