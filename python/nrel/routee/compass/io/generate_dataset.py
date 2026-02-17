@@ -1,5 +1,6 @@
 from __future__ import annotations
 import enum
+from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, Union, TYPE_CHECKING
 from pathlib import Path
 
@@ -19,6 +20,7 @@ from nrel.routee.compass.io.charging_station_ops import (
 if TYPE_CHECKING:
     import networkx
     import pandas as pd
+    import geopandas
 
 log = logging.getLogger(__name__)
 
@@ -30,6 +32,33 @@ HIGHWAY_SPEED_MAP = dict[HIGHWAY_TYPE, KM_PER_HR]
 # Parameters annotated with this pass through OSMnx, then GeoPandas, then to Pandas,
 # this is a best-effort annotation since the upstream doesn't really have one
 AggFunc = Callable[[Any], Any]
+
+
+@dataclass
+class HookParameters:
+    """
+    Parameters passed to hooks registered with generate_compass_dataset.
+
+    These parameters allow developers to access and modify the road network
+    data before the dataset generation process completes.
+
+    Attributes:
+        output_directory (Path): The directory where the dataset files are being written.
+        vertices (pd.DataFrame): A DataFrame containing the vertex (node) data
+            of the road network, including coordinates and IDs.
+        edges (geopandas.GeoDataFrame): A GeoDataFrame containing the edge (link)
+            data, including geometries and attributes like distance and speed.
+        graph (networkx.MultiDiGraph): The processed NetworkX graph object
+            representing the road network topology and attributes.
+    """
+
+    output_directory: Path
+    vertices: pd.DataFrame
+    edges: geopandas.GeoDataFrame
+    graph: networkx.MultiDiGraph
+
+
+DatasetHook = Callable[[HookParameters], None]
 
 
 class GeneratePipelinePhase(enum.Enum):
@@ -78,6 +107,7 @@ def generate_compass_dataset(
     requests_kwds: Optional[Dict[Any, Any]] = None,
     afdc_api_key: str = "DEMO_KEY",
     vehicle_models: Optional[List[str]] = None,
+    hooks: Optional[List[DatasetHook]] = None,
 ) -> None:
     """
     Processes a graph downloaded via OSMNx, generating the set of input
@@ -109,6 +139,9 @@ def generate_compass_dataset(
             ``["2017_CHEVROLET_Bolt", "2016_TOYOTA_Camry_4cyl_2WD"]``).
             Use :func:`list_available_vehicle_models` to see valid names.
             When ``None`` (the default) all available models are included.
+        hooks: Optional list of callables that take a ``HookParameters`` object.
+            These hooks will be called after the dataset has been generated
+            and before the function returns.
     Example:
         >>> import osmnx as ox
         >>> g = ox.graph_from_place("Denver, Colorado, USA")
@@ -363,6 +396,18 @@ def generate_compass_dataset(
             index=False,
             compression="gzip",
         )
+
+    # RUN HOOKS
+    if hooks is not None:
+        log.info(f"running {len(hooks)} dataset generation hooks")
+        params = HookParameters(
+            output_directory=output_directory,
+            vertices=v,
+            edges=e,
+            graph=g1,
+        )
+        for hook in hooks:
+            hook(params)
 
 
 def _resolve_required_model_bins(vehicle_models: List[str]) -> set[str]:

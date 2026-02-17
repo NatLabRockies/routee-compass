@@ -11,6 +11,7 @@ from nrel.routee.compass.routee_compass_py import (
 from nrel.routee.compass.io.generate_dataset import (
     GeneratePipelinePhase,
     generate_compass_dataset,
+    DatasetHook,
 )
 
 if TYPE_CHECKING:
@@ -136,6 +137,7 @@ class CompassApp:
         vehicle_models: Optional[List[str]] = None,
         parallelism: Optional[int] = None,
         overwrite: bool = False,
+        hooks: Optional[List[DatasetHook]] = None,
     ) -> CompassApp:
         """
         Build a CompassApp from a networkx graph.
@@ -207,6 +209,7 @@ class CompassApp:
                 raster_resolution_arc_seconds=raster_resolution_arc_seconds,
                 default_config=True,
                 vehicle_models=vehicle_models,
+                hooks=hooks,
             )
 
         if not config_path.exists():
