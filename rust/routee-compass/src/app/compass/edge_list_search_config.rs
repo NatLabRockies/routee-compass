@@ -2,7 +2,7 @@ use schemars::{json_schema, JsonSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-/// sub-section of [`CompassAppConfig`] where the [`TraversalModelService`], [`AccessModelService`], and [`ConstraintModelService`] components
+/// sub-section of [`CompassAppConfig`] where the [`TraversalModelService`] and [`ConstraintModelService`] components
 /// for an [`EdgeList`] are specified.
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct EdgeListSearchConfig {
