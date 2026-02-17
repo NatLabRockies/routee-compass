@@ -10,6 +10,7 @@ use routee_compass_core::{
         traversal::TraversalModelService,
     },
 };
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -21,7 +22,7 @@ use crate::{
 /// high-level application configuration that orchestrates together
 /// configuration requirements for the various components making up a
 /// [`CompassApp`].
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct CompassAppConfig {
     pub algorithm: SearchAlgorithmConfig,
     pub state: Option<Vec<(String, StateVariableConfig)>>,

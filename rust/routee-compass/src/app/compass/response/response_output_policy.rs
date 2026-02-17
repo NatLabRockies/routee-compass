@@ -4,13 +4,14 @@ use super::{
 };
 use crate::app::compass::{response::internal_writer::InternalWriter, CompassAppError};
 use flate2::{write::GzEncoder, Compression};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::{
     path::PathBuf,
     sync::{Arc, Mutex},
 };
 
-#[derive(Deserialize, Serialize, Clone, Debug, Default)]
+#[derive(Deserialize, Serialize, Clone, Debug, Default, JsonSchema)]
 #[serde(rename_all = "snake_case", tag = "type")]
 pub enum ResponseOutputPolicy {
     #[default]

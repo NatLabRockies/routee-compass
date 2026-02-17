@@ -134,7 +134,7 @@ impl SearchInstance {
                 vertex_id: dst.vertex_id,
                 state: i,
             };
-            tree.insert(prev_label, traversal.clone(), child_label.clone())
+            tree.insert(prev_label, traversal.clone(), child_label.clone(), self.label_model.clone())
                 .map_err(|e| SearchError::InternalError(e.to_string()))?;
 
             prev_label = child_label;

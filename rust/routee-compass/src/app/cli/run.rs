@@ -241,9 +241,10 @@ fn apply_output_directory_override(
 
 #[cfg(test)]
 mod tests {
+    use indexmap::IndexMap;
+
     use super::*;
     use crate::app::compass::response::response_output_format::ResponseOutputFormat;
-    use ordered_hash_map::OrderedHashMap;
 
     #[test]
     fn test_apply_output_directory_override_json() {
@@ -312,7 +313,7 @@ mod tests {
                 Box::new(ResponseOutputPolicy::File {
                     filename: "file2.csv".to_string(),
                     format: ResponseOutputFormat::Csv {
-                        mapping: OrderedHashMap::new(),
+                        mapping: IndexMap::new(),
                         sorted: false,
                     },
                     file_flush_rate: None,
@@ -371,7 +372,7 @@ mod tests {
                         Box::new(ResponseOutputPolicy::File {
                             filename: "file2.csv".to_string(),
                             format: ResponseOutputFormat::Csv {
-                                mapping: OrderedHashMap::new(),
+                                mapping: IndexMap::new(),
                                 sorted: false,
                             },
                             file_flush_rate: None,

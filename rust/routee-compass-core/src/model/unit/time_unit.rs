@@ -1,7 +1,8 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Default, Hash, PartialOrd)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Default, Hash, PartialOrd, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TimeUnit {
     Hours,

@@ -3,7 +3,9 @@ use std::fmt::Display;
 use super::{custom_variable_type::CustomVariableType, state_model_error::StateModelError};
 use crate::model::state::StateVariable;
 use ordered_float::OrderedFloat;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 /// codec between StateVar values and basic Rust types.
 /// all stateful information in Compass is encoded as a vector of floating
@@ -42,6 +44,37 @@ impl Display for CustomVariableConfig {
             .map(|i| format!("{i}"))
             .unwrap_or_else(|_| String::from("<invalid initial argument>"));
         write!(f, "{}: {}", self.name(), initial)
+    }
+}
+
+impl JsonSchema for CustomVariableConfig {
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        "CustomVariableConfig".into()
+    }
+
+    fn json_schema(_generator: &mut schemars::SchemaGenerator) -> schemars::Schema {
+        let create_schema = |name: &str, unit: &str| {
+            json!({
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": name
+                    },
+                    "initial": { "type": unit },
+                },
+                "required": vec!["type", "initial"],
+            })
+        };
+        let schema_value = schemars::json_schema!({
+            "oneOf": [
+                create_schema("floating_point", "number"),
+                create_schema("signed_integer", "integer"),
+                create_schema("unsigned_integer", "integer"),
+                create_schema("boolean", "boolean"),
+            ]
+        });
+        schema_value
     }
 }
 

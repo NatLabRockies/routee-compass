@@ -2,6 +2,7 @@ use crate::model::{
     state::{CustomVariableConfig, StateModelError, StateVariable},
     unit::{DistanceUnit, EnergyUnit, RatioUnit, SpeedUnit, TemperatureUnit, TimeUnit},
 };
+use schemars::{JsonSchema, json_schema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fmt::Display;
@@ -282,5 +283,94 @@ impl Display for StateVariableConfig {
                 )
             }
         }
+    }
+}
+
+
+impl JsonSchema for StateVariableConfig {
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        "StateVariableConfig".into()
+    }
+
+    fn json_schema(generator: &mut schemars::SchemaGenerator) -> schemars::Schema {
+        // Helper to create a variant schema with common fields
+        let create_variant = |type_name: &str, unit_schema: Option<schemars::Schema>| -> serde_json::Value {
+            
+            // Add output_unit if provided
+            let unit = match unit_schema {
+                Some(s) => serde_json::to_value(s).unwrap_or_default(),
+                None => serde_json::Value::Null,
+            };
+            
+            json!({
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": [type_name]
+                    },
+                    "initial": { "type": "number" },
+                    "accumulator": { "type": "boolean" },
+                    "output_unit": unit
+
+                },
+                "required": vec!["type", "initial", "accumulator"],
+            })
+        };
+
+        let variants = vec![
+            // Distance variant
+            create_variant(
+                "distance",
+                Some(generator.subschema_for::<Option<DistanceUnit>>()),
+            ),
+            // Time variant
+            create_variant(
+                "time",
+                Some(generator.subschema_for::<Option<TimeUnit>>()),
+            ),
+            // Speed variant
+            create_variant(
+                "speed",
+                Some(generator.subschema_for::<Option<SpeedUnit>>()),
+            ),
+            // Energy variant
+            create_variant(
+                "energy",
+                Some(generator.subschema_for::<Option<EnergyUnit>>()),
+            ),
+            // Ratio variant
+            create_variant(
+                "ratio",
+                Some(generator.subschema_for::<Option<RatioUnit>>()),
+            ),
+            // Temperature variant
+            create_variant(
+                "temperature",
+                Some(generator.subschema_for::<Option<TemperatureUnit>>()),
+            ),
+            // Custom variant
+            json!({
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": ["custom"]
+                    },
+                    "custom_type": { "type": "string" },
+                    "value": serde_json::to_value(generator.subschema_for::<CustomVariableConfig>())
+                    .unwrap_or(serde_json::Value::Null),
+                    "accumulator": { "type": "boolean"}
+                    
+                },
+                "required": ["type", "custom_type", "value", "accumulator"],
+            })
+        ];
+
+        // Create the oneOf schema for all variants
+        let schema_value = json_schema!({
+            "oneOf": variants
+        });
+        schema_value
     }
 }
