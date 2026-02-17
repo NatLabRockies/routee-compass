@@ -83,6 +83,11 @@ impl SearchTree {
             }
         }
 
+        // Increment child count of parent
+        if let Some(parent_node) = self.nodes.get_mut(&parent_label) {
+            parent_node.increment_child_count();
+        }
+
         // Create the new node
         let new_node =
             SearchTreeNode::new_child(edge_traversal, parent_label.clone(), self.direction);
@@ -105,9 +110,17 @@ impl SearchTree {
     /// between two labels, where one is pareto-dominant.
     pub fn remove(&mut self, label: &Label) -> Result<(), SearchTreeError> {
         // Remove from nodes map
-        self.nodes
+        let node = self
+            .nodes
             .remove(label)
             .ok_or_else(|| SearchTreeError::LabelNotFound(label.clone()))?;
+
+        // Decrement child count of parent
+        if let Some(parent_label) = node.parent_label() {
+            if let Some(parent_node) = self.nodes.get_mut(parent_label) {
+                parent_node.decrement_child_count();
+            }
+        }
 
         // Remove from labels map if not a Vertex label
         if !matches!(label, Label::Vertex(_)) {
