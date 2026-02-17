@@ -3,7 +3,6 @@
   "type": "bev",
   "mass_estimate_lbs": 3580,
   "model_input_file": "../models/2020_Chevrolet_Bolt_EV_Steady_Thermal.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "kWh/mile",
   "battery_capacity": 66,
   "battery_capacity_unit": "kilowatt_hours",

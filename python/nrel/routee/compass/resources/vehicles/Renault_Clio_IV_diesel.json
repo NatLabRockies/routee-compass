@@ -3,7 +3,6 @@
   "type": "ice",
   "mass_estimate_lbs": 2600,
   "model_input_file": "../models/Renault_Clio_IV_diesel.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "gallons diesel/mile",
   "real_world_energy_adjustment": 1.166,
   "a_star_heuristic_energy_rate": 0.022,

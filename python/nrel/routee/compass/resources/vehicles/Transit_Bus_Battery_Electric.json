@@ -3,7 +3,6 @@
   "type": "bev",
   "mass_estimate_lbs": 40000,
   "model_input_file": "../models/Transit_Bus_Battery_Electric.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "kWh/mile",
   "battery_capacity": 500,
   "battery_capacity_unit": "kilowatt_hours",

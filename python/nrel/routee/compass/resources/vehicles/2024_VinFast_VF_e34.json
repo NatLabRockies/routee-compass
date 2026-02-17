@@ -3,7 +3,6 @@
   "type": "bev",
   "mass_estimate_lbs": 3300,
   "model_input_file": "../models/2024_VinFast_VF_e34.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "kWh/mile",
   "battery_capacity": 42,
   "battery_capacity_unit": "kilowatt_hours",

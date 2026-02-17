@@ -4,12 +4,22 @@ use crate::model::IceEnergyModel;
 use crate::model::PhevEnergyModel;
 use config::Config;
 use routee_compass_core::config::ConfigJsonExtensions;
-use routee_compass_core::model::traversal::TraversalModelBuilder;
-use routee_compass_core::model::traversal::TraversalModelError;
-use routee_compass_core::model::traversal::TraversalModelService;
+use routee_compass_core::model::traversal::{
+    TraversalModelBuilder, TraversalModelError, TraversalModelService,
+};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct EnergyModelBuilderConfig {
+    #[serde(rename = "type")]
+    pub r#type: String,
+    pub vehicle_input_files: Vec<String>,
+    pub include_trip_energy: Option<bool>,
+}
 
 pub struct EnergyModelBuilder {}
 
@@ -18,35 +28,23 @@ impl TraversalModelBuilder for EnergyModelBuilder {
         &self,
         params: &serde_json::Value,
     ) -> Result<Arc<dyn TraversalModelService>, TraversalModelError> {
-        let parent_key = String::from("energy traversal model");
-
-        let vehicle_files = params
-            .get_config_array(&"vehicle_input_files", &parent_key)
-            .map_err(|e| TraversalModelError::BuildError(e.to_string()))?;
-
-        let include_trip_energy: Option<bool> = params
-            .get_config_serde_optional(&"include_trip_energy", &parent_key)
-            .map_err(|e| {
+        let config: EnergyModelBuilderConfig =
+            serde_json::from_value(params.clone()).map_err(|e| {
                 TraversalModelError::BuildError(format!(
-                    "Failed to get optional parameter `include_trip_energy` from config: {}",
-                    e
+                    "failure reading energy traversal model configuration: {e}"
                 ))
             })?;
 
         // read all vehicle configurations from files
         let mut vehicle_library = HashMap::new();
-        for vehicle_file in vehicle_files {
-            let file_path = vehicle_file.as_str().ok_or_else(|| {
-                TraversalModelError::BuildError("vehicle file path must be a string".to_string())
-            })?;
-
+        for vehicle_file in &config.vehicle_input_files {
             let vehicle_config = Config::builder()
-                .add_source(config::File::with_name(file_path))
+                .add_source(config::File::with_name(vehicle_file))
                 .build()
                 .map_err(|e| {
                     TraversalModelError::BuildError(format!(
                         "failed to read vehicle config file '{}': {}",
-                        file_path, e
+                        vehicle_file, e
                     ))
                 })?;
 
@@ -55,46 +53,50 @@ impl TraversalModelBuilder for EnergyModelBuilder {
                 .map_err(|e| {
                     TraversalModelError::BuildError(format!(
                         "failed to parse vehicle config file '{}': {}",
-                        file_path, e
+                        vehicle_file, e
                     ))
                 })?
-                .normalize_file_paths(Path::new(file_path), None)
+                .normalize_file_paths(Path::new(vehicle_file), None)
                 .map_err(|e| {
                     TraversalModelError::BuildError(format!(
                         "failed to normalize file paths in vehicle config file '{}': {}",
-                        file_path, e
+                        vehicle_file, e
                     ))
                 })?;
 
             // inject include_trip_energy if specified at the model level
-            if let Some(include_trip_energy) = include_trip_energy {
+            if let Some(include_trip_energy) = config.include_trip_energy {
                 vehicle_json["include_trip_energy"] = serde_json::Value::Bool(include_trip_energy);
             }
 
             let model_name = vehicle_json
-                .get_config_string(&"name", &parent_key)
-                .map_err(|e| {
+                .get("name")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| {
                     TraversalModelError::BuildError(format!(
-                        "vehicle model missing 'name' field in '{}': {}",
-                        file_path, e
+                        "vehicle model missing 'name' field in '{}'",
+                        vehicle_file
                     ))
-                })?;
+                })?
+                .to_string();
             let vehicle_type = vehicle_json
-                .get_config_string(&"type", &parent_key)
-                .map_err(|e| {
+                .get("type")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| {
                     TraversalModelError::BuildError(format!(
-                        "vehicle model missing 'type' field in '{}': {}",
-                        file_path, e
+                        "vehicle model missing 'type' field in '{}'",
+                        vehicle_file
                     ))
                 })?;
-            let service: Arc<dyn TraversalModelService> = match vehicle_type.as_str() {
+
+            let service: Arc<dyn TraversalModelService> = match vehicle_type {
                 "ice" => Arc::new(IceEnergyModel::try_from(&vehicle_json)?),
                 "bev" => Arc::new(BevEnergyModel::try_from(&vehicle_json)?),
                 "phev" => Arc::new(PhevEnergyModel::try_from(&vehicle_json)?),
                 _ => {
                     return Err(TraversalModelError::BuildError(format!(
                         "unknown vehicle model type in '{}': {}",
-                        file_path, vehicle_type
+                        vehicle_file, vehicle_type
                     )));
                 }
             };

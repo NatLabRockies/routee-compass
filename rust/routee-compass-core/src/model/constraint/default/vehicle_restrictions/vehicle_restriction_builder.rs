@@ -1,7 +1,7 @@
 use super::{
-    RestrictionRow, VehicleParameterType, VehicleRestriction, VehicleRestrictionFrontierService,
+    vehicle_restriction_builder_config::VehicleRestrictionBuilderConfig, RestrictionRow,
+    VehicleParameterType, VehicleRestriction, VehicleRestrictionFrontierService,
 };
-use crate::config::{CompassConfigurationField, ConfigJsonExtensions};
 use crate::{
     model::{
         constraint::{ConstraintModelBuilder, ConstraintModelError, ConstraintModelService},
@@ -20,18 +20,14 @@ impl ConstraintModelBuilder for VehicleRestrictionBuilder {
         &self,
         parameters: &serde_json::Value,
     ) -> Result<Arc<dyn ConstraintModelService>, ConstraintModelError> {
-        let constraint_key = CompassConfigurationField::Constraint.to_string();
-        let vehicle_restriction_input_file_key = String::from("vehicle_restriction_input_file");
-
-        let vehicle_restriction_input_file = parameters
-            .get_config_path(&vehicle_restriction_input_file_key, &constraint_key)
+        let config: VehicleRestrictionBuilderConfig = serde_json::from_value(parameters.clone())
             .map_err(|e| {
                 ConstraintModelError::BuildError(format!(
-                    "configuration error due to {}: {}",
-                    vehicle_restriction_input_file_key.clone(),
-                    e
+                    "failed to read vehicle restriction configuration: {e}"
                 ))
             })?;
+
+        let vehicle_restriction_input_file = PathBuf::from(&config.vehicle_restriction_input_file);
 
         let vehicle_restriction_lookup =
             vehicle_restriction_lookup_from_file(&vehicle_restriction_input_file)?;

@@ -3,7 +3,6 @@
   "type": "bev",
   "mass_estimate_lbs": 4650,
   "model_input_file": "../models/2023_Polestar_2_Long_range_Dual_motor.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "kWh/mile",
   "battery_capacity": 78,
   "battery_capacity_unit": "kilowatt_hours",

@@ -3,7 +3,6 @@
   "type": "bev",
   "mass_estimate_lbs": 2600,
   "model_input_file": "../models/2016_MITSUBISHI_i-MiEV.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "kWh/mile",
   "battery_capacity": 16,
   "battery_capacity_unit": "kilowatt_hours",

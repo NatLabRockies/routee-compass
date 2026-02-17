@@ -3,7 +3,6 @@
   "type": "ice",
   "mass_estimate_lbs": 2500,
   "model_input_file": "../models/2024_Volkswagen_Polo_1.bin",
-  "distance_unit": "miles",
   "energy_rate_unit": "gallons gasoline/mile",
   "real_world_energy_adjustment": 1.166,
   "a_star_heuristic_energy_rate": 0.025,
