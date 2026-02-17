@@ -59,7 +59,7 @@ impl JsonSchema for CustomVariableConfig {
                 "properties": {
                     "type": {
                         "type": "string",
-                        "enum": name
+                        "const": name
                     },
                     "initial": { "type": unit },
                 },
