@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771369167489,
+  "lastUpdate": 1771380835749,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -2729,6 +2729,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2964390,
             "range": "± 147635",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "51e5a40eed4bbf0ebd2561640b3d4eb31356a8bd",
+          "message": "Update rand requirement from 0.9.2 to 0.10.0 in /rust (#471)\n\n* Update rand requirement from 0.9.2 to 0.10.0 in /rust\n\nUpdates the requirements on [rand](https://github.com/rust-random/rand) to permit the latest version.\n- [Release notes](https://github.com/rust-random/rand/releases)\n- [Changelog](https://github.com/rust-random/rand/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/rust-random/rand/compare/rand_core-0.9.2...0.10.0)\n\n---\nupdated-dependencies:\n- dependency-name: rand\n  dependency-version: 0.10.0\n  dependency-type: direct:production\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\n\n* merge main\n\n---------\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>\nCo-authored-by: Nicholas Reinicke <Nicholas.Reinicke@nrel.gov>",
+          "timestamp": "2026-02-17T19:09:42-07:00",
+          "tree_id": "75551203ea1a4b4d4fba66cb1fb8962af319acbb",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/51e5a40eed4bbf0ebd2561640b3d4eb31356a8bd"
+        },
+        "date": 1771380835400,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2930326,
+            "range": "± 114381",
             "unit": "ns/iter"
           }
         ]
