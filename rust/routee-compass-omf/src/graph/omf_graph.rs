@@ -27,6 +27,7 @@ pub const GEOMETRIES_FILENAME: &str = "edges-geometries-enumerated.txt.gz";
 pub const SPEEDS_FILENAME: &str = "edges-speeds-mph-enumerated.txt.gz";
 pub const CLASSES_FILENAME: &str = "edges-classes-enumerated.txt.gz";
 pub const SPEED_MAPPING_FILENAME: &str = "edges-classes-speed-mapping.csv.gz";
+pub const OMF_IDS_FILENAME: &str = "edges-omf-ids.csv.gz";
 pub const BEARINGS_FILENAME: &str = "edges-bearings-enumerated.txt.gz";
 
 pub struct OmfGraphVectorized {
@@ -45,6 +46,7 @@ pub struct OmfEdgeList {
     pub speeds: Vec<f64>,
     pub speed_lookup: HashMap<String, f64>,
     pub bearings: Vec<f64>,
+    pub omf_segment_connector_ids: Option<Vec<(String, (String, String))>>,
 }
 
 impl OmfGraphVectorized {
@@ -53,6 +55,7 @@ impl OmfGraphVectorized {
         collection: &TransportationCollection,
         configuration: &[NetworkEdgeListConfiguration],
         island_detection_configuration: Option<IslandDetectionAlgorithmConfiguration>,
+        export_omf_ids: bool,
     ) -> Result<Self, OvertureMapsCollectionError> {
         // process all connectors into vertices
         let (mut vertices, mut vertex_lookup) =
@@ -127,6 +130,10 @@ impl OmfGraphVectorized {
             let global_speed =
                 ops::get_global_average_speed(&speeds, &segments, &segment_lookup, &splits)?;
 
+            // omf ids
+            let omf_ids =
+                export_omf_ids.then_some(ops::get_omf_ids(&segments, &segment_lookup, &splits)?);
+
             // match speeds according to classes
             let speeds = speeds
                 .into_par_iter()
@@ -157,6 +164,7 @@ impl OmfGraphVectorized {
                 speeds,
                 speed_lookup,
                 bearings,
+                omf_segment_connector_ids: omf_ids
             };
             edge_lists.push(edge_list);
         }
@@ -311,6 +319,17 @@ impl OmfGraphVectorized {
                 overwrite,
                 "write bearings",
             )?;
+
+            // Write OMF ids
+            if let Some(omf_ids) = &edge_list. omf_segment_connector_ids {
+                serialize_into_csv(
+                    omf_ids.iter().map(|(s_id, (src_id, dst_id))| (s_id, src_id, dst_id)),
+                    OMF_IDS_FILENAME,
+                    &mode_dir,
+                    overwrite,
+                    "write omf ids",
+                )?;
+            }
         }
         eprintln!();
 

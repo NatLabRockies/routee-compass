@@ -249,6 +249,18 @@ pub fn create_speed_by_segment_type_lookup<'a>(
         .collect::<HashMap<&SegmentFullType, f64>>())
 }
 
+/// get the tuples (segment_id, (src_id, dst_id)) referencing the original omf dataset
+pub fn get_omf_ids(
+    segments: &[&TransportationSegmentRecord],
+    segment_lookup: &HashMap<String, usize>,
+    splits: &[SegmentSplit],
+) -> Result<Vec<(String, (String, String))>, OvertureMapsCollectionError> {
+    splits
+        .par_iter()
+        .map(|split| split.get_omf_segment_id(segments, segment_lookup))
+        .collect()
+}
+
 pub fn get_global_average_speed(
     initial_speeds: &[Option<f64>],
     segments: &[&TransportationSegmentRecord],
@@ -344,6 +356,13 @@ pub fn clean_omf_edge_list(omf_list: OmfEdgeList, mask: Vec<bool>) -> OmfEdgeLis
         .enumerate()
         .filter_map(|(idx, b)| mask[idx].then_some(b))
         .collect();
+    
+    let omf_segment_connector_ids = omf_list.omf_segment_connector_ids.map(
+        |ids| ids.into_iter()
+        .enumerate()
+        .filter_map(|(idx, b)| mask[idx].then_some(b))
+        .collect()
+    );
 
     OmfEdgeList {
         edge_list_id: omf_list.edge_list_id,
@@ -353,5 +372,6 @@ pub fn clean_omf_edge_list(omf_list: OmfEdgeList, mask: Vec<bool>) -> OmfEdgeLis
         speeds,
         speed_lookup: omf_list.speed_lookup,
         bearings,
+        omf_segment_connector_ids
     }
 }

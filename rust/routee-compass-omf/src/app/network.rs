@@ -50,6 +50,7 @@ pub fn run(
     local_source: Option<&Path>,
     write_json: bool,
     island_detection_configuration: Option<IslandDetectionAlgorithmConfiguration>,
+    export_omf_ids: bool,
 ) -> Result<(), OvertureMapsCollectionError> {
     let collection: TransportationCollection = match local_source {
         Some(src_path) => read_local(src_path),
@@ -61,8 +62,12 @@ pub fn run(
         collection.to_json(output_directory)?;
     }
 
-    let vectorized_graph =
-        OmfGraphVectorized::new(&collection, modes, island_detection_configuration)?;
+    let vectorized_graph = OmfGraphVectorized::new(
+        &collection,
+        modes,
+        island_detection_configuration,
+        export_omf_ids,
+    )?;
     vectorized_graph.write_compass(output_directory, true)?;
 
     Ok(())
