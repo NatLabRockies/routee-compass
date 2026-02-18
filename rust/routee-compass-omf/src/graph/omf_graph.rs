@@ -164,7 +164,7 @@ impl OmfGraphVectorized {
                 speeds,
                 speed_lookup,
                 bearings,
-                omf_segment_ids: omf_segment_ids,
+                omf_segment_ids,
             };
             edge_lists.push(edge_list);
         }
