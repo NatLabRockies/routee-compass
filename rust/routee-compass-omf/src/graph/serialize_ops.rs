@@ -249,7 +249,7 @@ pub fn create_speed_by_segment_type_lookup<'a>(
         .collect::<HashMap<&SegmentFullType, f64>>())
 }
 
-/// get the tuples (segment_id, (src_id, dst_id)) referencing the original omf dataset
+/// get the tuples (segment_id, linear reference) referencing the original omf dataset
 pub fn get_segment_omf_ids(
     segments: &[&TransportationSegmentRecord],
     segment_lookup: &HashMap<String, usize>,
