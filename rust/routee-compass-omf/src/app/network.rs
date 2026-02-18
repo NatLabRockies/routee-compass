@@ -62,13 +62,9 @@ pub fn run(
         collection.to_json(output_directory)?;
     }
 
-    let vectorized_graph = OmfGraphVectorized::new(
-        &collection,
-        modes,
-        island_detection_configuration,
-        export_omf_ids,
-    )?;
-    vectorized_graph.write_compass(output_directory, true)?;
+    let vectorized_graph =
+        OmfGraphVectorized::new(&collection, modes, island_detection_configuration)?;
+    vectorized_graph.write_compass(output_directory, true, export_omf_ids)?;
 
     Ok(())
 }
