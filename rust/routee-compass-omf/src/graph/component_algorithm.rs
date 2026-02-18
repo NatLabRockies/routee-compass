@@ -395,7 +395,7 @@ mod tests {
         let backward_adjacency = build_adjacency(
             &edge_lists.iter().collect::<Vec<&EdgeList>>(),
             vertices.len(),
-            true,
+            false,
         )
         .unwrap();
 
