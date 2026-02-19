@@ -44,7 +44,7 @@ pub enum OmfOperation {
         /// which is a JSON file containing a TransportationCollection.
         #[arg(short, long)]
         local_source: Option<String>,
-        
+
         /// write the raw OMF dataset as a JSON blob to the output directory.
         #[arg(short, long)]
         store_raw: bool,
