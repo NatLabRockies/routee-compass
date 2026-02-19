@@ -1,5 +1,7 @@
 use std::path::Path;
 
+use geo::{Contains, Geometry};
+use rayon::prelude::*;
 use routee_compass_core::model::unit::DistanceUnit;
 use serde::{Deserialize, Serialize};
 
@@ -52,6 +54,7 @@ pub fn run(
     write_json: bool,
     island_detection_configuration: Option<IslandDetectionAlgorithmConfiguration>,
     export_omf_ids: bool,
+    extent: Option<Geometry<f32>>,
 ) -> Result<(), OvertureMapsCollectionError> {
     let collection: TransportationCollection = match local_source {
         Some(src_path) => read_local(src_path),
@@ -62,6 +65,12 @@ pub fn run(
         util::fs::create_dirs(output_directory)?;
         collection.to_json(output_directory)?;
     }
+
+    let collection = if let Some(ext_geom) = extent {
+        apply_extent_to_collection(collection, ext_geom)
+    } else {
+        collection
+    };
 
     let vectorized_graph =
         OmfGraphVectorized::new(&collection, modes, island_detection_configuration)?;
@@ -123,4 +132,39 @@ fn run_collector(
     );
 
     TransportationCollection::try_from_collector(collector, release, Some(bbox.into()))
+}
+
+/// filters segments and connectors in a transportation collection
+/// using an arbitrary extent with the `contains` predicate. empty geometries are ignored (filtered out)
+fn apply_extent_to_collection(
+    collection: TransportationCollection,
+    extent: Geometry<f32>,
+) -> TransportationCollection {
+    let filtered_segments = collection
+        .segments
+        .into_par_iter()
+        .filter(|segment| {
+            segment
+                .get_linestring()
+                .map(|linestring| extent.contains(linestring))
+                .unwrap_or(false)
+        })
+        .collect();
+
+    let filtered_connectors = collection
+        .connectors
+        .into_par_iter()
+        .filter(|connector| {
+            connector
+                .get_geometry()
+                .map(|geometry| extent.contains(geometry))
+                .unwrap_or(false)
+        })
+        .collect();
+
+    TransportationCollection {
+        release: collection.release.clone(),
+        connectors: filtered_connectors,
+        segments: filtered_segments,
+    }
 }

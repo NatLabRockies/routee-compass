@@ -78,6 +78,8 @@ impl TryFrom<OvertureRecord> for TransportationSegmentRecord {
 }
 
 impl TransportationSegmentRecord {
+    /// retrieve geometry mapped to linestring variant. returns Err if geometry is empty or
+    /// if it is not a linestring
     pub fn get_linestring(&self) -> Result<&LineString<f32>, OvertureMapsCollectionError> {
         let geometry = self.geometry.as_ref().ok_or_else(|| {
             OvertureMapsCollectionError::InvalidGeometry("empty geometry".to_string())
