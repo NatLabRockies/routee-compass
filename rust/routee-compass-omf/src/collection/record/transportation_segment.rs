@@ -259,7 +259,7 @@ impl fmt::Display for SegmentSubclass {
 }
 
 /// Fully qualified segment type including type, class and subclass. E.g. road-service-driveway
-#[derive(Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct SegmentFullType(SegmentSubtype, SegmentClass, Option<SegmentSubclass>);
 
 impl SegmentFullType {
@@ -921,8 +921,8 @@ impl SegmentSpeedLimit {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SpeedLimitWithUnit {
-    value: i32,
-    unit: SegmentSpeedUnit,
+    pub value: i32,
+    pub unit: SegmentSpeedUnit,
 }
 
 impl SpeedLimitWithUnit {

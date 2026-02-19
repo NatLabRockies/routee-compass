@@ -26,6 +26,10 @@ pub struct OmfApp {
 pub enum OmfOperation {
     /// download all of the OMF transportation data
     Network {
+        /// descriptive user-provided name for this import region.
+        #[arg(short, long)]
+        name: String,
+
         /// configuration file defining how the network is imported and separated
         /// into mode-specific edge lists.
         #[arg(short, long)]
@@ -59,6 +63,7 @@ impl OmfOperation {
     pub fn run(&self) -> Result<(), OvertureMapsCollectionError> {
         match self {
             OmfOperation::Network {
+                name,
                 configuration_file,
                 output_directory,
                 local_source,
@@ -98,6 +103,7 @@ impl OmfOperation {
                 };
                 let local = local_source.as_ref().map(Path::new);
                 crate::app::network::run(
+                    name,
                     bbox.as_ref(),
                     &network_config,
                     outdir,

@@ -18,7 +18,6 @@ use super::record::OvertureRecord;
 use super::record::OvertureRecordType;
 use super::OvertureMapsCollectionError;
 use super::OvertureMapsCollectorConfig;
-use super::ReleaseVersion;
 use super::RowFilter;
 use super::RowFilterConfig;
 
@@ -52,7 +51,7 @@ impl OvertureMapsCollector {
         }
     }
 
-    fn get_latest_release(&self) -> Result<String, OvertureMapsCollectionError> {
+    pub fn get_latest_release(&self) -> Result<String, OvertureMapsCollectionError> {
         // Get runtime to consume async functions
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
@@ -212,16 +211,12 @@ impl OvertureMapsCollector {
 
     pub fn collect_from_release(
         &self,
-        release: ReleaseVersion,
+        release_uri: &str,
         record_type: &OvertureRecordType,
         row_filter_config: Option<RowFilterConfig>,
     ) -> Result<Vec<OvertureRecord>, OvertureMapsCollectionError> {
-        let release_str = match release {
-            ReleaseVersion::Latest => self.get_latest_release()?,
-            other => String::from(other),
-        };
-        log::info!("Collecting OvertureMaps {record_type} records from release {release_str}");
-        let path = Path::from(record_type.format_url(release_str));
+        log::info!("Collecting OvertureMaps {record_type} records from release {release_uri}");
+        let path = Path::from(record_type.format_url(release_uri));
         self.collect_from_path(path, record_type, row_filter_config)
     }
 }
@@ -230,10 +225,8 @@ impl OvertureMapsCollector {
 mod test {
     use crate::collection::{
         ObjectStoreSource, OvertureMapsCollector, OvertureMapsCollectorConfig, OvertureRecord,
-        OvertureRecordType, ReleaseVersion, RowFilterConfig,
+        OvertureRecordType, RowFilterConfig,
     };
-    use chrono::NaiveDate;
-    use std::str::FromStr;
 
     fn get_collector() -> OvertureMapsCollector {
         OvertureMapsCollectorConfig::new(ObjectStoreSource::AmazonS3, Some(4), Some(64))
@@ -254,13 +247,15 @@ mod test {
             ymax: 39.784,
         };
 
+        // this retrieval and external depenency seems too brittle for a unit test
+        let latest_release = collector
+            .get_latest_release()
+            .expect("failed to retrieve latest OMF release");
+
         // Connectors
         let connector_records = collector
             .collect_from_release(
-                ReleaseVersion::Monthly {
-                    datetime: NaiveDate::from_str("2025-12-17").unwrap(),
-                    version: Some(0),
-                },
+                &latest_release,
                 &OvertureRecordType::Connector,
                 Some(row_filter.clone()),
             )
@@ -277,10 +272,7 @@ mod test {
         // Segment
         let segment_records = collector
             .collect_from_release(
-                ReleaseVersion::Monthly {
-                    datetime: NaiveDate::from_str("2025-12-17").unwrap(),
-                    version: Some(0),
-                },
+                &latest_release,
                 &OvertureRecordType::Segment,
                 Some(row_filter),
             )
