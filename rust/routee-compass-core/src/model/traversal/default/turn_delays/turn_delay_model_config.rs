@@ -5,8 +5,12 @@ use super::Turn;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "snake_case", deny_unknown_fields)]
-pub struct TurnDelayModelConfig {
-    pub table: HashMap<Turn, f64>,
-    pub time_unit: TimeUnit,
+#[serde(rename_all = "snake_case", tag = "type", deny_unknown_fields)]
+pub enum TurnDelayModelConfig {
+    TabularDiscrete {
+        /// table mapping fixed turn angles to delays in the provided time unit
+        table: HashMap<Turn, f64>,
+        /// time unit of delays
+        time_unit: TimeUnit,
+    }    
 }

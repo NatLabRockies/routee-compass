@@ -8,11 +8,14 @@ pub enum TurnDelayModel {
 
 impl From<TurnDelayModelConfig> for TurnDelayModel {
     fn from(config: TurnDelayModelConfig) -> Self {
-        let table = config
-            .table
-            .into_iter()
-            .map(|(turn, delay)| (turn, config.time_unit.to_uom(delay)))
-            .collect();
-        TurnDelayModel::TabularDiscrete { table }
+        match config {
+            TurnDelayModelConfig::TabularDiscrete { table, time_unit } => {
+                let table = table
+                    .into_iter()
+                    .map(|(turn, delay)| (turn, time_unit.to_uom(delay)))
+                    .collect();
+                TurnDelayModel::TabularDiscrete { table }
+            },
+        }
     }
 }
