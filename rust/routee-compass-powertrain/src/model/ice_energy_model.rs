@@ -17,8 +17,6 @@ use uom::{si::f64::Energy, ConstZero};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct IceEnergyModelConfig {
-    #[serde(rename = "type")]
-    pub r#type: String,
     #[serde(flatten)]
     pub prediction_model: PredictionModelConfig,
     pub include_trip_energy: Option<bool>,

@@ -1,5 +1,8 @@
 use super::CombinedTraversalService;
-use crate::model::traversal::{TraversalModelBuilder, TraversalModelError, TraversalModelService};
+use crate::{
+    config::ops::strip_type_from_config,
+    model::traversal::{TraversalModelBuilder, TraversalModelError, TraversalModelService},
+};
 use itertools::Itertools;
 use log;
 use std::{collections::HashMap, rc::Rc, sync::Arc};
@@ -67,23 +70,13 @@ fn build_model_from_json(
     conf: &serde_json::Value,
     builders: &HashMap<String, Rc<dyn TraversalModelBuilder>>,
 ) -> Result<Arc<dyn TraversalModelService>, TraversalModelError> {
-    let key_json = conf.get("type").ok_or_else(|| {
-        TraversalModelError::BuildError(format!(
-            "traversal model configuration missing 'type' keyword: '{}'",
-            serde_json::to_string(conf).unwrap_or_default()
-        ))
-    })?;
-    let key = key_json.as_str().ok_or_else(|| {
-        TraversalModelError::BuildError(format!(
-            "expected key 'type' to point to a string, found '{}'",
-            serde_json::to_string(key_json).unwrap_or_default()
-        ))
-    })?;
-    let b = builders.get(key).ok_or_else(|| {
+    let (conf_stripped, key) =
+        strip_type_from_config(conf).map_err(|e| TraversalModelError::BuildError(e.to_string()))?;
+    let b = builders.get(&key).ok_or_else(|| {
         let valid = builders.keys().join(", ");
         TraversalModelError::BuildError(format!(
-            "unknown traversal model name '{key_json}', must be one of: [{valid}]"
+            "unknown traversal model name '{key}', must be one of: [{valid}]"
         ))
     })?;
-    b.build(conf)
+    b.build(&conf_stripped)
 }

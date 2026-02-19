@@ -3,6 +3,7 @@ use crate::model::BevEnergyModel;
 use crate::model::IceEnergyModel;
 use crate::model::PhevEnergyModel;
 use config::Config;
+use routee_compass_core::config::ops::strip_type_from_config;
 use routee_compass_core::config::ConfigJsonExtensions;
 use routee_compass_core::model::traversal::{
     TraversalModelBuilder, TraversalModelError, TraversalModelService,
@@ -15,8 +16,6 @@ use std::sync::Arc;
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct EnergyModelBuilderConfig {
-    #[serde(rename = "type")]
-    pub r#type: String,
     pub vehicle_input_files: Vec<String>,
     pub include_trip_energy: Option<bool>,
 }
@@ -79,20 +78,14 @@ impl TraversalModelBuilder for EnergyModelBuilder {
                     ))
                 })?
                 .to_string();
-            let vehicle_type = vehicle_json
-                .get("type")
-                .and_then(|v| v.as_str())
-                .ok_or_else(|| {
-                    TraversalModelError::BuildError(format!(
-                        "vehicle model missing 'type' field in '{}'",
-                        vehicle_file
-                    ))
-                })?;
 
-            let service: Arc<dyn TraversalModelService> = match vehicle_type {
-                "ice" => Arc::new(IceEnergyModel::try_from(&vehicle_json)?),
-                "bev" => Arc::new(BevEnergyModel::try_from(&vehicle_json)?),
-                "phev" => Arc::new(PhevEnergyModel::try_from(&vehicle_json)?),
+            let (vehicle_json_stripped, vehicle_type) = strip_type_from_config(&vehicle_json)
+                .map_err(|e| TraversalModelError::BuildError(e.to_string()))?;
+
+            let service: Arc<dyn TraversalModelService> = match vehicle_type.as_str() {
+                "ice" => Arc::new(IceEnergyModel::try_from(&vehicle_json_stripped)?),
+                "bev" => Arc::new(BevEnergyModel::try_from(&vehicle_json_stripped)?),
+                "phev" => Arc::new(PhevEnergyModel::try_from(&vehicle_json_stripped)?),
                 _ => {
                     return Err(TraversalModelError::BuildError(format!(
                         "unknown vehicle model type in '{}': {}",

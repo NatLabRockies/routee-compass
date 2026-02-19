@@ -4,8 +4,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct TimeTraversalConfig {
-    #[serde(rename = "type")]
-    pub r#type: String,
     /// time unit for state modeling
     pub time_unit: TimeUnit,
     #[serde(default)]

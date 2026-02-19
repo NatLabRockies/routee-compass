@@ -5,8 +5,6 @@ use uom::si::f64::ThermodynamicTemperature;
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct TemperatureTraversalConfig {
-    #[serde(rename = "type")]
-    pub r#type: String,
     pub default_ambient_temperature: Option<AmbientTemperatureConfig>,
 }
 

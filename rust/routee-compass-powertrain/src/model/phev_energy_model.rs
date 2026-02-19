@@ -60,8 +60,6 @@ impl PhevEnergyModel {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct PhevEnergyModelConfig {
-    #[serde(rename = "type")]
-    pub r#type: String,
     pub name: String,
     pub charge_sustaining: PredictionModelConfig,
     pub charge_depleting: PredictionModelConfig,

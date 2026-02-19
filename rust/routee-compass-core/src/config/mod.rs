@@ -2,6 +2,7 @@ pub mod compass_configuration_error;
 pub mod compass_configuration_field;
 pub mod config_json_extension;
 mod one_or_many;
+pub mod ops;
 
 pub use compass_configuration_error::CompassConfigurationError;
 pub use compass_configuration_field::CompassConfigurationField;
