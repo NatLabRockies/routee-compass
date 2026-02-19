@@ -1,47 +1,54 @@
 use super::CompassComponentError;
-use crate::{plugin::{
+use crate::plugin::{
     input::{
-        InputPlugin, InputPluginBuilder, default::{
+        default::{
             debug::DebugInputPluginBuilder, grid_search::GridSearchBuilder,
             inject::InjectPluginBuilder, load_balancer::LoadBalancerBuilder,
-        }
+        },
+        InputPlugin, InputPluginBuilder,
     },
     output::{
-        OutputPlugin, OutputPluginBuilder, default::{
+        default::{
             summary::SummaryOutputPluginBuilder, traversal::TraversalPluginBuilder,
             uuid::UUIDOutputPluginBuilder,
-        }
+        },
+        OutputPlugin, OutputPluginBuilder,
     },
-}};
+};
 use inventory;
 use itertools::Itertools;
-use routee_compass_core::{config::ops::strip_type_from_config, model::{
-    constraint::{
-        ConstraintModelBuilder, ConstraintModelService, default::{
-            combined::combined_builder::CombinedConstraintModelBuilder,
-            no_restriction_builder::NoRestrictionBuilder,
-            road_class::road_class_builder::RoadClassBuilder,
-            turn_restrictions::turn_restriction_builder::TurnRestrictionBuilder,
-            vehicle_restrictions::VehicleRestrictionBuilder,
-        }
-    },
-    label::{
-        default::vertex_label_model::VertexLabelModelBuilder,
-        label_model_builder::LabelModelBuilder, label_model_service::LabelModelService,
-    },
-    traversal::{
-        TraversalModelBuilder, TraversalModelService, default::{
-            combined::CombinedTraversalBuilder, custom::CustomTraversalBuilder,
-            elevation::ElevationTraversalBuilder, grade::GradeTraversalBuilder,
-            temperature::TemperatureTraversalBuilder, time::TimeTraversalBuilder,
-            turn_delays::TurnDelayTraversalModelBuilder,
-        }
-    },
-}};
 use routee_compass_core::{
     algorithm::map_matching::{LcssMapMatchingBuilder, MapMatchingAlgorithm, MapMatchingBuilder},
     config::{CompassConfigurationError, ConfigJsonExtensions},
     model::traversal::default::{distance::DistanceTraversalBuilder, speed::SpeedTraversalBuilder},
+};
+use routee_compass_core::{
+    config::ops::strip_type_from_config,
+    model::{
+        constraint::{
+            default::{
+                combined::combined_builder::CombinedConstraintModelBuilder,
+                no_restriction_builder::NoRestrictionBuilder,
+                road_class::road_class_builder::RoadClassBuilder,
+                turn_restrictions::turn_restriction_builder::TurnRestrictionBuilder,
+                vehicle_restrictions::VehicleRestrictionBuilder,
+            },
+            ConstraintModelBuilder, ConstraintModelService,
+        },
+        label::{
+            default::vertex_label_model::VertexLabelModelBuilder,
+            label_model_builder::LabelModelBuilder, label_model_service::LabelModelService,
+        },
+        traversal::{
+            default::{
+                combined::CombinedTraversalBuilder, custom::CustomTraversalBuilder,
+                elevation::ElevationTraversalBuilder, grade::GradeTraversalBuilder,
+                temperature::TemperatureTraversalBuilder, time::TimeTraversalBuilder,
+                turn_delays::TurnDelayTraversalModelBuilder,
+            },
+            TraversalModelBuilder, TraversalModelService,
+        },
+    },
 };
 use routee_compass_powertrain::model::{
     charging::{

@@ -1,5 +1,8 @@
 use super::CombinedTraversalService;
-use crate::{config::ops::strip_type_from_config, model::traversal::{TraversalModelBuilder, TraversalModelError, TraversalModelService}};
+use crate::{
+    config::ops::strip_type_from_config,
+    model::traversal::{TraversalModelBuilder, TraversalModelError, TraversalModelService},
+};
 use itertools::Itertools;
 use log;
 use std::{collections::HashMap, rc::Rc, sync::Arc};
@@ -67,8 +70,8 @@ fn build_model_from_json(
     conf: &serde_json::Value,
     builders: &HashMap<String, Rc<dyn TraversalModelBuilder>>,
 ) -> Result<Arc<dyn TraversalModelService>, TraversalModelError> {
-    let (conf_stripped, key) = strip_type_from_config(conf)
-        .map_err(|e| TraversalModelError::BuildError(e.to_string()))?;
+    let (conf_stripped, key) =
+        strip_type_from_config(conf).map_err(|e| TraversalModelError::BuildError(e.to_string()))?;
     let b = builders.get(&key).ok_or_else(|| {
         let valid = builders.keys().join(", ");
         TraversalModelError::BuildError(format!(
