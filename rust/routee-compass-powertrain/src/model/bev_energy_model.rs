@@ -23,8 +23,6 @@ use uom::{
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct BevEnergyModelConfig {
-    #[serde(rename = "type")]
-    pub r#type: String,
     #[serde(flatten)]
     pub prediction_model: PredictionModelConfig,
     pub battery_capacity: f64,

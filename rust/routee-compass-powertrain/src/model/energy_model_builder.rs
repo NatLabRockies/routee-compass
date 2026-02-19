@@ -15,8 +15,6 @@ use std::sync::Arc;
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct EnergyModelBuilderConfig {
-    #[serde(rename = "type")]
-    pub r#type: String,
     pub vehicle_input_files: Vec<String>,
     pub include_trip_energy: Option<bool>,
 }

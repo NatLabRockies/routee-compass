@@ -5,8 +5,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct CustomTraversalConfig {
-    #[serde(rename = "type")]
-    pub r#type: String,
     /// file containing custom values for each edge id
     pub input_file: String,
     /// whether the input data is dense (aka, an enumerated edge_id file) or
