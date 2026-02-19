@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771380835749,
+  "lastUpdate": 1771542787681,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -2759,6 +2759,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2930326,
             "range": "± 114381",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e19ff3bfeaf89df9efc3a9db57e5bb008d4c3a46",
+          "message": "Rjf/revise config type handling (#473)\n\n* remove \"type\" from expected fields\n\n* strip \"type\" from traversal/constraint configuration JSON object\n\n* cargo fmt\n\n* remove expected \"type\" key in test\n\n* turn delay model config matches model impl (enum vs struct)\n\n* cargo fmt\n\n* strip type before building vehicle models\n\n* cargo fmt",
+          "timestamp": "2026-02-19T16:03:11-07:00",
+          "tree_id": "b27129f1e82b4fa8032fb1d104900287e3795009",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/e19ff3bfeaf89df9efc3a9db57e5bb008d4c3a46"
+        },
+        "date": 1771542787307,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2918547,
+            "range": "± 240088",
             "unit": "ns/iter"
           }
         ]
