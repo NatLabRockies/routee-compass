@@ -270,7 +270,7 @@ impl OmfGraphVectorized {
             serialize_into_enumerated_txt(
                 &connectors_omf_ids,
                 OMF_CONNECTOR_IDS_FILENAME,
-                &output_directory,
+                output_directory,
                 overwrite,
                 "write connector OMF ids",
             )?;
