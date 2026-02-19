@@ -3,8 +3,8 @@ use crate::model::BevEnergyModel;
 use crate::model::IceEnergyModel;
 use crate::model::PhevEnergyModel;
 use config::Config;
-use routee_compass_core::config::ConfigJsonExtensions;
 use routee_compass_core::config::ops::strip_type_from_config;
+use routee_compass_core::config::ConfigJsonExtensions;
 use routee_compass_core::model::traversal::{
     TraversalModelBuilder, TraversalModelError, TraversalModelService,
 };
@@ -78,7 +78,7 @@ impl TraversalModelBuilder for EnergyModelBuilder {
                     ))
                 })?
                 .to_string();
-            
+
             let (vehicle_json_stripped, vehicle_type) = strip_type_from_config(&vehicle_json)
                 .map_err(|e| TraversalModelError::BuildError(e.to_string()))?;
 
