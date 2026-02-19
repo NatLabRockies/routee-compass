@@ -326,6 +326,20 @@ impl SegmentSplit {
         }
     }
 
+    /// get the OMF ID of the segment and source linear reference corresponding to this split
+    pub fn get_omf_segment_id_and_linear_ref(
+        &self,
+        segments: &[&TransportationSegmentRecord],
+        segment_lookup: &HashMap<String, usize>,
+    ) -> Result<(String, f64), OvertureMapsCollectionError> {
+        let segment = self.get_segment(segments, segment_lookup)?;
+        match self {
+            SegmentSplit::SimpleConnectorSplit { src, .. } => {
+                Ok((segment.id.clone(), src.linear_reference.0))
+            }
+        }
+    }
+
     /// get a reference to the segment that contains this split
     fn get_segment<'a>(
         &self,

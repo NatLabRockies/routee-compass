@@ -16,6 +16,7 @@ use crate::{
     },
 };
 use geo::LineString;
+use itertools::Itertools;
 use kdam::tqdm;
 use rayon::prelude::*;
 use routee_compass_core::model::network::{EdgeConfig, EdgeId, EdgeList, EdgeListId, Vertex};
@@ -27,6 +28,8 @@ pub const GEOMETRIES_FILENAME: &str = "edges-geometries-enumerated.txt.gz";
 pub const SPEEDS_FILENAME: &str = "edges-speeds-mph-enumerated.txt.gz";
 pub const CLASSES_FILENAME: &str = "edges-classes-enumerated.txt.gz";
 pub const SPEED_MAPPING_FILENAME: &str = "edges-classes-speed-mapping.csv.gz";
+pub const OMF_SEGMENT_IDS_FILENAME: &str = "edges-omf-segment-ids.csv.gz";
+pub const OMF_CONNECTOR_IDS_FILENAME: &str = "vertices-omf-connector-ids.txt.gz";
 pub const BEARINGS_FILENAME: &str = "edges-bearings-enumerated.txt.gz";
 
 pub struct OmfGraphVectorized {
@@ -45,6 +48,7 @@ pub struct OmfEdgeList {
     pub speeds: Vec<f64>,
     pub speed_lookup: HashMap<String, f64>,
     pub bearings: Vec<f64>,
+    pub omf_segment_ids: Vec<(String, f64)>,
 }
 
 impl OmfGraphVectorized {
@@ -127,6 +131,9 @@ impl OmfGraphVectorized {
             let global_speed =
                 ops::get_global_average_speed(&speeds, &segments, &segment_lookup, &splits)?;
 
+            // omf ids
+            let omf_segment_ids = ops::get_segment_omf_ids(&segments, &segment_lookup, &splits)?;
+
             // match speeds according to classes
             let speeds = speeds
                 .into_par_iter()
@@ -157,6 +164,7 @@ impl OmfGraphVectorized {
                 speeds,
                 speed_lookup,
                 bearings,
+                omf_segment_ids,
             };
             edge_lists.push(edge_list);
         }
@@ -219,11 +227,13 @@ impl OmfGraphVectorized {
         &self,
         output_directory: &Path,
         overwrite: bool,
+        export_omf_ids: bool,
     ) -> Result<(), OvertureMapsCollectionError> {
         kdam::term::init(false);
         kdam::term::hide_cursor().map_err(|e| {
             OvertureMapsCollectionError::InternalError(format!("progress bar error: {e}"))
         })?;
+
         // create output directory if missing
         crate::util::fs::create_dirs(output_directory)?;
         use crate::util::fs::serialize_into_csv;
@@ -237,6 +247,25 @@ impl OmfGraphVectorized {
             overwrite,
             "write vertex dataset",
         )?;
+
+        // reversing the vertex lookup to get the connector id of each vertex
+        if export_omf_ids {
+            let connectors_omf_ids = self
+                .vertex_lookup
+                .iter()
+                .sorted_by_key(|(_, v)| *v)
+                .map(|(k, _)| k.clone())
+                .collect::<Vec<String>>();
+
+            // Write connector OMF IDs
+            serialize_into_enumerated_txt(
+                &connectors_omf_ids,
+                OMF_CONNECTOR_IDS_FILENAME,
+                &output_directory,
+                overwrite,
+                "write connector OMF ids",
+            )?;
+        }
 
         // write each edge list
         let edge_list_iter = tqdm!(
@@ -311,6 +340,17 @@ impl OmfGraphVectorized {
                 overwrite,
                 "write bearings",
             )?;
+
+            // Write OMF ids
+            if export_omf_ids {
+                serialize_into_csv(
+                    &edge_list.omf_segment_ids,
+                    OMF_SEGMENT_IDS_FILENAME,
+                    &mode_dir,
+                    overwrite,
+                    "write omf ids",
+                )?;
+            }
         }
         eprintln!();
 
