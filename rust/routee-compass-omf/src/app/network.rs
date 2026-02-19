@@ -39,6 +39,7 @@ impl From<&NetworkEdgeListConfiguration> for SegmentAccessRestrictionWhen {
 pub struct IslandDetectionAlgorithmConfiguration {
     pub min_distance: f64,
     pub distance_unit: DistanceUnit,
+    pub parallel_execution: bool,
 }
 
 /// runs an OMF network import using the provided configuration.
@@ -50,6 +51,7 @@ pub fn run(
     local_source: Option<&Path>,
     write_json: bool,
     island_detection_configuration: Option<IslandDetectionAlgorithmConfiguration>,
+    export_omf_ids: bool,
 ) -> Result<(), OvertureMapsCollectionError> {
     let collection: TransportationCollection = match local_source {
         Some(src_path) => read_local(src_path),
@@ -73,7 +75,7 @@ pub fn run(
     let source = OmfGraphSource::new(&release, name, bbox);
     let summary = OmfGraphSummary { source, stats };
 
-    vectorized_graph.write_compass(&summary, output_directory, true)?;
+    vectorized_graph.write_compass(&summary, output_directory, true, export_omf_ids)?;
 
     Ok(())
 }

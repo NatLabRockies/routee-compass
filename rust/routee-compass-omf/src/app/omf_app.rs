@@ -52,6 +52,10 @@ pub enum OmfOperation {
         /// bounding box to filter data (format: xmin,xmax,ymin,ymax)
         #[arg(short, long, value_parser = parse_bbox, allow_hyphen_values(true))]
         bbox: Option<CliBoundingBox>,
+
+        /// write the list of segment and connector IDs for each edge created
+        #[arg(long)]
+        omf_ids: bool,
     },
 }
 
@@ -65,6 +69,7 @@ impl OmfOperation {
                 local_source,
                 store_raw,
                 bbox,
+                omf_ids,
             } => {
                 let filepath = Path::new(configuration_file);
                 let config = Config::builder()
@@ -105,6 +110,7 @@ impl OmfOperation {
                     local,
                     *store_raw,
                     island_algorithm_configuration,
+                    *omf_ids,
                 )
             }
         }
