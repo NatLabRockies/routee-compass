@@ -1,3 +1,4 @@
+pub mod ops;
 pub mod compass_configuration_error;
 pub mod compass_configuration_field;
 pub mod config_json_extension;

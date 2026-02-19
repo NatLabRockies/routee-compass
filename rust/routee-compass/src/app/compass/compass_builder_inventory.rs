@@ -1,47 +1,43 @@
 use super::CompassComponentError;
-use crate::plugin::{
+use crate::{plugin::{
     input::{
-        default::{
+        InputPlugin, InputPluginBuilder, default::{
             debug::DebugInputPluginBuilder, grid_search::GridSearchBuilder,
             inject::InjectPluginBuilder, load_balancer::LoadBalancerBuilder,
-        },
-        InputPlugin, InputPluginBuilder,
+        }
     },
     output::{
-        default::{
+        OutputPlugin, OutputPluginBuilder, default::{
             summary::SummaryOutputPluginBuilder, traversal::TraversalPluginBuilder,
             uuid::UUIDOutputPluginBuilder,
-        },
-        OutputPlugin, OutputPluginBuilder,
+        }
     },
-};
+}};
 use inventory;
 use itertools::Itertools;
-use routee_compass_core::model::{
+use routee_compass_core::{config::ops::strip_type_from_config, model::{
     constraint::{
-        default::{
+        ConstraintModelBuilder, ConstraintModelService, default::{
             combined::combined_builder::CombinedConstraintModelBuilder,
             no_restriction_builder::NoRestrictionBuilder,
             road_class::road_class_builder::RoadClassBuilder,
             turn_restrictions::turn_restriction_builder::TurnRestrictionBuilder,
             vehicle_restrictions::VehicleRestrictionBuilder,
-        },
-        ConstraintModelBuilder, ConstraintModelService,
+        }
     },
     label::{
         default::vertex_label_model::VertexLabelModelBuilder,
         label_model_builder::LabelModelBuilder, label_model_service::LabelModelService,
     },
     traversal::{
-        default::{
+        TraversalModelBuilder, TraversalModelService, default::{
             combined::CombinedTraversalBuilder, custom::CustomTraversalBuilder,
             elevation::ElevationTraversalBuilder, grade::GradeTraversalBuilder,
             temperature::TemperatureTraversalBuilder, time::TimeTraversalBuilder,
             turn_delays::TurnDelayTraversalModelBuilder,
-        },
-        TraversalModelBuilder, TraversalModelService,
+        }
     },
-};
+}};
 use routee_compass_core::{
     algorithm::map_matching::{LcssMapMatchingBuilder, MapMatchingAlgorithm, MapMatchingBuilder},
     config::{CompassConfigurationError, ConfigJsonExtensions},
@@ -196,7 +192,8 @@ impl CompassBuilderInventory {
             String::from("combined"),
             Rc::new(CombinedTraversalBuilder::new(builders.clone())),
         );
-        let tm_type = config.get_config_string(&"type", &"traversal")?;
+        let (conf_stripped, tm_type) = strip_type_from_config(config)?;
+
         log::info!("loading traversal model service '{tm_type}'");
         let result = builders
             .get(&tm_type)
@@ -208,7 +205,7 @@ impl CompassBuilderInventory {
                 )
             })
             .and_then(|b| {
-                b.build(config)
+                b.build(&conf_stripped)
                     .map_err(CompassConfigurationError::TraversalModelError)
             });
         result
@@ -226,7 +223,8 @@ impl CompassBuilderInventory {
             String::from("combined"),
             Rc::new(CombinedConstraintModelBuilder::new(builders.clone())),
         );
-        let fm_type = config.get_config_string(&"type", &"constraint")?;
+        let (conf_stripped, fm_type) = strip_type_from_config(config)?;
+
         log::info!("loading constraint model service '{fm_type}'");
         builders
             .get(&fm_type)
@@ -238,7 +236,7 @@ impl CompassBuilderInventory {
                 )
             })
             .and_then(|b| {
-                b.build(config)
+                b.build(&conf_stripped)
                     .map_err(CompassConfigurationError::ConstraintModelError)
             })
     }

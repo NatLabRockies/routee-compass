@@ -1,3 +1,4 @@
+use crate::config::ops::strip_type_from_config;
 use crate::config::{CompassConfigurationError, CompassConfigurationField, ConfigJsonExtensions};
 use crate::model::constraint::{
     ConstraintModelBuilder, ConstraintModelError, ConstraintModelService,
@@ -20,21 +21,7 @@ impl CombinedConstraintModelBuilder {
         &self,
         config: &serde_json::Value,
     ) -> Result<Arc<dyn ConstraintModelService>, CompassConfigurationError> {
-        let fm_type_obj = config.get("type").ok_or_else(|| {
-            CompassConfigurationError::ExpectedFieldForComponent(
-                CompassConfigurationField::Constraint.to_string(),
-                String::from("type"),
-            )
-        })?;
-        let fm_type: String = fm_type_obj
-            .as_str()
-            .ok_or_else(|| {
-                CompassConfigurationError::ExpectedFieldWithType(
-                    String::from("type"),
-                    String::from("String"),
-                )
-            })?
-            .into();
+        let (conf_stripped, fm_type) = strip_type_from_config(config)?;
         self.builders
             .get(&fm_type)
             .ok_or_else(|| {
@@ -45,7 +32,7 @@ impl CombinedConstraintModelBuilder {
                 )
             })
             .and_then(|b| {
-                b.build(config)
+                b.build(&conf_stripped)
                     .map_err(CompassConfigurationError::ConstraintModelError)
             })
     }
