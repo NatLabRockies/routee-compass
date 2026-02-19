@@ -123,9 +123,7 @@ impl OmfOperation {
                         })?;
 
                         let wkt_str = json.get("extent").and_then(|v| v.as_str()).ok_or(
-                            OvertureMapsCollectionError::InvalidUserInput(format!(
-                                "Missing key 'extent'"
-                            )),
+                            OvertureMapsCollectionError::InvalidUserInput("Missing key 'extent'".to_string()),
                         )?;
 
                         let wkt: wkt::Wkt<f32> = wkt_str.parse().map_err(|e| {
