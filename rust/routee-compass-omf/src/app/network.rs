@@ -75,7 +75,7 @@ pub fn run(
     let source = OmfGraphSource::new(&release, name, bbox);
     let summary = OmfGraphSummary { source, stats };
 
-    vectorized_graph.write_compass(&summary, output_directory, true)?;
+    vectorized_graph.write_compass(&summary, output_directory, true, export_omf_ids)?;
 
     Ok(())
 }
