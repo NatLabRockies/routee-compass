@@ -15,7 +15,7 @@ impl From<TurnDelayModelConfig> for TurnDelayModel {
                     .map(|(turn, delay)| (turn, time_unit.to_uom(delay)))
                     .collect();
                 TurnDelayModel::TabularDiscrete { table }
-            },
+            }
         }
     }
 }

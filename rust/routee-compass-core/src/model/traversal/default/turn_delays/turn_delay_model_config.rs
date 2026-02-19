@@ -12,5 +12,5 @@ pub enum TurnDelayModelConfig {
         table: HashMap<Turn, f64>,
         /// time unit of delays
         time_unit: TimeUnit,
-    }    
+    },
 }
