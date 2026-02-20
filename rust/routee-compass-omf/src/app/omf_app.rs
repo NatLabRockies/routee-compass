@@ -3,7 +3,6 @@ use std::{fs, path::Path};
 use clap::{Parser, Subcommand};
 use config::{Config, File};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 use crate::{
     app::{
@@ -111,22 +110,11 @@ impl OmfOperation {
                 let extent = extent_file
                     .as_ref()
                     .map(|extent_path| {
-                        let contents = fs::read_to_string(extent_path).map_err(|e| {
+                        let wkt_str = fs::read_to_string(extent_path).map_err(|e| {
                             OvertureMapsCollectionError::InvalidUserInput(format!(
                                 "failed to load json file {extent_path}: {e}"
                             ))
                         })?;
-                        let json: Value = serde_json::from_str(&contents).map_err(|e| {
-                            OvertureMapsCollectionError::InvalidUserInput(format!(
-                                "failed to parse string into json from {extent_path}: {e}"
-                            ))
-                        })?;
-
-                        let wkt_str = json.get("extent").and_then(|v| v.as_str()).ok_or(
-                            OvertureMapsCollectionError::InvalidUserInput(format!(
-                                "Missing key 'extent' in {extent_path}"
-                            )),
-                        )?;
 
                         let wkt: wkt::Wkt<f32> = wkt_str.parse().map_err(|e| {
                             OvertureMapsCollectionError::InvalidUserInput(format!(
