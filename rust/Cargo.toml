@@ -50,7 +50,7 @@ rstar = "0.12.2"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.145", features = ["preserve_order"] }
 serde_repr = "0.1"
-smartcore = { version = "=0.4.0", features = ["serde"] }                      # random forest
+smartcore = { version = "=0.4.9", features = ["serde"] }                      # random forest
 syn = { version = "2.0", features = ["full"] }
 tempfile = "3.23.0"
 thiserror = "2.0.17"
