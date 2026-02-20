@@ -6,11 +6,11 @@ license = "BSD-3-Clause"
 include = ["src/util/bambam-config-omf.toml"]
 exclude = ["test", "**/.DS_Store", "target/"]
 readme = "README.md"
-repository = "https://github.com/NREL/bambam"
+repository = "https://github.com/NatLabRockies/bambam"
 documentation = "https://docs.rs/bambam-omf"
 description = "OvertureMaps Foundation support for The Behavior and Advanced Mobility Big Access Model"
 keywords = [
-    "nrel",
+    "nlr",
     "access-model",
     "accessibility",
     "multimodal",
