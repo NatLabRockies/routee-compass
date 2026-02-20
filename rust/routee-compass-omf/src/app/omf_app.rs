@@ -118,24 +118,24 @@ impl OmfOperation {
                         })?;
                         let json: Value = serde_json::from_str(&contents).map_err(|e| {
                             OvertureMapsCollectionError::InvalidUserInput(format!(
-                                "failed to parse string into json {e}"
+                                "failed to parse string into json from {extent_path}: {e}"
                             ))
                         })?;
 
                         let wkt_str = json.get("extent").and_then(|v| v.as_str()).ok_or(
-                            OvertureMapsCollectionError::InvalidUserInput(
-                                "Missing key 'extent'".to_string(),
-                            ),
+                            OvertureMapsCollectionError::InvalidUserInput(format!(
+                                "Missing key 'extent' in {extent_path}"
+                            )),
                         )?;
 
                         let wkt: wkt::Wkt<f32> = wkt_str.parse().map_err(|e| {
                             OvertureMapsCollectionError::InvalidUserInput(format!(
-                                "failed to parse string into WKT: {e}"
+                                "failed to parse string into WKT from {extent_path}: {e}"
                             ))
                         })?;
                         let polygon = wkt.try_into().map_err(|e| {
                             OvertureMapsCollectionError::InvalidUserInput(format!(
-                                "failed to parse WKT into geometry: {e}"
+                                "failed to parse WKT into geometry from {extent_path}: {e}"
                             ))
                         })?;
 
