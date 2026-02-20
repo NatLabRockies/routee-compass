@@ -112,7 +112,7 @@ impl OmfOperation {
                     .map(|extent_path| {
                         let wkt_str = fs::read_to_string(extent_path).map_err(|e| {
                             OvertureMapsCollectionError::InvalidUserInput(format!(
-                                "failed to load json file {extent_path}: {e}"
+                                "failed to load extent file {extent_path}: {e}"
                             ))
                         })?;
 
