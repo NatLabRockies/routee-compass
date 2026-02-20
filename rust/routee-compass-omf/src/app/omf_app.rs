@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{fs, path::Path};
 
 use clap::{Parser, Subcommand};
 use config::{Config, File};
@@ -56,6 +56,10 @@ pub enum OmfOperation {
         /// write the list of segment and connector IDs for each edge created
         #[arg(long)]
         omf_ids: bool,
+
+        /// Optional WKT extent in json format. expects a json file with a single "extent" key
+        #[arg(short, long)]
+        extent_file: Option<String>,
     },
 }
 
@@ -70,6 +74,7 @@ impl OmfOperation {
                 store_raw,
                 bbox,
                 omf_ids,
+                extent_file,
             } => {
                 let filepath = Path::new(configuration_file);
                 let config = Config::builder()
@@ -102,6 +107,29 @@ impl OmfOperation {
                     None => Path::new(""),
                 };
                 let local = local_source.as_ref().map(Path::new);
+                let extent = extent_file
+                    .as_ref()
+                    .map(|extent_path| {
+                        let wkt_str = fs::read_to_string(extent_path).map_err(|e| {
+                            OvertureMapsCollectionError::InvalidUserInput(format!(
+                                "failed to load extent file {extent_path}: {e}"
+                            ))
+                        })?;
+
+                        let wkt: wkt::Wkt<f32> = wkt_str.parse().map_err(|e| {
+                            OvertureMapsCollectionError::InvalidUserInput(format!(
+                                "failed to parse string into WKT from {extent_path}: {e}"
+                            ))
+                        })?;
+                        let polygon = wkt.try_into().map_err(|e| {
+                            OvertureMapsCollectionError::InvalidUserInput(format!(
+                                "failed to parse WKT into geometry from {extent_path}: {e}"
+                            ))
+                        })?;
+
+                        Ok(polygon)
+                    })
+                    .transpose()?;
                 crate::app::network::run(
                     name,
                     bbox.as_ref(),
@@ -111,6 +139,7 @@ impl OmfOperation {
                     *store_raw,
                     island_algorithm_configuration,
                     *omf_ids,
+                    extent,
                 )
             }
         }
