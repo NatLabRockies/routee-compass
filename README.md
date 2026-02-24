@@ -13,7 +13,7 @@
   </a>
 </div>
 
-[![Python Build](https://github.com/NREL/routee-compass/actions/workflows/python-release.yaml/badge.svg?event=release)](https://github.com/NREL/routee-compass/actions/workflows/python-release.yaml)
+[![Python Build](https://github.com/natlabrockies/routee-compass/actions/workflows/python-release.yaml/badge.svg?event=release)](https://github.com/natlabrockies/routee-compass/actions/workflows/python-release.yaml)
 
 RouteE Compass is an energy-aware routing engine for the RouteE ecosystem of software tools with the following key features:
 
@@ -25,17 +25,17 @@ RouteE Compass is a part of the [RouteE](https://www.nrel.gov/transportation/rou
 
 ## Installation
 
-See the [installation](https://nrel.github.io/routee-compass/installation.html) guide for installing RouteE Compass
+See the [installation](https://natlabrockies.github.io/routee-compass/installation.html) guide for installing RouteE Compass
 
 ## Usage
 
-See the [documentation](https://nrel.github.io/routee-compass/) for more information.
+See the [documentation](https://natlabrockies.github.io/routee-compass/) for more information.
 
 ## Contributors
 
 RouteE Compass is currently maintained by Nick Reinicke ([@nreinicke](https://github.com/nreinicke)) and Rob Fitzgerald ([@robfitzgerald](https://github.com/robfitzgerald)).
 
-If you're interested in contributing, please checkout the [contributing](https://nrel.github.io/routee-compass/developers/contributing.html) guide.
+If you're interested in contributing, please checkout the [contributing](https://natlabrockies.github.io/routee-compass/developers/contributing.html) guide.
 
 ## License
 
