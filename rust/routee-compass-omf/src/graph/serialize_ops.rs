@@ -224,7 +224,7 @@ pub fn create_speed_by_segment_type_lookup<'a>(
     classes: &'a [SegmentFullType],
 ) -> Result<HashMap<&'a SegmentFullType, f64>, OvertureMapsCollectionError> {
     let split_lenghts = splits
-        .iter()
+        .par_iter()
         .map(|split| {
             split
                 .get_split_length_meters(segments, segment_lookup)
@@ -268,7 +268,7 @@ pub fn get_global_average_speed(
     splits: &[SegmentSplit],
 ) -> Result<f64, OvertureMapsCollectionError> {
     let split_lenghts = splits
-        .iter()
+        .par_iter()
         .map(|split| {
             split
                 .get_split_length_meters(segments, segment_lookup)
@@ -300,7 +300,7 @@ pub fn bearing_deg_from_geometries(
     geometries: &[LineString<f32>],
 ) -> Result<Vec<f64>, OvertureMapsCollectionError> {
     geometries
-        .iter()
+        .par_iter()
         .map(|linestring| {
             let n = linestring.0.len();
             if n < 2 {
@@ -322,7 +322,7 @@ pub fn clean_omf_edge_list(omf_list: OmfEdgeList, mask: Vec<bool>) -> OmfEdgeLis
         omf_list
             .edges
             .0
-            .iter()
+            .par_iter()
             .enumerate()
             .filter_map(|(idx, edge)| mask[idx].then_some(*edge))
             .collect::<Vec<Edge>>()
@@ -331,35 +331,35 @@ pub fn clean_omf_edge_list(omf_list: OmfEdgeList, mask: Vec<bool>) -> OmfEdgeLis
 
     let geometries = omf_list
         .geometries
-        .into_iter()
+        .into_par_iter()
         .enumerate()
         .filter_map(|(idx, ls)| mask[idx].then_some(ls))
         .collect();
 
     let classes = omf_list
         .classes
-        .into_iter()
+        .into_par_iter()
         .enumerate()
         .filter_map(|(idx, cls)| mask[idx].then_some(cls))
         .collect();
 
     let speeds = omf_list
         .speeds
-        .into_iter()
+        .into_par_iter()
         .enumerate()
         .filter_map(|(idx, s)| mask[idx].then_some(s))
         .collect();
 
     let bearings = omf_list
         .bearings
-        .into_iter()
+        .into_par_iter()
         .enumerate()
         .filter_map(|(idx, b)| mask[idx].then_some(b))
         .collect();
 
     let omf_segment_ids = omf_list
         .omf_segment_ids
-        .into_iter()
+        .into_par_iter()
         .enumerate()
         .filter_map(|(idx, b)| mask[idx].then_some(b))
         .collect();
