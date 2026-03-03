@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772565308616,
+  "lastUpdate": 1772565641995,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -2849,6 +2849,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2950295,
             "range": "± 371393",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "08512b5b87921d10c8a227795c1d5f8fbb98e90b",
+          "message": "Merge pull request #479 from NatLabRockies/dependabot/cargo/rust/arrow-58.0.0\n\nUpdate arrow requirement from 57.1.0 to 58.0.0 in /rust",
+          "timestamp": "2026-03-03T12:13:53-07:00",
+          "tree_id": "c39a8b6982a63a7a2f16ead23969cd0e732bd33f",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/08512b5b87921d10c8a227795c1d5f8fbb98e90b"
+        },
+        "date": 1772565641281,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 3028065,
+            "range": "± 82237",
             "unit": "ns/iter"
           }
         ]
