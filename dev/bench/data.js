@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772566735420,
+  "lastUpdate": 1772567155171,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -2909,6 +2909,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 3029896,
             "range": "± 278307",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b251895f5f7e3ff4fbc22c0679affbf0777257f4",
+          "message": "Merge pull request #475 from NatLabRockies/dependabot/cargo/rust/uom-eq-0.38.0\n\nUpdate uom requirement from =0.36.0 to =0.38.0 in /rust",
+          "timestamp": "2026-03-03T12:26:23-07:00",
+          "tree_id": "ab598a690f3013ba22bac2d09a60f429e1b7c6d4",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/b251895f5f7e3ff4fbc22c0679affbf0777257f4"
+        },
+        "date": 1772567154804,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2903063,
+            "range": "± 104853",
             "unit": "ns/iter"
           }
         ]
