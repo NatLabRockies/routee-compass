@@ -55,7 +55,7 @@ syn = { version = "2.0", features = ["full"] }
 tempfile = "3.23.0"
 thiserror = "2.0.17"
 topological-sort = "0.2.2"
-uom = { version = "=0.36.0", features = ["serde"] }
+uom = { version = "=0.38.0", features = ["serde"] }
 wkb = "0.9.1"
 wkt = { version = "0.14.0", features = ["serde"] }
 
