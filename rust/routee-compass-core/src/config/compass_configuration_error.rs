@@ -52,11 +52,11 @@ pub enum CompassConfigurationError {
     InsertError(String),
     #[error(transparent)]
     GraphError(#[from] NetworkError),
-    #[error(transparent)]
+    #[error("IO error while loading configuration: {0}")]
     IoError(#[from] std::io::Error),
-    #[error(transparent)]
+    #[error("failed to deserialize configuration JSON: {0}")]
     SerdeDeserializationError(#[from] serde_json::Error),
-    #[error(transparent)]
+    #[error("unit/value conversion error during configuration: {0}")]
     ConversionError(#[from] ConversionError),
     #[error(transparent)]
     TraversalModelError(#[from] TraversalModelError),

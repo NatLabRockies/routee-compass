@@ -4,13 +4,13 @@ use std::num::ParseIntError;
 pub enum ConversionError {
     #[error("could not decode {0} as {1}")]
     DecoderError(String, String),
-    #[error(transparent)]
+    #[error("JSON serialization/deserialization error during value conversion: {source}")]
     SerdeJsonError {
         #[from]
         source: serde_json::Error,
     },
-    #[error(transparent)]
+    #[error("regex compilation error during conversion: {0}")]
     RegexError(#[from] regex::Error),
-    #[error(transparent)]
+    #[error("failed to parse integer during conversion: {0}")]
     ParseIntError(#[from] ParseIntError),
 }
