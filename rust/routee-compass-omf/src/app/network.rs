@@ -1,6 +1,6 @@
-use std::path::Path;
+use std::{path::Path, sync::Arc};
 
-use geo::{Contains, Geometry};
+use geo::{BoundingRect, Geometry, Intersects};
 use rayon::prelude::*;
 use routee_compass_core::model::unit::DistanceUnit;
 use serde::{Deserialize, Serialize};
@@ -140,25 +140,40 @@ fn apply_extent_to_collection(
     collection: TransportationCollection,
     extent: Geometry<f32>,
 ) -> TransportationCollection {
+    log::info!("Started applying extent to segments");
+    let extent_arc = Arc::new(extent);
     let filtered_segments = collection
         .segments
         .into_par_iter()
-        .filter(|segment| {
-            segment
-                .get_linestring()
-                .map(|linestring| extent.contains(linestring))
-                .unwrap_or(false)
+        .filter(|segment| match segment.get_linestring() {
+            Ok(ls) => {
+                let Some(bbox) = ls.bounding_rect() else {
+                    return false;
+                };
+
+                // Short-circuit condition for bbox
+                extent_arc.intersects(&bbox) && extent_arc.intersects(ls)
+            }
+            Err(_) => false,
         })
         .collect();
 
+    log::info!("Started applying extent to connectors");
     let filtered_connectors = collection
         .connectors
         .into_par_iter()
         .filter(|connector| {
-            connector
-                .get_geometry()
-                .map(|geometry| extent.contains(geometry))
-                .unwrap_or(false)
+            match connector.get_geometry() {
+                Some(geom) => {
+                    let Some(bbox) = geom.bounding_rect() else {
+                        return false;
+                    };
+
+                    // Short-circuit condition for bbox
+                    extent_arc.intersects(&bbox) && extent_arc.intersects(geom)
+                }
+                None => false,
+            }
         })
         .collect();
 

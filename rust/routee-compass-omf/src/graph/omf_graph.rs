@@ -63,18 +63,18 @@ impl OmfGraphVectorized {
         // process all connectors into vertices
         log::info!("Creating vertex lookup");
         let (mut vertices, mut vertex_lookup) =
-        ops::create_vertices_and_lookup(&collection.connectors, None)?;
-        
+            ops::create_vertices_and_lookup(&collection.connectors, None)?;
+
         log::info!("Processing edge lists");
         // for each mode configuration, create an edge list
         let mut edge_lists: Vec<OmfEdgeList> = vec![];
         for (index, edge_list_config) in configuration.iter().enumerate() {
             let edge_list_id = EdgeListId(index);
-            
+
             // create arguments for segment processing into edges
             let mut filter = edge_list_config.filter.clone();
             filter.sort(); // sort for performance
-            
+
             log::info!("Filtering edge list {edge_list_id}");
             // filter to the segments that match our travel mode filter(s)
             let segments: Vec<&TransportationSegmentRecord> = collection
@@ -83,7 +83,7 @@ impl OmfGraphVectorized {
                 .filter(|r| edge_list_config.filter.iter().all(|f| f.matches_filter(r)))
                 .collect();
             let segment_lookup = ops::create_segment_lookup(&segments);
-        
+
             // the splits are locations in each segment record where we want to define a vertex
             // which may not yet exist on the graph. this is where we begin to impose directivity
             // in our records.
