@@ -1,6 +1,6 @@
 use std::{path::Path, sync::Arc};
 
-use geo::{BoundingRect, Geometry, Intersects};
+use geo::{BoundingRect, Contains, Geometry, Intersects};
 use rayon::prelude::*;
 use routee_compass_core::model::unit::DistanceUnit;
 use serde::{Deserialize, Serialize};
@@ -152,7 +152,7 @@ fn apply_extent_to_collection(
                 };
 
                 // Short-circuit condition for bbox
-                extent_arc.intersects(&bbox) && extent_arc.intersects(ls)
+                extent_arc.intersects(&bbox) && extent_arc.contains(ls)
             }
             Err(_) => false,
         })
@@ -165,12 +165,9 @@ fn apply_extent_to_collection(
         .filter(|connector| {
             match connector.get_geometry() {
                 Some(geom) => {
-                    let Some(bbox) = geom.bounding_rect() else {
-                        return false;
-                    };
-
-                    // Short-circuit condition for bbox
-                    extent_arc.intersects(&bbox) && extent_arc.intersects(geom)
+                    // We assume these are going to be points so we
+                    // don't bother with the bounding box
+                    extent_arc.contains(geom)
                 }
                 None => false,
             }
