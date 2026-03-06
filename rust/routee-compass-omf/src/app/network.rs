@@ -1,6 +1,6 @@
-use std::{path::Path, sync::Arc};
+use std::{collections::HashSet, path::Path, sync::Arc};
 
-use geo::{BoundingRect, Contains, Geometry, Intersects};
+use geo::{BoundingRect, Geometry, Intersects};
 use rayon::prelude::*;
 use routee_compass_core::model::unit::DistanceUnit;
 use serde::{Deserialize, Serialize};
@@ -142,7 +142,7 @@ fn apply_extent_to_collection(
 ) -> TransportationCollection {
     log::info!("Started applying extent to segments");
     let extent_arc = Arc::new(extent);
-    let filtered_segments = collection
+    let filtered_segments: Vec<crate::collection::TransportationSegmentRecord> = collection
         .segments
         .into_par_iter()
         .filter(|segment| match segment.get_linestring() {
@@ -152,26 +152,33 @@ fn apply_extent_to_collection(
                 };
 
                 // Short-circuit condition for bbox
-                extent_arc.intersects(&bbox) && extent_arc.contains(ls)
+                extent_arc.intersects(&bbox) && extent_arc.intersects(ls)
             }
             Err(_) => false,
         })
         .collect();
 
+    log::info!("Collecting all connector IDs");
+    let connector_ids = filtered_segments
+        .par_iter()
+        .flat_map(|segment| {
+            segment
+                .connectors
+                .as_ref()
+                .unwrap_or(&vec![])
+                .iter()
+                .map(|con_ref| con_ref.connector_id.clone())
+                .collect::<Vec<String>>()
+        })
+        .collect::<HashSet<String>>();
+
+    let arc_ids = Arc::new(connector_ids);
+
     log::info!("Started applying extent to connectors");
     let filtered_connectors = collection
         .connectors
         .into_par_iter()
-        .filter(|connector| {
-            match connector.get_geometry() {
-                Some(geom) => {
-                    // We assume these are going to be points so we
-                    // don't bother with the bounding box
-                    extent_arc.contains(geom)
-                }
-                None => false,
-            }
-        })
+        .filter(|connector| arc_ids.contains(&connector.id))
         .collect();
 
     TransportationCollection {
