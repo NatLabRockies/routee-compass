@@ -9,13 +9,7 @@ readme = "README.md"
 repository = "https://github.com/NatLabRockies/bambam"
 documentation = "https://docs.rs/bambam-omf"
 description = "OvertureMaps Foundation support for The Behavior and Advanced Mobility Big Access Model"
-keywords = [
-    "nlr",
-    "access-model",
-    "accessibility",
-    "multimodal",
-    "transit",
-]
+keywords = ["nlr", "access-model", "accessibility", "multimodal", "transit"]
 categories = ["command-line-utilities", "science", "science::geo"]
 
 [dependencies]
@@ -35,9 +29,9 @@ futures = { workspace = true }
 geo = { workspace = true }
 geozero = { workspace = true }
 hex = { workspace = true }
+indexmap = { workspace = true }
 itertools = { workspace = true }
 kdam = { workspace = true }
-indexmap = { workspace = true }
 log = { workspace = true }
 object_store = { workspace = true }
 opening-hours-syntax = { workspace = true }
