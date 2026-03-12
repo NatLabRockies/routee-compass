@@ -334,14 +334,14 @@ pub fn compute_vertex_remapping(
             let edge = edge_lists
                 .get(el_id.0)
                 .ok_or(OvertureMapsCollectionError::InternalError(format!(
-                    "edge list id {} does not exists in OMF Edge Lists",
+                    "edge list id {} does not exist in OMF Edge Lists",
                     el_id
                 )))?
                 .edges
                 .0
                 .get(e_id.0)
                 .ok_or(OvertureMapsCollectionError::InternalError(format!(
-                    "edge id {} does not exists in OMF Edge List {}",
+                    "edge id {} does not exist in OMF Edge List {}",
                     e_id, el_id
                 )))?;
 
