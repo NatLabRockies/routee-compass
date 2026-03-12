@@ -11,8 +11,10 @@ use crate::{
         SegmentFullType, TransportationCollection, TransportationSegmentRecord,
     },
     graph::{
-        component_algorithm::island_detection_algorithm, segment_ops,
-        serialize_ops::clean_omf_edge_list, vertex_serializable::VertexSerializable,
+        component_algorithm::island_detection_algorithm,
+        segment_ops,
+        serialize_ops::{clean_omf_edge_list, compute_vertex_remapping},
+        vertex_serializable::VertexSerializable,
         OmfGraphSummary,
     },
 };
@@ -202,9 +204,21 @@ impl OmfGraphVectorized {
 
             // Refactor Vec into Hashmap
             let mut edges_lookup: HashMap<EdgeListId, Vec<EdgeId>> = HashMap::new();
-            for (a, b) in island_edges {
-                edges_lookup.entry(a).or_default().push(b);
+            for (a, b) in &island_edges {
+                edges_lookup.entry(a.clone()).or_default().push(b.clone());
             }
+
+            // Compute and apply vertex remapping
+            let vertex_remapping = compute_vertex_remapping(&vertices, &edge_lists, &island_edges)?;
+            vertices = vertices
+                .into_iter()
+                .filter_map(|vertex| {
+                    vertex_remapping[vertex.vertex_id.0].map(|vertex_id| Vertex {
+                        vertex_id: vertex_id,
+                        ..vertex
+                    })
+                })
+                .collect();
 
             // Clean the edge lists
             log::info!("Apply islands algorithm result");
@@ -225,9 +239,9 @@ impl OmfGraphVectorized {
                         .map(|edge| !edges_to_remove.contains(&edge.edge_id))
                         .collect::<Vec<bool>>();
 
-                    clean_omf_edge_list(omf_list, mask)
+                    clean_omf_edge_list(omf_list, mask, &vertex_remapping)
                 })
-                .collect::<Vec<OmfEdgeList>>();
+                .collect::<Result<Vec<OmfEdgeList>, OvertureMapsCollectionError>>()?;
         };
 
         let result = Self {
