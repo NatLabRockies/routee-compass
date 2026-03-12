@@ -25,7 +25,11 @@ impl fmt::Display for SegmentSubtype {
 
 /// Fully qualified segment type including type, class and subclass. E.g. road-service-driveway
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
-pub struct SegmentFullType(pub SegmentSubtype, pub SegmentClass, pub Option<SegmentSubclass>);
+pub struct SegmentFullType(
+    pub SegmentSubtype,
+    pub SegmentClass,
+    pub Option<SegmentSubclass>,
+);
 
 impl SegmentFullType {
     pub fn has_subclass(&self) -> bool {

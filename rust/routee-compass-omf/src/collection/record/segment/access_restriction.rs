@@ -1,9 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{
-    access_restriction_when::SegmentAccessRestrictionWhen,
-    mode::SegmentMode,
-};
+use super::{access_restriction_when::SegmentAccessRestrictionWhen, mode::SegmentMode};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "snake_case")]

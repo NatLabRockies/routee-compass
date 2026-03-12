@@ -5,8 +5,7 @@ use uom::si::f64::Velocity;
 use crate::collection::OvertureMapsCollectionError;
 
 use super::{
-    access_restriction_when::SegmentAccessRestrictionWhen,
-    value_between::validate_between_vector,
+    access_restriction_when::SegmentAccessRestrictionWhen, value_between::validate_between_vector,
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]

@@ -12,8 +12,6 @@ pub use building::BuildingsRecord;
 pub use overture_record::OvertureRecord;
 pub use place::PlacesRecord;
 pub use record_type::OvertureRecordType;
-pub use transportation_collection::TransportationCollection;
-pub use transportation_connector::TransportationConnectorRecord;
 pub use segment::{
     SegmentAccessRestriction, SegmentAccessRestrictionWhen, SegmentAccessRestrictionWhenVehicle,
     SegmentAccessType, SegmentClass, SegmentDestination, SegmentFullType, SegmentHeading,
@@ -21,6 +19,8 @@ pub use segment::{
     SegmentSubclass, SegmentSubtype, SegmentUnit, SegmentUsing, SegmentVehicleComparator,
     SegmentVehicleDimension, SpeedLimitWithUnit, TransportationSegmentRecord,
 };
+pub use transportation_collection::TransportationCollection;
+pub use transportation_connector::TransportationConnectorRecord;
 
 // Common structs and functions for many record types
 pub use common::OvertureMapsBbox;
