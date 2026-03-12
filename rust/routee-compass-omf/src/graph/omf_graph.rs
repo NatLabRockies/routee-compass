@@ -220,6 +220,13 @@ impl OmfGraphVectorized {
                 })
                 .collect();
 
+            // Update vertex_lookup to reflect the remapped vertex indices,
+            // dropping entries for removed vertices and updating the remaining ones.
+            vertex_lookup.retain(|_, v| vertex_remapping[*v].is_some());
+            for v in vertex_lookup.values_mut() {
+                *v = vertex_remapping[*v].unwrap().0;
+            }
+
             // Clean the edge lists
             log::info!("Apply islands algorithm result");
             edge_lists = edge_lists
