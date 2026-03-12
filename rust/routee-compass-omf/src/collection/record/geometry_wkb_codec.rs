@@ -1,5 +1,5 @@
 use geo::{Geometry, MapCoords, TryConvert};
-use geozero::{error::GeozeroError, wkb::Wkb, ToGeo};
+use geozero::{error::GeozeroError, wkb::Wkb, CoordDimensions, ToGeo, ToWkb};
 use serde::{Deserialize, Deserializer};
 use serde_bytes;
 
@@ -62,16 +62,12 @@ where
     match t {
         None => s.serialize_none(),
         Some(g) => {
-            let mut out_bytes = vec![];
             let geom: Geometry<f64> = g.try_convert().map_err(|e| {
                 serde::ser::Error::custom(format!(
                     "unable to convert geometry from f32 to f64: {e}"
                 ))
             })?;
-            let write_options = wkb::writer::WriteOptions {
-                endianness: wkb::Endianness::BigEndian,
-            };
-            wkb::writer::write_geometry(&mut out_bytes, &geom, &write_options).map_err(|e| {
+            let out_bytes = geom.to_wkb(CoordDimensions::xy()).map_err(|e| {
                 serde::ser::Error::custom(format!("failed to write geometry as WKB: {e}"))
             })?;
 
