@@ -377,7 +377,7 @@ pub fn clean_omf_edge_list(
         omf_list
             .edges
             .0
-            .par_iter()
+            .iter()
             .enumerate()
             .filter_map(|(idx, edge)| mask[idx].then_some(*edge))
             // correct indices after some edges were removed
