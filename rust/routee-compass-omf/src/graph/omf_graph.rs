@@ -220,11 +220,11 @@ impl OmfGraphVectorized {
                 })
                 .collect();
 
-            // Update vertex_lookup to reflect the remapped vertex indices,
-            // dropping entries for removed vertices and updating the remaining ones.
+            // dropping entries for removed vertices.
             vertex_lookup.retain(|_, v| vertex_remapping[*v].is_some());
+            // Update vertex_lookup to reflect the remapped vertex indices,
             for v in vertex_lookup.values_mut() {
-                *v = vertex_remapping[*v].unwrap().0;
+                *v = vertex_remapping[*v].ok_or(OvertureMapsCollectionError::InternalError(format!("vertex index {v} expected after island computation but was flagged for deletion")))?.0;
             }
 
             // Clean the edge lists
