@@ -416,35 +416,35 @@ pub fn clean_omf_edge_list(
 
     let geometries = omf_list
         .geometries
-        .into_par_iter()
+        .into_iter()
         .enumerate()
         .filter_map(|(idx, ls)| mask[idx].then_some(ls))
         .collect();
 
     let classes = omf_list
         .classes
-        .into_par_iter()
+        .into_iter()
         .enumerate()
         .filter_map(|(idx, cls)| mask[idx].then_some(cls))
         .collect();
 
     let speeds = omf_list
         .speeds
-        .into_par_iter()
+        .into_iter()
         .enumerate()
         .filter_map(|(idx, s)| mask[idx].then_some(s))
         .collect();
 
     let bearings = omf_list
         .bearings
-        .into_par_iter()
+        .into_iter()
         .enumerate()
         .filter_map(|(idx, b)| mask[idx].then_some(b))
         .collect();
 
     let omf_segment_ids = omf_list
         .omf_segment_ids
-        .into_par_iter()
+        .into_iter()
         .enumerate()
         .filter_map(|(idx, b)| mask[idx].then_some(b))
         .collect();
