@@ -205,7 +205,7 @@ impl OmfGraphVectorized {
             // Refactor Vec into Hashmap
             let mut edges_lookup: HashMap<EdgeListId, Vec<EdgeId>> = HashMap::new();
             for (a, b) in &island_edges {
-                edges_lookup.entry(a.clone()).or_default().push(b.clone());
+                edges_lookup.entry(*a).or_default().push(*b);
             }
 
             // Compute and apply vertex remapping
@@ -214,11 +214,18 @@ impl OmfGraphVectorized {
                 .into_iter()
                 .filter_map(|vertex| {
                     vertex_remapping[vertex.vertex_id.0].map(|vertex_id| Vertex {
-                        vertex_id: vertex_id,
+                        vertex_id,
                         ..vertex
                     })
                 })
                 .collect();
+
+            // dropping entries for removed vertices.
+            vertex_lookup.retain(|_, v| vertex_remapping[*v].is_some());
+            // Update vertex_lookup to reflect the remapped vertex indices,
+            for v in vertex_lookup.values_mut() {
+                *v = vertex_remapping[*v].ok_or(OvertureMapsCollectionError::InternalError(format!("vertex index {v} expected after island computation but was flagged for deletion")))?.0;
+            }
 
             // Clean the edge lists
             log::info!("Apply islands algorithm result");
