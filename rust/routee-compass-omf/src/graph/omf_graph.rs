@@ -205,7 +205,7 @@ impl OmfGraphVectorized {
             // Refactor Vec into Hashmap
             let mut edges_lookup: HashMap<EdgeListId, Vec<EdgeId>> = HashMap::new();
             for (a, b) in &island_edges {
-                edges_lookup.entry(a.clone()).or_default().push(b.clone());
+                edges_lookup.entry(*a).or_default().push(*b);
             }
 
             // Compute and apply vertex remapping
@@ -214,7 +214,7 @@ impl OmfGraphVectorized {
                 .into_iter()
                 .filter_map(|vertex| {
                     vertex_remapping[vertex.vertex_id.0].map(|vertex_id| Vertex {
-                        vertex_id: vertex_id,
+                        vertex_id,
                         ..vertex
                     })
                 })
