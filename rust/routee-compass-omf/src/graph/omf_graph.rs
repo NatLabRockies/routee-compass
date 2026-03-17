@@ -18,12 +18,12 @@ use crate::{
         OmfGraphSummary,
     },
 };
-use geo::LineString;
+use geo::{Convert, LineString};
+use geozero::ToWkt;
 use itertools::Itertools;
 use kdam::tqdm;
 use rayon::prelude::*;
 use routee_compass_core::model::network::{EdgeConfig, EdgeId, EdgeList, EdgeListId, Vertex};
-use wkt::ToWkt;
 
 pub const COMPASS_VERTEX_FILENAME: &str = "vertices-compass.csv.gz";
 pub const COMPASS_EDGES_FILENAME: &str = "edges-compass.csv.gz";
@@ -341,10 +341,10 @@ impl OmfGraphVectorized {
 
             // Write geometries
             serialize_into_enumerated_txt(
-                edge_list
-                    .geometries
-                    .iter()
-                    .map(|row| row.to_wkt().to_string()),
+                edge_list.geometries.iter().map(|row| {
+                    let row_f64: LineString<f64> = row.convert();
+                    geo::Geometry::from(row_f64).to_wkt().unwrap_or_default()
+                }),
                 GEOMETRIES_FILENAME,
                 &mode_dir,
                 overwrite,

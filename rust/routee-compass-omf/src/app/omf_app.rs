@@ -2,6 +2,8 @@ use std::{fs, path::Path};
 
 use clap::{Parser, Subcommand};
 use config::{Config, File};
+use geo::MapCoords;
+use geozero::{wkt::Wkt as WktReader, ToGeo};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -116,16 +118,15 @@ impl OmfOperation {
                             ))
                         })?;
 
-                        let wkt: wkt::Wkt<f32> = wkt_str.parse().map_err(|e| {
+                        let geometry_f64 = WktReader(wkt_str.trim()).to_geo().map_err(|e| {
                             OvertureMapsCollectionError::InvalidUserInput(format!(
                                 "failed to parse string into WKT from {extent_path}: {e}"
                             ))
                         })?;
-                        let polygon = wkt.try_into().map_err(|e| {
-                            OvertureMapsCollectionError::InvalidUserInput(format!(
-                                "failed to parse WKT into geometry from {extent_path}: {e}"
-                            ))
-                        })?;
+                        let polygon = geometry_f64.map_coords(|geo::Coord { x, y }| geo::Coord {
+                            x: x as f32,
+                            y: y as f32,
+                        });
 
                         Ok(polygon)
                     })
