@@ -378,12 +378,12 @@ pub fn clean_omf_edge_list(
             .edges
             .0
             .iter()
+            // Apply mask
+            .filter(|edge| mask[edge.edge_id.0])
+            // enumerate produces the new indices after some edges were removed
             .enumerate()
-            .filter_map(|(idx, edge)| mask[idx].then_some(*edge))
-            // correct indices after some edges were removed
             .collect::<Vec<_>>()
-            .into_iter()
-            .enumerate()
+            .into_par_iter()
             .map(|(new_idx, edge)| {
                 // Retrieve the correct vertex ids
                 let new_src_id = vertex_remapping
@@ -407,7 +407,7 @@ pub fn clean_omf_edge_list(
                     edge_id: EdgeId(new_idx),
                     src_vertex_id: new_src_id,
                     dst_vertex_id: new_dst_id,
-                    ..edge
+                    ..*edge
                 })
             })
             .collect::<Result<Vec<Edge>, OvertureMapsCollectionError>>()?
@@ -418,35 +418,50 @@ pub fn clean_omf_edge_list(
         .geometries
         .into_iter()
         .enumerate()
-        .filter_map(|(idx, ls)| mask[idx].then_some(ls))
+        .filter(|(idx, _)| mask[*idx])
+        .collect::<Vec<_>>()
+        .into_par_iter()
+        .map(|(_, ls)| ls)
         .collect();
 
     let classes = omf_list
         .classes
         .into_iter()
         .enumerate()
-        .filter_map(|(idx, cls)| mask[idx].then_some(cls))
+        .filter(|(idx, _)| mask[*idx])
+        .collect::<Vec<_>>()
+        .into_par_iter()
+        .map(|(_, cls)| cls)
         .collect();
 
     let speeds = omf_list
         .speeds
         .into_iter()
         .enumerate()
-        .filter_map(|(idx, s)| mask[idx].then_some(s))
+        .filter(|(idx, _)| mask[*idx])
+        .collect::<Vec<_>>()
+        .into_par_iter()
+        .map(|(_, s)| s)
         .collect();
 
     let bearings = omf_list
         .bearings
         .into_iter()
         .enumerate()
-        .filter_map(|(idx, b)| mask[idx].then_some(b))
+        .filter(|(idx, _)| mask[*idx])
+        .collect::<Vec<_>>()
+        .into_par_iter()
+        .map(|(_, b)| b)
         .collect();
 
     let omf_segment_ids = omf_list
         .omf_segment_ids
         .into_iter()
         .enumerate()
-        .filter_map(|(idx, b)| mask[idx].then_some(b))
+        .filter(|(idx, _)| mask[*idx])
+        .collect::<Vec<_>>()
+        .into_par_iter()
+        .map(|(_, i)| i)
         .collect();
 
     Ok(OmfEdgeList {
