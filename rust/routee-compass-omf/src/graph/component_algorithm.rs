@@ -149,14 +149,28 @@ fn is_component_island_sequential(
         Haversine.length(&line_string![initial_midpoint.0, current_midpoint.0]);
 
     // get all neighbors, add them to queue
+    // forward_adjacency[dst]: edges leaving dst (v → *)
     let outward_edges: Vec<&(EdgeListId, EdgeId)> =
         forward_adjacency[edge.dst_vertex_id.0].keys().collect();
     for (edge_list_id, edge_id) in outward_edges {
         queue.push_back((*edge_list_id, *edge_id));
     }
+    // backward_adjacency[src]: edges entering src (* → u)
     let inward_edges: Vec<&(EdgeListId, EdgeId)> =
         backward_adjacency[edge.src_vertex_id.0].keys().collect();
     for (edge_list_id, edge_id) in inward_edges {
+        queue.push_back((*edge_list_id, *edge_id));
+    }
+    // forward_adjacency[src]: other edges leaving src (u → *) — catches pure source vertices
+    let sibling_outward_edges: Vec<&(EdgeListId, EdgeId)> =
+        forward_adjacency[edge.src_vertex_id.0].keys().collect();
+    for (edge_list_id, edge_id) in sibling_outward_edges {
+        queue.push_back((*edge_list_id, *edge_id));
+    }
+    // backward_adjacency[dst]: other edges entering dst (* → v) — catches pure sink vertices
+    let sibling_inward_edges: Vec<&(EdgeListId, EdgeId)> =
+        backward_adjacency[edge.dst_vertex_id.0].keys().collect();
+    for (edge_list_id, edge_id) in sibling_inward_edges {
         queue.push_back((*edge_list_id, *edge_id));
     }
 
@@ -201,6 +215,7 @@ fn is_component_island_parallel(
                                                             .ok_or(OvertureMapsCollectionError::InternalError(format!("edge list {current_edge_list_id:?} or edge {current_edge_id:?} not found during island detection starting at edge {edge:?}")))?;
 
             // Expand queue
+            // forward_adjacency[dst]: edges leaving dst (v → *)
             let outward_edges: Vec<&(EdgeListId, EdgeId)> = forward_adjacency
                 [current_edge.dst_vertex_id.0]
                 .keys()
@@ -208,11 +223,28 @@ fn is_component_island_parallel(
             for (edge_list_id, edge_id) in outward_edges {
                 visit_queue.push_back((edge_list_id, edge_id));
             }
+            // backward_adjacency[src]: edges entering src (* → u)
             let inward_edges: Vec<&(EdgeListId, EdgeId)> = backward_adjacency
                 [current_edge.src_vertex_id.0]
                 .keys()
                 .collect();
             for (edge_list_id, edge_id) in inward_edges {
+                visit_queue.push_back((edge_list_id, edge_id));
+            }
+            // forward_adjacency[src]: other edges leaving src (u → *) — catches pure source vertices
+            let sibling_outward_edges: Vec<&(EdgeListId, EdgeId)> = forward_adjacency
+                [current_edge.src_vertex_id.0]
+                .keys()
+                .collect();
+            for (edge_list_id, edge_id) in sibling_outward_edges {
+                visit_queue.push_back((edge_list_id, edge_id));
+            }
+            // backward_adjacency[dst]: other edges entering dst (* → v) — catches pure sink vertices
+            let sibling_inward_edges: Vec<&(EdgeListId, EdgeId)> = backward_adjacency
+                [current_edge.dst_vertex_id.0]
+                .keys()
+                .collect();
+            for (edge_list_id, edge_id) in sibling_inward_edges {
                 visit_queue.push_back((edge_list_id, edge_id));
             }
 
