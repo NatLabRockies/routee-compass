@@ -39,6 +39,7 @@ clap = { workspace = true }
 config = { workspace = true }
 csv = { workspace = true }
 env_logger = { workspace = true }
+fasteval = { workspace = true }
 flate2 = { workspace = true }
 geo = { workspace = true }
 geo-traits = { workspace = true }
@@ -59,6 +60,7 @@ routee-compass-powertrain = { path = "../routee-compass-powertrain", version = "
 rstar = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+serde_json_path = { workspace = true }
 serde_repr = { workspace = true }
 thiserror = { workspace = true }
 uom = { workspace = true }
