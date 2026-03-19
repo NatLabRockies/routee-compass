@@ -2,7 +2,7 @@ use geo::{Bearing, Coord, Haversine, LineString};
 use itertools::Itertools;
 use kdam::{tqdm, Bar, BarExt};
 use rayon::prelude::*;
-use routee_compass_core::model::network::{Edge, EdgeId, EdgeList, EdgeListId, Vertex};
+use routee_compass_core::model::network::{Edge, EdgeId, EdgeList, EdgeListId, Vertex, VertexId};
 use std::{
     collections::{HashMap, HashSet},
     sync::{Arc, Mutex},
@@ -224,7 +224,7 @@ pub fn create_speed_by_segment_type_lookup<'a>(
     classes: &'a [SegmentFullType],
 ) -> Result<HashMap<&'a SegmentFullType, f64>, OvertureMapsCollectionError> {
     let split_lenghts = splits
-        .iter()
+        .par_iter()
         .map(|split| {
             split
                 .get_split_length_meters(segments, segment_lookup)
@@ -268,7 +268,7 @@ pub fn get_global_average_speed(
     splits: &[SegmentSplit],
 ) -> Result<f64, OvertureMapsCollectionError> {
     let split_lenghts = splits
-        .iter()
+        .par_iter()
         .map(|split| {
             split
                 .get_split_length_meters(segments, segment_lookup)
@@ -300,7 +300,7 @@ pub fn bearing_deg_from_geometries(
     geometries: &[LineString<f32>],
 ) -> Result<Vec<f64>, OvertureMapsCollectionError> {
     geometries
-        .iter()
+        .par_iter()
         .map(|linestring| {
             let n = linestring.0.len();
             if n < 2 {
@@ -315,17 +315,102 @@ pub fn bearing_deg_from_geometries(
         .collect()
 }
 
+/// Auxiliary function used to determine which vertices need to be removed
+/// and what the new id of the remaining vertices is. Each element
+/// of the returned vector is the new VertexId if the vertex is kept, and
+/// None if the vertex is removed.
+pub fn compute_vertex_remapping(
+    vertices: &[Vertex],
+    edge_lists: &[OmfEdgeList],
+    island_edges: &[(EdgeListId, EdgeId)],
+) -> Result<Vec<Option<VertexId>>, OvertureMapsCollectionError> {
+    // Identify orphan vertices
+    // Because we are using weak connectivity (two adjacency lists)
+    // all vertices that are part of a component of an edge that needs
+    // to be removed, should also be removed
+    let island_vertices = island_edges
+        .iter()
+        .map(|(el_id, e_id)| {
+            let edge = edge_lists
+                .get(el_id.0)
+                .ok_or(OvertureMapsCollectionError::InternalError(format!(
+                    "edge list id {} does not exist in OMF Edge Lists",
+                    el_id
+                )))?
+                .edges
+                .0
+                .get(e_id.0)
+                .ok_or(OvertureMapsCollectionError::InternalError(format!(
+                    "edge id {} does not exist in OMF Edge List {}",
+                    e_id, el_id
+                )))?;
+
+            Ok(vec![edge.src_vertex_id, edge.dst_vertex_id])
+        })
+        .collect::<Result<Vec<Vec<VertexId>>, OvertureMapsCollectionError>>()?
+        .into_iter()
+        .flatten()
+        .collect::<HashSet<VertexId>>();
+
+    // Create the mapping
+    let mut new_id: usize = 0;
+    Ok((0..vertices.len())
+        .map(|old_id| {
+            if island_vertices.contains(&VertexId(old_id)) {
+                None
+            } else {
+                new_id += 1;
+                Some(VertexId(new_id - 1))
+            }
+        })
+        .collect())
+}
+
 /// Given an OmfEdgeList and a boolean mask, returns an updated edge list
 /// with the mask applied.
-pub fn clean_omf_edge_list(omf_list: OmfEdgeList, mask: Vec<bool>) -> OmfEdgeList {
+pub fn clean_omf_edge_list(
+    omf_list: OmfEdgeList,
+    mask: Vec<bool>,
+    vertex_remapping: &[Option<VertexId>],
+) -> Result<OmfEdgeList, OvertureMapsCollectionError> {
     let edges = EdgeList(
         omf_list
             .edges
             .0
             .iter()
+            // Apply mask
+            .filter(|edge| mask[edge.edge_id.0])
+            // enumerate produces the new indices after some edges were removed
             .enumerate()
-            .filter_map(|(idx, edge)| mask[idx].then_some(*edge))
-            .collect::<Vec<Edge>>()
+            .collect::<Vec<_>>()
+            .into_par_iter()
+            .map(|(new_idx, edge)| {
+                // Retrieve the correct vertex ids
+                let new_src_id = vertex_remapping
+                    .get(edge.src_vertex_id.0)
+                    .copied()
+                    .flatten()
+                    .ok_or(OvertureMapsCollectionError::InternalError(format!(
+                        "src vertex_id {} for edge ({},{}) was removed",
+                        edge.src_vertex_id, edge.edge_list_id, edge.edge_id
+                    )))?;
+                let new_dst_id = vertex_remapping
+                    .get(edge.dst_vertex_id.0)
+                    .copied()
+                    .flatten()
+                    .ok_or(OvertureMapsCollectionError::InternalError(format!(
+                        "dst vertex_id {} for edge ({},{}) was removed",
+                        edge.dst_vertex_id, edge.edge_list_id, edge.edge_id
+                    )))?;
+
+                Ok(Edge {
+                    edge_id: EdgeId(new_idx),
+                    src_vertex_id: new_src_id,
+                    dst_vertex_id: new_dst_id,
+                    ..*edge
+                })
+            })
+            .collect::<Result<Vec<Edge>, OvertureMapsCollectionError>>()?
             .into_boxed_slice(),
     );
 
@@ -333,38 +418,53 @@ pub fn clean_omf_edge_list(omf_list: OmfEdgeList, mask: Vec<bool>) -> OmfEdgeLis
         .geometries
         .into_iter()
         .enumerate()
-        .filter_map(|(idx, ls)| mask[idx].then_some(ls))
+        .filter(|(idx, _)| mask[*idx])
+        .collect::<Vec<_>>()
+        .into_par_iter()
+        .map(|(_, ls)| ls)
         .collect();
 
     let classes = omf_list
         .classes
         .into_iter()
         .enumerate()
-        .filter_map(|(idx, cls)| mask[idx].then_some(cls))
+        .filter(|(idx, _)| mask[*idx])
+        .collect::<Vec<_>>()
+        .into_par_iter()
+        .map(|(_, cls)| cls)
         .collect();
 
     let speeds = omf_list
         .speeds
         .into_iter()
         .enumerate()
-        .filter_map(|(idx, s)| mask[idx].then_some(s))
+        .filter(|(idx, _)| mask[*idx])
+        .collect::<Vec<_>>()
+        .into_par_iter()
+        .map(|(_, s)| s)
         .collect();
 
     let bearings = omf_list
         .bearings
         .into_iter()
         .enumerate()
-        .filter_map(|(idx, b)| mask[idx].then_some(b))
+        .filter(|(idx, _)| mask[*idx])
+        .collect::<Vec<_>>()
+        .into_par_iter()
+        .map(|(_, b)| b)
         .collect();
 
     let omf_segment_ids = omf_list
         .omf_segment_ids
         .into_iter()
         .enumerate()
-        .filter_map(|(idx, b)| mask[idx].then_some(b))
+        .filter(|(idx, _)| mask[*idx])
+        .collect::<Vec<_>>()
+        .into_par_iter()
+        .map(|(_, i)| i)
         .collect();
 
-    OmfEdgeList {
+    Ok(OmfEdgeList {
         edge_list_id: omf_list.edge_list_id,
         edges,
         geometries,
@@ -373,5 +473,5 @@ pub fn clean_omf_edge_list(omf_list: OmfEdgeList, mask: Vec<bool>) -> OmfEdgeLis
         speed_lookup: omf_list.speed_lookup,
         bearings,
         omf_segment_ids,
-    }
+    })
 }

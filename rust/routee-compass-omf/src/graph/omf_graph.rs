@@ -11,8 +11,10 @@ use crate::{
         SegmentFullType, TransportationCollection, TransportationSegmentRecord,
     },
     graph::{
-        component_algorithm::island_detection_algorithm, segment_ops,
-        serialize_ops::clean_omf_edge_list, vertex_serializable::VertexSerializable,
+        component_algorithm::island_detection_algorithm,
+        segment_ops,
+        serialize_ops::{clean_omf_edge_list, compute_vertex_remapping},
+        vertex_serializable::VertexSerializable,
         OmfGraphSummary,
     },
 };
@@ -61,9 +63,11 @@ impl OmfGraphVectorized {
         island_detection_configuration: Option<IslandDetectionAlgorithmConfiguration>,
     ) -> Result<Self, OvertureMapsCollectionError> {
         // process all connectors into vertices
+        log::info!("Creating vertex lookup");
         let (mut vertices, mut vertex_lookup) =
             ops::create_vertices_and_lookup(&collection.connectors, None)?;
 
+        log::info!("Processing edge lists");
         // for each mode configuration, create an edge list
         let mut edge_lists: Vec<OmfEdgeList> = vec![];
         for (index, edge_list_config) in configuration.iter().enumerate() {
@@ -73,6 +77,7 @@ impl OmfGraphVectorized {
             let mut filter = edge_list_config.filter.clone();
             filter.sort(); // sort for performance
 
+            log::info!("Filtering edge list {edge_list_id}");
             // filter to the segments that match our travel mode filter(s)
             let segments: Vec<&TransportationSegmentRecord> = collection
                 .segments
@@ -84,6 +89,7 @@ impl OmfGraphVectorized {
             // the splits are locations in each segment record where we want to define a vertex
             // which may not yet exist on the graph. this is where we begin to impose directivity
             // in our records.
+            log::info!("Creating splits");
             let mut splits = vec![];
             for heading in [SegmentHeading::Forward, SegmentHeading::Backward] {
                 let mut when: SegmentAccessRestrictionWhen = edge_list_config.into();
@@ -99,6 +105,7 @@ impl OmfGraphVectorized {
 
             // depending on the split method, we may need to create additional vertices at locations
             // which are not OvertureMaps-defined connector types.
+            log::info!("Extending vertices");
             ops::extend_vertices(
                 &splits,
                 &segments,
@@ -108,6 +115,7 @@ impl OmfGraphVectorized {
             )?;
 
             // create all edges based on the above split points using all vertices.
+            log::info!("Creating edges");
             let edges = ops::create_edges(
                 &segments,
                 &segment_lookup,
@@ -116,11 +124,16 @@ impl OmfGraphVectorized {
                 &vertex_lookup,
                 edge_list_id,
             )?;
+            log::info!("Creating geometries");
             let geometries = ops::create_geometries(&segments, &segment_lookup, &splits)?;
+            log::info!("Creating bearings");
             let bearings = ops::bearing_deg_from_geometries(&geometries)?;
+            log::info!("Creating classes");
             let classes = ops::create_segment_full_types(&segments, &segment_lookup, &splits)?;
 
+            log::info!("Creating speeds");
             let speeds = ops::create_speeds(&segments, &segment_lookup, &splits)?;
+            log::info!("Creating speed lookup");
             let speed_lookup = ops::create_speed_by_segment_type_lookup(
                 &speeds,
                 &segments,
@@ -130,13 +143,16 @@ impl OmfGraphVectorized {
             )?;
 
             // insert global speed value for reference
+            log::info!("Computing global speed");
             let global_speed =
                 ops::get_global_average_speed(&speeds, &segments, &segment_lookup, &splits)?;
 
             // omf ids
+            log::info!("Computing omf_ids");
             let omf_segment_ids = ops::get_segment_omf_ids(&segments, &segment_lookup, &splits)?;
 
             // match speeds according to classes
+            log::info!("Completing speeds vector with default global");
             let speeds = speeds
                 .into_par_iter()
                 .zip(&classes)
@@ -172,6 +188,7 @@ impl OmfGraphVectorized {
         }
 
         // Compute islands in resulting edge lists and remove island edges
+        log::info!("Compute islands");
         if let Some(algorithm_config) = island_detection_configuration {
             let ref_edge_lists = edge_lists
                 .iter()
@@ -187,11 +204,31 @@ impl OmfGraphVectorized {
 
             // Refactor Vec into Hashmap
             let mut edges_lookup: HashMap<EdgeListId, Vec<EdgeId>> = HashMap::new();
-            for (a, b) in island_edges {
-                edges_lookup.entry(a).or_default().push(b);
+            for (a, b) in &island_edges {
+                edges_lookup.entry(*a).or_default().push(*b);
+            }
+
+            // Compute and apply vertex remapping
+            let vertex_remapping = compute_vertex_remapping(&vertices, &edge_lists, &island_edges)?;
+            vertices = vertices
+                .into_iter()
+                .filter_map(|vertex| {
+                    vertex_remapping[vertex.vertex_id.0].map(|vertex_id| Vertex {
+                        vertex_id,
+                        ..vertex
+                    })
+                })
+                .collect();
+
+            // dropping entries for removed vertices.
+            vertex_lookup.retain(|_, v| vertex_remapping[*v].is_some());
+            // Update vertex_lookup to reflect the remapped vertex indices,
+            for v in vertex_lookup.values_mut() {
+                *v = vertex_remapping[*v].ok_or(OvertureMapsCollectionError::InternalError(format!("vertex index {v} expected after island computation but was flagged for deletion")))?.0;
             }
 
             // Clean the edge lists
+            log::info!("Apply islands algorithm result");
             edge_lists = edge_lists
                 .into_iter()
                 .map(|omf_list| {
@@ -209,9 +246,9 @@ impl OmfGraphVectorized {
                         .map(|edge| !edges_to_remove.contains(&edge.edge_id))
                         .collect::<Vec<bool>>();
 
-                    clean_omf_edge_list(omf_list, mask)
+                    clean_omf_edge_list(omf_list, mask, &vertex_remapping)
                 })
-                .collect::<Vec<OmfEdgeList>>();
+                .collect::<Result<Vec<OmfEdgeList>, OvertureMapsCollectionError>>()?;
         };
 
         let result = Self {

@@ -94,20 +94,21 @@ pub fn island_detection_algorithm(
                     component.push((current_el_id, current_e_id));
                     let current_edge = edge_lists[current_el_id.0].0[current_e_id.0];
 
-                    let current_distance = is_component_island_sequential(
-                        &current_edge,
-                        start_midpoint,
-                        &mut visited,
-                        &mut queue,
-                        vertices,
-                        &forward_adjacency,
-                        &backward_adjacency,
-                    );
-
                     // Update the max_distance
+                    let current_midpoint = compute_midpoint(&current_edge, vertices);
+                    let current_distance =
+                        Haversine.length(&line_string![start_midpoint.0, current_midpoint.0]);
                     let current_distance_uom =
                         uom_length::new::<uom::si::length::meter>(current_distance as f64);
                     max_distance_reached = max_distance_reached.max(current_distance_uom);
+
+                    visit_edge(
+                        &current_edge,
+                        &mut visited,
+                        &mut queue,
+                        &forward_adjacency,
+                        &backward_adjacency,
+                    );
 
                     // Update bar
                     if let Err(e) = pb.update(1) {
@@ -131,42 +132,49 @@ pub fn island_detection_algorithm(
     island_edges
 }
 
-/// returns the f32 distance in meters from the current edge midpoint to the initial edge midpoint.
-fn is_component_island_sequential(
+/// visit operation for weakly-connected BFS traversal
+fn visit_edge(
     edge: &Edge,
-    initial_midpoint: Point<f32>,
     visited: &mut HashSet<(EdgeListId, EdgeId)>,
     queue: &mut VecDeque<(EdgeListId, EdgeId)>,
-    vertices: &[Vertex],
     forward_adjacency: &DenseAdjacencyList,
     backward_adjacency: &DenseAdjacencyList,
-) -> f32 {
+) -> () {
     let (edge_list_id, edge_id) = (edge.edge_list_id, edge.edge_id);
 
-    // Update counter
-    let current_midpoint = compute_midpoint(edge, vertices);
-    let current_distance_to_start_meters =
-        Haversine.length(&line_string![initial_midpoint.0, current_midpoint.0]);
-
     // get all neighbors, add them to queue
+    // forward_adjacency[dst]: edges leaving dst (v → *)
     let outward_edges: Vec<&(EdgeListId, EdgeId)> =
         forward_adjacency[edge.dst_vertex_id.0].keys().collect();
     for (edge_list_id, edge_id) in outward_edges {
         queue.push_back((*edge_list_id, *edge_id));
     }
+    // backward_adjacency[src]: edges entering src (* → u)
     let inward_edges: Vec<&(EdgeListId, EdgeId)> =
         backward_adjacency[edge.src_vertex_id.0].keys().collect();
     for (edge_list_id, edge_id) in inward_edges {
         queue.push_back((*edge_list_id, *edge_id));
     }
+    // forward_adjacency[src]: other edges leaving src (u → *) — catches pure source vertices
+    let sibling_outward_edges: Vec<&(EdgeListId, EdgeId)> =
+        forward_adjacency[edge.src_vertex_id.0].keys().collect();
+    for (edge_list_id, edge_id) in sibling_outward_edges {
+        queue.push_back((*edge_list_id, *edge_id));
+    }
+    // backward_adjacency[dst]: other edges entering dst (* → v) — catches pure sink vertices
+    let sibling_inward_edges: Vec<&(EdgeListId, EdgeId)> =
+        backward_adjacency[edge.dst_vertex_id.0].keys().collect();
+    for (edge_list_id, edge_id) in sibling_inward_edges {
+        queue.push_back((*edge_list_id, *edge_id));
+    }
 
     // mark as visited
     visited.insert((edge_list_id, edge_id));
-
-    current_distance_to_start_meters
 }
 
-/// parallelizable implementation
+/// parallelizable implementation. Explores the entire component this
+/// edge belongs to up to a given distance threshold and returns whether or
+/// not the component is an island
 fn is_component_island_parallel(
     edge: &Edge,
     distance_threshold: f64,
@@ -176,9 +184,9 @@ fn is_component_island_parallel(
     forward_adjacency: &DenseAdjacencyList,
     backward_adjacency: &DenseAdjacencyList,
 ) -> Result<bool, OvertureMapsCollectionError> {
-    let mut visited = HashSet::<(&EdgeListId, &EdgeId)>::new();
-    let mut visit_queue: VecDeque<(&EdgeListId, &EdgeId)> = VecDeque::new();
-    visit_queue.push_back((&edge.edge_list_id, &edge.edge_id));
+    let mut visited = HashSet::<(EdgeListId, EdgeId)>::new();
+    let mut visit_queue: VecDeque<(EdgeListId, EdgeId)> = VecDeque::new();
+    visit_queue.push_back((edge.edge_list_id, edge.edge_id));
 
     let edge_midpoint = compute_midpoint(edge, vertices);
     let mut max_distance_reached = uom_length::new::<uom::si::length::meter>(0 as f64);
@@ -193,28 +201,20 @@ fn is_component_island_parallel(
             {
                 continue;
             }
-            visited.insert((current_edge_list_id, current_edge_id));
 
             // Retrieve current edge information
             let current_edge = edge_lists.get(current_edge_list_id.0)
-                                                            .and_then(|el| el.get(current_edge_id))
-                                                            .ok_or(OvertureMapsCollectionError::InternalError(format!("edge list {current_edge_list_id:?} or edge {current_edge_id:?} not found during island detection starting at edge {edge:?}")))?;
+                .and_then(|el| el.get(&current_edge_id))
+                .ok_or(OvertureMapsCollectionError::InternalError(format!("edge list {current_edge_list_id:?} or edge {current_edge_id:?} not found during island detection starting at edge {edge:?}")))?;
 
             // Expand queue
-            let outward_edges: Vec<&(EdgeListId, EdgeId)> = forward_adjacency
-                [current_edge.dst_vertex_id.0]
-                .keys()
-                .collect();
-            for (edge_list_id, edge_id) in outward_edges {
-                visit_queue.push_back((edge_list_id, edge_id));
-            }
-            let inward_edges: Vec<&(EdgeListId, EdgeId)> = backward_adjacency
-                [current_edge.src_vertex_id.0]
-                .keys()
-                .collect();
-            for (edge_list_id, edge_id) in inward_edges {
-                visit_queue.push_back((edge_list_id, edge_id));
-            }
+            visit_edge(
+                &current_edge,
+                &mut visited,
+                &mut visit_queue,
+                forward_adjacency,
+                backward_adjacency,
+            );
 
             // Update counter
             let current_midpoint = compute_midpoint(current_edge, vertices);
