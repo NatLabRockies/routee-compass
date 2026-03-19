@@ -135,7 +135,10 @@ fn run_collector(
 }
 
 /// filters segments and connectors in a transportation collection
-/// using an arbitrary extent with the `contains` predicate. empty geometries are ignored (filtered out)
+/// using an arbitrary extent with the `intersect` predicate over the segments collection.
+/// a second pass is performed over the connectors collection to reomve all connectors not referenced
+/// by the remaining segments.
+/// empty geometries are ignored (filtered out).
 fn apply_extent_to_collection(
     collection: TransportationCollection,
     extent: Geometry<f32>,
