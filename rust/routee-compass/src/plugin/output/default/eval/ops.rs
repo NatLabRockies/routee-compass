@@ -3,7 +3,10 @@ use std::{collections::HashMap, str::FromStr};
 use itertools::Itertools;
 use serde_json_path::JsonPath;
 
-use crate::plugin::output::{OutputPluginError, default::eval::{Operation, config::ExpressionConfig}};
+use crate::plugin::output::{
+    default::eval::{config::ExpressionConfig, Operation},
+    OutputPluginError,
+};
 
 /// A pre-parsed path segment used for writing results back into the JSON tree.
 pub enum PathSegment {
@@ -30,7 +33,6 @@ pub enum CompiledOnFailure {
     Record { segments: Vec<PathSegment> },
     Ignore,
 }
-
 
 // ---------------------------------------------------------------------------
 // Config → CompiledExpression
@@ -103,11 +105,14 @@ pub fn parse_path_segments(path: &str) -> Result<Vec<PathSegment>, OutputPluginE
                 }
                 let mut bracket_content = String::new();
                 for ic in chars.by_ref() {
-                    if ic == ']' { break; }
+                    if ic == ']' {
+                        break;
+                    }
                     bracket_content.push(ic);
                 }
                 // Quoted string key: ['foo'] or ["foo"]
-                let segment = if (bracket_content.starts_with('\'') && bracket_content.ends_with('\''))
+                let segment = if (bracket_content.starts_with('\'')
+                    && bracket_content.ends_with('\''))
                     || (bracket_content.starts_with('"') && bracket_content.ends_with('"'))
                 {
                     let key = bracket_content[1..bracket_content.len() - 1].to_string();
@@ -194,9 +199,7 @@ pub fn set_path(
                 ))
             })?;
             let child = arr.get_mut(*i).ok_or_else(|| {
-                OutputPluginError::OutputPluginFailed(format!(
-                    "array index {i} is out of bounds"
-                ))
+                OutputPluginError::OutputPluginFailed(format!("array index {i} is out of bounds"))
             })?;
             set_path(child, rest, value)
         }
@@ -339,25 +342,24 @@ pub fn eval_and_write(
         if args.is_empty() {
             return variables.get(name).copied();
         }
-        
-            let op = match Operation::from_str(name) {
-                Ok(operation) => Some(operation),
-                Err(e) => {
-                    callback_errors.push(e);
-                    None
-                },
-            }?;
-            
-            let result = match op.apply(args.as_slice()) {
-                Ok(result) => Some(result),
-                Err(e) => {
-                    callback_errors.push(e);
-                    None
-                }
-            }?;
 
-            Some(result)
+        let op = match Operation::from_str(name) {
+            Ok(operation) => Some(operation),
+            Err(e) => {
+                callback_errors.push(e);
+                None
+            }
+        }?;
 
+        let result = match op.apply(args.as_slice()) {
+            Ok(result) => Some(result),
+            Err(e) => {
+                callback_errors.push(e);
+                None
+            }
+        }?;
+
+        Some(result)
     })
     .map_err(|e| {
         OutputPluginError::OutputPluginFailed(format!(
@@ -369,7 +371,9 @@ pub fn eval_and_write(
     // propagate the callback errors in priority over fasteval errors which would be less descriptive
     if !callback_errors.is_empty() {
         let msg = callback_errors.into_iter().join("\n");
-        return Err(OutputPluginError::OutputPluginFailed(format!("failure evaluating expression operations: {msg}")));
+        return Err(OutputPluginError::OutputPluginFailed(format!(
+            "failure evaluating expression operations: {msg}"
+        )));
     }
     let result = eval_result?;
 

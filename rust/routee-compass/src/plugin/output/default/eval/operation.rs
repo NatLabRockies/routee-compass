@@ -29,7 +29,6 @@ pub enum Operation {
     Pow,
 }
 
-
 impl Operation {
     pub const ALL: [Self; 20] = [
         Self::Sqrt,
@@ -53,31 +52,35 @@ impl Operation {
         Self::Max,
         Self::Pow,
     ];
-    
+
     /// apply this operation to a list of variables provided in the expected order
     pub fn apply(&self, args: &[f64]) -> Result<f64, String> {
         match (self, args) {
-            (    Operation::Sqrt,  [x])    => Ok(x.sqrt()),
-            (    Operation::Abs,   [x])    => Ok(x.abs()),
-            (    Operation::Floor, [x])    => Ok(x.floor()),
-            (    Operation::Ceil,  [x])    => Ok(x.ceil()),
-            (    Operation::Round, [x])    => Ok(x.round()),
-            (    Operation::Exp,   [x])    => Ok(x.exp()),
-            (    Operation::Ln,    [x])    => Ok(x.ln()),
-            (    Operation::Log2,  [x])    => Ok(x.log2()),
-            (    Operation::Log10, [x])    => Ok(x.log10()),
-            (    Operation::Log,   [x, b]) => Ok(x.log(*b)),
-            (    Operation::Sin,   [x])    => Ok(x.sin()),
-            (    Operation::Cos,   [x])    => Ok(x.cos()),
-            (    Operation::Tan,   [x])    => Ok(x.tan()),
-            (    Operation::Asin,  [x])    => Ok(x.asin()),
-            (    Operation::Acos,  [x])    => Ok(x.acos()),
-            (    Operation::Atan,  [x])    => Ok(x.atan()),
-            (    Operation::Atan2, [y, x]) => Ok(y.atan2(*x)),
-            (    Operation::Min,   [a, b]) => Ok(a.min(*b)),
-            (    Operation::Max,   [a, b]) => Ok(a.max(*b)),
-            (    Operation::Pow,   [b, e]) => Ok(b.powf(*e)),     
-            _ => Err(format!("wrong number of arguments for '{}' found {:?}", self.describe(), args))
+            (Operation::Sqrt, [x]) => Ok(x.sqrt()),
+            (Operation::Abs, [x]) => Ok(x.abs()),
+            (Operation::Floor, [x]) => Ok(x.floor()),
+            (Operation::Ceil, [x]) => Ok(x.ceil()),
+            (Operation::Round, [x]) => Ok(x.round()),
+            (Operation::Exp, [x]) => Ok(x.exp()),
+            (Operation::Ln, [x]) => Ok(x.ln()),
+            (Operation::Log2, [x]) => Ok(x.log2()),
+            (Operation::Log10, [x]) => Ok(x.log10()),
+            (Operation::Log, [x, b]) => Ok(x.log(*b)),
+            (Operation::Sin, [x]) => Ok(x.sin()),
+            (Operation::Cos, [x]) => Ok(x.cos()),
+            (Operation::Tan, [x]) => Ok(x.tan()),
+            (Operation::Asin, [x]) => Ok(x.asin()),
+            (Operation::Acos, [x]) => Ok(x.acos()),
+            (Operation::Atan, [x]) => Ok(x.atan()),
+            (Operation::Atan2, [y, x]) => Ok(y.atan2(*x)),
+            (Operation::Min, [a, b]) => Ok(a.min(*b)),
+            (Operation::Max, [a, b]) => Ok(a.max(*b)),
+            (Operation::Pow, [b, e]) => Ok(b.powf(*e)),
+            _ => Err(format!(
+                "wrong number of arguments for '{}' found {:?}",
+                self.describe(),
+                args
+            )),
         }
     }
 
@@ -89,7 +92,7 @@ impl Operation {
             Self::Atan2 => "(y, x)",
             Self::Min | Self::Max => "(a, b)",
             Self::Pow => "(b, e)",
-            _ => "(x)"
+            _ => "(x)",
         };
         format!("{op}{args}")
     }

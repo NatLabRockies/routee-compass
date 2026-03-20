@@ -1,10 +1,10 @@
-mod plugin;
 mod builder;
 mod config;
+mod plugin;
 
-pub mod ops;
 mod operation;
+pub mod ops;
 pub use builder::EvalOutputPluginBuilder;
 pub use config::EvalOutputPluginConfig;
-pub use plugin::EvalOutputPlugin;
 pub use operation::Operation;
+pub use plugin::EvalOutputPlugin;

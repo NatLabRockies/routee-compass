@@ -3,8 +3,11 @@ use std::sync::Arc;
 use crate::{
     app::compass::CompassComponentError,
     plugin::{
+        output::{
+            default::eval::{config::EvalOutputPluginConfig, EvalOutputPlugin},
+            OutputPluginBuilder,
+        },
         PluginError,
-        output::{OutputPluginBuilder, default::eval::{EvalOutputPlugin, config::EvalOutputPluginConfig}},
     },
 };
 
@@ -14,9 +17,14 @@ impl OutputPluginBuilder for EvalOutputPluginBuilder {
     fn build(
         &self,
         parameters: &serde_json::Value,
-    ) -> Result<std::sync::Arc<dyn crate::plugin::output::OutputPlugin>, CompassComponentError> {
-        let conf: EvalOutputPluginConfig = serde_json::from_value(parameters.clone())
-            .map_err(|e| CompassComponentError::PluginError(PluginError::BuildFailed(format!("while building eval plugin: {e}"))))?;
+    ) -> Result<std::sync::Arc<dyn crate::plugin::output::OutputPlugin>, CompassComponentError>
+    {
+        let conf: EvalOutputPluginConfig =
+            serde_json::from_value(parameters.clone()).map_err(|e| {
+                CompassComponentError::PluginError(PluginError::BuildFailed(format!(
+                    "while building eval plugin: {e}"
+                )))
+            })?;
         Ok(Arc::new(EvalOutputPlugin::new(conf)?))
     }
 }

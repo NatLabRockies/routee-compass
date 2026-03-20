@@ -1,4 +1,7 @@
-use crate::plugin::output::{OutputPlugin, default::eval::ops::{self, CompiledExpression, CompiledOnFailure}};
+use crate::plugin::output::{
+    default::eval::ops::{self, CompiledExpression, CompiledOnFailure},
+    OutputPlugin,
+};
 
 use super::config::{EvalOutputPluginConfig, OnFailureBehavior};
 
@@ -71,14 +74,14 @@ mod tests {
     use crate::{
         app::compass::CompassAppError,
         plugin::output::{
-            OutputPlugin,
             default::eval::config::{EvalOutputPluginConfig, ExpressionConfig, OnFailureBehavior},
+            OutputPlugin,
         },
     };
 
     use super::EvalOutputPlugin;
 
-    /// mocks a dummy search result for tests wrapped by OutputPlugin. 
+    /// mocks a dummy search result for tests wrapped by OutputPlugin.
     /// the plugin ignores it, as it only interacts with the output JSON row, so an Err here is fine.
     type DummyResult = Result<
         (
@@ -92,9 +95,15 @@ mod tests {
     }
 
     /// creates a plugin instance for testing.
-    fn build_plugin(expressions: Vec<ExpressionConfig>, on_failure: OnFailureBehavior) -> EvalOutputPlugin {
-        EvalOutputPlugin::new(EvalOutputPluginConfig { expressions, on_failure })
-            .expect("plugin should build")
+    fn build_plugin(
+        expressions: Vec<ExpressionConfig>,
+        on_failure: OnFailureBehavior,
+    ) -> EvalOutputPlugin {
+        EvalOutputPlugin::new(EvalOutputPluginConfig {
+            expressions,
+            on_failure,
+        })
+        .expect("plugin should build")
     }
 
     // -----------------------------------------------------------------------
@@ -105,7 +114,10 @@ mod tests {
     fn test_success_simple_arithmetic() {
         let plugin = build_plugin(
             vec![ExpressionConfig::new(
-                &[("delay", "$.metric.time_delay"), ("rate", "$.cost.per_hour")],
+                &[
+                    ("delay", "$.metric.time_delay"),
+                    ("rate", "$.cost.per_hour"),
+                ],
                 "delay * rate",
                 "$.cost.delay_cost",
             )],
@@ -139,7 +151,11 @@ mod tests {
     #[test]
     fn test_success_creates_intermediate_objects() {
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("v", "$.v")], "v ^ 2", "$.stats.squared.value")],
+            vec![ExpressionConfig::new(
+                &[("v", "$.v")],
+                "v ^ 2",
+                "$.stats.squared.value",
+            )],
             OnFailureBehavior::Interrupt,
         );
         let mut output = json!({ "v": 5.0 });
@@ -150,7 +166,11 @@ mod tests {
     #[test]
     fn test_success_subtraction() {
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("a", "$.a"), ("b", "$.b")], "a - b", "$.result")],
+            vec![ExpressionConfig::new(
+                &[("a", "$.a"), ("b", "$.b")],
+                "a - b",
+                "$.result",
+            )],
             OnFailureBehavior::Interrupt,
         );
         let mut output = json!({ "a": 10.0, "b": 3.0 });
@@ -161,7 +181,11 @@ mod tests {
     #[test]
     fn test_success_division() {
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("a", "$.a"), ("b", "$.b")], "a / b", "$.result")],
+            vec![ExpressionConfig::new(
+                &[("a", "$.a"), ("b", "$.b")],
+                "a / b",
+                "$.result",
+            )],
             OnFailureBehavior::Interrupt,
         );
         let mut output = json!({ "a": 10.0, "b": 4.0 });
@@ -188,7 +212,11 @@ mod tests {
     #[test]
     fn test_interrupt_returns_err_on_missing_input() {
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("x", "$.missing")], "x * 2", "$.result")],
+            vec![ExpressionConfig::new(
+                &[("x", "$.missing")],
+                "x * 2",
+                "$.result",
+            )],
             OnFailureBehavior::Interrupt,
         );
         let mut output = json!({});
@@ -237,13 +265,21 @@ mod tests {
     #[test]
     fn test_record_appends_error_and_returns_ok() {
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("x", "$.missing")], "x * 2", "$.result")],
-            OnFailureBehavior::Record { path: "$.eval_errors".to_string() },
+            vec![ExpressionConfig::new(
+                &[("x", "$.missing")],
+                "x * 2",
+                "$.result",
+            )],
+            OnFailureBehavior::Record {
+                path: "$.eval_errors".to_string(),
+            },
         );
         let mut output = json!({});
         plugin.process(&mut output, &dummy_result()).unwrap();
 
-        let errors = output["eval_errors"].as_array().expect("should be an array");
+        let errors = output["eval_errors"]
+            .as_array()
+            .expect("should be an array");
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0]["expr"], json!("x * 2"));
         assert!(errors[0]["error"].is_string());
@@ -256,12 +292,16 @@ mod tests {
                 ExpressionConfig::new(&[("x", "$.missing")], "x * 2", "$.result"),
                 ExpressionConfig::new(&[("y", "$.y")], "y + 1", "$.sentinel"),
             ],
-            OnFailureBehavior::Record { path: "$.eval_errors".to_string() },
+            OnFailureBehavior::Record {
+                path: "$.eval_errors".to_string(),
+            },
         );
         let mut output = json!({ "y": 5.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
 
-        let errors = output["eval_errors"].as_array().expect("should be an array");
+        let errors = output["eval_errors"]
+            .as_array()
+            .expect("should be an array");
         assert_eq!(errors.len(), 1);
         // The second expression must still have run.
         assert_eq!(output["sentinel"].as_f64().unwrap(), 6.0);
@@ -274,12 +314,16 @@ mod tests {
                 ExpressionConfig::new(&[("x", "$.missing_x")], "x * 2", "$.r1"),
                 ExpressionConfig::new(&[("y", "$.missing_y")], "y + 1", "$.r2"),
             ],
-            OnFailureBehavior::Record { path: "$.eval_errors".to_string() },
+            OnFailureBehavior::Record {
+                path: "$.eval_errors".to_string(),
+            },
         );
         let mut output = json!({});
         plugin.process(&mut output, &dummy_result()).unwrap();
 
-        let errors = output["eval_errors"].as_array().expect("should be an array");
+        let errors = output["eval_errors"]
+            .as_array()
+            .expect("should be an array");
         assert_eq!(errors.len(), 2);
         assert_eq!(errors[0]["expr"], json!("x * 2"));
         assert_eq!(errors[1]["expr"], json!("y + 1"));
@@ -288,8 +332,14 @@ mod tests {
     #[test]
     fn test_record_nested_error_path() {
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("x", "$.missing")], "x", "$.result")],
-            OnFailureBehavior::Record { path: "$.diagnostics.errors".to_string() },
+            vec![ExpressionConfig::new(
+                &[("x", "$.missing")],
+                "x",
+                "$.result",
+            )],
+            OnFailureBehavior::Record {
+                path: "$.diagnostics.errors".to_string(),
+            },
         );
         let mut output = json!({});
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -324,7 +374,11 @@ mod tests {
     fn test_ops_log2() {
         // log2(8) = 3
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("x", "$.x")], "log2(x)", "$.result")],
+            vec![ExpressionConfig::new(
+                &[("x", "$.x")],
+                "log2(x)",
+                "$.result",
+            )],
             OnFailureBehavior::Interrupt,
         );
         let mut output = json!({ "x": 8.0 });
@@ -337,7 +391,11 @@ mod tests {
     fn test_ops_log10() {
         // log10(100) = 2
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("x", "$.x")], "log10(x)", "$.result")],
+            vec![ExpressionConfig::new(
+                &[("x", "$.x")],
+                "log10(x)",
+                "$.result",
+            )],
             OnFailureBehavior::Interrupt,
         );
         let mut output = json!({ "x": 100.0 });
@@ -374,7 +432,11 @@ mod tests {
     fn test_ops_floor() {
         // floor(3.7) = 3
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("x", "$.x")], "floor(x)", "$.result")],
+            vec![ExpressionConfig::new(
+                &[("x", "$.x")],
+                "floor(x)",
+                "$.result",
+            )],
             OnFailureBehavior::Interrupt,
         );
         let mut output = json!({ "x": 3.7 });
@@ -386,7 +448,11 @@ mod tests {
     fn test_ops_ceil() {
         // ceil(3.2) = 4
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("x", "$.x")], "ceil(x)", "$.result")],
+            vec![ExpressionConfig::new(
+                &[("x", "$.x")],
+                "ceil(x)",
+                "$.result",
+            )],
             OnFailureBehavior::Interrupt,
         );
         let mut output = json!({ "x": 3.2 });
@@ -398,7 +464,11 @@ mod tests {
     fn test_ops_round() {
         // round(2.5) = 3 (half-away-from-zero)
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("x", "$.x")], "round(x)", "$.result")],
+            vec![ExpressionConfig::new(
+                &[("x", "$.x")],
+                "round(x)",
+                "$.result",
+            )],
             OnFailureBehavior::Interrupt,
         );
         let mut output = json!({ "x": 2.5 });
@@ -478,7 +548,11 @@ mod tests {
     fn test_ops_asin() {
         // asin(0) = 0
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("x", "$.x")], "asin(x)", "$.result")],
+            vec![ExpressionConfig::new(
+                &[("x", "$.x")],
+                "asin(x)",
+                "$.result",
+            )],
             OnFailureBehavior::Interrupt,
         );
         let mut output = json!({ "x": 0.0 });
@@ -502,7 +576,11 @@ mod tests {
     fn test_ops_acos() {
         // acos(1) = 0
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("x", "$.x")], "acos(x)", "$.result")],
+            vec![ExpressionConfig::new(
+                &[("x", "$.x")],
+                "acos(x)",
+                "$.result",
+            )],
             OnFailureBehavior::Interrupt,
         );
         let mut output = json!({ "x": 1.0 });
@@ -514,7 +592,11 @@ mod tests {
     fn test_ops_atan() {
         // atan(0) = 0
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("x", "$.x")], "atan(x)", "$.result")],
+            vec![ExpressionConfig::new(
+                &[("x", "$.x")],
+                "atan(x)",
+                "$.result",
+            )],
             OnFailureBehavior::Interrupt,
         );
         let mut output = json!({ "x": 0.0 });
@@ -591,7 +673,10 @@ mod tests {
         let mut output = json!({ "x": 1.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
         let result = output["result"].as_f64().unwrap();
-        assert!((result - 0.0).abs() < 1e-10, "expected 0.0 (log2(1)), got {result}");
+        assert!(
+            (result - 0.0).abs() < 1e-10,
+            "expected 0.0 (log2(1)), got {result}"
+        );
     }
 
     #[test]
@@ -619,7 +704,11 @@ mod tests {
     fn test_ops_sqrt_of_negative_fails() {
         // sqrt(-4) → NaN → non-finite result → error
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("x", "$.x")], "sqrt(x)", "$.result")],
+            vec![ExpressionConfig::new(
+                &[("x", "$.x")],
+                "sqrt(x)",
+                "$.result",
+            )],
             OnFailureBehavior::Interrupt,
         );
         let mut output = json!({ "x": -4.0 });
@@ -641,7 +730,11 @@ mod tests {
     fn test_ops_log2_of_zero_fails() {
         // log2(0) → -Infinity → non-finite result → error
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("x", "$.x")], "log2(x)", "$.result")],
+            vec![ExpressionConfig::new(
+                &[("x", "$.x")],
+                "log2(x)",
+                "$.result",
+            )],
             OnFailureBehavior::Interrupt,
         );
         let mut output = json!({ "x": 0.0 });
@@ -652,7 +745,11 @@ mod tests {
     fn test_ops_asin_out_of_domain_fails() {
         // asin(2) → NaN (domain is [-1, 1]) → non-finite result → error
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("x", "$.x")], "asin(x)", "$.result")],
+            vec![ExpressionConfig::new(
+                &[("x", "$.x")],
+                "asin(x)",
+                "$.result",
+            )],
             OnFailureBehavior::Interrupt,
         );
         let mut output = json!({ "x": 2.0 });
@@ -663,7 +760,11 @@ mod tests {
     fn test_ops_acos_out_of_domain_fails() {
         // acos(2) → NaN (domain is [-1, 1]) → non-finite result → error
         let plugin = build_plugin(
-            vec![ExpressionConfig::new(&[("x", "$.x")], "acos(x)", "$.result")],
+            vec![ExpressionConfig::new(
+                &[("x", "$.x")],
+                "acos(x)",
+                "$.result",
+            )],
             OnFailureBehavior::Interrupt,
         );
         let mut output = json!({ "x": 2.0 });
@@ -759,25 +860,23 @@ mod tests {
         // A Record on_failure path of bare "$" should fail at build time.
         let result = EvalOutputPlugin::new(EvalOutputPluginConfig {
             expressions: vec![],
-            on_failure: OnFailureBehavior::Record { path: "$".to_string() },
+            on_failure: OnFailureBehavior::Record {
+                path: "$".to_string(),
+            },
         });
         assert!(result.is_err());
     }
 
     // a more complicated test case based on calculating a MEP Metric score
-    // from a BAMBAM run. leverages the sequential ordering of expressions to 
+    // from a BAMBAM run. leverages the sequential ordering of expressions to
     // build up the terms of multiple MEP calculations.
     #[test]
     fn test_example_mep() {
-        // MEP = 
+        // MEP =
         let plugin = EvalOutputPlugin::new(EvalOutputPluginConfig {
             expressions: vec![
                 // assign the t=0 opportunity term
-                ExpressionConfig::new(
-                    &[], 
-                    "0.0", 
-                    "$.mep.opp_0"
-                ),
+                ExpressionConfig::new(&[], "0.0", "$.mep.opp_0"),
                 // assign the opportunity normalization term
                 ExpressionConfig::new(
                     &[
@@ -793,67 +892,70 @@ mod tests {
                         ("F_j", "$.info.activity_frequencies.jobs"),
                         ("F_r", "$.info.activity_frequencies.retail"),
                         ("F_s", "$.info.activity_frequencies.services"),
-                    ], 
-                    "(N_f / N_j) * (F_j / (F_f + F_e + F_h + F_j + F_r + F_s))", 
-                    "$.mep.norm"
+                    ],
+                    "(N_f / N_j) * (F_j / (F_f + F_e + F_h + F_j + F_r + F_s))",
+                    "$.mep.norm",
                 ),
                 // assign the t=10 opportunity term
                 ExpressionConfig::new(
                     &[
                         ("norm", "$.mep.norm"),
                         ("o_10", "$.aggregate_opportunities.opportunities['10'].jobs"),
-                    ], 
-                    "o_10 * norm", 
-                    "$.mep.opp_10"
+                    ],
+                    "o_10 * norm",
+                    "$.mep.opp_10",
                 ),
                 // assign the t=20 opportunity term
                 ExpressionConfig::new(
                     &[
                         ("norm", "$.mep.norm"),
                         ("o_20", "$.aggregate_opportunities.opportunities['20'].jobs"),
-                    ], 
-                    "o_20 * norm", 
-                    "$.mep.opp_20"
+                    ],
+                    "o_20 * norm",
+                    "$.mep.opp_20",
                 ),
                 // assign the modal weighting factor for drive, 10m
                 ExpressionConfig::new(
                     &[
                         ("e_k", "$.info.intensities.drive.energy"),
                         ("c_k", "$.info.intensities.drive.cost"),
-                    ], 
-                    "(-0.5 * e_k) + (-0.08 * 10.0) + (-0.5 * c_k)", 
-                    "$.mep.m_i_drive_10"
+                    ],
+                    "(-0.5 * e_k) + (-0.08 * 10.0) + (-0.5 * c_k)",
+                    "$.mep.m_i_drive_10",
                 ),
                 // assign the modal weighting factor for drive, 10m
                 ExpressionConfig::new(
                     &[
                         ("e_k", "$.info.intensities.drive.energy"),
                         ("c_k", "$.info.intensities.drive.cost"),
-                    ], 
-                    "(-0.5 * e_k) + (-0.08 * 20.0) + (-0.5 * c_k)", 
-                    "$.mep.m_i_drive_20"
+                    ],
+                    "(-0.5 * e_k) + (-0.08 * 20.0) + (-0.5 * c_k)",
+                    "$.mep.m_i_drive_20",
                 ),
                 ExpressionConfig::new(
                     &[
                         ("o_prev", "$.mep.opp_0"),
                         ("o", "$.mep.opp_10"),
-                        ("mikt", "$.mep.m_i_drive_10")
-                    ], 
-                    "(o - o_prev) * exp(mikt)", 
-                    "$.mep.mep_10"
+                        ("mikt", "$.mep.m_i_drive_10"),
+                    ],
+                    "(o - o_prev) * exp(mikt)",
+                    "$.mep.mep_10",
                 ),
                 ExpressionConfig::new(
                     &[
                         ("o_prev", "$.mep.opp_10"),
                         ("o", "$.mep.opp_20"),
-                        ("mikt", "$.mep.m_i_drive_20")
-                    ], 
-                    "(o - o_prev) * exp(mikt)", 
-                    "$.mep.mep_20"
+                        ("mikt", "$.mep.m_i_drive_20"),
+                    ],
+                    "(o - o_prev) * exp(mikt)",
+                    "$.mep.mep_20",
                 ),
             ],
-            on_failure: OnFailureBehavior::Record { path: "$.diagnostics.errors".to_string() },
-        }).unwrap();
+            on_failure: OnFailureBehavior::Record {
+                path: "$.diagnostics.errors".to_string(),
+            },
+        })
+        .unwrap();
         let mut output = json!({
             "info": {
                 "activity_frequencies": {
@@ -893,7 +995,8 @@ mod tests {
         });
         plugin.process(&mut output, &dummy_result()).unwrap();
 
-        println!("{}",
+        println!(
+            "{}",
             serde_json::to_string_pretty(&output).unwrap_or_default()
         );
 
@@ -903,4 +1006,3 @@ mod tests {
         assert_eq!(errors.len(), 0);
     }
 }
-

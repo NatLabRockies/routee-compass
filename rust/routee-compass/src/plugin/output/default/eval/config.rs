@@ -2,14 +2,13 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-
 /// Configure the Eval plugin to perform a set of expressions on output rows.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct EvalOutputPluginConfig {
     /// expressions to run for each row
     pub expressions: Vec<ExpressionConfig>,
     /// behavior when expression fails
-    pub on_failure: OnFailureBehavior
+    pub on_failure: OnFailureBehavior,
 }
 
 /// Configuration for a single arithmetic expression to evaluate over the output JSON.
@@ -21,13 +20,13 @@ pub struct EvalOutputPluginConfig {
 /// # Example (TOML)
 ///
 /// ```toml
-/// { 
-///     inputs = { 
-///         time_delay = "$.metric.time_delay", 
-///         per_hour = "$.cost.per_hour" 
+/// {
+///     inputs = {
+///         time_delay = "$.metric.time_delay",
+///         per_hour = "$.cost.per_hour"
 ///     },
 ///     expr = "time_delay * per_hour",
-///     output = "$.cost.delay_cost" 
+///     output = "$.cost.delay_cost"
 /// }
 /// ```
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -50,18 +49,16 @@ pub enum OnFailureBehavior {
     /// interrupt the plugin on failure, returning an Err from the plugin.
     Interrupt,
     /// record the error to the output row at some JSONpath
-    Record {
-        path: String
-    },
+    Record { path: String },
     /// ignore the error
-    Ignore
+    Ignore,
 }
 
 impl ExpressionConfig {
     /// create a new ExpressionConfig programatically.
-    /// 
+    ///
     /// # Arguments
-    /// * `inputs` - a pair of (variable_name, JSONPath) for each variable we 
+    /// * `inputs` - a pair of (variable_name, JSONPath) for each variable we
     /// want to bind from the output row.
     /// * `expression` - mathematical expression
     pub fn new(inputs: &[(&str, &str)], expression: &str, output: &str) -> Self {
