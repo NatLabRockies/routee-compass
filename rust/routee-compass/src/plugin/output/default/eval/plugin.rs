@@ -1000,9 +1000,6 @@ mod tests {
             serde_json::to_string_pretty(&output).unwrap_or_default()
         );
 
-        let errors = output["diagnostics"]["errors"]
-            .as_array()
-            .expect("should be an array");
-        assert_eq!(errors.len(), 0);
+        assert!(output.get("diagnostics").is_none());
     }
 }
