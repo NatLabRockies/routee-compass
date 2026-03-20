@@ -3,7 +3,7 @@ use std::{collections::HashMap, str::FromStr};
 use itertools::Itertools;
 use serde_json_path::JsonPath;
 
-use crate::plugin::output::{OutputPluginError, default::eval::config::{ExpressionConfig, Operation}};
+use crate::plugin::output::{OutputPluginError, default::eval::{Operation, config::ExpressionConfig}};
 
 /// A pre-parsed path segment used for writing results back into the JSON tree.
 pub enum PathSegment {
@@ -101,19 +101,28 @@ pub fn parse_path_segments(path: &str) -> Result<Vec<PathSegment>, OutputPluginE
                 if !current_key.is_empty() {
                     segments.push(PathSegment::Key(std::mem::take(&mut current_key)));
                 }
-                let mut idx_str = String::new();
+                let mut bracket_content = String::new();
                 for ic in chars.by_ref() {
-                    if ic == ']' {
-                        break;
-                    }
-                    idx_str.push(ic);
+                    if ic == ']' { break; }
+                    bracket_content.push(ic);
                 }
-                let idx: usize = idx_str.parse().map_err(|_| {
-                    OutputPluginError::OutputPluginFailed(format!(
-                        "invalid array index '{idx_str}' in path '{path}'"
-                    ))
-                })?;
-                segments.push(PathSegment::Index(idx));
+                // Quoted string key: ['foo'] or ["foo"]
+                let segment = if (bracket_content.starts_with('\'') && bracket_content.ends_with('\''))
+                    || (bracket_content.starts_with('"') && bracket_content.ends_with('"'))
+                {
+                    let key = bracket_content[1..bracket_content.len() - 1].to_string();
+                    PathSegment::Key(key)
+                } else {
+                    // Numeric array index: [0]
+                    let idx: usize = bracket_content.parse().map_err(|_| {
+                        OutputPluginError::OutputPluginFailed(format!(
+                            "invalid bracket segment '[{bracket_content}]' in path '{path}': \
+                            expected an integer index or a quoted string key"
+                        ))
+                    })?;
+                    PathSegment::Index(idx)
+                };
+                segments.push(segment);
             }
             other => current_key.push(other),
         }
@@ -415,6 +424,26 @@ mod tests {
         assert!(matches!(&segs[0], PathSegment::Key(k) if k == "a"));
         assert!(matches!(&segs[1], PathSegment::Key(k) if k == "b"));
         assert!(matches!(&segs[2], PathSegment::Key(k) if k == "c"));
+    }
+
+    #[test]
+    fn test_parse_bracket_single_quoted_string_key() {
+        // $.a['10'].b  →  [Key("a"), Key("10"), Key("b")]
+        let segs = parse_path_segments("$.a['10'].b").unwrap();
+        assert_eq!(segs.len(), 3);
+        assert!(matches!(&segs[0], PathSegment::Key(k) if k == "a"));
+        assert!(matches!(&segs[1], PathSegment::Key(k) if k == "10"));
+        assert!(matches!(&segs[2], PathSegment::Key(k) if k == "b"));
+    }
+
+    #[test]
+    fn test_parse_bracket_double_quoted_string_key() {
+        // $.a["spaced key"].b  →  [Key("a"), Key("spaced key"), Key("b")]
+        let segs = parse_path_segments("$.a[\"spaced key\"].b").unwrap();
+        assert_eq!(segs.len(), 3);
+        assert!(matches!(&segs[0], PathSegment::Key(k) if k == "a"));
+        assert!(matches!(&segs[1], PathSegment::Key(k) if k == "spaced key"));
+        assert!(matches!(&segs[2], PathSegment::Key(k) if k == "b"));
     }
 
     #[test]
