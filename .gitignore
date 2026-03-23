@@ -5,8 +5,7 @@ Cargo.lock
 docs/examples/*.ipynb
 docs/examples/denver_metro/
 
-# onnx runtimes get downloaded here:
-onnxruntime/
+*.onnx
 
 .DS_Store
 *.code-workspace

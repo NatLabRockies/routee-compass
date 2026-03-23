@@ -1,8 +1,8 @@
 use crate::model::fieldname;
 
 use super::{
-    interpolation::InterpolationModel, model_type::ModelType, prediction_model_ops,
-    smartcore::SmartcoreModel, PredictionModel, PredictionModelConfig,
+    interpolation::InterpolationModel, model_type::ModelType, onnx::onnx_model::OnnxModel,
+    prediction_model_ops, smartcore::SmartcoreModel, PredictionModel, PredictionModelConfig,
 };
 use routee_compass_core::model::{
     state::{InputFeature, StateModel, StateVariable},
@@ -37,6 +37,10 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
         let prediction_model: Arc<dyn PredictionModel> = match &config.model_type {
             ModelType::Smartcore => {
                 let model = SmartcoreModel::new(&config.model_input_file, config.energy_rate_unit)?;
+                Arc::new(model)
+            }
+            ModelType::Onnx => {
+                let model = OnnxModel::new(&config.model_input_file, config.energy_rate_unit)?;
                 Arc::new(model)
             }
             ModelType::Interpolate {
@@ -164,5 +168,53 @@ impl PredictionModelRecord {
         };
 
         Ok(energy)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::prediction::ModelType;
+    use routee_compass_core::model::state::InputFeature;
+    use routee_compass_core::model::unit::EnergyRateUnit;
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_onnx_config_loading() {
+        let model_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .join("python/nrel/routee/compass/resources/models/camry_4cyl_2wd/2016/default/grade_percent_speed_mph/v1/model.onnx");
+
+        if !model_path.exists() {
+            println!("Test skipped: model file not found at {:?}", model_path);
+            return;
+        }
+
+        let config = PredictionModelConfig {
+            name: "test_onnx".to_string(),
+            model_input_file: model_path.to_str().unwrap().to_string(),
+            model_type: ModelType::Onnx,
+            input_features: vec![
+                InputFeature::Speed {
+                    name: "speed".to_string(),
+                    unit: None,
+                },
+                InputFeature::Ratio {
+                    name: "grade".to_string(),
+                    unit: None,
+                },
+            ],
+            energy_rate_unit: EnergyRateUnit::GGPM,
+            mass_estimate_lbs: 3300.0,
+            a_star_heuristic_energy_rate: Some(0.028),
+            real_world_energy_adjustment: Some(1.166),
+        };
+
+        let record = PredictionModelRecord::try_from(&config).unwrap();
+        assert_eq!(record.name, "test_onnx");
+        assert_eq!(record.energy_rate_unit, EnergyRateUnit::GGPM);
     }
 }

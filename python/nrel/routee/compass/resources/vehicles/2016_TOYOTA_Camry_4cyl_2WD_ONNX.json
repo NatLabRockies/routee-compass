@@ -1,0 +1,38 @@
+{
+  "name": "2016_TOYOTA_Camry_4cyl_2WD_ONNX",
+  "type": "ice",
+  "mass_estimate_lbs": 3300,
+  "model_input_file": "../models/2016_TOYOTA_Camry_4cyl_2WD.onnx",
+  "energy_rate_unit": "gallons gasoline/mile",
+  "real_world_energy_adjustment": 1.166,
+  "a_star_heuristic_energy_rate": 0.028,
+  "input_features": [
+    {
+      "type": "speed",
+      "name": "edge_speed",
+      "unit": "mph"
+    },
+    {
+      "type": "ratio",
+      "name": "edge_grade",
+      "unit": "percent"
+    }
+  ],
+  "model_type": {
+    "interpolate": {
+      "underlying_model_type": "onnx",
+      "feature_bounds": {
+        "edge_speed": {
+          "lower_bound": 0,
+          "upper_bound": 100,
+          "num_bins": 101
+        },
+        "edge_grade": {
+          "lower_bound": -20,
+          "upper_bound": 20,
+          "num_bins": 41
+        }
+      }
+    }
+  }
+}

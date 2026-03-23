@@ -168,6 +168,9 @@ vehicle_input_files = [
     "vehicles/Sleeper_old_400kW.json",
     "vehicles/Transit_Bus_Battery_Electric.json",
     "vehicles/Transit_Bus_Diesel.json",
+
+    # TODO: Update all vehicles to use onnx
+    "vehicles/2016_TOYOTA_Camry_4cyl_2WD_ONNX.json",
 ]
 
 
