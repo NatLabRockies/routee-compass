@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI agents when working with code in this repository.
 
 ## Project Overview
 
@@ -38,10 +38,7 @@ cargo fmt -- --check                                  # Rust formatting
 cargo clippy --all --all-targets --all-features -- -D warnings  # Rust linting
 
 # Python
-ruff check
-ruff format --check
-mypy . 
-pytest python
+pixi run check
 ```
 
 ## Component-Specific Guidance
@@ -65,6 +62,5 @@ cargo build --release
 
 ### Python Wrapper 
 ```bash
-conda activate routee-compass
-maturin develop
+pixi run build
 ```

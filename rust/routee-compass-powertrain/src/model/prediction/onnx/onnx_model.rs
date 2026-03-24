@@ -26,13 +26,12 @@ impl PredictionModel for OnnxModel {
             ))
         })?;
 
-        let input_tensor = ort::value::Value::from_array(array)
-            .map_err(|e| {
-                TraversalModelError::TraversalModelFailure(format!(
-                    "Failed to create ONNX tensor: {}",
-                    e
-                ))
-            })?;
+        let input_tensor = ort::value::Value::from_array(array).map_err(|e| {
+            TraversalModelError::TraversalModelFailure(format!(
+                "Failed to create ONNX tensor: {}",
+                e
+            ))
+        })?;
 
         let mut model = self.model.lock().map_err(|e| {
             TraversalModelError::TraversalModelFailure(format!("Failed to lock ONNX model: {}", e))
@@ -41,7 +40,10 @@ impl PredictionModel for OnnxModel {
         let outputs = model
             .run(ort::inputs!["input" => input_tensor])
             .map_err(|e| {
-                TraversalModelError::TraversalModelFailure(format!("Failed to run ONNX model: {}", e))
+                TraversalModelError::TraversalModelFailure(format!(
+                    "Failed to run ONNX model: {}",
+                    e
+                ))
             })?;
 
         let output_tensor = &outputs[0];
