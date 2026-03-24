@@ -109,13 +109,16 @@ test-py312 = { features = ["py312", "all"], solve-group = "py312" }
 test-py313 = { features = ["py313", "all"], solve-group = "py313" }
 
 [tool.pixi.tasks]
-build = "maturin develop --uv"
+build_py = "maturin develop --uv"
+build_rust = { cmd = "cargo build --workspace --release", cwd = "rust" }
+
 fmt_fix = "ruff format"
 fmt_check = "ruff format --check"
 lint_check = "ruff check"
 lint_fix = "ruff check --fix"
 typing = "mypy ."
-test = {cmd = "pytest python/tests/", depends-on = ["build"]}
+test = { cmd = "pytest python/tests/", depends-on = ["build_py"] }
+
 rust_fmt_check = { cmd = "cargo fmt -- --check", cwd = "rust" }
 rust_lint = { cmd = "cargo clippy --all --all-targets --all-features -- -D warnings", cwd = "rust" }
 rust_test = { cmd = "cargo test --workspace", cwd = "rust" }

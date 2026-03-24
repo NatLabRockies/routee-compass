@@ -32,35 +32,19 @@ scripts/                    # Utility scripts for building and maintenance
 **All code changes must pass the following checks before being committed:**
 
 ```bash
-# Rust
-cargo test
-cargo fmt -- --check                                  # Rust formatting
-cargo clippy --all --all-targets --all-features -- -D warnings  # Rust linting
-
-# Python
-pixi run check
+pixi run check_all    # Run all checks (Python + Rust)
+pixi run check_py     # Python only: ruff format, ruff lint, mypy, pytest
+pixi run check_rust   # Rust only: cargo fmt, cargo clippy, cargo test
 ```
-
-## Component-Specific Guidance
-
-**For Rust core development**:
-- All core rust code is in `rust/`
-
-**For Python Wrapper development**:
-- Package is managed with matruin and pyproject.toml and uses PyO3 bindings
-- When running any python code, first activate the conda environment `conda activate routee-compass`
 
 ## Build Commands
 
 ### Rust 
 ```bash
-cd rust 
-
-# Build 
-cargo build --release
+pixi run build_rust
 ```
 
 ### Python Wrapper 
 ```bash
-pixi run build
+pixi run build_py
 ```
