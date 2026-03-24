@@ -71,7 +71,9 @@ impl PredictionModel for OnnxModel {
                 ))
             })?;
 
-        let output_tensor = &outputs[0];
+        let (_output_name, output_tensor) = outputs.iter().next().ok_or_else(|| {
+            TraversalModelError::TraversalModelFailure("ONNX model returned no outputs".to_string())
+        })?;
         let tensor_data = output_tensor.try_extract_tensor::<f32>().map_err(|e| {
             TraversalModelError::TraversalModelFailure(format!(
                 "Failed to extract output tensor: {}",
@@ -79,7 +81,9 @@ impl PredictionModel for OnnxModel {
             ))
         })?;
 
-        let energy_rate = tensor_data.1[0] as f64;
+        let energy_rate = *tensor_data.1.first().ok_or_else(|| {
+            TraversalModelError::TraversalModelFailure("ONNX output tensor is empty".to_string())
+        })? as f64;
         Ok((energy_rate, self.energy_rate_unit))
     }
 }
