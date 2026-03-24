@@ -39,8 +39,14 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
                 let model = SmartcoreModel::new(&config.model_input_file, config.energy_rate_unit)?;
                 Arc::new(model)
             }
-            ModelType::Onnx => {
-                let model = OnnxModel::new(&config.model_input_file, config.energy_rate_unit)?;
+            ModelType::Onnx { pool_size } => {
+                let pool_size = pool_size.unwrap_or_else(|| {
+                    std::thread::available_parallelism()
+                        .map(|n| n.get())
+                        .unwrap_or(1)
+                });
+                let model =
+                    OnnxModel::new(&config.model_input_file, config.energy_rate_unit, pool_size)?;
                 Arc::new(model)
             }
             ModelType::Interpolate {

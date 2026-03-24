@@ -73,7 +73,9 @@ impl InterpolationModel {
                 underlying_model_path,
                 energy_rate_unit,
             )?),
-            ModelType::Onnx => Arc::new(OnnxModel::new(underlying_model_path, energy_rate_unit)?),
+            ModelType::Onnx { .. } => {
+                Arc::new(OnnxModel::new(underlying_model_path, energy_rate_unit, 1)?)
+            }
             _ => {
                 return Err(TraversalModelError::TraversalModelFailure(
                     "Got unexpected model type when building the interpolation model".to_string(),

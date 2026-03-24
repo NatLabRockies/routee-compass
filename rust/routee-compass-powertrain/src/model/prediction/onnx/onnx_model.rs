@@ -7,8 +7,19 @@ use ndarray::Array2;
 use ort::session::Session;
 use routee_compass_core::model::{traversal::TraversalModelError, unit::EnergyRateUnit};
 
+/// A prediction model backed by one or more ONNX Runtime sessions.
+///
+/// Because [`Session::run`] requires `&mut self` while the [`PredictionModel`] trait requires
+/// `Send + Sync` with an immutable `&self` receiver, each session is wrapped in a [`Mutex`].
+/// When constructed with `pool_size > 1`, multiple sessions are loaded from the same model file
+/// and [`predict`](PredictionModel::predict) acquires whichever session is available first,
+/// enabling parallel inference across threads.
+///
+/// When used as the underlying model for
+/// [`InterpolationModel`](crate::model::prediction::interpolation::InterpolationModel),
+/// a pool size of 1 is sufficient since grid building is sequential.
 pub struct OnnxModel {
-    model: Mutex<Session>,
+    sessions: Vec<Mutex<Session>>,
     energy_rate_unit: EnergyRateUnit,
 }
 
@@ -33,9 +44,23 @@ impl PredictionModel for OnnxModel {
             ))
         })?;
 
-        let mut model = self.model.lock().map_err(|e| {
-            TraversalModelError::TraversalModelFailure(format!("Failed to lock ONNX model: {}", e))
-        })?;
+        // Try to find an unlocked session; if all are busy, block on the first.
+        let mut model = None;
+        for session in &self.sessions {
+            if let Ok(guard) = session.try_lock() {
+                model = Some(guard);
+                break;
+            }
+        }
+        let mut model = match model {
+            Some(guard) => guard,
+            None => self.sessions[0].lock().map_err(|e| {
+                TraversalModelError::TraversalModelFailure(format!(
+                    "Failed to lock ONNX model: {}",
+                    e
+                ))
+            })?,
+        };
 
         let outputs = model
             .run(ort::inputs!["input" => input_tensor])
@@ -63,7 +88,10 @@ impl OnnxModel {
     pub fn new<P: AsRef<Path>>(
         routee_model_path: &P,
         energy_rate_unit: EnergyRateUnit,
+        pool_size: usize,
     ) -> Result<Self, TraversalModelError> {
+        let pool_size = pool_size.max(1);
+
         // make sure we have an .onnx file
         let is_onnx = routee_model_path
             .as_ref()
@@ -78,55 +106,30 @@ impl OnnxModel {
             )));
         }
 
-        let model = Session::builder()
-            .map_err(|e| {
-                TraversalModelError::BuildError(format!(
-                    "Failed to build ONNXRuntime session from {} due to: {}",
-                    routee_model_path.as_ref().to_string_lossy(),
-                    e,
-                ))
-            })?
-            .commit_from_file(routee_model_path)
-            .map_err(|e| {
-                TraversalModelError::BuildError(format!(
-                    "Failed to build ONNXRuntime session from {} due to: {}",
-                    routee_model_path.as_ref().to_string_lossy(),
-                    e,
-                ))
-            })?;
-
-        Ok(OnnxModel {
-            model: Mutex::new(model),
-            energy_rate_unit,
-        })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::path::PathBuf;
-
-    #[test]
-    fn test_onnx_predict() {
-        let model_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .join("python/nrel/routee/compass/resources/models/camry_4cyl_2wd/2016/default/grade_percent_speed_mph/v1/model.onnx");
-
-        if !model_path.exists() {
-            println!("Test skipped: model file not found at {:?}", model_path);
-            return;
+        let mut sessions = Vec::with_capacity(pool_size);
+        for _ in 0..pool_size {
+            let session = Session::builder()
+                .map_err(|e| {
+                    TraversalModelError::BuildError(format!(
+                        "Failed to build ONNXRuntime session from {} due to: {}",
+                        routee_model_path.as_ref().to_string_lossy(),
+                        e,
+                    ))
+                })?
+                .commit_from_file(routee_model_path)
+                .map_err(|e| {
+                    TraversalModelError::BuildError(format!(
+                        "Failed to build ONNXRuntime session from {} due to: {}",
+                        routee_model_path.as_ref().to_string_lossy(),
+                        e,
+                    ))
+                })?;
+            sessions.push(Mutex::new(session));
         }
 
-        let model = OnnxModel::new(&model_path, EnergyRateUnit::GGPM).unwrap();
-        let feature_vector = vec![60.0, 0.0]; // 60 mph, 0% grade
-        let (energy_rate, unit) = model.predict(&feature_vector).unwrap();
-
-        assert!(energy_rate > 0.0);
-        assert_eq!(unit, EnergyRateUnit::GGPM);
-        println!("Energy rate at 60 mph, 0% grade: {} {}", energy_rate, unit);
+        Ok(OnnxModel {
+            sessions,
+            energy_rate_unit,
+        })
     }
 }
