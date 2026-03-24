@@ -116,4 +116,11 @@ lint_check = "ruff check"
 lint_fix = "ruff check --fix"
 typing = "mypy ."
 test = {cmd = "pytest python/tests/", depends-on = ["build"]}
-check = { depends-on = ["fmt_fix", "lint_fix", "typing", "test"] }
+rust_fmt_check = { cmd = "cargo fmt -- --check", cwd = "rust" }
+rust_lint = { cmd = "cargo clippy --all --all-targets --all-features -- -D warnings", cwd = "rust" }
+rust_test = { cmd = "cargo test --workspace", cwd = "rust" }
+rust_sort = { cmd = "cargo sort --workspace", cwd = "rust" }
+
+check_py = { depends-on = ["fmt_fix", "lint_fix", "typing", "test"] }
+check_rust = { depends-on = ["rust_fmt_check", "rust_lint", "rust_test"] }
+check_all = { depends-on = ["check_py", "check_rust"] }
