@@ -42,9 +42,10 @@ impl<'de> Deserialize<'de> for ModelType {
             pool_size: Option<usize>,
         }
 
-        // Try the externally-tagged form first (handles both "smartcore" and {"onnx": {...}})
-        // For "onnx" as a bare string, the externally-tagged repr will fail since Onnx
-        // expects a struct body. We use serde's content to buffer and retry.
+        // Uses an untagged wrapper enum (Outer) that tries two representations in order:
+        // 1. Tagged(Helper) — handles externally-tagged forms like "smartcore" and {"onnx": {...}}
+        // 2. BareOnnx — handles "onnx" as a bare string, which the tagged form rejects
+        //    since Onnx expects a struct body.
         #[derive(Deserialize)]
         #[serde(rename_all = "snake_case")]
         #[serde(untagged)]
