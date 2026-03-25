@@ -9,7 +9,7 @@ use ninterp::prelude::*;
 use routee_compass_core::model::{
     state::InputFeature, traversal::TraversalModelError, unit::EnergyRateUnit,
 };
-use std::{collections::HashMap, path::Path, sync::Arc};
+use std::{collections::HashMap, path::Path};
 
 /// Enum to hold different interpolator types based on dimensionality
 enum InterpolatorVariant {
@@ -68,13 +68,13 @@ impl InterpolationModel {
         }
 
         // Load underlying model to build the interpolation grid
-        let model: Arc<dyn PredictionModel> = match underlying_model_type {
-            ModelType::Smartcore => Arc::new(SmartcoreModel::new(
+        let model: Box<dyn PredictionModel> = match underlying_model_type {
+            ModelType::Smartcore => Box::new(SmartcoreModel::new(
                 underlying_model_path,
                 energy_rate_unit,
             )?),
             ModelType::Onnx { .. } => {
-                Arc::new(OnnxModel::new(underlying_model_path, energy_rate_unit, 1)?)
+                Box::new(OnnxModel::new(underlying_model_path, energy_rate_unit, 1)?)
             }
             _ => {
                 return Err(TraversalModelError::TraversalModelFailure(
@@ -106,7 +106,7 @@ impl InterpolationModel {
         let interpolator = match num_features {
             1 => {
                 let grid_0 = grid[0].clone();
-                let values = Self::build_values_1d(model.clone(), &grid_0)?;
+                let values = Self::build_values_1d(model.as_ref(), &grid_0)?;
                 let interp = Interp1D::new(grid_0, values, strategy::Linear, Extrapolate::Clamp)
                     .map_err(|e| {
                         TraversalModelError::TraversalModelFailure(format!(
@@ -118,7 +118,7 @@ impl InterpolationModel {
             2 => {
                 let grid_0 = grid[0].clone();
                 let grid_1 = grid[1].clone();
-                let values = Self::build_values_2d(model.clone(), &grid_0, &grid_1)?;
+                let values = Self::build_values_2d(model.as_ref(), &grid_0, &grid_1)?;
                 let interp =
                     Interp2D::new(grid_0, grid_1, values, strategy::Linear, Extrapolate::Clamp)
                         .map_err(|e| {
@@ -132,7 +132,7 @@ impl InterpolationModel {
                 let grid_0 = grid[0].clone();
                 let grid_1 = grid[1].clone();
                 let grid_2 = grid[2].clone();
-                let values = Self::build_values_3d(model.clone(), &grid_0, &grid_1, &grid_2)?;
+                let values = Self::build_values_3d(model.as_ref(), &grid_0, &grid_1, &grid_2)?;
                 let interp = Interp3D::new(
                     grid_0,
                     grid_1,
@@ -149,7 +149,7 @@ impl InterpolationModel {
                 InterpolatorVariant::Three(interp)
             }
             _ => {
-                let values = Self::build_values_nd(model.clone(), &grid)?;
+                let values = Self::build_values_nd(model.as_ref(), &grid)?;
                 let interp = InterpND::new(grid, values, strategy::Linear, Extrapolate::Clamp)
                     .map_err(|e| {
                         TraversalModelError::TraversalModelFailure(format!(
@@ -167,7 +167,7 @@ impl InterpolationModel {
     }
 
     fn build_values_1d(
-        model: Arc<dyn PredictionModel>,
+        model: &dyn PredictionModel,
         grid_0: &Array1<f64>,
     ) -> Result<Array1<f64>, TraversalModelError> {
         let mut values = Array1::<f64>::zeros(grid_0.len());
@@ -186,7 +186,7 @@ impl InterpolationModel {
     }
 
     fn build_values_2d(
-        model: Arc<dyn PredictionModel>,
+        model: &dyn PredictionModel,
         grid_0: &Array1<f64>,
         grid_1: &Array1<f64>,
     ) -> Result<Array2<f64>, TraversalModelError> {
@@ -208,7 +208,7 @@ impl InterpolationModel {
     }
 
     fn build_values_3d(
-        model: Arc<dyn PredictionModel>,
+        model: &dyn PredictionModel,
         grid_0: &Array1<f64>,
         grid_1: &Array1<f64>,
         grid_2: &Array1<f64>,
@@ -233,7 +233,7 @@ impl InterpolationModel {
     }
 
     fn build_values_nd(
-        model: Arc<dyn PredictionModel>,
+        model: &dyn PredictionModel,
         grid: &[Array1<f64>],
     ) -> Result<ArrayD<f64>, TraversalModelError> {
         let shape: Vec<usize> = grid.iter().map(|feature| feature.len()).collect();
