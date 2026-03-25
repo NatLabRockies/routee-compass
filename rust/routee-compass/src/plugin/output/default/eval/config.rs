@@ -55,7 +55,7 @@ pub enum OnFailureBehavior {
 }
 
 impl ExpressionConfig {
-    /// create a new ExpressionConfig programatically.
+    /// create a new ExpressionConfig programmatically.
     ///
     /// # Arguments
     /// * `inputs` - a pair of (variable_name, JSONPath) for each variable we
