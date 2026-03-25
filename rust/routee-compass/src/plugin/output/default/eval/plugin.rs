@@ -995,11 +995,6 @@ mod tests {
         });
         plugin.process(&mut output, &dummy_result()).unwrap();
 
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&output).unwrap_or_default()
-        );
-
         assert!(output.get("diagnostics").is_none());
     }
 }
