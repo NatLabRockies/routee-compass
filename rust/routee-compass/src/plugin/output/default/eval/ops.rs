@@ -1,5 +1,6 @@
 use std::{collections::HashMap, str::FromStr};
 
+use fasteval::{Compiler, Evaler};
 use itertools::Itertools;
 use serde_json_path::JsonPath;
 
@@ -20,10 +21,14 @@ pub enum PathSegment {
 pub struct CompiledExpression {
     /// `(variable_name, compiled JSONPath)` pairs for each input binding.
     pub inputs: Vec<(String, JsonPath)>,
-    /// Raw `fasteval` expression string (re-used each invocation).
+    /// Raw expression string retained for error messages.
     pub expr: String,
     /// Pre-parsed output path segments.
     pub output_segments: Vec<PathSegment>,
+    /// Memory arena that backs the pre-compiled bytecode.
+    pub slab: fasteval::Slab,
+    /// Pre-compiled bytecode produced by `fasteval`'s compiler.
+    pub compiled: fasteval::Instruction,
 }
 
 /// Compiled form of [`OnFailureBehavior`] — the `Record` variant's path is
@@ -61,10 +66,25 @@ pub fn compile_expression(
         ))
     })?;
 
+    // Parse and compile the fasteval expression once so that eval_and_write can
+    // skip the parse step on every row.
+    let mut slab = fasteval::Slab::new();
+    let parsed = fasteval::Parser::new()
+        .parse(&conf.expr, &mut slab.ps)
+        .map_err(|e| {
+            crate::plugin::PluginError::BuildFailed(format!(
+                "failed to parse expression '{}': {e}",
+                conf.expr
+            ))
+        })?;
+    let compiled = parsed.from(&slab.ps).compile(&slab.ps, &mut slab.cs);
+
     Ok(CompiledExpression {
         inputs,
         expr: conf.expr,
         output_segments,
+        slab,
+        compiled,
     })
 }
 
@@ -333,40 +353,41 @@ pub fn eval_and_write(
         variables.insert(name.clone(), f);
     }
 
-    // 2. Evaluate the fasteval expression, providing both user variables and
-    //    common math functions via the callback (ez_eval routes all identifiers —
-    //    including function calls — through the user-supplied closure).
+    // 2. Evaluate the pre-compiled fasteval bytecode, providing both user
+    //    variables and common math functions via the callback.
     let mut callback_errors: Vec<String> = vec![];
-    let eval_result = fasteval::ez_eval(&expr.expr, &mut |name: &str, args: Vec<f64>| {
-        // Zero-arg identifiers are variable lookups.
-        if args.is_empty() {
-            return variables.get(name).copied();
-        }
-
-        let op = match Operation::from_str(name) {
-            Ok(operation) => Some(operation),
-            Err(e) => {
-                callback_errors.push(e);
-                None
+    let eval_result = expr
+        .compiled
+        .eval(&expr.slab, &mut |name: &str, args: Vec<f64>| {
+            // Zero-arg identifiers are variable lookups.
+            if args.is_empty() {
+                return variables.get(name).copied();
             }
-        }?;
 
-        let result = match op.apply(args.as_slice()) {
-            Ok(result) => Some(result),
-            Err(e) => {
-                callback_errors.push(e);
-                None
-            }
-        }?;
+            let op = match Operation::from_str(name) {
+                Ok(operation) => Some(operation),
+                Err(e) => {
+                    callback_errors.push(e);
+                    None
+                }
+            }?;
 
-        Some(result)
-    })
-    .map_err(|e| {
-        OutputPluginError::OutputPluginFailed(format!(
-            "error evaluating expression '{}': {e}",
-            expr.expr
-        ))
-    });
+            let result = match op.apply(args.as_slice()) {
+                Ok(result) => Some(result),
+                Err(e) => {
+                    callback_errors.push(e);
+                    None
+                }
+            }?;
+
+            Some(result)
+        })
+        .map_err(|e| {
+            OutputPluginError::OutputPluginFailed(format!(
+                "error evaluating expression '{}': {e}",
+                expr.expr
+            ))
+        });
 
     // propagate the callback errors in priority over fasteval errors which would be less descriptive
     if !callback_errors.is_empty() {
