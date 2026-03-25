@@ -65,7 +65,7 @@ impl Operation {
             (Operation::Ln, [x]) => Ok(x.ln()),
             (Operation::Log2, [x]) => Ok(x.log2()),
             (Operation::Log10, [x]) => Ok(x.log10()),
-            (Operation::Log, [x, b]) => Ok(x.log(*b)),
+            (Operation::Log, [b, x]) => Ok(x.log(*b)),
             (Operation::Sin, [x]) => Ok(x.sin()),
             (Operation::Cos, [x]) => Ok(x.cos()),
             (Operation::Tan, [x]) => Ok(x.tan()),
@@ -88,7 +88,7 @@ impl Operation {
     pub fn describe(&self) -> String {
         let op = self.to_string();
         let args = match self {
-            Self::Log => "(x, b)",
+            Self::Log => "(b, x)",
             Self::Atan2 => "(y, x)",
             Self::Min | Self::Max => "(a, b)",
             Self::Pow => "(b, e)",
