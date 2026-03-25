@@ -1,15 +1,18 @@
 use super::CompassComponentError;
 use crate::plugin::{
     input::{
-        InputPlugin, InputPluginBuilder, default::{
+        default::{
             debug::DebugInputPluginBuilder, grid_search::GridSearchBuilder,
             inject::InjectPluginBuilder, load_balancer::LoadBalancerBuilder,
-        }
+        },
+        InputPlugin, InputPluginBuilder,
     },
     output::{
-        OutputPlugin, OutputPluginBuilder, default::{
-            eval::EvalOutputPluginBuilder, summary::SummaryOutputPluginBuilder, traversal::TraversalPluginBuilder, uuid::UUIDOutputPluginBuilder
-        }
+        default::{
+            eval::EvalOutputPluginBuilder, summary::SummaryOutputPluginBuilder,
+            traversal::TraversalPluginBuilder, uuid::UUIDOutputPluginBuilder,
+        },
+        OutputPlugin, OutputPluginBuilder,
     },
 };
 use inventory;
