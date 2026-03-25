@@ -137,3 +137,77 @@ impl OnnxModel {
         })
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::path::PathBuf;
+
+    use super::*;
+    use crate::model::prediction::prediction_model::PredictionModel;
+
+    fn model_path() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src")
+            .join("model")
+            .join("test")
+            .join("Toyota_Camry.onnx")
+    }
+
+    #[test]
+    fn test_onnx_model_predicts_energy_rate() {
+        let model = OnnxModel::new(&model_path(), EnergyRateUnit::GGPM, 1).unwrap();
+
+        // Predict energy rate at 50 mph, 0% grade
+        let (energy_rate, unit) = model.predict(&[50.0, 0.0]).unwrap();
+
+        assert_eq!(unit, EnergyRateUnit::GGPM);
+
+        // Energy rate should be between 28-32 mpg (i.e. 1/32 to 1/28 gallons per mile)
+        let expected_lower = 1.0 / 32.0;
+        let expected_upper = 1.0 / 28.0;
+        assert!(
+            energy_rate >= expected_lower && energy_rate <= expected_upper,
+            "energy_rate {} not in expected range [{}, {}]",
+            energy_rate,
+            expected_lower,
+            expected_upper,
+        );
+    }
+
+    #[test]
+    fn test_onnx_model_uphill_uses_more_energy() {
+        let model = OnnxModel::new(&model_path(), EnergyRateUnit::GGPM, 1).unwrap();
+
+        let (flat_rate, _) = model.predict(&[50.0, 0.0]).unwrap();
+        let (uphill_rate, _) = model.predict(&[50.0, 0.05]).unwrap();
+
+        assert!(
+            uphill_rate > flat_rate,
+            "expected uphill rate {} > flat rate {}",
+            uphill_rate,
+            flat_rate,
+        );
+    }
+
+    #[test]
+    fn test_onnx_model_pool_size() {
+        let model = OnnxModel::new(&model_path(), EnergyRateUnit::GGPM, 4).unwrap();
+        assert_eq!(model.sessions.len(), 4);
+
+        // Should still produce the same result
+        let (energy_rate, _) = model.predict(&[50.0, 0.0]).unwrap();
+        assert!(energy_rate > 0.0);
+    }
+
+    #[test]
+    fn test_onnx_model_rejects_non_onnx_file() {
+        let bad_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src")
+            .join("model")
+            .join("test")
+            .join("Toyota_Camry.bin");
+
+        let result = OnnxModel::new(&bad_path, EnergyRateUnit::GGPM, 1);
+        assert!(result.is_err());
+    }
+}
