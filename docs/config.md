@@ -598,6 +598,93 @@ Both the `route` and the `tree` key are optional and if omitted, the plugin will
 - "wkt": outputs a LINESTRING for a route, or a MULTILINESTRING for a tree
 - "geo_json": annotated geometry data as a FeatureCollection of LineStrings with properties assigned from traversal metrics
 
+### Eval
+
+Evaluate arbitrary arithmetic expressions using data expected on the output.
+
+Each expression takes inputs, defined as a mapping from [JSONPath](https://goessner.net/articles/JsonPath/) (on the right) to a variable name (on the left) to use. The variables, constants, infix operators and mathematical operations can be used in the `expr`. The result of the expression is stored on the `output` JSONPath. Under-the-hood, we use [fasteval](https://docs.rs/fasteval/latest/fasteval/) for expression evaluation; see the docs for any restrictions on variable naming.
+
+For example, to estimate the cost per mile of a trip, we can take the `route.cost.total_cost` and divide it by the `route.traversal_summary.trip_time.value`. Here we assume the time is in minutes:
+
+```toml
+[[plugin.output_plugins]]
+type = "eval"
+expressions = [{
+  inputs = {
+    cost = "$.route.cost.total_cost",
+    time = "$.route.traversal_summary.trip_time.value"
+  },
+  expr = "cost / (time / 60.0)",
+  output = "$.route.cost.cost_per_hour"
+}]
+on_failure.type = "ignore"
+```
+
+Expressions can be chained to store incremental (and dependent) terms. Here, distance is assumed in miles:
+
+```toml
+[[plugin.output_plugins]]
+type = "eval"
+expressions = [{
+  inputs = {
+    cost = "$.route.cost.total_cost",
+    time = "$.route.traversal_summary.trip_time.value"
+  },
+  expr = "cost / (time / 60.0)",
+  output = "$.route.cost.cost_per_hour"
+}, {
+  inputs = {
+    cph = "$.route.cost.cost_per_hour",
+    inputs = {
+      cost = "$.route.cost.total_cost",
+      dist = "$.route.traversal_summary.trip_distance.value"
+    },
+    expr = "cost / (dist * 1.609)",
+    output = "$.route.cost.cost_per_km"
+  }
+}]
+on_failure.type = "ignore"
+```
+
+#### Failure modes
+
+If the evaluation fails, there are three behaviors:
+```toml
+# do nothing
+on_failure.type = "ignore" 
+# raise an error to the plugin
+on_failure.type = "interrupt" 
+# write the error to a location on the output
+on_failure = { type = "record", path = "$.error" } 
+```
+
+#### Operations
+
+The Eval plugin supports +,-,*,/ and the following math operations. Variable names used below provided as an example but not required, the functions accept any valid variable name or math constant.
+
+Operation | Arguments | Example
+--- | --- | ---
+Sqrt  | x    | sqrt(x)  
+Abs   | x    | abs(x)
+Floor | x    | floor(x)
+Ceil  | x    | ceil(x)
+Round | x    | round(x)
+Exp   | x    | exp(x)
+Ln    | x    | ln(x)
+Log2  | x    | log2(x)
+Log10 | x    | log10(x)
+Log   | b, x | log(b,x)
+Sin   | x    | sin(x)
+Cos   | x    | cos(x)
+Tan   | x    | tan(x)
+Asin  | x    | asin(x)
+Acos  | x    | acos(x)
+Atan  | x    | atan(x)
+Atan2 | y, x | atan2(y,x)
+Min   | a, b | min(a,b)
+Max   | a, b | max(a,b)
+Pow   | b, e | pow(b,e)
+
 ## System
 
 The system section declares application-level parameters.
