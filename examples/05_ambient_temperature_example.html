@@ -16,37 +16,40 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-
-  
-  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=9c3e77be" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
-  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=30a733bc"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
     <script>let toggleHintShow = 'Click to show';</script>
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
@@ -64,6 +67,7 @@
     <link rel="prev" title="Charging Stations Example" href="04_charging_stations_example.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="python"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -79,19 +83,8 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-primary-sidebar-checkbox"/>
-  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-secondary-sidebar-checkbox"/>
-  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../search.html"
       method="get">
@@ -99,7 +92,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search this book..."
          aria-label="Search this book..."
          autocomplete="off"
@@ -107,8 +99,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -124,7 +116,8 @@
       
       
       
-      <div class="bd-sidebar-primary bd-sidebar">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -154,21 +147,17 @@
     
     
     <img src="../_static/routeelogo.png" class="logo__image only-light" alt="RouteE Compass - Home"/>
-    <script>document.write(`<img src="../_static/routeelogo.png" class="logo__image only-dark" alt="RouteE Compass - Home"/>`);</script>
+    <img src="../_static/routeelogo.png" class="logo__image only-dark pst-js-only" alt="RouteE Compass - Home"/>
   
   
 </a></div>
         <div class="sidebar-primary-item">
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script></div>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         
@@ -213,9 +202,14 @@
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
@@ -345,7 +339,7 @@
 
 
 <button onclick="toggleFullScreen()"
-  class="btn btn-sm btn-fullscreen-button"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
   title="Fullscreen mode"
   data-bs-placement="bottom" data-bs-toggle="tooltip"
 >
@@ -359,25 +353,17 @@
 
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-  </button>
-`);
-</script>
-<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
 </button>
 </div></div>
@@ -443,11 +429,11 @@ that includes a traversal model that injects ambient temperature.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>graph edge list 0: /home/runner/work/routee-compass/routee-compass/docs/examples/denver_co/edges-compass.csv.gz: 48526it [00:00, 1692576.75it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>graph edge list 0: /home/runner/work/routee-compass/routee-compass/docs/examples/denver_co/edges-compass.csv.gz: 48601it [00:00, 1732082.12it/s]
 
 
-building adjacencies: 100%|██████████| 48526/48526 [00:00&lt;00:00, 3715495.25it/s]
-building adjacencies: 100%|██████████| 48526/48526 [00:00&lt;00:00, 3708977.00it/s]
+building adjacencies: 100%|██████████| 48601/48601 [00:00&lt;00:00, 4034414.50it/s]
+building adjacencies: 100%|██████████| 48601/48601 [00:00&lt;00:00, 4029046.75it/s]
 </pre></div>
 </div>
 </div>
@@ -483,17 +469,17 @@ mild ambient temperature considerations and search for the shortest time route.<
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Ambient Temperature: 72 F, Trip Energy: 2.028 kWh
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Ambient Temperature: 72 F, Trip Energy: 2.05 kWh
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 2816.48it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 2695.13it/s]
 
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1074113.88it/s]
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 999001.00it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.18it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.94it/s]
 </pre></div>
 </div>
 </div>
@@ -539,83 +525,82 @@ with different temperature settings.</p>
 </div>
 <div class="cell_output docutils container">
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 302480.34it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 587199.06it/s]
 
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1366120.25it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.05it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 360360.38it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2169197.25it/s]
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1996008.00it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.72it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.72it/s]
 
 
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 372439.47it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 616142.94it/s]
 
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1536098.38it/s]
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1883239.12it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.63it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.97it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 557724.50it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2123142.25it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.50it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 623830.31it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2173913.00it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.84it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 501504.50it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2217294.75it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.60it/s]
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Ambient Temperature: 0 F, Trip Energy: 2.902 kWh
-Ambient Temperature: 15 F, Trip Energy: 2.89 kWh
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Ambient Temperature: 0 F, Trip Energy: 2.901 kWh
+Ambient Temperature: 15 F, Trip Energy: 2.889 kWh
 Ambient Temperature: 32 F, Trip Energy: 2.601 kWh
-Ambient Temperature: 50 F, Trip Energy: 2.178 kWh
-Ambient Temperature: 72 F, Trip Energy: 2.028 kWh
+Ambient Temperature: 50 F, Trip Energy: 2.188 kWh
+Ambient Temperature: 72 F, Trip Energy: 2.05 kWh
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Ambient Temperature: 90 F, Trip Energy: 2.051 kWh
+Ambient Temperature: 110 F, Trip Energy: 2.088 kWh
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 349040.16it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 590667.50it/s]
 
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1751313.50it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.60it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 366972.47it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2169197.25it/s]
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1996008.00it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.42it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.56it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 601322.88it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1879699.25it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.30it/s]
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 316856.78it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2079002.25it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.04it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 303490.16it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2127659.50it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.58it/s]
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Ambient Temperature: 90 F, Trip Energy: 2.03 kWh
-Ambient Temperature: 110 F, Trip Energy: 2.07 kWh
-</pre></div>
-</div>
-<img alt="../_images/6f5b48e3760d09e829a2a6cff6a486dacc410a010b440296168f4ed0ca170cae.png" src="../_images/6f5b48e3760d09e829a2a6cff6a486dacc410a010b440296168f4ed0ca170cae.png" />
+<img alt="../_images/ddb53e073f6cecfc93b35d828113e64f0d7d640fa11183732d6b136f9b69b79f.png" src="../_images/ddb53e073f6cecfc93b35d828113e64f0d7d640fa11183732d6b136f9b69b79f.png" />
 </div>
 </div>
 <p>Next, let's take a look at the 2022 Tesla Model 3 and the 2020 Chevy Bolt and compare their energy consumption across the same range of ambient temperatures.</p>
@@ -669,157 +654,159 @@ Ambient Temperature: 110 F, Trip Energy: 2.07 kWh
 </div>
 </div>
 <div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 0 F, Trip Energy: 2.873 kWh
+Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 15 F, Trip Energy: 2.547 kWh
+</pre></div>
+</div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 198019.81it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 211461.20it/s]
 
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1751313.50it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 26.80it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 332778.69it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2079002.25it/s]
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1160092.88it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.35it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.10it/s]
 
 
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 297973.78it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1109877.88it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.72it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 340599.44it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 594177.06it/s]
 
 applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1956947.12it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.64it/s]
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 0 F, Trip Energy: 2.871 kWh
-Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 15 F, Trip Energy: 2.547 kWh
-Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 32 F, Trip Energy: 2.091 kWh
-Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 50 F, Trip Energy: 1.924 kWh
-Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 72 F, Trip Energy: 1.906 kWh
-Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 90 F, Trip Energy: 1.907 kWh
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.56it/s]
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 407331.97it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1218026.75it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.98it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 330578.50it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 616142.94it/s]
 
 applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2169197.25it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.62it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.50it/s]
 
 
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 309981.41it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 612369.88it/s]
 
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2169197.25it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.15it/s]
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1386962.62it/s]
 
 
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 383877.16it/s]
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.07it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 679347.81it/s]
 
 applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2320185.75it/s]
 
 
 
-search: 100%|█████��████| 1/1 [00:00&lt;00:00, 27.68it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.10it/s]
 
 
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 345303.84it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 627746.38it/s]
 
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1814882.00it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.42it/s]
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2000000.00it/s]
 
 
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 321957.50it/s]
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.47it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 616142.94it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2217294.75it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.75it/s]
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 110 F, Trip Energy: 1.976 kWh
-Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 0 F, Trip Energy: 2.965 kWh
-Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 15 F, Trip Energy: 2.939 kWh
-Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 32 F, Trip Energy: 2.562 kWh
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 32 F, Trip Energy: 2.088 kWh
+Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 50 F, Trip Energy: 1.921 kWh
+Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 72 F, Trip Energy: 1.904 kWh
+Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 90 F, Trip Energy: 1.904 kWh
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1468428.75it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 527983.12it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2079002.25it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.03it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.97it/s]
 
 
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 297000.28it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 619578.69it/s]
 
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1996008.00it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.37it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 273522.97it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2123142.25it/s]
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2212389.50it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.66it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.60it/s]
 
 
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 360360.38it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 489236.78it/s]
 
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2036660.00it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.81it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 294464.06it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1996008.00it/s]
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2127659.50it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 27.79it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.14it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 400801.59it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2079002.25it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.05it/s]
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 50 F, Trip Energy: 2.043 kWh
-Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 72 F, Trip Energy: 1.83 kWh
-Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 90 F, Trip Energy: 1.831 kWh
-Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 110 F, Trip Energy: 1.882 kWh
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 110 F, Trip Energy: 1.973 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 0 F, Trip Energy: 2.966 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 15 F, Trip Energy: 2.94 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 32 F, Trip Energy: 2.562 kWh
 </pre></div>
 </div>
-<img alt="../_images/51894dd959d4a380950aaa49bcd0ff0d1b5ca7a81b027706d5397770738caf91.png" src="../_images/51894dd959d4a380950aaa49bcd0ff0d1b5ca7a81b027706d5397770738caf91.png" />
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 50 F, Trip Energy: 2.039 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 72 F, Trip Energy: 1.827 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 90 F, Trip Energy: 1.828 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 110 F, Trip Energy: 1.879 kWh
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 337154.41it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1248439.50it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.50it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 445632.81it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2040816.38it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.85it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 580383.06it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2217294.75it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.96it/s]
+</pre></div>
+</div>
+<img alt="../_images/ddf2c20707aa10595144309a548f740a8678478d88964a4495d55240481f3d55.png" src="../_images/ddf2c20707aa10595144309a548f740a8678478d88964a4495d55240481f3d55.png" />
 </div>
 </div>
 </section>
@@ -880,14 +867,16 @@ Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 110 F, Trip E
             
             
               
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
-  <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
     <i class="fa-solid fa-list"></i> Contents
   </div>
-  <nav class="bd-toc-nav page-toc">
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-route-with-mild-ambient-temperature">Basic Route With Mild Ambient Temperature</a></li>
 </ul>
@@ -938,8 +927,8 @@ By National Laboratory of the Rockies
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
   </footer>

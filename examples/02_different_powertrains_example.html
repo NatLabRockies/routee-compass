@@ -16,37 +16,40 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-
-  
-  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=9c3e77be" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
-  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=30a733bc"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
     <script>let toggleHintShow = 'Click to show';</script>
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
@@ -66,6 +69,7 @@
     <link rel="prev" title="OpenStreetMap Example" href="01_open_street_maps_example.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="python"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -81,19 +85,8 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-primary-sidebar-checkbox"/>
-  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-secondary-sidebar-checkbox"/>
-  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../search.html"
       method="get">
@@ -101,7 +94,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search this book..."
          aria-label="Search this book..."
          autocomplete="off"
@@ -109,8 +101,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -126,7 +118,8 @@
       
       
       
-      <div class="bd-sidebar-primary bd-sidebar">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -156,21 +149,17 @@
     
     
     <img src="../_static/routeelogo.png" class="logo__image only-light" alt="RouteE Compass - Home"/>
-    <script>document.write(`<img src="../_static/routeelogo.png" class="logo__image only-dark" alt="RouteE Compass - Home"/>`);</script>
+    <img src="../_static/routeelogo.png" class="logo__image only-dark pst-js-only" alt="RouteE Compass - Home"/>
   
   
 </a></div>
         <div class="sidebar-primary-item">
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script></div>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         
@@ -215,9 +204,14 @@
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
@@ -347,7 +341,7 @@
 
 
 <button onclick="toggleFullScreen()"
-  class="btn btn-sm btn-fullscreen-button"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
   title="Fullscreen mode"
   data-bs-placement="bottom" data-bs-toggle="tooltip"
 >
@@ -361,25 +355,17 @@
 
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-  </button>
-`);
-</script>
-<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
 </button>
 </div></div>
@@ -444,11 +430,11 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>graph edge list 0: /home/runner/work/routee-compass/routee-compass/docs/examples/denver_co/edges-compass.csv.gz: 48526it [00:00, 1685102.50it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>graph edge list 0: /home/runner/work/routee-compass/routee-compass/docs/examples/denver_co/edges-compass.csv.gz: 48601it [00:00, 1710982.25it/s]
 
 
-building adjacencies: 100%|██████████| 48526/48526 [00:00&lt;00:00, 4113541.25it/s]
-building adjacencies: 100%|██████████| 48526/48526 [00:00&lt;00:00, 4106583.50it/s]
+building adjacencies: 100%|██████████| 48601/48601 [00:00&lt;00:00, 4332021.00it/s]
+building adjacencies: 100%|██████████| 48601/48601 [00:00&lt;00:00, 4326017.50it/s]
 </pre></div>
 </div>
 </div>
@@ -596,13 +582,13 @@ By default, the PHEV will run using battery energy exclusively (starting at <cod
 </div>
 <div class="cell_output docutils container">
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 2289.25it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 2146.78it/s]
 
-applying input plugin 2: 100%|██████████| 6/6 [00:00&lt;00:00, 100120.15it/s]
+applying input plugin 2: 100%|██████████| 6/6 [00:00&lt;00:00, 100349.55it/s]
 
 
 
-search: 100%|██████████| 6/6 [00:00&lt;00:00, 66.57it/s]
+search: 100%|██████████| 6/6 [00:00&lt;00:00, 66.46it/s]
 </pre></div>
 </div>
 </div>
@@ -615,84 +601,84 @@ search: 100%|██████████| 6/6 [00:00&lt;00:00, 66.57it/s]
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;trip_energy_electric&#39;: {&#39;type&#39;: &#39;energy&#39;,
-  &#39;initial&#39;: 0.0,
-  &#39;accumulator&#39;: True,
-  &#39;output_unit&#39;: &#39;kilowatt_hours&#39;,
-  &#39;index&#39;: 0,
-  &#39;name&#39;: &#39;trip_energy_electric&#39;},
- &#39;trip_elevation_loss&#39;: {&#39;type&#39;: &#39;distance&#39;,
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;trip_elevation_gain&#39;: {&#39;type&#39;: &#39;distance&#39;,
   &#39;initial&#39;: 0.0,
   &#39;accumulator&#39;: True,
   &#39;output_unit&#39;: &#39;miles&#39;,
-  &#39;index&#39;: 1,
-  &#39;name&#39;: &#39;trip_elevation_loss&#39;},
- &#39;edge_turn_delay&#39;: {&#39;type&#39;: &#39;time&#39;,
-  &#39;initial&#39;: 0.0,
-  &#39;accumulator&#39;: False,
-  &#39;output_unit&#39;: &#39;seconds&#39;,
-  &#39;index&#39;: 2,
-  &#39;name&#39;: &#39;edge_turn_delay&#39;},
+  &#39;index&#39;: 0,
+  &#39;name&#39;: &#39;trip_elevation_gain&#39;},
  &#39;trip_distance&#39;: {&#39;type&#39;: &#39;distance&#39;,
   &#39;initial&#39;: 0.0,
   &#39;accumulator&#39;: True,
   &#39;output_unit&#39;: &#39;miles&#39;,
-  &#39;index&#39;: 3,
+  &#39;index&#39;: 1,
   &#39;name&#39;: &#39;trip_distance&#39;},
- &#39;edge_time&#39;: {&#39;type&#39;: &#39;time&#39;,
-  &#39;initial&#39;: 0.0,
-  &#39;accumulator&#39;: False,
-  &#39;output_unit&#39;: None,
-  &#39;index&#39;: 4,
-  &#39;name&#39;: &#39;edge_time&#39;},
- &#39;trip_time&#39;: {&#39;type&#39;: &#39;time&#39;,
-  &#39;initial&#39;: 0.0,
-  &#39;accumulator&#39;: True,
-  &#39;output_unit&#39;: None,
-  &#39;index&#39;: 5,
-  &#39;name&#39;: &#39;trip_time&#39;},
- &#39;edge_grade&#39;: {&#39;type&#39;: &#39;ratio&#39;,
-  &#39;initial&#39;: 0.0,
-  &#39;accumulator&#39;: False,
-  &#39;output_unit&#39;: &#39;decimal&#39;,
-  &#39;index&#39;: 6,
-  &#39;name&#39;: &#39;edge_grade&#39;},
- &#39;battery_capacity&#39;: {&#39;type&#39;: &#39;energy&#39;,
-  &#39;initial&#39;: 216000000.0,
-  &#39;accumulator&#39;: False,
-  &#39;output_unit&#39;: &#39;kilowatt_hours&#39;,
-  &#39;index&#39;: 7,
-  &#39;name&#39;: &#39;battery_capacity&#39;},
- &#39;trip_elevation_gain&#39;: {&#39;type&#39;: &#39;distance&#39;,
-  &#39;initial&#39;: 0.0,
-  &#39;accumulator&#39;: True,
-  &#39;output_unit&#39;: &#39;miles&#39;,
-  &#39;index&#39;: 8,
-  &#39;name&#39;: &#39;trip_elevation_gain&#39;},
- &#39;trip_soc&#39;: {&#39;type&#39;: &#39;ratio&#39;,
-  &#39;initial&#39;: 1.0,
-  &#39;accumulator&#39;: True,
-  &#39;output_unit&#39;: &#39;decimal&#39;,
-  &#39;index&#39;: 9,
-  &#39;name&#39;: &#39;trip_soc&#39;},
- &#39;edge_distance&#39;: {&#39;type&#39;: &#39;distance&#39;,
-  &#39;initial&#39;: 0.0,
-  &#39;accumulator&#39;: False,
-  &#39;output_unit&#39;: &#39;miles&#39;,
-  &#39;index&#39;: 10,
-  &#39;name&#39;: &#39;edge_distance&#39;},
  &#39;edge_speed&#39;: {&#39;type&#39;: &#39;speed&#39;,
   &#39;initial&#39;: 0.0,
   &#39;accumulator&#39;: False,
   &#39;output_unit&#39;: &#39;miles/hour&#39;,
-  &#39;index&#39;: 11,
+  &#39;index&#39;: 2,
   &#39;name&#39;: &#39;edge_speed&#39;},
+ &#39;edge_turn_delay&#39;: {&#39;type&#39;: &#39;time&#39;,
+  &#39;initial&#39;: 0.0,
+  &#39;accumulator&#39;: False,
+  &#39;output_unit&#39;: &#39;seconds&#39;,
+  &#39;index&#39;: 3,
+  &#39;name&#39;: &#39;edge_turn_delay&#39;},
+ &#39;battery_capacity&#39;: {&#39;type&#39;: &#39;energy&#39;,
+  &#39;initial&#39;: 216000000.0,
+  &#39;accumulator&#39;: False,
+  &#39;output_unit&#39;: &#39;kilowatt_hours&#39;,
+  &#39;index&#39;: 4,
+  &#39;name&#39;: &#39;battery_capacity&#39;},
+ &#39;trip_time&#39;: {&#39;type&#39;: &#39;time&#39;,
+  &#39;initial&#39;: 0.0,
+  &#39;accumulator&#39;: True,
+  &#39;output_unit&#39;: &#39;minutes&#39;,
+  &#39;index&#39;: 5,
+  &#39;name&#39;: &#39;trip_time&#39;},
+ &#39;edge_time&#39;: {&#39;type&#39;: &#39;time&#39;,
+  &#39;initial&#39;: 0.0,
+  &#39;accumulator&#39;: False,
+  &#39;output_unit&#39;: &#39;minutes&#39;,
+  &#39;index&#39;: 6,
+  &#39;name&#39;: &#39;edge_time&#39;},
+ &#39;trip_elevation_loss&#39;: {&#39;type&#39;: &#39;distance&#39;,
+  &#39;initial&#39;: 0.0,
+  &#39;accumulator&#39;: True,
+  &#39;output_unit&#39;: &#39;miles&#39;,
+  &#39;index&#39;: 7,
+  &#39;name&#39;: &#39;trip_elevation_loss&#39;},
+ &#39;trip_soc&#39;: {&#39;type&#39;: &#39;ratio&#39;,
+  &#39;initial&#39;: 1.0,
+  &#39;accumulator&#39;: True,
+  &#39;output_unit&#39;: &#39;decimal&#39;,
+  &#39;index&#39;: 8,
+  &#39;name&#39;: &#39;trip_soc&#39;},
+ &#39;edge_grade&#39;: {&#39;type&#39;: &#39;ratio&#39;,
+  &#39;initial&#39;: 0.0,
+  &#39;accumulator&#39;: False,
+  &#39;output_unit&#39;: &#39;decimal&#39;,
+  &#39;index&#39;: 9,
+  &#39;name&#39;: &#39;edge_grade&#39;},
  &#39;edge_energy_electric&#39;: {&#39;type&#39;: &#39;energy&#39;,
   &#39;initial&#39;: 0.0,
   &#39;accumulator&#39;: False,
   &#39;output_unit&#39;: &#39;kilowatt_hours&#39;,
+  &#39;index&#39;: 10,
+  &#39;name&#39;: &#39;edge_energy_electric&#39;},
+ &#39;trip_energy_electric&#39;: {&#39;type&#39;: &#39;energy&#39;,
+  &#39;initial&#39;: 0.0,
+  &#39;accumulator&#39;: True,
+  &#39;output_unit&#39;: &#39;kilowatt_hours&#39;,
+  &#39;index&#39;: 11,
+  &#39;name&#39;: &#39;trip_energy_electric&#39;},
+ &#39;edge_distance&#39;: {&#39;type&#39;: &#39;distance&#39;,
+  &#39;initial&#39;: 0.0,
+  &#39;accumulator&#39;: False,
+  &#39;output_unit&#39;: &#39;miles&#39;,
   &#39;index&#39;: 12,
-  &#39;name&#39;: &#39;edge_energy_electric&#39;}}
+  &#39;name&#39;: &#39;edge_distance&#39;}}
 </pre></div>
 </div>
 </div>
@@ -761,7 +747,7 @@ We'll use gge as our unit and convert the electrical energy using a factor of 33
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Axes: xlabel=&#39;route.traversal_summary.trip_time.value&#39;, ylabel=&#39;gge&#39;&gt;
 </pre></div>
 </div>
-<img alt="../_images/22842e7ff06304bbf201770736c2f133a96abef9daf5072a5695891c37754388.png" src="../_images/22842e7ff06304bbf201770736c2f133a96abef9daf5072a5695891c37754388.png" />
+<img alt="../_images/1f2abfaa6c838f976756f94d642f469d54e302f95288dfc2ed57dce442779114.png" src="../_images/1f2abfaa6c838f976756f94d642f469d54e302f95288dfc2ed57dce442779114.png" />
 </div>
 </div>
 <p>Here, we see that the BEV and the PHEV use much less energy than the ICE alternative but all powertrains have a route that uses less energy and more time.</p>
@@ -788,7 +774,7 @@ We'll use gge as our unit and convert the electrical energy using a factor of 33
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Axes: xlabel=&#39;route.traversal_summary.trip_time.value&#39;, ylabel=&#39;route.cost.total_cost&#39;&gt;
 </pre></div>
 </div>
-<img alt="../_images/d60c123ae6abf21c7a5e616430aae4c9cfbacb0cf65b9f06dbb6ed37ad64c730.png" src="../_images/d60c123ae6abf21c7a5e616430aae4c9cfbacb0cf65b9f06dbb6ed37ad64c730.png" />
+<img alt="../_images/9e6a78f9d22ad0c3dab9869c5685fea846db4f8619f53036418eb4c6ad1c7ee8.png" src="../_images/9e6a78f9d22ad0c3dab9869c5685fea846db4f8619f53036418eb4c6ad1c7ee8.png" />
 </div>
 </div>
 <p>Here, we notice that the ICE vehicle has the lowest costs and all powertrains save money on the optimal energy route.
@@ -804,7 +790,7 @@ This would likely change based on our cost assumptions (for example if we assume
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Axes: &gt;
 </pre></div>
 </div>
-<img alt="../_images/8f972a8edd529a52e4e6a89168b008dda3d9fe52e501af7c1c2e45bfae629217.png" src="../_images/8f972a8edd529a52e4e6a89168b008dda3d9fe52e501af7c1c2e45bfae629217.png" />
+<img alt="../_images/8eb214494c5c681fb3f85519e2af45da5f5171f639bf101ffc477ed4eeb05a55.png" src="../_images/8eb214494c5c681fb3f85519e2af45da5f5171f639bf101ffc477ed4eeb05a55.png" />
 </div>
 </div>
 </section>
@@ -865,14 +851,16 @@ This would likely change based on our cost assumptions (for example if we assume
             
             
               
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
-  <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
     <i class="fa-solid fa-list"></i> Contents
   </div>
-  <nav class="bd-toc-nav page-toc">
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running">Running</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#load-application">Load Application</a></li>
@@ -927,8 +915,8 @@ By National Laboratory of the Rockies
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
   </footer>
