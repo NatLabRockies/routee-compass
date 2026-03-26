@@ -620,7 +620,7 @@ expressions = [{
 on_failure.type = "ignore"
 ```
 
-Expressions can be chained to store incremental (and dependent) terms. Here, distance is assumed in miles:
+Expressions can be chained to store incremental (and dependent) terms. Here, the recorded distance is assumed in miles:
 
 ```toml
 [[plugin.output_plugins]]
@@ -634,14 +634,11 @@ expressions = [{
   output = "$.route.cost.cost_per_hour"
 }, {
   inputs = {
-    cph = "$.route.cost.cost_per_hour",
-    inputs = {
-      cost = "$.route.cost.total_cost",
-      dist = "$.route.traversal_summary.trip_distance.value"
-    },
-    expr = "cost / (dist * 1.609)",
-    output = "$.route.cost.cost_per_km"
-  }
+    cost = "$.route.cost.total_cost",
+    dist = "$.route.traversal_summary.trip_distance.value"
+  },
+  expr = "cost / (dist * 1.609)",
+  output = "$.route.cost.cost_per_km"
 }]
 on_failure.type = "ignore"
 ```
