@@ -555,6 +555,29 @@ mapping = { "walk" = 1, "bike" = 10, "drive" = 100 }
 
 Here are the default output plugins that are provided:
 
+### Summary
+
+Append a summary from the run directly from the search result. Adds:
+
+```json
+{
+  "search_executed_time": "ISO 8601 time",
+  "search_runtime": "hh:mm:ss",
+  "route_edges": "integer",
+  "tree_size_count": "integer",
+  "iterations": "integer",
+  "terminated": "if terminated early, a message explaining why",
+}
+```
+
+Simply add this type to your list of output plugins. Optionally, include memory estimation (experimental):
+
+```toml
+[[plugin.output_plugins]]
+type = "summary"
+estimate_memory_consumption = false
+```
+
 ### Traversal
 
 A plugin that appends various items to the result. It leverages the mapping model for route and tree geometry generation.
