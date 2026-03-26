@@ -45,6 +45,7 @@ pub struct ExpressionConfig {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "snake_case", tag = "type")]
 pub enum OnFailureBehavior {
     /// interrupt the plugin on failure, returning an Err from the plugin.
     Interrupt,
