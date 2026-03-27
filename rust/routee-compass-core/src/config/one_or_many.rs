@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use serde::de::{self, Deserializer, MapAccess, SeqAccess, Visitor};
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::marker::PhantomData;
 
@@ -203,7 +203,10 @@ mod tests {
         let err = serde_json::from_str::<OneOrMany<Item>>(json)
             .unwrap_err()
             .to_string();
-        assert!(err.contains("expected u32"), "inner error message not captured");
+        assert!(
+            err.contains("expected u32"),
+            "inner error message not captured"
+        );
     }
 
     #[test]
