@@ -1,10 +1,10 @@
 use serde::de::{self, Deserializer, MapAccess, SeqAccess, Visitor};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 use std::fmt;
 use std::marker::PhantomData;
 
 /// Helper type that can deserialize either a single item or a vector of items
-#[derive(Serialize, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub enum OneOrMany<T: Clone> {
     /// first attempt: this is a Vector of T
     Many(Vec<T>),
@@ -65,6 +65,15 @@ impl<'de, T: Clone + Deserialize<'de>> Visitor<'de> for OneOrManyVisitor<T> {
 impl<'de, T: Clone + Deserialize<'de>> Deserialize<'de> for OneOrMany<T> {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         deserializer.deserialize_any(OneOrManyVisitor(PhantomData))
+    }
+}
+
+impl<T: Clone + Serialize> Serialize for OneOrMany<T> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        match self {
+            OneOrMany::One(item) => item.serialize(serializer),
+            OneOrMany::Many(items) => items.serialize(serializer),
+        }
     }
 }
 
@@ -181,6 +190,26 @@ mod tests {
             OneOrMany::Many(items) => assert!(items.is_empty()),
             OneOrMany::One(_) => panic!("expected Many"),
         }
+    }
+
+    #[test]
+    fn test_serialize_one_roundtrip() {
+        let item = Item::new("foo", 42);
+        let original = OneOrMany::One(item.clone());
+        let json = serde_json::to_string(&original).unwrap();
+        assert_eq!(json, r#"{"name":"foo","value":42}"#);
+        let roundtripped: OneOrMany<Item> = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped.into_vec(), vec![item]);
+    }
+
+    #[test]
+    fn test_serialize_many_roundtrip() {
+        let items = vec![Item::new("foo", 1), Item::new("bar", 2)];
+        let original = OneOrMany::Many(items.clone());
+        let json = serde_json::to_string(&original).unwrap();
+        assert_eq!(json, r#"[{"name":"foo","value":1},{"name":"bar","value":2}]"#);
+        let roundtripped: OneOrMany<Item> = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped.into_vec(), items);
     }
 
     #[test]
