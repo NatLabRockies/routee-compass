@@ -207,7 +207,10 @@ mod tests {
         let items = vec![Item::new("foo", 1), Item::new("bar", 2)];
         let original = OneOrMany::Many(items.clone());
         let json = serde_json::to_string(&original).unwrap();
-        assert_eq!(json, r#"[{"name":"foo","value":1},{"name":"bar","value":2}]"#);
+        assert_eq!(
+            json,
+            r#"[{"name":"foo","value":1},{"name":"bar","value":2}]"#
+        );
         let roundtripped: OneOrMany<Item> = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped.into_vec(), items);
     }
