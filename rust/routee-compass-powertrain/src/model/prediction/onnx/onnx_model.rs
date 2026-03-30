@@ -1,5 +1,5 @@
 use std::path::Path;
-use std::sync::{Condvar, Mutex};
+use std::sync::Mutex;
 
 use crate::model::prediction::prediction_model::PredictionModel;
 
@@ -7,23 +7,18 @@ use ndarray::Array2;
 use ort::session::Session;
 use routee_compass_core::model::{traversal::TraversalModelError, unit::EnergyRateUnit};
 
-/// A prediction model backed by a pool of ONNX Runtime sessions.
+/// A prediction model backed by a single ONNX Runtime session behind a [`Mutex`].
 ///
 /// Because [`Session::run`] requires `&mut self` while the [`PredictionModel`] trait requires
-/// `Send + Sync` with an immutable `&self` receiver, sessions are managed in a pool.
-/// When constructed with `pool_size > 1`, multiple sessions are loaded from the same model file
-/// and [`predict`](PredictionModel::predict) acquires whichever session is available first,
-/// enabling parallel inference across threads.
+/// `Send + Sync` with an immutable `&self` receiver, the session is wrapped in a [`Mutex`].
 ///
-/// The pool uses a [`Condvar`] so that callers waiting for a session are woken as soon as any
-/// session is returned, rather than all contending on a single mutex.
-///
-/// When used as the underlying model for
-/// [`InterpolationModel`](crate::model::prediction::interpolation::InterpolationModel),
-/// a pool size of 1 is sufficient since grid building is sequential.
+/// This model is currently only used as a feeder to build the interpolation grid in
+/// [`InterpolationModel`](crate::model::prediction::interpolation::InterpolationModel).
+/// It is not intended for direct use in parallel search. If used with a large number of
+/// threads, the single mutex-guarded session will serialize all inference calls and may
+/// cause performance issues.
 pub struct OnnxModel {
-    pool: Mutex<Vec<Session>>,
-    pool_notifier: Condvar,
+    session: Mutex<Session>,
     energy_rate_unit: EnergyRateUnit,
 }
 
@@ -48,45 +43,37 @@ impl PredictionModel for OnnxModel {
             ))
         })?;
 
-        // Take a session from the pool, blocking until one is available.
-        // Run inference and extract the scalar result while the session is held,
-        // then return the session to the pool before returning.
-        let mut session = self.take_session()?;
+        let mut session = self.session.lock().map_err(|e| {
+            TraversalModelError::TraversalModelFailure(format!(
+                "Failed to lock ONNX session: {}",
+                e
+            ))
+        })?;
 
-        let energy_rate = (|| -> Result<f64, TraversalModelError> {
-            let outputs = session
-                .run(ort::inputs!["input" => input_tensor])
-                .map_err(|e| {
-                    TraversalModelError::TraversalModelFailure(format!(
-                        "Failed to run ONNX model: {}",
-                        e
-                    ))
-                })?;
-
-            let (_output_name, output_tensor) = outputs.iter().next().ok_or_else(|| {
-                TraversalModelError::TraversalModelFailure(
-                    "ONNX model returned no outputs".to_string(),
-                )
-            })?;
-            let tensor_data = output_tensor.try_extract_tensor::<f32>().map_err(|e| {
+        let outputs = session
+            .run(ort::inputs!["input" => input_tensor])
+            .map_err(|e| {
                 TraversalModelError::TraversalModelFailure(format!(
-                    "Failed to extract output tensor: {}",
+                    "Failed to run ONNX model: {}",
                     e
                 ))
             })?;
 
-            let energy_rate = *tensor_data.1.first().ok_or_else(|| {
-                TraversalModelError::TraversalModelFailure(
-                    "ONNX output tensor is empty".to_string(),
-                )
-            })? as f64;
-            Ok(energy_rate)
-        })();
+        let (_output_name, output_tensor) = outputs.iter().next().ok_or_else(|| {
+            TraversalModelError::TraversalModelFailure("ONNX model returned no outputs".to_string())
+        })?;
+        let tensor_data = output_tensor.try_extract_tensor::<f32>().map_err(|e| {
+            TraversalModelError::TraversalModelFailure(format!(
+                "Failed to extract output tensor: {}",
+                e
+            ))
+        })?;
 
-        // Always return the session to the pool, even on error.
-        self.return_session(session);
+        let energy_rate = *tensor_data.1.first().ok_or_else(|| {
+            TraversalModelError::TraversalModelFailure("ONNX output tensor is empty".to_string())
+        })? as f64;
 
-        Ok((energy_rate?, self.energy_rate_unit))
+        Ok((energy_rate, self.energy_rate_unit))
     }
 }
 
@@ -94,10 +81,7 @@ impl OnnxModel {
     pub fn new<P: AsRef<Path>>(
         routee_model_path: &P,
         energy_rate_unit: EnergyRateUnit,
-        pool_size: usize,
     ) -> Result<Self, TraversalModelError> {
-        let pool_size = pool_size.max(1);
-
         // make sure we have an .onnx file
         let is_onnx = routee_model_path
             .as_ref()
@@ -112,66 +96,27 @@ impl OnnxModel {
             )));
         }
 
-        let mut sessions = Vec::with_capacity(pool_size);
-        for _ in 0..pool_size {
-            let session = Session::builder()
-                .map_err(|e| {
-                    TraversalModelError::BuildError(format!(
-                        "Failed to build ONNXRuntime session from {} due to: {}",
-                        routee_model_path.as_ref().to_string_lossy(),
-                        e,
-                    ))
-                })?
-                .commit_from_file(routee_model_path)
-                .map_err(|e| {
-                    TraversalModelError::BuildError(format!(
-                        "Failed to build ONNXRuntime session from {} due to: {}",
-                        routee_model_path.as_ref().to_string_lossy(),
-                        e,
-                    ))
-                })?;
-            sessions.push(session);
-        }
-
-        Ok(OnnxModel {
-            pool: Mutex::new(sessions),
-            pool_notifier: Condvar::new(),
-            energy_rate_unit,
-        })
-    }
-
-    /// Take a session from the pool, blocking until one is available.
-    fn take_session(&self) -> Result<Session, TraversalModelError> {
-        let mut pool = self.pool.lock().map_err(|e| {
-            TraversalModelError::TraversalModelFailure(format!(
-                "Failed to lock ONNX session pool: {}",
-                e
-            ))
-        })?;
-        loop {
-            if let Some(session) = pool.pop() {
-                return Ok(session);
-            }
-            pool = self.pool_notifier.wait(pool).map_err(|e| {
-                TraversalModelError::TraversalModelFailure(format!(
-                    "Failed to wait on ONNX session pool: {}",
-                    e
+        let session = Session::builder()
+            .map_err(|e| {
+                TraversalModelError::BuildError(format!(
+                    "Failed to build ONNXRuntime session from {} due to: {}",
+                    routee_model_path.as_ref().to_string_lossy(),
+                    e,
+                ))
+            })?
+            .commit_from_file(routee_model_path)
+            .map_err(|e| {
+                TraversalModelError::BuildError(format!(
+                    "Failed to build ONNXRuntime session from {} due to: {}",
+                    routee_model_path.as_ref().to_string_lossy(),
+                    e,
                 ))
             })?;
-        }
-    }
 
-    /// Return a session to the pool and notify one waiting caller.
-    fn return_session(&self, session: Session) {
-        if let Ok(mut pool) = self.pool.lock() {
-            pool.push(session);
-            self.pool_notifier.notify_one();
-        }
-    }
-
-    #[cfg(test)]
-    fn pool_size(&self) -> usize {
-        self.pool.lock().map(|p| p.len()).unwrap_or(0)
+        Ok(OnnxModel {
+            session: Mutex::new(session),
+            energy_rate_unit,
+        })
     }
 }
 
@@ -192,7 +137,7 @@ mod test {
 
     #[test]
     fn test_onnx_model_predicts_energy_rate() {
-        let model = OnnxModel::new(&model_path(), EnergyRateUnit::GGPM, 1).unwrap();
+        let model = OnnxModel::new(&model_path(), EnergyRateUnit::GGPM).unwrap();
 
         // Predict energy rate at 50 mph, 0% grade
         let (energy_rate, unit) = model.predict(&[50.0, 0.0]).unwrap();
@@ -213,7 +158,7 @@ mod test {
 
     #[test]
     fn test_onnx_model_uphill_uses_more_energy() {
-        let model = OnnxModel::new(&model_path(), EnergyRateUnit::GGPM, 1).unwrap();
+        let model = OnnxModel::new(&model_path(), EnergyRateUnit::GGPM).unwrap();
 
         let (flat_rate, _) = model.predict(&[50.0, 0.0]).unwrap();
         let (uphill_rate, _) = model.predict(&[50.0, 0.05]).unwrap();
@@ -227,17 +172,6 @@ mod test {
     }
 
     #[test]
-    fn test_onnx_model_pool_size() {
-        let model = OnnxModel::new(&model_path(), EnergyRateUnit::GGPM, 4).unwrap();
-        assert_eq!(model.pool_size(), 4);
-
-        // Should still produce the same result and return session to the pool
-        let (energy_rate, _) = model.predict(&[50.0, 0.0]).unwrap();
-        assert!(energy_rate > 0.0);
-        assert_eq!(model.pool_size(), 4);
-    }
-
-    #[test]
     fn test_onnx_model_rejects_non_onnx_file() {
         let bad_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("src")
@@ -245,7 +179,7 @@ mod test {
             .join("test")
             .join("Toyota_Camry.bin");
 
-        let result = OnnxModel::new(&bad_path, EnergyRateUnit::GGPM, 1);
+        let result = OnnxModel::new(&bad_path, EnergyRateUnit::GGPM);
         assert!(result.is_err());
     }
 }
