@@ -24,7 +24,7 @@ pub enum MapMatchingError {
     #[error("search error: {0}")]
     SearchError(#[from] SearchError),
 
-    #[error("search tree error: {0}")]
+    #[error("search graph error: {0}")]
     SearchGraphError(#[from] SearchGraphError),
 
     #[error("internal error: {0}")]
