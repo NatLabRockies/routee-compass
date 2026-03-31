@@ -31,7 +31,7 @@ impl OutputPlugin for SummaryOutputPlugin {
                 output["search_executed_time"] = json![result.search_executed_time.clone()];
                 output["search_runtime"] = json![result.search_runtime.hhmmss()];
                 output["route_edges"] = json![route_edges];
-                output["tree_size_count"] = json![tree_edges];
+                output["graph_size_count"] = json![tree_edges];
                 output["iterations"] = json![result.iterations];
                 output["terminated"] = json![terminated];
 
