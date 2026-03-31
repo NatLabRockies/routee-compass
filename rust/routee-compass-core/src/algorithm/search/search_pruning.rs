@@ -8,7 +8,7 @@ use crate::{
     },
 };
 
-/// Prune labels from the search tree that are Pareto-dominated by the new label.
+/// Prune labels from the search graph that are Pareto-dominated by the new label.
 ///
 /// A label is dominated if the new label is at least as good on all objectives
 /// (cost and label state) and strictly better on at least one.
@@ -20,7 +20,7 @@ use crate::{
 ///
 /// We seek to maximize label state while minimizing cost.
 pub fn prune_graph(
-    tree: &mut SearchGraph,
+    graph: &mut SearchGraph,
     next_label: &Label,
     traversal: &EdgeTraversal,
     label_model: Arc<dyn LabelModel>,
@@ -29,10 +29,10 @@ pub fn prune_graph(
         return Ok(());
     }
     let next_cost = traversal.cost.objective_cost;
-    let prev_entries = tree
+    let prev_entries = graph
         .get_labels_iter(*next_label.vertex_id())
         .map(|label| {
-            let node = tree
+            let node = graph
                 .get(&label)
                 .ok_or_else(|| SearchGraphError::MissingNodeForLabel(label.clone()))?;
             let cost = node.traversal_cost().map(|tc| tc.objective_cost);
@@ -54,12 +54,12 @@ pub fn prune_graph(
         if remove {
             // new label is pareto-dominant over this previous label.
             // we only remove the previous label if it is prunable (has no children)
-            let prunable = tree
+            let prunable = graph
                 .get(&prev_label)
                 .map(|n| n.is_prunable())
                 .unwrap_or_default();
             if prunable {
-                let _ = tree.remove(&prev_label);
+                let _ = graph.remove(&prev_label);
             }
         }
     }
