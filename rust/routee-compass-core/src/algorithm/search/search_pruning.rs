@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    algorithm::search::{EdgeTraversal, SearchTree, SearchTreeError},
+    algorithm::search::{EdgeTraversal, SearchGraph, SearchGraphError},
     model::{
         label::{Label, LabelModel, LabelModelError},
         unit::Cost,
@@ -19,12 +19,12 @@ use crate::{
 /// - `Ordering::Greater` means prev has higher (better) state than next
 ///
 /// We seek to maximize label state while minimizing cost.
-pub fn prune_tree(
-    tree: &mut SearchTree,
+pub fn prune_graph(
+    tree: &mut SearchGraph,
     next_label: &Label,
     traversal: &EdgeTraversal,
     label_model: Arc<dyn LabelModel>,
-) -> Result<(), SearchTreeError> {
+) -> Result<(), SearchGraphError> {
     if next_label.does_not_require_pruning() {
         return Ok(());
     }
@@ -34,11 +34,11 @@ pub fn prune_tree(
         .map(|label| {
             let node = tree
                 .get(&label)
-                .ok_or_else(|| SearchTreeError::MissingNodeForLabel(label.clone()))?;
+                .ok_or_else(|| SearchGraphError::MissingNodeForLabel(label.clone()))?;
             let cost = node.traversal_cost().map(|tc| tc.objective_cost);
             Ok((label, cost.unwrap_or_default()))
         })
-        .collect::<Result<Vec<_>, SearchTreeError>>()?;
+        .collect::<Result<Vec<_>, SearchGraphError>>()?;
 
     for (prev_label, prev_cost) in prev_entries.into_iter() {
         let remove = test_dominates(
@@ -49,7 +49,7 @@ pub fn prune_tree(
             label_model.clone(),
         )
         .map_err(|e| {
-            SearchTreeError::PruningError(format!("label model comparison failed: {e}"))
+            SearchGraphError::PruningError(format!("label model comparison failed: {e}"))
         })?;
         if remove {
             // new label is pareto-dominant over this previous label.

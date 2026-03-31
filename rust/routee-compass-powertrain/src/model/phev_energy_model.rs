@@ -5,7 +5,7 @@ use super::{
     prediction::{PredictionModelConfig, PredictionModelRecord},
 };
 use routee_compass_core::{
-    algorithm::search::SearchTree,
+    algorithm::search::SearchGraph,
     model::{
         network::{Edge, Vertex},
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
@@ -219,7 +219,7 @@ impl TraversalModel for PhevEnergyModel {
         &self,
         _trajectory: (&Vertex, &Edge, &Vertex),
         state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
+        _tree: &SearchGraph,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         phev_traversal(
@@ -238,7 +238,7 @@ impl TraversalModel for PhevEnergyModel {
         &self,
         _od: (&Vertex, &Vertex),
         state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
+        _tree: &SearchGraph,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         phev_traversal(

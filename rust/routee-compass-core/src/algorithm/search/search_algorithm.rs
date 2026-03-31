@@ -283,7 +283,7 @@ pub fn run_edge_oriented(
             }
 
             // removed specialized case that depended on creating EdgeTraversals mechanically. broken
-            //   (without substantial refactor) with the inclusion of the SearchTree abstraction.
+            //   (without substantial refactor) with the inclusion of the SearchGraph abstraction.
 
             // run a search and append source/target edges to result
             let SearchAlgorithmResult {

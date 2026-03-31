@@ -1,6 +1,6 @@
 use super::{MemoryUnit, TerminationModelError};
 use crate::{
-    algorithm::search::SearchTree,
+    algorithm::search::SearchGraph,
     util::duration_extension::{deserialize_duration, DurationExtension},
 };
 use serde::{Deserialize, Serialize};
@@ -45,7 +45,7 @@ impl TerminationModel {
     pub fn continue_or_explain(
         &self,
         start_time: &Instant,
-        solution: &SearchTree,
+        solution: &SearchGraph,
         iterations: u64,
     ) -> Option<String> {
         let should_terminate = self.should_terminate(start_time, solution, iterations);
@@ -63,7 +63,7 @@ impl TerminationModel {
     pub fn continue_or_error(
         &self,
         start_time: &Instant,
-        solution: &SearchTree,
+        solution: &SearchGraph,
         iterations: u64,
     ) -> Result<(), TerminationModelError> {
         let should_terminate = self.should_terminate(start_time, solution, iterations);
@@ -79,7 +79,7 @@ impl TerminationModel {
     pub fn should_terminate(
         &self,
         start_time: &Instant,
-        solution: &SearchTree,
+        solution: &SearchGraph,
         iteration: u64,
     ) -> bool {
         use TerminationModel as T;
@@ -129,7 +129,7 @@ impl TerminationModel {
 
     /// this method will a string explaining why a model terminated. if the
     /// conditions do not merit termination, then the result will be None.
-    pub fn explain(&self, start_time: &Instant, solution: &SearchTree, iterations: u64) -> String {
+    pub fn explain(&self, start_time: &Instant, solution: &SearchGraph, iterations: u64) -> String {
         use TerminationModel as T;
         // must test if this particular [`TerminationModel`] variant instance was the cause of
         // termination, in the case of [`TerminationModel::Combined`].
@@ -193,7 +193,7 @@ mod tests {
     };
 
     use crate::{
-        algorithm::search::{Direction, EdgeTraversal, SearchTree},
+        algorithm::search::{Direction, EdgeTraversal, SearchGraph},
         model::{
             cost::TraversalCost,
             label::{default::vertex_label_model::VertexLabelModel, Label},
@@ -376,8 +376,8 @@ mod tests {
         assert_eq!(msg, expected);
     }
 
-    fn mock_tree(size: usize) -> SearchTree {
-        let mut tree = SearchTree::new(Direction::Forward);
+    fn mock_tree(size: usize) -> SearchGraph {
+        let mut tree = SearchGraph::new(Direction::Forward);
         if size == 0 {
             return tree;
         }

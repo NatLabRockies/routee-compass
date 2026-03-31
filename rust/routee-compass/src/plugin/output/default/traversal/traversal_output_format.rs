@@ -4,7 +4,7 @@ use super::traversal_ops as ops;
 use crate::plugin::output::OutputPluginError;
 use geo::{CoordFloat, Geometry, TryConvert};
 use routee_compass_core::{
-    algorithm::search::{EdgeTraversal, SearchTree},
+    algorithm::search::{EdgeTraversal, SearchGraph},
     model::{map::MapModel, state::StateModel},
 };
 use serde::{Deserialize, Serialize};
@@ -64,32 +64,32 @@ impl TraversalOutputFormat {
     /// generates output for a tree based on the configured TraversalOutputFormat
     pub fn generate_tree_output(
         &self,
-        tree: &SearchTree,
+        graph: &SearchGraph,
         map_model: Arc<MapModel>,
         state_model: Arc<StateModel>,
     ) -> Result<serde_json::Value, OutputPluginError> {
         match self {
             TraversalOutputFormat::Wkt => {
-                let route_geometry = ops::create_tree_multilinestring(tree, map_model)?;
+                let route_geometry = ops::create_tree_multilinestring(graph, map_model)?;
                 let route_wkt = route_geometry.wkt_string();
                 Ok(serde_json::Value::String(route_wkt))
             }
             TraversalOutputFormat::Wkb => {
-                let route_geometry = ops::create_tree_multilinestring(tree, map_model)?;
+                let route_geometry = ops::create_tree_multilinestring(graph, map_model)?;
                 let geometry = geo::Geometry::MultiLineString(route_geometry);
                 let wkb_str = geometry_to_wkb_string(&geometry)?;
                 Ok(serde_json::Value::String(wkb_str))
             }
             TraversalOutputFormat::Json => {
-                let result = serde_json::to_value(tree.values().collect::<Vec<_>>())?;
+                let result = serde_json::to_value(graph.values().collect::<Vec<_>>())?;
                 Ok(result)
             }
             TraversalOutputFormat::GeoJson => {
-                let result = ops::create_tree_geojson(tree, map_model, state_model)?;
+                let result = ops::create_tree_geojson(graph, map_model, state_model)?;
                 Ok(result)
             }
             TraversalOutputFormat::EdgeId => {
-                let tree_ids = tree
+                let tree_ids = graph
                     .values()
                     .filter_map(|b| b.incoming_edge().map(|e| (e.edge_list_id, e.edge_id)))
                     .collect::<Vec<_>>();

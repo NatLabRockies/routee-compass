@@ -125,7 +125,7 @@ pub(crate) fn run_shortest_path(
                     .collect();
                 Ok(edge_ids)
             }
-            Err(e) => Err(MapMatchingError::SearchTreeError(e)),
+            Err(e) => Err(MapMatchingError::SearchGraphError(e)),
         },
         Err(SearchError::NoPathExistsBetweenVertices(_, _, _)) => Ok(Vec::new()),
         Err(e) => Err(MapMatchingError::SearchError(e)),

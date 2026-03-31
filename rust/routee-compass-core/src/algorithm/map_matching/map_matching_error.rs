@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::algorithm::search::{SearchError, SearchTreeError};
+use crate::algorithm::search::{SearchError, SearchGraphError};
 use crate::model::map::MapError;
 
 /// Error types for map matching operations.
@@ -25,7 +25,7 @@ pub enum MapMatchingError {
     SearchError(#[from] SearchError),
 
     #[error("search tree error: {0}")]
-    SearchTreeError(#[from] SearchTreeError),
+    SearchGraphError(#[from] SearchGraphError),
 
     #[error("internal error: {0}")]
     InternalError(String),

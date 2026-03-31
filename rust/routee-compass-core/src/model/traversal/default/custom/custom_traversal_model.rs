@@ -1,5 +1,5 @@
 use super::CustomTraversalEngine;
-use crate::algorithm::search::SearchTree;
+use crate::algorithm::search::SearchGraph;
 use crate::model::network::{Edge, Vertex};
 use crate::model::state::StateModel;
 use crate::model::state::StateVariable;
@@ -42,7 +42,7 @@ impl TraversalModel for CustomTraversalModel {
         &self,
         trajectory: (&Vertex, &Edge, &Vertex),
         state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
+        _tree: &SearchGraph,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         let (_, edge, _) = trajectory;
@@ -54,7 +54,7 @@ impl TraversalModel for CustomTraversalModel {
         &self,
         _od: (&Vertex, &Vertex),
         _state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
+        _tree: &SearchGraph,
         _state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         Ok(())

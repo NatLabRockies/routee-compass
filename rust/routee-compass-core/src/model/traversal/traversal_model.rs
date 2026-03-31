@@ -1,5 +1,5 @@
 use super::traversal_model_error::TraversalModelError;
-use crate::algorithm::search::SearchTree;
+use crate::algorithm::search::SearchGraph;
 use crate::model::network::{Edge, Vertex};
 use crate::model::state::{InputFeature, StateModel, StateVariable, StateVariableConfig};
 
@@ -38,7 +38,7 @@ pub trait TraversalModel: Send + Sync {
         &self,
         trajectory: (&Vertex, &Edge, &Vertex),
         state: &mut Vec<StateVariable>,
-        tree: &SearchTree,
+        graph: &SearchGraph,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError>;
 
@@ -59,7 +59,7 @@ pub trait TraversalModel: Send + Sync {
         &self,
         od: (&Vertex, &Vertex),
         state: &mut Vec<StateVariable>,
-        tree: &SearchTree,
+        graph: &SearchGraph,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError>;
 }

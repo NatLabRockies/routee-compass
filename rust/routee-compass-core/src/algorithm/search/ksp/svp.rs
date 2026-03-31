@@ -3,7 +3,7 @@ use crate::{
     algorithm::search::{
         a_star::a_star_ops, direction::Direction, edge_traversal::EdgeTraversal,
         search_algorithm::SearchAlgorithm, search_algorithm_result::SearchAlgorithmResult,
-        search_error::SearchError, util::RouteSimilarityFunction, SearchInstance, SearchTreeNode,
+        search_error::SearchError, util::RouteSimilarityFunction, SearchInstance, SearchGraphNode,
     },
     model::{network::VertexId, unit::ReverseCost},
     util::priority_queue::InternalPriorityQueue,
@@ -79,7 +79,7 @@ pub fn run(
             None => continue,
             Some(et) => et,
         };
-        if let Some(SearchTreeNode::Branch { incoming_edge, .. }) = rev_labels.get(label) {
+        if let Some(SearchGraphNode::Branch { incoming_edge, .. }) = rev_labels.get(label) {
             if rev_labels.contains_key(&label) {
                 let total_cost = fwd_et.cost.total_cost + incoming_edge.cost.total_cost;
                 intersection_queue.push(*label.vertex_id(), total_cost.into());

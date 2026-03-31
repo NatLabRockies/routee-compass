@@ -3,7 +3,7 @@ use geo::{LineString, MultiLineString, Point};
 use geo_types::MultiPoint;
 use geojson::{Feature, FeatureCollection};
 use routee_compass_core::algorithm::search::EdgeTraversal;
-use routee_compass_core::algorithm::search::SearchTree;
+use routee_compass_core::algorithm::search::SearchGraph;
 use routee_compass_core::model::map::MapModel;
 use routee_compass_core::model::state::StateModel;
 use routee_compass_core::util::geo::geo_io_utils;
@@ -11,11 +11,11 @@ use serde_json::{json, Map};
 use std::sync::Arc;
 
 pub fn create_tree_geojson(
-    tree: &SearchTree,
+    graph: &SearchGraph,
     map_model: Arc<MapModel>,
     state_model: Arc<StateModel>,
 ) -> Result<serde_json::Value, OutputPluginError> {
-    let features = tree
+    let features = graph
         .values()
         .filter_map(|t| {
             let et = match t.incoming_edge() {
@@ -144,11 +144,10 @@ pub fn create_route_linestring(
 }
 
 pub fn create_tree_multilinestring(
-    tree: &SearchTree,
-    // geoms: &[LineString<f32>],
+    graph: &SearchGraph,
     map_model: Arc<MapModel>,
 ) -> Result<MultiLineString<f32>, OutputPluginError> {
-    let edges = tree
+    let edges = graph
         .values()
         .flat_map(|node| node.incoming_edge().map(|et| (et.edge_list_id, et.edge_id)))
         .collect::<Vec<_>>();
@@ -167,10 +166,10 @@ pub fn create_tree_multilinestring(
 }
 
 pub fn create_tree_multipoint(
-    tree: &SearchTree,
+    graph: &SearchGraph,
     map_model: Arc<MapModel>,
 ) -> Result<MultiPoint<f32>, OutputPluginError> {
-    let edges = tree
+    let edges = graph
         .values()
         .filter_map(|node| node.incoming_edge().map(|et| (et.edge_list_id, et.edge_id)))
         .collect::<Vec<_>>();

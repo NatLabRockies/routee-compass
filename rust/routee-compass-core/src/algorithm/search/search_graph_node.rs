@@ -6,13 +6,13 @@ use crate::{
     model::{cost::TraversalCost, label::Label},
 };
 
-/// A node in the search tree containing parent/child relationships and traversal data
+/// A node in the search graph, containing parent/child relationships and traversal data
 #[derive(Debug, Clone, Allocative, Serialize)]
-pub enum SearchTreeNode {
+pub enum SearchGraphNode {
     Root {
         /// Tree orientation this node belongs to
         direction: Direction,
-        /// Number of nodes in the tree that have this node as a parent
+        /// Number of nodes in the graph that have this node as a parent
         child_count: usize,
     },
     Branch {
@@ -22,12 +22,12 @@ pub enum SearchTreeNode {
         parent: Label,
         /// Tree orientation this node belongs to
         direction: Direction,
-        /// Number of nodes in the tree that have this node as a parent
+        /// Number of nodes in the graph that have this node as a parent
         child_count: usize,
     },
 }
 
-impl SearchTreeNode {
+impl SearchGraphNode {
     pub fn new_root(orientation: Direction) -> Self {
         Self::Root {
             direction: orientation,
@@ -46,61 +46,61 @@ impl SearchTreeNode {
 
     pub fn parent_label(&self) -> Option<&Label> {
         match self {
-            SearchTreeNode::Root { .. } => None,
-            SearchTreeNode::Branch { parent, .. } => Some(parent),
+            SearchGraphNode::Root { .. } => None,
+            SearchGraphNode::Branch { parent, .. } => Some(parent),
         }
     }
 
     pub fn incoming_edge(&self) -> Option<&EdgeTraversal> {
         match self {
-            SearchTreeNode::Root { .. } => None,
-            SearchTreeNode::Branch { incoming_edge, .. } => Some(incoming_edge),
+            SearchGraphNode::Root { .. } => None,
+            SearchGraphNode::Branch { incoming_edge, .. } => Some(incoming_edge),
         }
     }
 
     pub fn is_root(&self) -> bool {
         match self {
-            SearchTreeNode::Root { .. } => true,
-            SearchTreeNode::Branch { .. } => false,
+            SearchGraphNode::Root { .. } => true,
+            SearchGraphNode::Branch { .. } => false,
         }
     }
 
     pub fn direction(&self) -> Direction {
         match self {
-            SearchTreeNode::Root { direction, .. } => *direction,
-            SearchTreeNode::Branch { direction, .. } => *direction,
+            SearchGraphNode::Root { direction, .. } => *direction,
+            SearchGraphNode::Branch { direction, .. } => *direction,
         }
     }
 
     pub fn traversal_cost(&self) -> Option<&TraversalCost> {
         match self {
-            SearchTreeNode::Root { .. } => None,
-            SearchTreeNode::Branch { incoming_edge, .. } => Some(&incoming_edge.cost),
+            SearchGraphNode::Root { .. } => None,
+            SearchGraphNode::Branch { incoming_edge, .. } => Some(&incoming_edge.cost),
         }
     }
 
     pub fn child_count(&self) -> usize {
         match self {
-            SearchTreeNode::Root { child_count, .. } => *child_count,
-            SearchTreeNode::Branch { child_count, .. } => *child_count,
+            SearchGraphNode::Root { child_count, .. } => *child_count,
+            SearchGraphNode::Branch { child_count, .. } => *child_count,
         }
     }
 
     pub fn increment_child_count(&mut self) {
         match self {
-            SearchTreeNode::Root { child_count, .. } => *child_count += 1,
-            SearchTreeNode::Branch { child_count, .. } => *child_count += 1,
+            SearchGraphNode::Root { child_count, .. } => *child_count += 1,
+            SearchGraphNode::Branch { child_count, .. } => *child_count += 1,
         }
     }
 
     pub fn decrement_child_count(&mut self) {
         match self {
-            SearchTreeNode::Root { child_count, .. } => {
+            SearchGraphNode::Root { child_count, .. } => {
                 if *child_count > 0 {
                     *child_count -= 1;
                 }
             }
-            SearchTreeNode::Branch { child_count, .. } => {
+            SearchGraphNode::Branch { child_count, .. } => {
                 if *child_count > 0 {
                     *child_count -= 1;
                 }

@@ -1,5 +1,5 @@
 use crate::{
-    algorithm::search::SearchTree,
+    algorithm::search::SearchGraph,
     model::{
         network::{Edge, Vertex},
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
@@ -50,11 +50,11 @@ impl TraversalModel for CombinedTraversalModel {
         &self,
         trajectory: (&Vertex, &Edge, &Vertex),
         state: &mut Vec<StateVariable>,
-        tree: &SearchTree,
+        graph: &SearchGraph,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         for model in self.models.iter() {
-            model.traverse_edge(trajectory, state, tree, state_model)?;
+            model.traverse_edge(trajectory, state, graph, state_model)?;
         }
         Ok(())
     }
@@ -63,11 +63,11 @@ impl TraversalModel for CombinedTraversalModel {
         &self,
         od: (&Vertex, &Vertex),
         state: &mut Vec<StateVariable>,
-        tree: &SearchTree,
+        graph: &SearchGraph,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         for model in self.models.iter() {
-            model.estimate_traversal(od, state, tree, state_model)?;
+            model.estimate_traversal(od, state, graph, state_model)?;
         }
         Ok(())
     }

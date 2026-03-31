@@ -1,5 +1,5 @@
 use crate::{
-    algorithm::search::SearchTreeError,
+    algorithm::search::SearchGraphError,
     model::{
         constraint::ConstraintModelError,
         cost::CostModelError,
@@ -26,9 +26,9 @@ pub enum SearchError {
         source: StateModelError,
     },
     #[error("The search failed due with an internal error due to a malformed search tree. Source: {source}")]
-    SearchTreeError {
+    SearchGraphError {
         #[from]
-        source: SearchTreeError,
+        source: SearchGraphError,
     },
     #[error("The search failed due to a road network error. Please review the [graph] section of your Compass configuration. Source: {source}")]
     NetworkFailure {

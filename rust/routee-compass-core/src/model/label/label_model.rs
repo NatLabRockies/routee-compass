@@ -57,14 +57,14 @@ pub trait LabelModel: Send + Sync {
     ) -> Result<Label, LabelModelError>;
 
     /// Test whether a new label dominates over a previous label stored
-    /// at the same vertex in a `SearchTree`.
+    /// at the same vertex in a `SearchGraph`.
     ///
     /// Uses [`std::cmp::Ordering`] with the following convention:
     ///   - [`Ordering::Greater`] — `next` label dominates `prev` (the new label is better)
     ///   - [`Ordering::Equal`] — `prev` and `next` labels are equivalent
     ///   - [`Ordering::Less`] — `prev` label dominates `next` (the existing label is better)
     ///
-    /// This allows for pruning of the label state space during `SearchTree` insertion.
+    /// This allows for pruning of the label state space during `SearchGraph` insertion.
     ///
     /// # Arguments
     /// * `prev` - the existing label already stored at the vertex

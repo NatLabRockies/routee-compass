@@ -1,6 +1,6 @@
 use uom::ConstZero;
 
-use crate::algorithm::search::SearchTree;
+use crate::algorithm::search::SearchGraph;
 use crate::model::network::{Edge, Vertex};
 use crate::model::state::{CustomVariableConfig, InputFeature};
 use crate::model::traversal::TraversalModel;
@@ -140,7 +140,7 @@ impl TraversalModel for MockUpstreamModel {
         &self,
         _trajectory: (&Vertex, &Edge, &Vertex),
         _state: &mut Vec<crate::model::state::StateVariable>,
-        _tree: &SearchTree,
+        _tree: &SearchGraph,
         _state_model: &crate::model::state::StateModel,
     ) -> Result<(), TraversalModelError> {
         Ok(())
@@ -150,7 +150,7 @@ impl TraversalModel for MockUpstreamModel {
         &self,
         _od: (&Vertex, &Vertex),
         _state: &mut Vec<crate::model::state::StateVariable>,
-        _tree: &SearchTree,
+        _tree: &SearchGraph,
         _state_model: &crate::model::state::StateModel,
     ) -> Result<(), TraversalModelError> {
         Ok(())

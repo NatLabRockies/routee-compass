@@ -4,7 +4,7 @@ use crate::algorithm::search::EdgeTraversal;
 use crate::algorithm::search::SearchError;
 use crate::algorithm::search::SearchInstance;
 use crate::algorithm::search::SearchResult;
-use crate::algorithm::search::SearchTree;
+use crate::algorithm::search::SearchGraph;
 use crate::model::cost::TraversalCost;
 use crate::model::label::Label;
 use crate::model::network::EdgeListId;
@@ -37,14 +37,14 @@ pub fn run_vertex_oriented(
         let initial_label =
             si.label_model
                 .label_from_state(source, &initial_state, &si.state_model)?;
-        let tree = SearchTree::with_root(initial_label, *direction);
+        let tree = SearchGraph::with_root(initial_label, *direction);
         return Ok(SearchResult::completed(tree, 0));
     }
 
     // context for the search (graph, search functions, frontier priority queue)
     let mut frontier: InternalPriorityQueue<Label, ReverseCost> = InternalPriorityQueue::default();
     let mut traversal_costs: HashMap<Label, Cost> = HashMap::new();
-    let mut solution = SearchTree::new(*direction);
+    let mut solution = SearchGraph::new(*direction);
 
     // setup initial search state
     let initial_state = si.state_model.initial_state(None)?;
@@ -200,7 +200,7 @@ pub fn run_edge_oriented(
                 let initial_label =
                     si.label_model
                         .label_from_state(e1_dst, &initial_state, &si.state_model)?;
-                let tree = SearchTree::with_root(initial_label, *direction);
+                let tree = SearchGraph::with_root(initial_label, *direction);
                 Ok(SearchResult::completed(tree, 0))
             } else {
                 run_vertex_oriented(e1_dst, Some(e2_src), direction, a_star, si)
@@ -215,7 +215,7 @@ pub fn estimate_traversal_cost(
     src: VertexId,
     dst: VertexId,
     state: &[StateVariable],
-    tree: &SearchTree,
+    graph: &SearchGraph,
     si: &SearchInstance,
 ) -> Result<TraversalCost, SearchError> {
     let src = si.graph.get_vertex(&src)?;
@@ -225,7 +225,7 @@ pub fn estimate_traversal_cost(
     si.get_traversal_estimation_model().estimate_traversal(
         (src, dst),
         &mut dst_state,
-        tree,
+        graph,
         &si.state_model,
     )?;
     let cost_estimate = si.cost_model.estimate_cost(&dst_state, &si.state_model)?;
@@ -463,7 +463,7 @@ mod tests {
         let si = build_search_instance(graph.clone());
 
         // execute the route search
-        let result: Vec<Result<SearchTree, SearchError>> = queries
+        let result: Vec<Result<SearchGraph, SearchError>> = queries
             .clone()
             .into_par_iter()
             .map(|(o, d, _expected)| {

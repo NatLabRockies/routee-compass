@@ -444,7 +444,7 @@ pub fn model_template(pascal_case_name: &str, extensions: Option<&TraversalExten
         {super_import}
 
         use routee_compass_core::{{
-            algorithm::search::SearchTree,
+            algorithm::search::SearchGraph,
             model::{{
                 network::{{Edge, Vertex}},
                 state::{{InputFeature, StateModel, StateVariable, StateVariableConfig}},
@@ -471,7 +471,7 @@ pub fn model_template(pascal_case_name: &str, extensions: Option<&TraversalExten
                 &self,
                 _trajectory: (&Vertex, &Edge, &Vertex),
                 _state: &mut Vec<StateVariable>,
-                _tree: &SearchTree,
+                _tree: &SearchGraph,
                 _state_model: &StateModel,
             ) -> Result<(), TraversalModelError> {{
                 todo!()
@@ -481,7 +481,7 @@ pub fn model_template(pascal_case_name: &str, extensions: Option<&TraversalExten
                 &self,
                 _od: (&Vertex, &Vertex),
                 _state: &mut Vec<StateVariable>,
-                _tree: &SearchTree,
+                _tree: &SearchGraph,
                 _state_model: &StateModel,
             ) -> Result<(), TraversalModelError> {{
                 todo!()

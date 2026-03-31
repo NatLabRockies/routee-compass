@@ -2,7 +2,7 @@ use super::{
     cost_ops, network::NetworkCostRate, CostAggregation, CostFeature, TraversalCost,
     VehicleCostRate,
 };
-use crate::algorithm::search::SearchTree;
+use crate::algorithm::search::SearchGraph;
 use crate::model::cost::CostModelError;
 use crate::model::network::Edge;
 use crate::model::network::Vertex;
@@ -102,7 +102,7 @@ impl CostModel {
         trajectory: (&Vertex, &Edge, &Vertex),
         previous_state: &[StateVariable],
         current_state: &[StateVariable],
-        tree: &SearchTree,
+        graph: &SearchGraph,
         state_model: &StateModel,
     ) -> Result<TraversalCost, CostModelError> {
         let mut result = TraversalCost::default();
@@ -127,13 +127,13 @@ impl CostModel {
                 let current_network_cost = feature.network_cost_rate.network_cost(
                     trajectory,
                     current_state,
-                    tree,
+                    graph,
                     state_model,
                 )?;
                 let previous_network_cost = feature.network_cost_rate.network_cost(
                     trajectory,
                     previous_state,
-                    tree,
+                    graph,
                     state_model,
                 )?;
                 current_network_cost - previous_network_cost
@@ -141,7 +141,7 @@ impl CostModel {
                 feature.network_cost_rate.network_cost(
                     trajectory,
                     current_state,
-                    tree,
+                    graph,
                     state_model,
                 )?
             };
@@ -250,8 +250,8 @@ mod test {
     }
 
     /// Helper to create a basic search tree for testing
-    fn create_test_tree() -> SearchTree {
-        SearchTree::new(Direction::Forward)
+    fn create_test_tree() -> SearchGraph {
+        SearchGraph::new(Direction::Forward)
     }
 
     #[test]

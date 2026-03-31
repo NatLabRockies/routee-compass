@@ -4,7 +4,7 @@ use super::{
 };
 use crate::model::fieldname;
 use routee_compass_core::{
-    algorithm::search::SearchTree,
+    algorithm::search::SearchGraph,
     model::{
         network::{Edge, Vertex},
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
@@ -189,7 +189,7 @@ impl TraversalModel for BevEnergyModel {
         &self,
         _trajectory: (&Vertex, &Edge, &Vertex),
         state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
+        _tree: &SearchGraph,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         bev_traversal(
@@ -205,7 +205,7 @@ impl TraversalModel for BevEnergyModel {
         &self,
         _od: (&Vertex, &Vertex),
         state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
+        _tree: &SearchGraph,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         bev_traversal_estimate(

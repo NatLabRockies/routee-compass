@@ -125,7 +125,7 @@ impl Label {
     }
 
     /// Returns true if this label variant should be stored in the vertex->labels mapping
-    /// of the SearchTree.
+    /// of the SearchGraph.
     ///
     /// Label::Vertex is excluded because it's redundant - the vertex ID is already
     /// the key, so storing Label::Vertex(id) under key `id` provides no additional value.

@@ -1,6 +1,6 @@
 use itertools::Itertools;
 
-use crate::algorithm::search::SearchTree;
+use crate::algorithm::search::SearchGraph;
 use crate::model::network::{Edge, Vertex, VertexId};
 use crate::model::state::{StateModel, StateVariable};
 use crate::model::unit::Cost;
@@ -68,7 +68,7 @@ impl NetworkCostRate {
         &self,
         trajectory: (&Vertex, &Edge, &Vertex),
         _state: &[StateVariable],
-        _tree: &SearchTree,
+        _tree: &SearchGraph,
         _state_model: &StateModel,
     ) -> Result<Cost, CostModelError> {
         match self {

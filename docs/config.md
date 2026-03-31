@@ -39,7 +39,7 @@ geometry = { input_file = "edges-geometries-enumerated.txt.gz" }
 tolerance.distance = 15.0
 # mapping threshold distance unit
 tolerance.unit = "meters"
-# allow queries without destinations, for shortest path tree results
+# allow queries without destinations, for shortest path results
 queries_without_destinations = true
 # whether we match queries via "point", "vertex_id", or "edge_id" (or arrays of combinations)
 matching_type = "point"

@@ -2,7 +2,7 @@ use uom::{si::f64::Time, ConstZero};
 
 use super::TurnDelayTraversalModelEngine;
 use crate::{
-    algorithm::search::SearchTree,
+    algorithm::search::SearchGraph,
     model::{
         network::{Edge, Vertex},
         state::{StateModel, StateVariable, StateVariableConfig},
@@ -71,15 +71,15 @@ impl TraversalModel for TurnDelayTraversalModel {
         &self,
         traversal: (&Vertex, &Edge, &Vertex),
         state: &mut Vec<StateVariable>,
-        tree: &SearchTree,
+        graph: &SearchGraph,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
-        if tree.is_empty() {
+        if graph.is_empty() {
             // we need a previous edge to complete a turn
             return Ok(());
         }
         let (src, edge, _) = traversal;
-        let prev_edge_id = match tree.get_incoming_edge(src.vertex_id) {
+        let prev_edge_id = match graph.get_incoming_edge(src.vertex_id) {
             Some(prev_traversal) => prev_traversal.edge_id,
             None => return Ok(()), // no previous edge, no turn delay to apply
         };
@@ -97,7 +97,7 @@ impl TraversalModel for TurnDelayTraversalModel {
         &self,
         _od: (&Vertex, &Vertex),
         _state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
+        _tree: &SearchGraph,
         _state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         Ok(())

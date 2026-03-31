@@ -89,7 +89,7 @@ mod test {
 
     use super::topological_dependency_sort;
     use crate::{
-        algorithm::search::SearchTree,
+        algorithm::search::SearchGraph,
         model::{
             network::{Edge, Vertex},
             state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
@@ -316,7 +316,7 @@ mod test {
             &self,
             _trajectory: (&Vertex, &Edge, &Vertex),
             _state: &mut Vec<StateVariable>,
-            _tree: &SearchTree,
+            _tree: &SearchGraph,
             _state_model: &StateModel,
         ) -> Result<(), TraversalModelError> {
             todo!()
@@ -326,7 +326,7 @@ mod test {
             &self,
             _od: (&Vertex, &Vertex),
             _state: &mut Vec<StateVariable>,
-            _tree: &SearchTree,
+            _tree: &SearchGraph,
             _state_model: &StateModel,
         ) -> Result<(), TraversalModelError> {
             todo!()

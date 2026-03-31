@@ -1,6 +1,6 @@
 use super::search_error::SearchError;
 use super::SearchInstance;
-use crate::algorithm::search::SearchTree;
+use crate::algorithm::search::SearchGraph;
 use crate::model::cost::{CostModel, TraversalCost};
 use crate::model::network::{Edge, EdgeId, EdgeListId, Vertex};
 use crate::model::state::{StateModel, StateVariable};
@@ -53,7 +53,7 @@ impl EdgeTraversal {
     /// An edge traversal summarizing the costs and result state of accessing and traversing the next edge.
     pub fn new(
         next_edge: (EdgeListId, EdgeId),
-        tree: &SearchTree,
+        graph: &SearchGraph,
         prev_state: &[StateVariable],
         si: &SearchInstance,
     ) -> Result<EdgeTraversal, SearchError> {
@@ -63,7 +63,7 @@ impl EdgeTraversal {
         let tm = si.get_traversal_model(&edge_list_id)?;
         Self::new_local(
             trajectory,
-            tree,
+            graph,
             prev_state,
             &si.state_model.clone(),
             tm.clone().as_ref(),
@@ -78,7 +78,7 @@ impl EdgeTraversal {
     /// method and does not require [`Arc`]-wrapped types.
     pub fn new_local(
         trajectory: (&Vertex, &Edge, &Vertex),
-        tree: &SearchTree,
+        graph: &SearchGraph,
         prev_state: &[StateVariable],
         state_model: &StateModel,
         traversal_model: &dyn TraversalModel,
@@ -87,10 +87,10 @@ impl EdgeTraversal {
         let (_, edge, _) = trajectory;
         let mut result_state = state_model.initial_state(Some(prev_state))?;
 
-        traversal_model.traverse_edge(trajectory, &mut result_state, tree, state_model)?;
+        traversal_model.traverse_edge(trajectory, &mut result_state, graph, state_model)?;
 
         let cost =
-            cost_model.traversal_cost(trajectory, prev_state, &result_state, tree, state_model)?;
+            cost_model.traversal_cost(trajectory, prev_state, &result_state, graph, state_model)?;
 
         let result = EdgeTraversal {
             edge_list_id: edge.edge_list_id,

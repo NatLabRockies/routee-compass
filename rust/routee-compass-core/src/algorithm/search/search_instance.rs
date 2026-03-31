@@ -1,5 +1,5 @@
 use crate::{
-    algorithm::search::{Direction, EdgeTraversal, SearchError, SearchTree},
+    algorithm::search::{Direction, EdgeTraversal, SearchError, SearchGraph},
     model::{
         constraint::ConstraintModel,
         cost::CostModel,
@@ -83,7 +83,7 @@ impl SearchInstance {
     ///
     /// # Implementation Note: Vector Index Tracking
     ///
-    /// When building the internal `SearchTree` for the path, this method uses "indexed labels"
+    /// When building the internal `SearchGraph` for the path, this method uses "indexed labels"
     /// (`Label::VertexWithIntState`) where the state is the current index in the path.
     ///
     /// We must track the vector index of each insertion for the following reasons:
@@ -91,8 +91,8 @@ impl SearchInstance {
     /// 1. **Path Cycles**: A path may visit the same vertex multiple times (e.g., in complex
     ///    intersections or specific routing constraints). If we used plain `Label::Vertex`,
     ///    subsequent visits to the same vertex would overwrite previous entries in the
-    ///    `SearchTree`'s internal map, breaking the tree structure.
-    /// 2. **Backtracking**: The `SearchTree` depends on unique labels to correctly backtrack
+    ///    `SearchGraph`'s internal map, breaking the tree structure.
+    /// 2. **Backtracking**: The `SearchGraph` depends on unique labels to correctly backtrack
     ///    from a destination to the root. By indexing each step, we ensure that every node
     ///    in the path is a unique entity in the tree, even if they share the same physical vertex.
     /// 3. **State Consistency**: It ensures that the state at each step of the path is
@@ -104,7 +104,7 @@ impl SearchInstance {
     ) -> Result<Vec<EdgeTraversal>, SearchError> {
         let mut edge_traversals = Vec::with_capacity(path.len());
         let mut current_state = self.state_model.initial_state(None)?;
-        let mut tree = SearchTree::new(Direction::Forward);
+        let mut tree = SearchGraph::new(Direction::Forward);
 
         let mut prev_label = if let Some((edge_list_id, edge_id)) = path.first() {
             let (src, _, _) = self.graph.edge_triplet(edge_list_id, edge_id)?;

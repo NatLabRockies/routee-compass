@@ -2,7 +2,7 @@ use uom::si::f64::Velocity;
 use uom::ConstZero;
 
 use super::speed_traversal_engine::SpeedTraversalEngine;
-use crate::algorithm::search::SearchTree;
+use crate::algorithm::search::SearchGraph;
 use crate::model::network::{Edge, EdgeId, Vertex};
 use crate::model::state::StateModel;
 use crate::model::state::StateVariable;
@@ -64,7 +64,7 @@ impl TraversalModel for SpeedTraversalModel {
         &self,
         trajectory: (&Vertex, &Edge, &Vertex),
         state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
+        _tree: &SearchGraph,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         let (_, edge, _) = trajectory;
@@ -79,7 +79,7 @@ impl TraversalModel for SpeedTraversalModel {
         &self,
         _od: (&Vertex, &Vertex),
         state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
+        _tree: &SearchGraph,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         let speed: Velocity = match self.speed_limit {
@@ -186,7 +186,7 @@ mod tests {
             .traverse_edge(
                 (&v, &e1, &v),
                 &mut state,
-                &SearchTree::default(),
+                &SearchGraph::default(),
                 &state_model,
             )
             .unwrap();
@@ -225,7 +225,7 @@ mod tests {
                 test_regular_model.output_features(),
             )
             .expect("test invariant failed");
-        let tree = SearchTree::default();
+        let tree = SearchGraph::default();
 
         let mut state_with_limit = state_model.initial_state(None).unwrap();
         let mut state_without_limit = state_model.initial_state(None).unwrap();

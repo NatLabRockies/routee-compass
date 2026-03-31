@@ -1,5 +1,5 @@
 use crate::{
-    algorithm::search::{SearchError, SearchTree},
+    algorithm::search::{SearchError, SearchGraph},
     model::{
         label::Label,
         network::{EdgeId, EdgeListId, VertexId},
@@ -39,7 +39,7 @@ impl FrontierInstance {
         frontier: &mut InternalPriorityQueue<Label, ReverseCost>,
         source: VertexId,
         target: Option<VertexId>,
-        solution: &SearchTree,
+        solution: &SearchGraph,
         initial_state: &[StateVariable],
     ) -> Result<Option<FrontierInstance>, SearchError> {
         loop {
@@ -101,7 +101,7 @@ mod tests {
     #[test]
     fn test_pop_new_empty_queue() {
         let mut frontier = InternalPriorityQueue::default();
-        let solution = SearchTree::new(Direction::Forward);
+        let solution = SearchGraph::new(Direction::Forward);
         let initial_state = vec![StateVariable::ZERO];
         let result =
             FrontierInstance::pop_new(&mut frontier, VertexId(0), None, &solution, &initial_state)
@@ -112,7 +112,7 @@ mod tests {
     #[test]
     fn test_pop_new_no_path_exists() {
         let mut frontier = InternalPriorityQueue::default();
-        let solution = SearchTree::new(Direction::Forward);
+        let solution = SearchGraph::new(Direction::Forward);
         let initial_state = vec![StateVariable::ZERO];
         let result = FrontierInstance::pop_new(
             &mut frontier,
@@ -129,7 +129,7 @@ mod tests {
         let mut frontier = InternalPriorityQueue::default();
         let label = Label::Vertex(VertexId(0));
         frontier.push(label.clone(), ReverseCost::from(Cost::ZERO));
-        let solution = SearchTree::new(Direction::Forward);
+        let solution = SearchGraph::new(Direction::Forward);
         let initial_state = vec![StateVariable::ZERO];
         let result =
             FrontierInstance::pop_new(&mut frontier, VertexId(0), None, &solution, &initial_state)
@@ -148,7 +148,7 @@ mod tests {
         frontier.push(l2.clone(), ReverseCost::from(Cost::new(5.0)));
         frontier.push(l1.clone(), ReverseCost::from(Cost::new(10.0)));
 
-        let mut solution = SearchTree::new(Direction::Forward);
+        let mut solution = SearchGraph::new(Direction::Forward);
         let root = Label::Vertex(VertexId(0));
         solution.set_root(root.clone());
 
@@ -184,7 +184,7 @@ mod tests {
         let label = Label::Vertex(target);
         frontier.push(label, ReverseCost::from(Cost::ZERO));
 
-        let solution = SearchTree::new(Direction::Forward);
+        let solution = SearchGraph::new(Direction::Forward);
         let initial_state = vec![StateVariable::ZERO];
 
         // Reaching target vertex should return Ok(None)
@@ -217,7 +217,7 @@ mod tests {
         frontier.push(l2.clone(), ReverseCost::from(Cost::new(5.0)));
         frontier.push(l1.clone(), ReverseCost::from(Cost::new(10.0)));
 
-        let mut solution = SearchTree::new(Direction::Forward);
+        let mut solution = SearchGraph::new(Direction::Forward);
         let root = Label::Vertex(VertexId(0));
         solution.set_root(root.clone());
 
