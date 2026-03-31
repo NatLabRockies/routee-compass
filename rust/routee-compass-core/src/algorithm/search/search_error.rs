@@ -25,7 +25,7 @@ pub enum SearchError {
         #[from]
         source: StateModelError,
     },
-    #[error("The search failed due with an internal error due to a malformed search tree. Source: {source}")]
+    #[error("The search failed due with an internal error due to a malformed search graph. Source: {source}")]
     SearchGraphError {
         #[from]
         source: SearchGraphError,
