@@ -3,7 +3,7 @@ use crate::{
     algorithm::search::{
         a_star::a_star_ops, direction::Direction, edge_traversal::EdgeTraversal,
         search_algorithm::SearchAlgorithm, search_algorithm_result::SearchAlgorithmResult,
-        search_error::SearchError, util::RouteSimilarityFunction, SearchInstance, SearchGraphNode,
+        search_error::SearchError, util::RouteSimilarityFunction, SearchGraphNode, SearchInstance,
     },
     model::{network::VertexId, unit::ReverseCost},
     util::priority_queue::InternalPriorityQueue,

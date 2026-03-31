@@ -9,8 +9,8 @@ use ordered_float::OrderedFloat;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-/// A directed acyclic graph (DAG) encoding the search space. Supports efficient lookups 
-/// and bi-directional parent/child traversal. Designed for route planning algorithms that 
+/// A directed acyclic graph (DAG) encoding the search space. Supports efficient lookups
+/// and bi-directional parent/child traversal. Designed for route planning algorithms that
 /// need both indexing and backtracking capabilities
 #[derive(Clone, Debug, Allocative)]
 pub struct SearchGraph {
@@ -463,24 +463,26 @@ mod tests {
         // Insert first child
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            child1_traversal.clone(),
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child1_traversal.clone(),
+                child1_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Insert second child
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        graph.insert(
-            root_label.clone(),
-            child2_traversal.clone(),
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child2_traversal.clone(),
+                child2_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         assert_eq!(graph.len(), 3);
 
@@ -521,13 +523,14 @@ mod tests {
 
         let child_label = create_test_label(1);
         let child_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            child_traversal,
-            child_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child_traversal,
+                child_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Root has no parent
         assert!(graph.get_parent(&root_label).is_none());
@@ -545,33 +548,36 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            child1_traversal.clone(),
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child1_traversal.clone(),
+                child1_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        graph.insert(
-            child1_label.clone(),
-            child2_traversal.clone(),
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child1_label.clone(),
+                child2_traversal.clone(),
+                child2_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        graph.insert(
-            child2_label.clone(),
-            child3_traversal.clone(),
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child2_label.clone(),
+                child3_traversal.clone(),
+                child3_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Reconstruct path to child3
         let path = graph.reconstruct_path(&child3_label, None).unwrap();
@@ -589,33 +595,36 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            child1_traversal.clone(),
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child1_traversal.clone(),
+                child1_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        graph.insert(
-            child1_label.clone(),
-            child2_traversal.clone(),
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child1_label.clone(),
+                child2_traversal.clone(),
+                child2_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        graph.insert(
-            child2_label.clone(),
-            child3_traversal.clone(),
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child2_label.clone(),
+                child3_traversal.clone(),
+                child3_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Reconstruct path to child3 (reverse orientation keeps natural order)
         let path = graph.reconstruct_path(&child3_label, None).unwrap();
@@ -642,23 +651,25 @@ mod tests {
 
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child1_traversal,
+                child1_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        graph.insert(
-            root_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child2_traversal,
+                child2_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Test labels iterator
         let labels: HashSet<_> = graph.labels().cloned().collect();
@@ -686,33 +697,36 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            child1_traversal.clone(),
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child1_traversal.clone(),
+                child1_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        graph.insert(
-            child1_label.clone(),
-            child2_traversal.clone(),
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child1_label.clone(),
+                child2_traversal.clone(),
+                child2_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        graph.insert(
-            child2_label.clone(),
-            child3_traversal.clone(),
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child2_label.clone(),
+                child3_traversal.clone(),
+                child3_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Backtrack from vertex 3 using graph's inherent direction (Forward)
         let path = graph.backtrack(VertexId(3)).unwrap();
@@ -730,33 +744,36 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            child1_traversal.clone(),
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child1_traversal.clone(),
+                child1_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        graph.insert(
-            child1_label.clone(),
-            child2_traversal.clone(),
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child1_label.clone(),
+                child2_traversal.clone(),
+                child2_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        graph.insert(
-            child2_label.clone(),
-            child3_traversal.clone(),
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child2_label.clone(),
+                child3_traversal.clone(),
+                child3_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Backtrack from vertex 3 using graph's inherent direction (Reverse)
         let path = graph.backtrack(VertexId(3)).unwrap();
@@ -795,13 +812,14 @@ mod tests {
 
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child1_traversal,
+                child1_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Test finding existing vertex
         let found_label = graph.get_min_cost_label(VertexId(1));
@@ -823,13 +841,14 @@ mod tests {
         let child_label = create_test_label(1);
         let edge_traversal = create_test_edge_traversal(1, 10.0);
 
-        graph.insert(
-            parent_label.clone(),
-            edge_traversal.clone(),
-            child_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                parent_label.clone(),
+                edge_traversal.clone(),
+                child_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Verify root was created automatically
         assert!(!graph.is_empty());
@@ -859,29 +878,32 @@ mod tests {
         let label3 = create_test_label(3);
 
         // First insert creates root automatically
-        graph.insert(
-            label0.clone(),
-            create_test_edge_traversal(1, 10.0),
-            label1.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                label0.clone(),
+                create_test_edge_traversal(1, 10.0),
+                label1.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Subsequent inserts work normally
-        graph.insert(
-            label1.clone(),
-            create_test_edge_traversal(2, 15.0),
-            label2.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
-        graph.insert(
-            label2.clone(),
-            create_test_edge_traversal(3, 20.0),
-            label3.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                label1.clone(),
+                create_test_edge_traversal(2, 15.0),
+                label2.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
+        graph
+            .insert(
+                label2.clone(),
+                create_test_edge_traversal(3, 20.0),
+                label3.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Verify final structure
         assert_eq!(graph.len(), 4);
@@ -906,13 +928,14 @@ mod tests {
         // Insert should work normally without creating a new root
         let child_label = create_test_label(1);
         let edge_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            edge_traversal,
-            child_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                edge_traversal,
+                child_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Root should still be the same
         assert_eq!(graph.len(), 2);
@@ -938,43 +961,47 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3 -> 4
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child1_traversal,
+                child1_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        graph.insert(
-            child1_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child1_label.clone(),
+                child2_traversal,
+                child2_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        graph.insert(
-            child2_label.clone(),
-            child3_traversal,
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child2_label.clone(),
+                child3_traversal,
+                child3_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child4_label = create_test_label(4);
         let child4_traversal = create_test_edge_traversal(4, 25.0);
-        graph.insert(
-            child3_label.clone(),
-            child4_traversal,
-            child4_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child3_label.clone(),
+                child4_traversal,
+                child4_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Backtrack with depth equal to total path length
         let path = graph.backtrack_with_depth(VertexId(4), 4).unwrap();
@@ -994,43 +1021,47 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3 -> 4
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child1_traversal,
+                child1_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        graph.insert(
-            child1_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child1_label.clone(),
+                child2_traversal,
+                child2_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        graph.insert(
-            child2_label.clone(),
-            child3_traversal,
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child2_label.clone(),
+                child3_traversal,
+                child3_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child4_label = create_test_label(4);
         let child4_traversal = create_test_edge_traversal(4, 25.0);
-        graph.insert(
-            child3_label.clone(),
-            child4_traversal,
-            child4_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child3_label.clone(),
+                child4_traversal,
+                child4_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Backtrack with depth less than total path length
         let path = graph.backtrack_with_depth(VertexId(4), 2).unwrap();
@@ -1049,33 +1080,36 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child1_traversal,
+                child1_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        graph.insert(
-            child1_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child1_label.clone(),
+                child2_traversal,
+                child2_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        graph.insert(
-            child2_label.clone(),
-            child3_traversal,
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child2_label.clone(),
+                child3_traversal,
+                child3_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Backtrack with depth of 1
         let path = graph.backtrack_with_depth(VertexId(3), 1).unwrap();
@@ -1093,43 +1127,47 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3 -> 4
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child1_traversal,
+                child1_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        graph.insert(
-            child1_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child1_label.clone(),
+                child2_traversal,
+                child2_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        graph.insert(
-            child2_label.clone(),
-            child3_traversal,
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child2_label.clone(),
+                child3_traversal,
+                child3_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child4_label = create_test_label(4);
         let child4_traversal = create_test_edge_traversal(4, 25.0);
-        graph.insert(
-            child3_label.clone(),
-            child4_traversal,
-            child4_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child3_label.clone(),
+                child4_traversal,
+                child4_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Backtrack with depth equal to total path length (reverse orientation)
         let path = graph.backtrack_with_depth(VertexId(4), 4).unwrap();
@@ -1150,43 +1188,47 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3 -> 4
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child1_traversal,
+                child1_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        graph.insert(
-            child1_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child1_label.clone(),
+                child2_traversal,
+                child2_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        graph.insert(
-            child2_label.clone(),
-            child3_traversal,
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child2_label.clone(),
+                child3_traversal,
+                child3_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child4_label = create_test_label(4);
         let child4_traversal = create_test_edge_traversal(4, 25.0);
-        graph.insert(
-            child3_label.clone(),
-            child4_traversal,
-            child4_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child3_label.clone(),
+                child4_traversal,
+                child4_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Backtrack with depth less than total path length
         let path = graph.backtrack_with_depth(VertexId(4), 2).unwrap();
@@ -1227,23 +1269,25 @@ mod tests {
         // Build a short path: 0 -> 1 -> 2
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child1_traversal,
+                child1_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        graph.insert(
-            child1_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child1_label.clone(),
+                child2_traversal,
+                child2_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Request more depth than available
         let path = graph.backtrack_with_depth(VertexId(2), 10).unwrap();
@@ -1270,53 +1314,58 @@ mod tests {
 
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child1_traversal,
+                child1_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        graph.insert(
-            root_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child2_traversal,
+                child2_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        graph.insert(
-            child1_label.clone(),
-            child3_traversal,
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child1_label.clone(),
+                child3_traversal,
+                child3_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child4_label = create_test_label(4);
         let child4_traversal = create_test_edge_traversal(4, 25.0);
-        graph.insert(
-            child2_label.clone(),
-            child4_traversal,
-            child4_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child2_label.clone(),
+                child4_traversal,
+                child4_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child5_label = create_test_label(5);
         let child5_traversal = create_test_edge_traversal(5, 30.0);
-        graph.insert(
-            child4_label.clone(),
-            child5_traversal,
-            child5_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child4_label.clone(),
+                child5_traversal,
+                child5_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Test backtrack from leaf node 3 with depth 1
         let path = graph.backtrack_with_depth(VertexId(3), 1).unwrap();
@@ -1368,13 +1417,14 @@ mod tests {
 
         // This will set root as Label::Vertex(0)
         // Label::Vertex is NOT added to self.labels
-        graph.insert(
-            root_label.clone(),
-            create_test_edge_traversal(1, 10.0),
-            child_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                create_test_edge_traversal(1, 10.0),
+                child_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // child_label IS added to self.labels because it is not Label::Vertex
 
@@ -1408,13 +1458,14 @@ mod tests {
 
         // Insert (root -> child)
         // This trigger's root creation and child insertion
-        graph.insert(
-            root_label.clone(),
-            et,
-            child_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                et,
+                child_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // 2. Verify OPTIMIZATION: labels map should be EMPTY
         // Because Label::Vertex is optimized to NOT be stored in the secondary index
@@ -1451,33 +1502,36 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        graph.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                root_label.clone(),
+                child1_traversal,
+                child1_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        graph.insert(
-            child1_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child1_label.clone(),
+                child2_traversal,
+                child2_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        graph.insert(
-            child2_label.clone(),
-            child3_traversal,
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        graph
+            .insert(
+                child2_label.clone(),
+                child3_traversal,
+                child3_label.clone(),
+                mock_label_model(),
+            )
+            .unwrap();
 
         // Test: get incoming edge for vertex 1 (should be edge 1: 0->1)
         let edge1 = graph.get_incoming_edge(VertexId(1));
