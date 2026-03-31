@@ -10,7 +10,7 @@ use routee_compass_core::util::geo::geo_io_utils;
 use serde_json::{json, Map};
 use std::sync::Arc;
 
-pub fn create_tree_geojson(
+pub fn create_graph_geojson(
     graph: &SearchGraph,
     map_model: Arc<MapModel>,
     state_model: Arc<StateModel>,
@@ -27,7 +27,7 @@ pub fn create_tree_geojson(
                 .cloned()
                 .map_err(|e| {
                     OutputPluginError::OutputPluginFailed(format!(
-                        "failure creating tree GeoJSON: {e}"
+                        "failure creating graph GeoJSON: {e}"
                     ))
                 })
                 .and_then(|g| create_geojson_feature(et, g, state_model.clone()));
@@ -143,7 +143,7 @@ pub fn create_route_linestring(
     Ok(geometry)
 }
 
-pub fn create_tree_multilinestring(
+pub fn create_graph_multilinestring(
     graph: &SearchGraph,
     map_model: Arc<MapModel>,
 ) -> Result<MultiLineString<f32>, OutputPluginError> {
@@ -152,20 +152,20 @@ pub fn create_tree_multilinestring(
         .flat_map(|node| node.incoming_edge().map(|et| (et.edge_list_id, et.edge_id)))
         .collect::<Vec<_>>();
 
-    let tree_linestrings = edges
+    let graph_linestrings = edges
         .iter()
         .map(|(elid, eid)| {
             let geom = map_model.get_linestring(elid, eid).map_err(|e| {
-                OutputPluginError::OutputPluginFailed(format!("failure building tree WKT: {e}"))
+                OutputPluginError::OutputPluginFailed(format!("failure building graph WKT: {e}"))
             });
             geom.cloned()
         })
         .collect::<Result<Vec<LineString<f32>>, OutputPluginError>>()?;
-    let geometry = MultiLineString::new(tree_linestrings);
+    let geometry = MultiLineString::new(graph_linestrings);
     Ok(geometry)
 }
 
-pub fn create_tree_multipoint(
+pub fn create_graph_multipoint(
     graph: &SearchGraph,
     map_model: Arc<MapModel>,
 ) -> Result<MultiPoint<f32>, OutputPluginError> {
@@ -174,7 +174,7 @@ pub fn create_tree_multipoint(
         .filter_map(|node| node.incoming_edge().map(|et| (et.edge_list_id, et.edge_id)))
         .collect::<Vec<_>>();
 
-    let tree_destinations = edges
+    let graph_destinations = edges
         .iter()
         .map(|(elid, eid)| {
             let linestring = map_model.get_linestring(elid, eid).map_err(|e| {
@@ -190,6 +190,6 @@ pub fn create_tree_multipoint(
             Ok(points)
         })
         .collect::<Result<Vec<Point<f32>>, OutputPluginError>>()?;
-    let geometry = MultiPoint::new(tree_destinations);
+    let geometry = MultiPoint::new(graph_destinations);
     Ok(geometry)
 }

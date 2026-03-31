@@ -61,8 +61,8 @@ impl TraversalOutputFormat {
         }
     }
 
-    /// generates output for a tree based on the configured TraversalOutputFormat
-    pub fn generate_tree_output(
+    /// generates output for a graph based on the configured TraversalOutputFormat
+    pub fn generate_graph_output(
         &self,
         graph: &SearchGraph,
         map_model: Arc<MapModel>,
@@ -70,12 +70,12 @@ impl TraversalOutputFormat {
     ) -> Result<serde_json::Value, OutputPluginError> {
         match self {
             TraversalOutputFormat::Wkt => {
-                let route_geometry = ops::create_tree_multilinestring(graph, map_model)?;
+                let route_geometry = ops::create_graph_multilinestring(graph, map_model)?;
                 let route_wkt = route_geometry.wkt_string();
                 Ok(serde_json::Value::String(route_wkt))
             }
             TraversalOutputFormat::Wkb => {
-                let route_geometry = ops::create_tree_multilinestring(graph, map_model)?;
+                let route_geometry = ops::create_graph_multilinestring(graph, map_model)?;
                 let geometry = geo::Geometry::MultiLineString(route_geometry);
                 let wkb_str = geometry_to_wkb_string(&geometry)?;
                 Ok(serde_json::Value::String(wkb_str))
@@ -85,15 +85,15 @@ impl TraversalOutputFormat {
                 Ok(result)
             }
             TraversalOutputFormat::GeoJson => {
-                let result = ops::create_tree_geojson(graph, map_model, state_model)?;
+                let result = ops::create_graph_geojson(graph, map_model, state_model)?;
                 Ok(result)
             }
             TraversalOutputFormat::EdgeId => {
-                let tree_ids = graph
+                let graph_ids = graph
                     .values()
                     .filter_map(|b| b.incoming_edge().map(|e| (e.edge_list_id, e.edge_id)))
                     .collect::<Vec<_>>();
-                let json = serde_json::json![tree_ids];
+                let json = serde_json::json![graph_ids];
                 Ok(json)
             }
         }
@@ -155,7 +155,7 @@ fn geometry_to_wkb_string<T: CoordFloat + Into<f64>>(
 //     //     ];
 //     //     let _ = SearchAppResult {
 //     //         routes: vec![route],
-//     //         trees: vec![],
+//     //         graphs: vec![],
 //     //         search_executed_time: Local::now().to_rfc3339(),
 //     //         search_runtime: Duration::ZERO,
 //     //         iterations: 0,

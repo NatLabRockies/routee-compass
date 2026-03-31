@@ -3,14 +3,14 @@ use std::fmt::Display;
 
 pub enum TraversalJsonField {
     RouteOutput,
-    TreeOutput,
+    GraphOutput,
 }
 
 impl TraversalJsonField {
     pub fn as_str(&self) -> &'static str {
         match self {
             TraversalJsonField::RouteOutput => "route",
-            TraversalJsonField::TreeOutput => "tree",
+            TraversalJsonField::GraphOutput => "graph",
         }
     }
 }

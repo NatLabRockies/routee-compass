@@ -10,26 +10,26 @@ use std::collections::HashMap;
 
 pub struct TraversalPlugin {
     route: Option<TraversalOutputFormat>,
-    tree: Option<TraversalOutputFormat>,
+    graph: Option<TraversalOutputFormat>,
     summary_ops: HashMap<String, SummaryOp>,
     route_key: String,
-    tree_key: String,
+    graph_key: String,
 }
 
 impl TraversalPlugin {
     pub fn new(
         route: Option<TraversalOutputFormat>,
-        tree: Option<TraversalOutputFormat>,
+        graph: Option<TraversalOutputFormat>,
         summary_ops: HashMap<String, SummaryOp>,
     ) -> Result<TraversalPlugin, OutputPluginError> {
         let route_key = TraversalJsonField::RouteOutput.to_string();
-        let tree_key = TraversalJsonField::TreeOutput.to_string();
+        let graph_key = TraversalJsonField::GraphOutput.to_string();
         Ok(TraversalPlugin {
             route,
-            tree,
+            graph,
             summary_ops,
             route_key,
-            tree_key,
+            graph_key,
         })
     }
 }
@@ -80,26 +80,26 @@ impl OutputPlugin for TraversalPlugin {
             output[&self.route_key] = routes_json;
         }
 
-        // output tree(s) if configured
-        if let Some(tree_args) = self.tree {
-            let trees_serialized = result
+        // output graph(s) if configured
+        if let Some(graph_args) = self.graph {
+            let graphs_serialized = result
                 .graphs
                 .iter()
-                .map(|tree| {
-                    // tree_args.generate_tree_output(tree, &self.geoms)
-                    tree_args.generate_tree_output(
-                        tree,
+                .map(|graph| {
+                    // graph_args.generate_graph_output(graph, &self.geoms)
+                    graph_args.generate_graph_output(
+                        graph,
                         si.map_model.clone(),
                         si.state_model.clone(),
                     )
                 })
                 .collect::<Result<Vec<_>, _>>()?;
-            let trees_json = match trees_serialized.as_slice() {
+            let graphs_json = match graphs_serialized.as_slice() {
                 [] => serde_json::Value::Null,
-                [tree] => tree.to_owned(),
-                _ => json![trees_serialized],
+                [graph] => graph.to_owned(),
+                _ => json![graphs_serialized],
             };
-            output[&self.tree_key] = json![trees_json];
+            output[&self.graph_key] = json![graphs_json];
         }
 
         Ok(())
