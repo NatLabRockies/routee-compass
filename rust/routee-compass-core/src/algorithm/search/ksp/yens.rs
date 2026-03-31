@@ -157,7 +157,7 @@ pub fn run(
     }
 
     let result = SearchAlgorithmResult {
-        trees: shortest.trees,
+        graphs: shortest.graphs,
         routes: accepted,
         iterations,
         terminated: None,

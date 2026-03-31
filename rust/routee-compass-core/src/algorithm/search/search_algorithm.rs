@@ -76,7 +76,7 @@ impl SearchAlgorithm {
                     }
                 };
                 Ok(SearchAlgorithmResult {
-                    trees: vec![search_result.tree],
+                    graphs: vec![search_result.tree],
                     routes,
                     iterations: search_result.iterations,
                     terminated: search_result.terminated.clone(),
@@ -144,7 +144,7 @@ impl SearchAlgorithm {
                     }
                 };
                 Ok(SearchAlgorithmResult {
-                    trees: vec![search_result.tree],
+                    graphs: vec![search_result.tree],
                     routes,
                     iterations: search_result.iterations,
                     terminated: search_result.terminated.clone(),
@@ -244,7 +244,7 @@ pub fn run_edge_oriented(
     match target {
         None => {
             let SearchAlgorithmResult {
-                mut trees,
+                graphs: mut trees,
                 mut routes,
                 iterations,
                 terminated,
@@ -268,7 +268,7 @@ pub fn run_edge_oriented(
                 route.insert(0, src_et.clone());
             }
             let updated = SearchAlgorithmResult {
-                trees,
+                graphs: trees,
                 routes,
                 iterations: iterations + 1,
                 terminated,
@@ -287,7 +287,7 @@ pub fn run_edge_oriented(
 
             // run a search and append source/target edges to result
             let SearchAlgorithmResult {
-                trees,
+                graphs: trees,
                 mut routes,
                 iterations,
                 terminated,
@@ -315,7 +315,7 @@ pub fn run_edge_oriented(
             }
 
             let result = SearchAlgorithmResult {
-                trees,
+                graphs: trees,
                 routes,
                 iterations: iterations + 2,
                 terminated,

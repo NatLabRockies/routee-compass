@@ -5,7 +5,7 @@ use crate::algorithm::search::SearchGraph;
 
 #[derive(Default, Allocative)]
 pub struct SearchAlgorithmResult {
-    pub trees: Vec<SearchGraph>,
+    pub graphs: Vec<SearchGraph>,
     pub routes: Vec<Vec<EdgeTraversal>>,
     pub iterations: u64,
     pub terminated: Option<String>,

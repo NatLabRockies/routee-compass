@@ -21,7 +21,7 @@ pub fn run(
 ) -> Result<SearchAlgorithmResult, SearchError> {
     // run forward and reverse search
     let SearchAlgorithmResult {
-        trees: fwd_trees,
+        graphs: fwd_trees,
         routes: _,
         iterations: fwd_iterations,
         terminated: fwd_terminated,
@@ -33,7 +33,7 @@ pub fn run(
         si,
     )?;
     let SearchAlgorithmResult {
-        trees: rev_trees,
+        graphs: rev_trees,
         routes: _,
         iterations: rev_iterations,
         terminated: rev_terminated,
@@ -158,7 +158,7 @@ pub fn run(
 
     // combine all data into this result
     let result = SearchAlgorithmResult {
-        trees: vec![fwd_tree.clone(), rev_tree.clone()], // todo: figure out how to avoid this clone
+        graphs: vec![fwd_tree.clone(), rev_tree.clone()], // todo: figure out how to avoid this clone
         routes,
         iterations: fwd_iterations + rev_iterations + ksp_it, // todo: figure out how to report individually
         terminated,
