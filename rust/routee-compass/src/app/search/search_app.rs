@@ -119,7 +119,7 @@ impl SearchApp {
 
         let result = SearchAppResult {
             routes: results.routes,
-            trees: results.trees,
+            graphs: results.trees,
             search_executed_time: search_start_time.to_rfc3339(),
             search_runtime,
             iterations: results.iterations,

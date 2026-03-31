@@ -41,8 +41,8 @@ where
             .into_iter()
             .map(|(g, d)| Node::new(g, d))
             .collect::<Result<Vec<_>, _>>()?;
-        let tree = RTree::bulk_load(nodes);
-        Ok(PolygonalRTree(tree))
+        let graph = RTree::bulk_load(nodes);
+        Ok(PolygonalRTree(graph))
     }
 
     /// tests for intersection with polygonal data in this tree. this involves two steps:

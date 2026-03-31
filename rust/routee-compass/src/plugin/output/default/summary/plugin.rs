@@ -22,7 +22,7 @@ impl OutputPlugin for SummaryOutputPlugin {
             Err(_e) => Ok(()),
             Ok((result, _)) => {
                 let route_edges = result.routes.iter().map(|r| r.len()).sum::<usize>();
-                let tree_edges = result.trees.iter().map(|t| t.len()).sum::<usize>();
+                let tree_edges = result.graphs.iter().map(|t| t.len()).sum::<usize>();
                 let terminated = result
                     .terminated
                     .clone()

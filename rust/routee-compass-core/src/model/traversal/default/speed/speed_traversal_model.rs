@@ -225,7 +225,7 @@ mod tests {
                 test_regular_model.output_features(),
             )
             .expect("test invariant failed");
-        let tree = SearchGraph::default();
+        let graph = SearchGraph::default();
 
         let mut state_with_limit = state_model.initial_state(None).unwrap();
         let mut state_without_limit = state_model.initial_state(None).unwrap();
@@ -235,12 +235,12 @@ mod tests {
 
         // Traverse with speed limit
         test_limited_model
-            .traverse_edge((&v, &e, &v), &mut state_with_limit, &tree, &state_model)
+            .traverse_edge((&v, &e, &v), &mut state_with_limit, &graph, &state_model)
             .unwrap();
 
         // Traverse without speed limit
         test_regular_model
-            .traverse_edge((&v, &e, &v), &mut state_without_limit, &tree, &state_model)
+            .traverse_edge((&v, &e, &v), &mut state_without_limit, &graph, &state_model)
             .unwrap();
 
         // The time with speed limit should be about twice the time without limit

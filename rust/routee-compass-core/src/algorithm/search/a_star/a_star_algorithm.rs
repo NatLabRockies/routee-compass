@@ -37,8 +37,8 @@ pub fn run_vertex_oriented(
         let initial_label =
             si.label_model
                 .label_from_state(source, &initial_state, &si.state_model)?;
-        let tree = SearchGraph::with_root(initial_label, *direction);
-        return Ok(SearchResult::completed(tree, 0));
+        let graph = SearchGraph::with_root(initial_label, *direction);
+        return Ok(SearchResult::completed(graph, 0));
     }
 
     // context for the search (graph, search functions, frontier priority queue)
@@ -200,8 +200,8 @@ pub fn run_edge_oriented(
                 let initial_label =
                     si.label_model
                         .label_from_state(e1_dst, &initial_state, &si.state_model)?;
-                let tree = SearchGraph::with_root(initial_label, *direction);
-                Ok(SearchResult::completed(tree, 0))
+                let graph = SearchGraph::with_root(initial_label, *direction);
+                Ok(SearchResult::completed(graph, 0))
             } else {
                 run_vertex_oriented(e1_dst, Some(e2_src), direction, a_star, si)
             }

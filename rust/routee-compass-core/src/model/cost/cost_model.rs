@@ -249,8 +249,8 @@ mod test {
         }
     }
 
-    /// Helper to create a basic search tree for testing
-    fn create_test_tree() -> SearchGraph {
+    /// Helper to create a basic search graph for testing
+    fn create_test_graph() -> SearchGraph {
         SearchGraph::new(Direction::Forward)
     }
 
@@ -418,14 +418,14 @@ mod test {
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
         let trajectory = (&v1, &e, &v2);
-        let tree = create_test_tree();
+        let graph = create_test_graph();
 
         let result = cost_model
             .traversal_cost(
                 trajectory,
                 &previous_state,
                 &current_state,
-                &tree,
+                &graph,
                 &state_model,
             )
             .expect("Failed to compute traversal cost");
@@ -482,14 +482,14 @@ mod test {
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
         let trajectory = (&v1, &e, &v2);
-        let tree = create_test_tree();
+        let graph = create_test_graph();
 
         let result = cost_model
             .traversal_cost(
                 trajectory,
                 &previous_state,
                 &current_state,
-                &tree,
+                &graph,
                 &state_model,
             )
             .expect("Failed to compute traversal cost");
@@ -587,14 +587,14 @@ mod test {
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
         let trajectory = (&v1, &e, &v2);
-        let tree = create_test_tree();
+        let graph = create_test_graph();
 
         let result = cost_model
             .traversal_cost(
                 trajectory,
                 &previous_state,
                 &current_state,
-                &tree,
+                &graph,
                 &state_model,
             )
             .expect("Failed to compute traversal cost");
@@ -664,14 +664,14 @@ mod test {
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
         let trajectory = (&v1, &e, &v2);
-        let tree = create_test_tree();
+        let graph = create_test_graph();
 
         let result = cost_model
             .traversal_cost(
                 trajectory,
                 &previous_state,
                 &current_state,
-                &tree,
+                &graph,
                 &state_model,
             )
             .expect("Failed to compute traversal cost");
@@ -833,14 +833,14 @@ mod test {
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
         let trajectory = (&v1, &e, &v2);
-        let tree = create_test_tree();
+        let graph = create_test_graph();
 
         let result = cost_model
             .traversal_cost(
                 trajectory,
                 &previous_state,
                 &current_state,
-                &tree,
+                &graph,
                 &state_model,
             )
             .expect("Failed to compute traversal cost");
@@ -918,14 +918,14 @@ mod test {
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
         let trajectory = (&v1, &e, &v2);
-        let tree = create_test_tree();
+        let graph = create_test_graph();
 
         let result_acc = cost_model_acc
             .traversal_cost(
                 trajectory,
                 &previous_state,
                 &current_state,
-                &tree,
+                &graph,
                 &state_model_acc,
             )
             .expect("Failed to compute accumulator cost");
@@ -935,7 +935,7 @@ mod test {
                 trajectory,
                 &previous_state,
                 &current_state,
-                &tree,
+                &graph,
                 &state_model_non_acc,
             )
             .expect("Failed to compute non-accumulator cost");

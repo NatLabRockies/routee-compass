@@ -80,7 +80,7 @@ impl TraversalModel for SimpleChargingModel {
         &self,
         _od: (&Vertex, &Vertex),
         _state: &mut Vec<StateVariable>,
-        _tree: &SearchGraph,
+        _graph: &SearchGraph,
         _state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         Ok(())
@@ -89,7 +89,7 @@ impl TraversalModel for SimpleChargingModel {
         &self,
         trajectory: (&Vertex, &Edge, &Vertex),
         state: &mut Vec<StateVariable>,
-        _tree: &SearchGraph,
+        _graph: &SearchGraph,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         let current_soc = state_model.get_ratio(state, fieldname::TRIP_SOC)?;
@@ -249,7 +249,7 @@ mod tests {
     fn test_charging_when_soc_below_threshold() {
         let model = mock_simple_charging_model();
         let state_model = state_model(&model);
-        let tree = SearchGraph::default();
+        let graph: SearchGraph = SearchGraph::default();
 
         // Set SOC to 15% (below 20% threshold) and 60 kWh battery
         let low_soc = Ratio::new::<uom::si::ratio::percent>(15.0);
@@ -271,7 +271,7 @@ mod tests {
             .traverse_edge(
                 (&trajectory.0, &trajectory.1, &trajectory.2),
                 &mut state,
-                &tree,
+                &graph,
                 &state_model,
             )
             .unwrap();
@@ -294,7 +294,7 @@ mod tests {
     fn test_no_charging_when_soc_above_threshold() {
         let model = mock_simple_charging_model();
         let state_model = state_model(&model);
-        let tree = SearchGraph::default();
+        let graph = SearchGraph::default();
 
         // Set SOC to 50% (above 20% threshold)
         let high_soc = Ratio::new::<uom::si::ratio::percent>(50.0);
@@ -316,7 +316,7 @@ mod tests {
             .traverse_edge(
                 (&trajectory.0, &trajectory.1, &trajectory.2),
                 &mut state,
-                &tree,
+                &graph,
                 &state_model,
             )
             .unwrap();
@@ -336,7 +336,7 @@ mod tests {
     fn test_no_charging_station_at_vertex() {
         let model = mock_simple_charging_model();
         let state_model = state_model(&model);
-        let tree = SearchGraph::default();
+        let graph = SearchGraph::default();
 
         // Set SOC to 15% (below 20% threshold)
         let low_soc = Ratio::new::<uom::si::ratio::percent>(15.0);
@@ -358,7 +358,7 @@ mod tests {
             .traverse_edge(
                 (&trajectory.0, &trajectory.1, &trajectory.2),
                 &mut state,
-                &tree,
+                &graph,
                 &state_model,
             )
             .unwrap();
@@ -378,7 +378,7 @@ mod tests {
     fn test_charging_with_different_power_types() {
         let model = mock_simple_charging_model();
         let state_model = state_model(&model);
-        let tree = SearchGraph::default();
+        let graph = SearchGraph::default();
 
         // Test DC fast charging
         let low_soc = Ratio::new::<uom::si::ratio::percent>(15.0);
@@ -399,7 +399,7 @@ mod tests {
             .traverse_edge(
                 (&trajectory_dc.0, &trajectory_dc.1, &trajectory_dc.2),
                 &mut state_dc,
-                &tree,
+                &graph,
                 &state_model,
             )
             .unwrap();
@@ -415,7 +415,7 @@ mod tests {
             .traverse_edge(
                 (&trajectory_ac.0, &trajectory_ac.1, &trajectory_ac.2),
                 &mut state_ac,
-                &tree,
+                &graph,
                 &state_model,
             )
             .unwrap();
@@ -445,7 +445,7 @@ mod tests {
     fn test_invalid_power_type() {
         let model = mock_simple_charging_model();
         let state_model = state_model(&model);
-        let tree = SearchGraph::default();
+        let graph = SearchGraph::default();
 
         // Set SOC to 15% (below 20% threshold)
         let low_soc = Ratio::new::<uom::si::ratio::percent>(15.0);
@@ -467,7 +467,7 @@ mod tests {
             .traverse_edge(
                 (&trajectory.0, &trajectory.1, &trajectory.2),
                 &mut state,
-                &tree,
+                &graph,
                 &state_model,
             )
             .unwrap();

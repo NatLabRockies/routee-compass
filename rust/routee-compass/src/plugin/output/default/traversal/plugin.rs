@@ -83,7 +83,7 @@ impl OutputPlugin for TraversalPlugin {
         // output tree(s) if configured
         if let Some(tree_args) = self.tree {
             let trees_serialized = result
-                .trees
+                .graphs
                 .iter()
                 .map(|tree| {
                     // tree_args.generate_tree_output(tree, &self.geoms)

@@ -92,7 +92,7 @@ impl TerminationModel {
                 }
             },
             T::SolutionSizeLimit { limit } => {
-                // if you add one more branch to the tree it would violate this termination criteria
+                // if you add one more branch to the graph it would violate this termination criteria
                 solution.len() >= *limit
             }
             T::IterationsLimit { limit } => {
@@ -211,7 +211,7 @@ mod tests {
         let start_time = Instant::now() - within_limit;
         let limit = Duration::from_secs(2);
         let frequency = 10;
-        let tree = mock_tree(0);
+        let graph = mock_graph(0);
 
         let m = T::QueryRuntimeLimit {
             limit,
@@ -219,7 +219,7 @@ mod tests {
         };
 
         for iteration in 0..(frequency + 1) {
-            let result = m.should_terminate(&start_time, &tree, iteration);
+            let result = m.should_terminate(&start_time, &graph, iteration);
             // in all iterations, the result should be false, though for iterations 1-9, that will be due to the sample frequency
             assert!(!result);
         }
@@ -231,7 +231,7 @@ mod tests {
         let start_time = Instant::now() - exceeds_limit;
         let limit = Duration::from_secs(2);
         let frequency = 10;
-        let tree = mock_tree(0);
+        let graph = mock_graph(0);
 
         let m = T::QueryRuntimeLimit {
             limit,
@@ -239,7 +239,7 @@ mod tests {
         };
 
         for iteration in 0..(frequency + 1) {
-            let result = m.should_terminate(&start_time, &tree, iteration);
+            let result = m.should_terminate(&start_time, &graph, iteration);
             if iteration == 0 {
                 // edge case. when iteration == 0, we will run the test, and it should fail, since 10 % 0 == 0 is true.
                 // but let's continue testing iterations 1-10 to explore the expected range of behaviors.
@@ -260,9 +260,9 @@ mod tests {
         let m = T::IterationsLimit { limit: 5 };
         let i = Instant::now();
 
-        let t4 = mock_tree(4);
-        let t5 = mock_tree(5);
-        let t6 = mock_tree(6);
+        let t4 = mock_graph(4);
+        let t5 = mock_graph(5);
+        let t6 = mock_graph(6);
 
         let good = m.should_terminate(&i, &t4, 4);
         let terminate1 = m.should_terminate(&i, &t5, 5);
@@ -274,12 +274,12 @@ mod tests {
 
     #[test]
     fn test_solution_size_limit() {
-        // solution size limit of 5 should accept tree of size 4 + 5, fail on size 6
+        // solution size limit of 5 should accept graph of size 4 + 5, fail on size 6
         let m = T::SolutionSizeLimit { limit: 5 };
         let i = Instant::now();
-        let t4 = mock_tree(4);
-        let t5 = mock_tree(5);
-        let t6 = mock_tree(6);
+        let t4 = mock_graph(4);
+        let t5 = mock_graph(5);
+        let t6 = mock_graph(6);
 
         let good1 = m.should_terminate(&i, &t4, 4);
         let terminate1 = m.should_terminate(&i, &t5, 5);
@@ -297,11 +297,11 @@ mod tests {
             frequency: None,
         };
         let i = Instant::now();
-        let empty_tree = mock_tree(0);
-        let fuller_tree = mock_tree(100); // larger than 0.01MB == 10KB
+        let empty_graph = mock_graph(0);
+        let fuller_graph = mock_graph(100); // larger than 0.01MB == 10KB
 
-        let good = m.should_terminate(&i, &empty_tree, 4);
-        let terminate = m.should_terminate(&i, &fuller_tree, 5);
+        let good = m.should_terminate(&i, &empty_graph, 4);
+        let terminate = m.should_terminate(&i, &fuller_graph, 5);
 
         assert!(!good);
         assert!(terminate);
@@ -315,7 +315,7 @@ mod tests {
         let frequency = 1;
         let iteration_limit = 5;
         let solution_limit = 3;
-        let tree = mock_tree(solution_limit + 1);
+        let graph = mock_graph(solution_limit + 1);
 
         let m1 = T::QueryRuntimeLimit {
             limit: runtime_limit,
@@ -330,9 +330,9 @@ mod tests {
         let cm = T::Combined {
             models: vec![m1, m2, m3],
         };
-        let terminate = cm.should_terminate(&start_time, &tree, iteration_limit + 1);
+        let terminate = cm.should_terminate(&start_time, &graph, iteration_limit + 1);
         assert!(terminate);
-        let msg = cm.explain(&start_time, &tree, iteration_limit + 1);
+        let msg = cm.explain(&start_time, &graph, iteration_limit + 1);
         let expected = [
             "exceeded runtime limit of 0:00:02.000 tested every 1 iterations",
             "exceeded iteration limit of 5",
@@ -350,7 +350,7 @@ mod tests {
         let frequency = 1;
         let iteration_limit = 5;
         let solution_limit = 3;
-        let tree = mock_tree(solution_limit - 1);
+        let graph = mock_graph(solution_limit - 1);
 
         let m1 = T::QueryRuntimeLimit {
             limit: runtime_limit,
@@ -365,9 +365,9 @@ mod tests {
         let cm = T::Combined {
             models: vec![m1, m2, m3],
         };
-        let terminate = cm.should_terminate(&start_time, &tree, iteration_limit + 1);
+        let terminate = cm.should_terminate(&start_time, &graph, iteration_limit + 1);
         assert!(terminate);
-        let msg = cm.explain(&start_time, &tree, iteration_limit + 1);
+        let msg = cm.explain(&start_time, &graph, iteration_limit + 1);
         let expected = [
             "exceeded runtime limit of 0:00:02.000 tested every 1 iterations",
             "exceeded iteration limit of 5",
@@ -376,12 +376,12 @@ mod tests {
         assert_eq!(msg, expected);
     }
 
-    fn mock_tree(size: usize) -> SearchGraph {
-        let mut tree = SearchGraph::new(Direction::Forward);
+    fn mock_graph(size: usize) -> SearchGraph {
+        let mut graph = SearchGraph::new(Direction::Forward);
         if size == 0 {
-            return tree;
+            return graph;
         }
-        // when creating the tree, it will create a root node, so len() will be mock_tree's size + 1
+        // when creating the graph, it will create a root node, so len() will be mock_graph's size + 1
         for idx in 0..(size - 1) {
             let cost = TraversalCost {
                 objective_cost: Cost::MIN_COST,
@@ -395,7 +395,7 @@ mod tests {
                 cost,
                 result_state: vec![],
             };
-            tree.insert(
+            graph.insert(
                 Label::Vertex(VertexId(idx)),
                 edge_traversal,
                 Label::Vertex(VertexId(idx + 1)),
@@ -403,7 +403,7 @@ mod tests {
             )
             .expect("test invariant failed")
         }
-        tree
+        graph
     }
 
     #[test]

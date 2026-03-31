@@ -405,7 +405,7 @@ pub fn run_single_calculate_path(
 
     let search_app_result = crate::app::search::SearchAppResult {
         routes: vec![edge_traversals],
-        trees: vec![],
+        graphs: vec![],
         search_executed_time: start_time.to_rfc3339(),
         search_runtime: runtime,
         iterations: 0,
