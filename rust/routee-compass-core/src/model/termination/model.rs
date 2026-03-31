@@ -395,13 +395,14 @@ mod tests {
                 cost,
                 result_state: vec![],
             };
-            graph.insert(
-                Label::Vertex(VertexId(idx)),
-                edge_traversal,
-                Label::Vertex(VertexId(idx + 1)),
-                Arc::new(VertexLabelModel {}),
-            )
-            .expect("test invariant failed")
+            graph
+                .insert(
+                    Label::Vertex(VertexId(idx)),
+                    edge_traversal,
+                    Label::Vertex(VertexId(idx + 1)),
+                    Arc::new(VertexLabelModel {}),
+                )
+                .expect("test invariant failed")
         }
         graph
     }
