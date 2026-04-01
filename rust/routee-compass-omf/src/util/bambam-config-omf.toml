@@ -47,7 +47,7 @@ traversal.models = [
 frontier.type = "combined"
 frontier.models = [
     { type = "time_limit", time_limit = { time = 40.0, time_unit = "minutes" }},
-    { type = "multimodal", this_mode = "walk", constraints = [], available_modes = ["walk", "bike", "drive"], available_route_ids = [], max_trip_legs = 5 }
+    { type = "multimodal", this_mode = "walk", available_modes = ["walk", "bike", "drive"], available_route_ids = [], max_trip_legs = 5 }
 ]
 
 ###
@@ -65,7 +65,7 @@ traversal.models = [
 frontier.type = "combined"
 frontier.models = [
     { type = "time_limit", time_limit = { time = 40.0, time_unit = "minutes" }},
-    { type = "multimodal", this_mode = "bike", constraints = [], available_modes = ["walk", "bike", "drive"], available_route_ids = [], max_trip_legs = 5 }
+    { type = "multimodal", this_mode = "bike", available_modes = ["walk", "bike", "drive"], available_route_ids = [], max_trip_legs = 5 }
 ]
 
 ###
@@ -83,7 +83,7 @@ traversal.models = [
 frontier.type = "combined"
 frontier.models = [
     { type = "time_limit", time_limit = { time = 40.0, time_unit = "minutes" }},
-    { type = "multimodal", this_mode = "drive", constraints = [], available_modes = ["walk", "bike", "drive"], available_route_ids = [], max_trip_legs = 5 }
+    { type = "multimodal", this_mode = "drive", available_modes = ["walk", "bike", "drive"], available_route_ids = [], max_trip_legs = 5 }
 ]
 
 
