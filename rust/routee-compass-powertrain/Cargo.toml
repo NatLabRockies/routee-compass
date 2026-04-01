@@ -25,6 +25,7 @@ log = { workspace = true }
 ndarray = { workspace = true }
 ninterp = { workspace = true }
 ordered-float = { workspace = true }
+ort = { workspace = true }
 rayon = { workspace = true }
 routee-compass-core = { path = "../routee-compass-core", version = "0.18.0" }
 serde = { workspace = true }

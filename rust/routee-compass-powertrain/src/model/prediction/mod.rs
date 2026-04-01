@@ -1,5 +1,6 @@
 pub mod interpolation;
 mod model_type;
+pub mod onnx;
 mod prediction_model;
 pub mod prediction_model_ops;
 mod prediction_model_record;

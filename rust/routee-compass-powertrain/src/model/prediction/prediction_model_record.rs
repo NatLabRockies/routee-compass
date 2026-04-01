@@ -1,8 +1,8 @@
 use crate::model::fieldname;
 
 use super::{
-    interpolation::InterpolationModel, model_type::ModelType, prediction_model_ops,
-    smartcore::SmartcoreModel, PredictionModel, PredictionModelConfig,
+    interpolation::InterpolationModel, model_type::ModelType, onnx::onnx_model::OnnxModel,
+    prediction_model_ops, smartcore::SmartcoreModel, PredictionModel, PredictionModelConfig,
 };
 use routee_compass_core::model::{
     state::{InputFeature, StateModel, StateVariable},
@@ -37,6 +37,10 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
         let prediction_model: Arc<dyn PredictionModel> = match &config.model_type {
             ModelType::Smartcore => {
                 let model = SmartcoreModel::new(&config.model_input_file, config.energy_rate_unit)?;
+                Arc::new(model)
+            }
+            ModelType::Onnx => {
+                let model = OnnxModel::new(&config.model_input_file, config.energy_rate_unit)?;
                 Arc::new(model)
             }
             ModelType::Interpolate {
