@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1774649406230,
+  "lastUpdate": 1775056952552,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -2999,6 +2999,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2912275,
             "range": "± 131668",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nreinicke@users.noreply.github.com",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "06abe99ac6579f60f64784a561627ea0ac342f21",
+          "message": "Reintroduce ONNX (#486)\n\n* add onnx prediction model\n\n* add onnx model as acceptable model type in interpolate\n\n* pull out onnx config for now; add rust checks to pixi\n\n* update build instructions in claude.md\n\n* Implement a session pool for onnx models\n\n* safely get onnx interior objections\n\n* add unit tests for onnx model\n\n* update onnx session pool to use Condvar to not all block on one session\n\n* Update custom model type deserializer comment\n\n* revert back to single onnx mutex session",
+          "timestamp": "2026-04-01T09:17:50-06:00",
+          "tree_id": "15caba5f94b0121438140918034333911849b0a5",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/06abe99ac6579f60f64784a561627ea0ac342f21"
+        },
+        "date": 1775056951896,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 3013015,
+            "range": "± 268363",
             "unit": "ns/iter"
           }
         ]
