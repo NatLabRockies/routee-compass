@@ -100,37 +100,6 @@ impl SearchTree {
         }
     }
 
-    // /// removes a label from the search tree. occurs during pruning when making a comparison
-    // /// between two labels, where one is pareto-dominant.
-    // pub fn remove(&mut self, label: &Label) -> Result<(), SearchTreeError> {
-    //     // Remove from nodes map
-    //     let node = self
-    //         .nodes
-    //         .remove(label)
-    //         .ok_or_else(|| SearchTreeError::LabelNotFound(label.clone()))?;
-
-    //     // Decrement child count of parent
-    //     if let Some(parent_label) = node.parent_label() {
-    //         if let Some(parent_node) = self.nodes.get_mut(parent_label) {
-    //             parent_node.decrement_child_count();
-    //         }
-    //     }
-
-    //     // Remove from labels map if not a Vertex label
-    //     if !matches!(label, Label::Vertex(_)) {
-    //         let vertex_id = label.vertex_id();
-    //         if let Some(label_set) = self.labels.get_mut(vertex_id) {
-    //             label_set.remove(label);
-    //             // Clean up empty sets
-    //             if label_set.is_empty() {
-    //                 self.labels.remove(vertex_id);
-    //             }
-    //         }
-    //     }
-
-    //     Ok(())
-    // }
-
     pub fn iter<'a>(&'a self) -> Box<dyn Iterator<Item = (&'a Label, &'a SearchTreeNode)> + 'a> {
         Box::new(self.nodes.iter())
     }
@@ -155,27 +124,10 @@ impl SearchTree {
 
     /// Find labels for the given vertex ID
     pub fn get_labels(&self, vertex: VertexId) -> Box<dyn Iterator<Item = Label> + '_> {
-        // we always perform a lookup for the Vertex label, as it is excluded from the labels map
-        let vertex_label = Label::Vertex(vertex);
-        let vertex_iter = std::iter::once(vertex_label);
-
         match self.labels.get(&vertex) {
-            Some(labels) => Box::new(vertex_iter.chain(labels.iter().cloned())),
-            None => Box::new(vertex_iter),
-        }
-    }
-
-    /// Find labels for the given vertex ID as an owned iterator
-    pub fn get_labels_iter(&self, vertex: VertexId) -> Box<dyn Iterator<Item = Label>> {
-        match self.labels.get(&vertex) {
-            Some(labels) => Box::new(labels.clone().into_iter()),
+            Some(labels) => Box::new(labels.iter().cloned()),
             None => Box::new(std::iter::empty()),
         }
-    }
-
-    /// Find labels for the given vertex ID with mutable access.
-    pub fn get_labels_mut(&mut self, vertex: VertexId) -> Option<&mut HashSet<Label>> {
-        self.labels.get_mut(&vertex)
     }
 
     /// finds a single label by picking the one that is maximal/minimal wrt some comparison function.
@@ -404,15 +356,11 @@ pub enum SearchTreeError {
     InvalidBranchStructure(String),
     #[error("Vertex not found in tree: {0}")]
     VertexNotFound(VertexId),
-    #[error("Cycle detected: {0}")]
-    CycleDetected(String),
     #[error("Search tree error while interacting with Graph: {source}")]
     NetworkError {
         #[from]
         source: NetworkError,
     },
-    #[error("Failure while pruning tree: {0}")]
-    PruningError(String),
 }
 
 #[cfg(test)]
