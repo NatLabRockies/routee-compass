@@ -17,7 +17,7 @@ pub enum TrajectoryInsertBehavior {
 impl TrajectoryInsertBehavior {
     /// pick the type of insert to run based on the existence of this label in the tree.
     pub fn new(
-        tree: &mut SearchTree,
+        tree: &SearchTree,
         next_label: &Label,
         traversal: &EdgeTraversal,
     ) -> TrajectoryInsertBehavior {
