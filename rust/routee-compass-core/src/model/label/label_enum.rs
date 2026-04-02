@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, hash::Hash};
 
 use allocative::Allocative;
 use serde::Serialize;
@@ -16,10 +16,28 @@ pub const OS_ALIGNED_STATE_LEN: usize = 8;
 #[derive(PartialEq, Eq, Hash, Debug, Clone, Serialize, Allocative)]
 pub struct IntStateVec(pub Vec<usize>);
 
-#[derive(PartialEq, Eq, Hash, Debug, Clone, Serialize, Allocative)]
+#[derive(Debug, Clone, Serialize, Allocative)]
 pub struct U8StateVec {
     pub state: Vec<u8>,
     pub state_len: u8,
+}
+
+impl PartialEq for U8StateVec {
+    fn eq(&self, other: &Self) -> bool {
+        let len = self.state_len as usize;
+        let other_len = other.state_len as usize;
+        len == other_len && self.state[..len] == other.state[..other_len]
+    }
+}
+
+impl Eq for U8StateVec {}
+
+impl Hash for U8StateVec {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        let len = self.state_len as usize;
+        self.state_len.hash(state);
+        self.state[..len].hash(state);
+    }
 }
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone, Serialize, Allocative)]
