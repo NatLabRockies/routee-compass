@@ -9,13 +9,7 @@ description = "The RouteE-Compass energy-aware routing engine"
 homepage = "https://nrel.github.io/routee-compass"
 repository = "https://github.com/NREL/routee-compass"
 documentation = "https://docs.rs/routee-compass"
-keywords = [
-    "eco-routing",
-    "route-planning",
-    "routing",
-    "networks",
-    "road-networks",
-]
+keywords = ["eco-routing", "route-planning", "routing", "networks", "road-networks"]
 categories = ["science", "science::geo"]
 
 [lib]
