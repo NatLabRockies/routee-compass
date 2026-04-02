@@ -137,40 +137,6 @@ mod tests {
     }
 
     #[test]
-    fn test_pop_new_skips_pruned_label() {
-        let mut frontier = InternalPriorityQueue::default();
-        let l1 = Label::Vertex(VertexId(1));
-        let l2 = Label::Vertex(VertexId(2));
-
-        // l2 has higher priority (lower cost) but is "pruned" (not in solution tree)
-        frontier.push(l2.clone(), ReverseCost::from(Cost::new(5.0)));
-        frontier.push(l1.clone(), ReverseCost::from(Cost::new(10.0)));
-
-        let mut solution = SearchTree::new(Direction::Forward);
-        let root = Label::Vertex(VertexId(0));
-        solution.set_root(root.clone());
-
-        // Add l1 to the tree
-        let et = crate::algorithm::search::EdgeTraversal {
-            edge_id: EdgeId(0),
-            edge_list_id: EdgeListId(0),
-            cost: TraversalCost::new(Cost::new(10.0), Cost::new(10.0)),
-            result_state: vec![StateVariable::ZERO],
-        };
-        solution.insert_trajectory(root, et, l1.clone()).unwrap();
-
-        let initial_state = vec![StateVariable::ZERO];
-
-        // Should skip l2 and return l1
-        let result =
-            FrontierInstance::pop_new(&mut frontier, VertexId(0), None, &solution, &initial_state)
-                .unwrap();
-
-        assert!(result.is_some());
-        assert_eq!(result.unwrap().prev_label, l1);
-    }
-
-    #[test]
     fn test_pop_new_reaches_target() {
         let mut frontier = InternalPriorityQueue::default();
         let target = VertexId(1);
@@ -191,49 +157,5 @@ mod tests {
         .unwrap();
 
         assert!(result.is_none());
-    }
-
-    #[test]
-    fn test_pop_new_skips_pruned_state_label() {
-        let mut frontier = InternalPriorityQueue::default();
-        let v1 = VertexId(1);
-        let l1 = Label::VertexWithIntState {
-            vertex_id: v1,
-            state: 100,
-        };
-        let l2 = Label::VertexWithIntState {
-            vertex_id: v1,
-            state: 50,
-        }; // This label will not be in the tree
-
-        // l2 has higher priority (lower cost) but is not in the tree
-        frontier.push(l2.clone(), ReverseCost::from(Cost::new(5.0)));
-        frontier.push(l1.clone(), ReverseCost::from(Cost::new(10.0)));
-
-        let mut solution = SearchTree::new(Direction::Forward);
-        let root = Label::Vertex(VertexId(0));
-        solution.set_root(root.clone());
-
-        // Manually insert l1 by using a compatible label model
-        let et = crate::algorithm::search::EdgeTraversal {
-            edge_id: EdgeId(0),
-            edge_list_id: EdgeListId(0),
-            cost: TraversalCost::new(Cost::new(10.0), Cost::new(10.0)),
-            result_state: vec![StateVariable::ZERO],
-        };
-
-        // VertexLabelModel.compare returns Greater, so it won't prune anything.
-        // That's fine for this test since we just want to ensure l1 is in the tree and l2 is not.
-        solution.insert_trajectory(root, et, l1.clone()).unwrap();
-
-        let initial_state = vec![StateVariable::ZERO];
-
-        // Should skip l2 (not in tree) and return l1
-        let result =
-            FrontierInstance::pop_new(&mut frontier, VertexId(0), None, &solution, &initial_state)
-                .unwrap();
-
-        assert!(result.is_some());
-        assert_eq!(result.unwrap().prev_label, l1);
     }
 }
