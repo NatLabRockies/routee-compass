@@ -26,9 +26,7 @@ pub enum SearchTreeNode {
 impl SearchTreeNode {
     /// create a new root node.
     pub fn new_root(direction: Direction) -> Self {
-        Self::Root {
-            direction,
-        }
+        Self::Root { direction }
     }
 
     /// create a new child node from some trajectory (parent) -> [incoming_edge] -> (), for some
