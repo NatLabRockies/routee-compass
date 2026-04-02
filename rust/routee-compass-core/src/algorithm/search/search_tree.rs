@@ -54,7 +54,7 @@ impl SearchTree {
     }
 
     /// Insert the trajectory (parent) -[edge]-> (child) as a node in the tree. it is
-    /// assumed that the incoming edge traversal has already been deemed dominant over 
+    /// assumed that the incoming edge traversal has already been deemed dominant over
     /// any matching trajectory already existing in the tree.
     pub fn insert_trajectory(
         &mut self,
@@ -77,7 +77,7 @@ impl SearchTree {
         if !vertex_labels.contains(&child_label) {
             vertex_labels.insert(child_label.clone());
         }
-        
+
         // update the nodes collection
         let new_node =
             SearchTreeNode::new_child(edge_traversal, parent_label.clone(), self.direction);

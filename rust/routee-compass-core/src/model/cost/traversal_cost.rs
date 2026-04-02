@@ -18,7 +18,6 @@ pub struct TraversalCost {
 }
 
 impl TraversalCost {
- 
     /// helper for building one-off [TraversalCost] values that can be
     /// used in prescribed scenarios such as testing.
     pub fn new(total_cost: Cost, objective_cost: Cost) -> TraversalCost {
@@ -28,12 +27,12 @@ impl TraversalCost {
             #[cfg(feature = "detailed_costs")]
             cost_component: std::collections::HashMap::new(),
         }
-    } 
+    }
 
     /// creates a TraversalCost where the cost value is as low as it can go (but, importantly, not zero).
     pub fn min_cost() -> TraversalCost {
         TraversalCost::new(Cost::MIN_COST, Cost::MIN_COST)
-    } 
+    }
 
     /// inserts a new cost into this traversal.
     /// manages storing a separate notion of objective vs total cost
