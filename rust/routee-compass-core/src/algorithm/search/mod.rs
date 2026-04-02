@@ -11,8 +11,8 @@ mod search_tree_node;
 mod termination_behavior;
 
 pub mod a_star;
-pub mod ksp;
 pub mod insert_behavior;
+pub mod ksp;
 pub mod util;
 pub use direction::Direction;
 pub use edge_traversal::EdgeTraversal;

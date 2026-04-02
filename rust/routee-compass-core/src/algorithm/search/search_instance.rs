@@ -134,12 +134,8 @@ impl SearchInstance {
                 vertex_id: dst.vertex_id,
                 state: i,
             };
-            tree.insert_trajectory(
-                prev_label,
-                traversal.clone(),
-                child_label.clone(),
-            )
-            .map_err(|e| SearchError::InternalError(e.to_string()))?;
+            tree.insert_trajectory(prev_label, traversal.clone(), child_label.clone())
+                .map_err(|e| SearchError::InternalError(e.to_string()))?;
 
             prev_label = child_label;
             current_state = traversal.result_state.clone();

@@ -256,11 +256,7 @@ pub fn run_edge_oriented(
 
             for tree in trees.iter_mut() {
                 if !tree.contains(&dst_label) {
-                    tree.insert_trajectory(
-                        e1_label.clone(),
-                        src_et.clone(),
-                        dst_label.clone(),
-                    )?;
+                    tree.insert_trajectory(e1_label.clone(), src_et.clone(), dst_label.clone())?;
                 }
             }
             for route in routes.iter_mut() {
