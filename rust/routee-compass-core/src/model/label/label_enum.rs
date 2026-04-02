@@ -18,8 +18,10 @@ pub struct IntStateVec(pub Vec<usize>);
 
 #[derive(Debug, Clone, Serialize, Allocative)]
 pub struct U8StateVec {
-    pub state: Vec<u8>,
-    pub state_len: u8,
+    /// the memory-padded storage
+    state: Vec<u8>,
+    /// the length of usable storage dedicated to this state, <= self.state.len()
+    state_len: u8,
 }
 
 impl PartialEq for U8StateVec {
