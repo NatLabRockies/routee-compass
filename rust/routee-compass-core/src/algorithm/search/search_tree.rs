@@ -53,9 +53,9 @@ impl SearchTree {
         self.root = Some(root_label);
     }
 
-    /// Insert the trajectory (parent) -[edge]-> (child) as a node in the tree.
-    /// this is the public method for adding new branches to the [SearchTree] as it
-    /// handles pruning and manages updates to both node and label storage.
+    /// Insert the trajectory (parent) -[edge]-> (child) as a node in the tree. it is
+    /// assumed that the incoming edge traversal has already been deemed dominant over 
+    /// any matching trajectory already existing in the tree.
     pub fn insert_trajectory(
         &mut self,
         parent_label: Label,
@@ -72,14 +72,13 @@ impl SearchTree {
             }
         }
 
-        // insert label if missing. 
+        // update the label lookup
+        let vertex_labels = self.labels.entry(*child_label.vertex_id()).or_default();
+        if !vertex_labels.contains(&child_label) {
+            vertex_labels.insert(child_label.clone());
+        }
         
-        self.labels.entry(*child_label.vertex_id())
-            .and_modify(|labels| {
-                let _ = labels.insert(child_label.clone());
-            })
-            .or_insert(HashSet::from([child_label.clone()]));
-        
+        // update the nodes collection
         let new_node =
             SearchTreeNode::new_child(edge_traversal, parent_label.clone(), self.direction);
         self.nodes.insert(child_label, new_node);
