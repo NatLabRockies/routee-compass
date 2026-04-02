@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775159444118,
+  "lastUpdate": 1775159505281,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3059,6 +3059,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2906547,
             "range": "± 60245",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "28575be4e7fc187cd7b5ceb86c5e496374e186e7",
+          "message": "Merge pull request #485 from NatLabRockies/dependabot/cargo/rust/geojson-1.0.0\n\nUpdate geojson requirement from 0.24.2 to 1.0.0 in /rust",
+          "timestamp": "2026-04-02T13:47:09-06:00",
+          "tree_id": "02ded52fe22903eda8e763e8b389745f28dcba5f",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/28575be4e7fc187cd7b5ceb86c5e496374e186e7"
+        },
+        "date": 1775159504777,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2979085,
+            "range": "± 187265",
             "unit": "ns/iter"
           }
         ]
