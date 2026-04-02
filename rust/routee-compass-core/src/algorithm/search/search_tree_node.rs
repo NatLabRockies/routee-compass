@@ -12,8 +12,6 @@ pub enum SearchTreeNode {
     Root {
         /// Tree orientation this node belongs to
         direction: Direction,
-        /// Number of nodes in the tree that have this node as a parent
-        child_count: usize,
     },
     Branch {
         /// The edge traversal that led to this node (None for root)
@@ -30,7 +28,6 @@ impl SearchTreeNode {
     pub fn new_root(direction: Direction) -> Self {
         Self::Root {
             direction,
-            child_count: 0,
         }
     }
 
