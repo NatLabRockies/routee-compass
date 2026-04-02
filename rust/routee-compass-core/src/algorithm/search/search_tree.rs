@@ -1129,7 +1129,6 @@ mod tests {
         };
 
         // This will set root as Label::Vertex(0)
-        // Label::Vertex is NOT added to self.labels
         tree.insert_trajectory(
             root_label.clone(),
             create_test_edge_traversal(1, 10.0),
@@ -1137,13 +1136,8 @@ mod tests {
         )
         .unwrap();
 
-        // child_label IS added to self.labels because it is not Label::Vertex
-
-        // Now self.labels is NOT empty (contains key VertexId(1))
-
         // Try to backtrack from root.
-        // We expect this to SUCCEED (return empty path for root), but currently it might fail
-        // with VertexNotFound(0) because get_labels skips Label::Vertex when self.labels is populated.
+        // We expect this to SUCCEED (return empty path for root).
         let result = tree.backtrack(VertexId(0));
         assert!(
             result.is_ok(),
@@ -1195,5 +1189,75 @@ mod tests {
         // Test: nonexistent vertex returns None
         let edge_none = tree.get_incoming_edge(VertexId(99));
         assert!(edge_none.is_none());
+    }
+
+    #[test]
+    fn test_insert_trajectory_cost_improvement() {
+        let root_label = create_test_label(0);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+
+        let child_label = create_test_label(1);
+        
+        // Insert costly trajectory
+        let costly_traversal = create_test_edge_traversal(1, 20.0);
+        tree.insert_trajectory(root_label.clone(), costly_traversal, child_label.clone())
+            .unwrap();
+
+        // Check initial insertion
+        let node = tree.get(&child_label).unwrap();
+        assert_eq!(node.incoming_edge().unwrap().cost.objective_cost.as_f64(), 20.0);
+
+        // Insert improved trajectory
+        let cheap_traversal = create_test_edge_traversal(2, 10.0);
+        tree.insert_trajectory(root_label.clone(), cheap_traversal, child_label.clone())
+            .unwrap();
+
+        // Check cost was updated (InsertNode behavior)
+        let updated_node = tree.get(&child_label).unwrap();
+        assert_eq!(updated_node.incoming_edge().unwrap().cost.objective_cost.as_f64(), 10.0);
+        assert_eq!(updated_node.incoming_edge().unwrap().edge_id, EdgeId(2));
+    }
+
+    #[test]
+    fn test_insert_trajectory_cost_pruning() {
+        let root_label = create_test_label(0);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+
+        let child_label = create_test_label(1);
+
+        // Insert cheap trajectory
+        let cheap_traversal = create_test_edge_traversal(1, 10.0);
+        tree.insert_trajectory(root_label.clone(), cheap_traversal, child_label.clone())
+            .unwrap();
+
+        // Try to insert worse trajectory
+        let costly_traversal = create_test_edge_traversal(2, 20.0);
+        tree.insert_trajectory(root_label.clone(), costly_traversal, child_label.clone())
+            .unwrap();
+
+        // Check cost wasn't changed (CancelInsertion behavior)
+        let kept_node = tree.get(&child_label).unwrap();
+        assert_eq!(kept_node.incoming_edge().unwrap().cost.objective_cost.as_f64(), 10.0);
+        assert_eq!(kept_node.incoming_edge().unwrap().edge_id, EdgeId(1));
+    }
+
+    #[test]
+    fn test_reconstruct_path_cycle_detection() {
+        let root_label = create_test_label(0);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+
+        let child_label = create_test_label(1);
+        let traversal = create_test_edge_traversal(1, 10.0);
+        
+        tree.insert_trajectory(root_label.clone(), traversal.clone(), child_label.clone())
+            .unwrap();
+
+        // Force a cycle: make root point back to child, creating a loop
+        let bad_root_node = SearchTreeNode::new_child(traversal, child_label.clone(), Direction::Forward);
+        tree.nodes.insert(root_label.clone(), bad_root_node);
+
+        // Attempt backtrack from child which hits root, which bounces back to child
+        let result = tree.backtrack(VertexId(1));
+        assert!(matches!(result, Err(SearchTreeError::InvalidBranchStructure(_))));
     }
 }
