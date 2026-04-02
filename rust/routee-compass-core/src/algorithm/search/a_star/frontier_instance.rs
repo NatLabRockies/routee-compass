@@ -154,11 +154,7 @@ mod tests {
         let et = crate::algorithm::search::EdgeTraversal {
             edge_id: EdgeId(0),
             edge_list_id: EdgeListId(0),
-            cost: TraversalCost {
-                objective_cost: Cost::new(10.0),
-                total_cost: Cost::new(10.0),
-                ..Default::default()
-            },
+            cost: TraversalCost::new(Cost::new(10.0), Cost::new(10.0)),
             result_state: vec![StateVariable::ZERO],
         };
         solution.insert_trajectory(root, et, l1.clone()).unwrap();
@@ -222,11 +218,7 @@ mod tests {
         let et = crate::algorithm::search::EdgeTraversal {
             edge_id: EdgeId(0),
             edge_list_id: EdgeListId(0),
-            cost: TraversalCost {
-                objective_cost: Cost::new(10.0),
-                total_cost: Cost::new(10.0),
-                ..Default::default()
-            },
+            cost: TraversalCost::new(Cost::new(10.0), Cost::new(10.0)),
             result_state: vec![StateVariable::ZERO],
         };
 

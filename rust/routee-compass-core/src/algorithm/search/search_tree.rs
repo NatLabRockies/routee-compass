@@ -1,5 +1,4 @@
 use super::{EdgeTraversal, SearchTreeNode};
-use crate::algorithm::search::insert_behavior::TrajectoryInsertBehavior;
 use crate::model::network::{EdgeId, EdgeListId, Graph, NetworkError, VertexId};
 use crate::model::unit::AsF64;
 use crate::{algorithm::search::Direction, model::label::Label};
@@ -73,15 +72,14 @@ impl SearchTree {
             }
         }
 
-        let strat = TrajectoryInsertBehavior::new(self, &child_label, &edge_traversal);
-        if matches!(strat, TrajectoryInsertBehavior::CancelInsertion) {
-            // new trajectory does not improve trip to child label.
-            return Ok(());
-        }
-        if matches!(strat, TrajectoryInsertBehavior::InsertLabelAndNode) {
-            // first visit to child_label, we need to add it to the tree.
-            self.insert_label(child_label.clone());
-        }
+        // insert label if missing. 
+        
+        self.labels.entry(*child_label.vertex_id())
+            .and_modify(|labels| {
+                let _ = labels.insert(child_label.clone());
+            })
+            .or_insert(HashSet::from([child_label.clone()]));
+        
         let new_node =
             SearchTreeNode::new_child(edge_traversal, parent_label.clone(), self.direction);
         self.nodes.insert(child_label, new_node);
@@ -1103,12 +1101,7 @@ mod tests {
         EdgeTraversal {
             edge_id: EdgeId(edge_id),
             edge_list_id: EdgeListId(0),
-            cost: TraversalCost {
-                total_cost: Cost::new(cost),
-                objective_cost: Cost::new(cost),
-                #[cfg(feature = "detailed_costs")]
-                cost_component: std::collections::HashMap::new(),
-            },
+            cost: TraversalCost::new(Cost::new(cost), Cost::new(cost)),
             result_state: vec![],
         }
     }
@@ -1189,75 +1182,6 @@ mod tests {
         // Test: nonexistent vertex returns None
         let edge_none = tree.get_incoming_edge(VertexId(99));
         assert!(edge_none.is_none());
-    }
-
-    #[test]
-    fn test_insert_trajectory_cost_improvement() {
-        let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
-
-        let child_label = create_test_label(1);
-
-        // Insert costly trajectory
-        let costly_traversal = create_test_edge_traversal(1, 20.0);
-        tree.insert_trajectory(root_label.clone(), costly_traversal, child_label.clone())
-            .unwrap();
-
-        // Check initial insertion
-        let node = tree.get(&child_label).unwrap();
-        assert_eq!(
-            node.incoming_edge().unwrap().cost.objective_cost.as_f64(),
-            20.0
-        );
-
-        // Insert improved trajectory
-        let cheap_traversal = create_test_edge_traversal(2, 10.0);
-        tree.insert_trajectory(root_label.clone(), cheap_traversal, child_label.clone())
-            .unwrap();
-
-        // Check cost was updated (InsertNode behavior)
-        let updated_node = tree.get(&child_label).unwrap();
-        assert_eq!(
-            updated_node
-                .incoming_edge()
-                .unwrap()
-                .cost
-                .objective_cost
-                .as_f64(),
-            10.0
-        );
-        assert_eq!(updated_node.incoming_edge().unwrap().edge_id, EdgeId(2));
-    }
-
-    #[test]
-    fn test_insert_trajectory_cost_pruning() {
-        let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
-
-        let child_label = create_test_label(1);
-
-        // Insert cheap trajectory
-        let cheap_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert_trajectory(root_label.clone(), cheap_traversal, child_label.clone())
-            .unwrap();
-
-        // Try to insert worse trajectory
-        let costly_traversal = create_test_edge_traversal(2, 20.0);
-        tree.insert_trajectory(root_label.clone(), costly_traversal, child_label.clone())
-            .unwrap();
-
-        // Check cost wasn't changed (CancelInsertion behavior)
-        let kept_node = tree.get(&child_label).unwrap();
-        assert_eq!(
-            kept_node
-                .incoming_edge()
-                .unwrap()
-                .cost
-                .objective_cost
-                .as_f64(),
-            10.0
-        );
-        assert_eq!(kept_node.incoming_edge().unwrap().edge_id, EdgeId(1));
     }
 
     #[test]
