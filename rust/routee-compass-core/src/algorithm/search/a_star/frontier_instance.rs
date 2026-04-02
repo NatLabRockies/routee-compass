@@ -57,11 +57,6 @@ impl FrontierInstance {
                 }
                 (Some((prev_label, _)), _) => {
                     let node_opt = solution.get(&prev_label);
-                    if node_opt.is_none() && !solution.is_empty() {
-                        // this label was pruned from the search tree while it was in the frontier.
-                        // skip it and continue to the next label in the frontier.
-                        continue;
-                    }
                     let prev_edge_traversal_opt = node_opt.and_then(|n| n.incoming_edge()).cloned();
 
                     // grab the current state from the solution, or get initial state if we are at the search root
@@ -90,11 +85,7 @@ impl FrontierInstance {
 mod tests {
     use super::*;
     use crate::algorithm::search::Direction;
-    use crate::model::{
-        cost::TraversalCost,
-        network::{EdgeId, EdgeListId, VertexId},
-        unit::Cost,
-    };
+    use crate::model::{network::VertexId, unit::Cost};
 
     #[test]
     fn test_pop_new_empty_queue() {
