@@ -256,11 +256,10 @@ pub fn run_edge_oriented(
 
             for tree in trees.iter_mut() {
                 if !tree.contains(&dst_label) {
-                    tree.insert(
+                    tree.insert_trajectory(
                         e1_label.clone(),
                         src_et.clone(),
                         dst_label.clone(),
-                        si.label_model.clone(),
                     )?;
                 }
             }

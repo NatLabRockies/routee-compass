@@ -92,11 +92,9 @@ mod tests {
     use crate::algorithm::search::Direction;
     use crate::model::{
         cost::TraversalCost,
-        label::{default::vertex_label_model::VertexLabelModel, LabelModel},
         network::{EdgeId, EdgeListId, VertexId},
         unit::Cost,
     };
-    use std::sync::Arc;
 
     #[test]
     fn test_pop_new_empty_queue() {
@@ -163,8 +161,7 @@ mod tests {
             },
             result_state: vec![StateVariable::ZERO],
         };
-        let label_model: Arc<dyn LabelModel> = Arc::new(VertexLabelModel {});
-        solution.insert(root, et, l1.clone(), label_model).unwrap();
+        solution.insert_trajectory(root, et, l1.clone()).unwrap();
 
         let initial_state = vec![StateVariable::ZERO];
 
@@ -235,8 +232,7 @@ mod tests {
 
         // VertexLabelModel.compare returns Greater, so it won't prune anything.
         // That's fine for this test since we just want to ensure l1 is in the tree and l2 is not.
-        let label_model: Arc<dyn LabelModel> = Arc::new(VertexLabelModel {});
-        solution.insert(root, et, l1.clone(), label_model).unwrap();
+        solution.insert_trajectory(root, et, l1.clone()).unwrap();
 
         let initial_state = vec![StateVariable::ZERO];
 
