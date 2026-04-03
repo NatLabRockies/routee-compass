@@ -51,6 +51,9 @@ impl<'a> EdgeTraversalContext<'a> {
     /// convenience method to access the previous edge, exactly one step of backtracking into the tree.
     /// if there is no previous edge (we are at the search origin/source), then the result is None.
     pub fn previous_edge_traversal(&self) -> Result<Option<&EdgeTraversal>, SearchTreeError> {
+        if self.tree.is_empty() {
+            return Ok(None);
+        }
         let pred = self.tree.predecessor(self.parent_label)?;
         match pred {
             Some((edge_traversal, _)) => Ok(Some(edge_traversal)),
