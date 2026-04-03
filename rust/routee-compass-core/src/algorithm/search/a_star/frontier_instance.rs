@@ -44,15 +44,15 @@ impl FrontierInstance {
     ) -> Result<Option<FrontierInstance>, SearchError> {
         match (frontier.pop(), target) {
             (None, Some(target_vertex_id)) => {
-                return Err(SearchError::NoPathExistsBetweenVertices(
+                Err(SearchError::NoPathExistsBetweenVertices(
                     source,
                     target_vertex_id,
                     solution.len(),
                 ))
             }
-            (None, None) => return Ok(None),
+            (None, None) => Ok(None),
             (Some((prev_label, _)), Some(target_v)) if prev_label.vertex_id() == &target_v => {
-                return Ok(None)
+                Ok(None)
             }
             (Some((prev_label, _)), _) => {
                 let node_opt = solution.get(&prev_label);
@@ -73,7 +73,7 @@ impl FrontierInstance {
                     prev_state,
                 };
 
-                return Ok(Some(result));
+                Ok(Some(result))
             }
         }
     }
