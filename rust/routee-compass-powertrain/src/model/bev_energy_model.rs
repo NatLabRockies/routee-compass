@@ -8,7 +8,9 @@ use routee_compass_core::{
     model::{
         network::Vertex,
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
-        traversal::{EdgeTraversalContext, TraversalModel, TraversalModelError, TraversalModelService},
+        traversal::{
+            EdgeTraversalContext, TraversalModel, TraversalModelError, TraversalModelService,
+        },
         unit::{EnergyRateUnit, EnergyUnit, RatioUnit},
     },
 };

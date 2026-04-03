@@ -44,7 +44,8 @@ impl TraversalModel for CustomTraversalModel {
         state: &mut Vec<StateVariable>,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
-        self.engine.insert_value(&ctx.edge.edge_id, state, state_model)
+        self.engine
+            .insert_value(&ctx.edge.edge_id, state, state_model)
     }
 
     /// records the value that will be assigned to this edge into the state vector.

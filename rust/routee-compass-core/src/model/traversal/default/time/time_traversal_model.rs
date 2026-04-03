@@ -6,7 +6,7 @@ use uom::{
 use crate::{
     algorithm::search::SearchTree,
     model::{
-        network::{Vertex},
+        network::Vertex,
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
         traversal::{
             default::{fieldname, time::TimeTraversalConfig},

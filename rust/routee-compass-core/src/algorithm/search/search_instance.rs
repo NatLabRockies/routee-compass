@@ -3,7 +3,7 @@ use crate::{
     model::{
         constraint::ConstraintModel,
         cost::CostModel,
-        label::{Label, label_model::LabelModel},
+        label::{label_model::LabelModel, Label},
         map::MapModel,
         network::{EdgeId, EdgeListId, Graph},
         state::StateModel,

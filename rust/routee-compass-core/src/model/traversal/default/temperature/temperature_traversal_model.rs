@@ -3,7 +3,7 @@ use uom::{si::f64::ThermodynamicTemperature, ConstZero};
 use crate::{
     algorithm::search::SearchTree,
     model::{
-        network::{Vertex},
+        network::Vertex,
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
         traversal::{default::fieldname, TraversalModel, TraversalModelError},
         unit::TemperatureUnit,

@@ -367,7 +367,7 @@ mod tests {
             Arc::new(HashMap::new()),
             CostAggregation::Sum,
             state_model.clone(),
-            CostConstraint::StrictlyPositive
+            CostConstraint::StrictlyPositive,
         )
         .unwrap();
         SearchInstance {

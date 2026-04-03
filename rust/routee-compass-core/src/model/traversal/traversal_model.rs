@@ -1,6 +1,6 @@
 use super::traversal_model_error::TraversalModelError;
 use crate::algorithm::search::SearchTree;
-use crate::model::network::{Vertex};
+use crate::model::network::Vertex;
 use crate::model::state::{InputFeature, StateModel, StateVariable, StateVariableConfig};
 use crate::model::traversal::EdgeTraversalContext;
 

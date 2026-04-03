@@ -113,13 +113,17 @@ impl SearchTree {
         self.nodes.get(label)
     }
 
-    /// gets the label with the minimum accumulated tree cost associated with the 
+    /// gets the label with the minimum accumulated tree cost associated with the
     /// destination vertex of a search.
-    pub fn get_min_accumulated_cost_label(&self, destination_vertex: VertexId) -> Result<(Label, Cost), SearchTreeError> {
+    pub fn get_min_accumulated_cost_label(
+        &self,
+        destination_vertex: VertexId,
+    ) -> Result<(Label, Cost), SearchTreeError> {
         let labels = self
-            .labels.get(&destination_vertex)
+            .labels
+            .get(&destination_vertex)
             .ok_or(SearchTreeError::VertexNotFound(destination_vertex))?;
-        
+
         let mut min_cost: Option<(Label, Cost)> = None;
         for label in labels.iter() {
             // performs tree backtracking to calculate total objective cost for this label
@@ -130,8 +134,8 @@ impl SearchTree {
             }
         }
 
-        min_cost.ok_or_else(|| SearchTreeError::MissingLabelsForDestinationVertex(destination_vertex))
-        
+        min_cost
+            .ok_or_else(|| SearchTreeError::MissingLabelsForDestinationVertex(destination_vertex))
     }
 
     /// Find labels for the given vertex ID
@@ -170,9 +174,9 @@ impl SearchTree {
     // }
 
     /// walk up the tree from the given label to the root, summing the marginal objective costs.
-    /// fails if the tree is malformed by counting labels visited and comparing to the count of 
+    /// fails if the tree is malformed by counting labels visited and comparing to the count of
     /// [Label]s in the tree.
-    /// 
+    ///
     /// # Arguments
     /// * `label` - trip destination label to backtrack from and calculate cost
     pub fn calculate_total_objective_cost(&self, label: &Label) -> Result<Cost, SearchTreeError> {
@@ -180,7 +184,7 @@ impl SearchTree {
         let mut current_label = label;
         let mut steps: usize = 0;
         let max_steps = self.nodes.len();
-        
+
         loop {
             // Guard against infinite loops in malformed trees
             if steps > max_steps {
@@ -190,21 +194,26 @@ impl SearchTree {
                 )));
             }
 
-            let node = self.get(current_label)
+            let node = self
+                .get(current_label)
                 .ok_or_else(|| SearchTreeError::LabelNotFound(current_label.clone()))?;
-                
+
             match node {
                 SearchTreeNode::Root { .. } => break,
-                SearchTreeNode::Branch { incoming_edge, parent, .. } => {
+                SearchTreeNode::Branch {
+                    incoming_edge,
+                    parent,
+                    ..
+                } => {
                     // add this objective cost and update the node cursor to the branch's parent
                     total = total + incoming_edge.cost.objective_cost;
                     current_label = parent;
                 }
             }
-            
+
             steps += 1;
         }
-        
+
         Ok(total)
     }
 
@@ -259,9 +268,7 @@ impl SearchTree {
         leaf_vertex: VertexId,
         depth: u64,
     ) -> Result<Vec<EdgeTraversal>, SearchTreeError> {
-        
-        let (target_label, _) = self
-            .get_min_accumulated_cost_label(leaf_vertex)?;
+        let (target_label, _) = self.get_min_accumulated_cost_label(leaf_vertex)?;
 
         self.reconstruct_path(&target_label, Some(depth))
     }
@@ -274,8 +281,7 @@ impl SearchTree {
     /// # Returns
     /// A path of EdgeTraversals from root to leaf (forward) or leaf to root (reverse)
     pub fn backtrack(&self, leaf_vertex: VertexId) -> Result<Vec<EdgeTraversal>, SearchTreeError> {
-        let (target_label, _) = self
-            .get_min_accumulated_cost_label(leaf_vertex)?;
+        let (target_label, _) = self.get_min_accumulated_cost_label(leaf_vertex)?;
 
         self.reconstruct_path(&target_label, None)
     }
@@ -286,7 +292,11 @@ impl SearchTree {
     }
 
     /// convenience method to backtrack from some label to some depth.
-    pub fn backtrack_label_with_depth(&self, label: &Label, depth: u64) -> Result<Vec<EdgeTraversal>, SearchTreeError> {
+    pub fn backtrack_label_with_depth(
+        &self,
+        label: &Label,
+        depth: u64,
+    ) -> Result<Vec<EdgeTraversal>, SearchTreeError> {
         self.reconstruct_path(label, Some(depth))
     }
 
@@ -338,14 +348,14 @@ impl SearchTree {
             if exceeds_depth {
                 break;
             }
-            
+
             let predecessor = self.predecessor(current_label)?;
             match predecessor {
                 Some((incoming_edge, parent)) => {
                     path.push(incoming_edge.clone());
                     current_label = parent;
-                },
-                None => break
+                }
+                None => break,
             }
 
             steps += 1;
@@ -362,16 +372,23 @@ impl SearchTree {
         }
     }
 
-    /// get the edge traversal and parent [Label] that leads to some child [Label], aka, 
+    /// get the edge traversal and parent [Label] that leads to some child [Label], aka,
     /// where (parent) -[incoming_edge]-> (child)
-    pub fn predecessor(&self, child: &Label) -> Result<Option<(&EdgeTraversal, &Label)>, SearchTreeError> {
+    pub fn predecessor(
+        &self,
+        child: &Label,
+    ) -> Result<Option<(&EdgeTraversal, &Label)>, SearchTreeError> {
         let current_node = self
             .get(child)
             .ok_or_else(|| SearchTreeError::LabelNotFound(child.clone()))?;
 
         match current_node {
             SearchTreeNode::Root { .. } => Ok(None),
-            SearchTreeNode::Branch { incoming_edge, parent, .. } => Ok(Some((incoming_edge, parent)))
+            SearchTreeNode::Branch {
+                incoming_edge,
+                parent,
+                ..
+            } => Ok(Some((incoming_edge, parent))),
         }
     }
 
@@ -384,9 +401,7 @@ impl SearchTree {
     pub fn nodes(&self) -> impl Iterator<Item = &SearchTreeNode> {
         self.nodes.values()
     }
-
 }
-
 
 #[derive(Debug, thiserror::Error)]
 pub enum SearchTreeError {

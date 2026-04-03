@@ -73,11 +73,10 @@ impl TraversalModel for TurnDelayTraversalModel {
         state: &mut Vec<StateVariable>,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
-        let prev_edge_traversal = ctx.previous_edge_traversal()
-            .map_err(|e| {
-                let msg = format!("while accessing previous edge during turn delay calculation, {e}");
-                TraversalModelError::TraversalModelFailure(msg)
-            })?;
+        let prev_edge_traversal = ctx.previous_edge_traversal().map_err(|e| {
+            let msg = format!("while accessing previous edge during turn delay calculation, {e}");
+            TraversalModelError::TraversalModelFailure(msg)
+        })?;
         let prev_edge_id = match prev_edge_traversal {
             Some(prev_traversal) => prev_traversal.edge_id,
             None => return Ok(()), // no previous edge, no turn delay to apply

@@ -83,7 +83,7 @@ impl NetworkCostRate {
             NetworkCostRate::Combined(rates) => {
                 let mapped = rates
                     .iter()
-                    .map(|f| f.network_cost(ctx, _state,  _state_model))
+                    .map(|f| f.network_cost(ctx, _state, _state_model))
                     .collect::<Result<Vec<Cost>, CostModelError>>()?;
                 let cost = mapped.iter().fold(Cost::ZERO, |a, b| a + *b);
 

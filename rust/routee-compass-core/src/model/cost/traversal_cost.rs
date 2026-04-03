@@ -30,7 +30,7 @@ impl TraversalCost {
     }
 
     /// creates a TraversalCost where the cost value is the true zero.
-    /// 
+    ///
     /// IMPORTANT! zero is _not_ a valid cost value to assign to an edge in a search algorithm
     /// that requires values are monotonic to avoid cycles (such as Dijkstra's). in that case,
     /// use [TraversalCost::min]. see [CostConstraint].
@@ -49,13 +49,19 @@ impl TraversalCost {
     /// by only applying the "weight" value to the objective cost.
     ///
     /// when recording a cost component, if it already exists, we append to the cost value.
-    /// 
+    ///
     /// # Arguments
     /// * `name` - name of the state variable that creates this cost observation
     /// * `cost` - the cost of the state variable using the current cost model
     /// * `weight` - weighting factor to apply to this cost value when calculating the objective cost
     /// * `constraint` - constraints on Cost to apply based on the type of search algorithm that is running
-    pub fn insert(&mut self, #[allow(unused_variables)] name: &str, cost: Cost, weight: f64, constraint: CostConstraint) {
+    pub fn insert(
+        &mut self,
+        #[allow(unused_variables)] name: &str,
+        cost: Cost,
+        weight: f64,
+        constraint: CostConstraint,
+    ) {
         let insert_cost = match constraint {
             CostConstraint::StrictlyPositive => Cost::enforce_strictly_positive(cost),
             CostConstraint::Unconstrained => cost,

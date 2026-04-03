@@ -1,4 +1,10 @@
-use crate::{algorithm::search::{EdgeTraversal, SearchTree, SearchTreeError}, model::{label::Label, network::{Edge, Vertex}}};
+use crate::{
+    algorithm::search::{EdgeTraversal, SearchTree, SearchTreeError},
+    model::{
+        label::Label,
+        network::{Edge, Vertex},
+    },
+};
 
 /// context for an edge traversal from (src)->[edge]->(dst) that will be
 /// added to the tree.
@@ -12,7 +18,7 @@ pub struct EdgeTraversalContext<'a> {
     /// destination of the trajectory
     pub dst: &'a Vertex,
     /// search tree state before adding this traversal
-    pub tree: &'a SearchTree
+    pub tree: &'a SearchTree,
 }
 
 impl<'a> EdgeTraversalContext<'a> {
@@ -22,16 +28,22 @@ impl<'a> EdgeTraversalContext<'a> {
         src: &'a Vertex,
         edge: &'a Edge,
         dst: &'a Vertex,
-        tree: &'a SearchTree
+        tree: &'a SearchTree,
     ) -> Self {
-        Self { parent_label, src, edge, dst, tree }
+        Self {
+            parent_label,
+            src,
+            edge,
+            dst,
+            tree,
+        }
     }
 
-    /// convenience method to backtrack from the parent label toward the tree root. 
-    /// 
+    /// convenience method to backtrack from the parent label toward the tree root.
+    ///
     /// # Arguments
     /// * `depth` - if provided, the number of steps to take toward the root, otherwise returns the complete path to the root.
-    /// 
+    ///
     pub fn backtrack(&self, depth: Option<u64>) -> Result<Vec<EdgeTraversal>, SearchTreeError> {
         self.tree.reconstruct_path(self.parent_label, depth)
     }

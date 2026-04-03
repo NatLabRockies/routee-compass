@@ -1,7 +1,7 @@
 use uom::ConstZero;
 
 use crate::algorithm::search::SearchTree;
-use crate::model::network::{Vertex};
+use crate::model::network::Vertex;
 use crate::model::state::{CustomVariableConfig, InputFeature, StateModel, StateVariable};
 use crate::model::traversal::{EdgeTraversalContext, TraversalModel};
 use crate::model::{

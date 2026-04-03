@@ -3,9 +3,11 @@ use crate::model::{fieldname, prediction::PredictionModelRecord};
 use routee_compass_core::{
     algorithm::search::SearchTree,
     model::{
-        network::{Vertex},
+        network::Vertex,
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
-        traversal::{EdgeTraversalContext, TraversalModel, TraversalModelError, TraversalModelService},
+        traversal::{
+            EdgeTraversalContext, TraversalModel, TraversalModelError, TraversalModelService,
+        },
         unit::{EnergyRateUnit, EnergyUnit},
     },
 };

@@ -22,7 +22,7 @@ pub struct CostModel {
     vehicle_rate_mapping: Arc<HashMap<String, VehicleCostRate>>,
     network_rate_mapping: Arc<HashMap<String, NetworkCostRate>>,
     cost_aggregation: CostAggregation,
-    cost_constraint: CostConstraint
+    cost_constraint: CostConstraint,
 }
 
 impl CostModel {
@@ -89,7 +89,7 @@ impl CostModel {
             vehicle_rate_mapping,
             network_rate_mapping,
             cost_aggregation,
-            cost_constraint
+            cost_constraint,
         })
     }
 
@@ -125,23 +125,19 @@ impl CostModel {
             };
 
             let n_cost = if feature.is_accumulator {
-                let current_network_cost = feature.network_cost_rate.network_cost(
-                    &ctx,
-                    current_state,
-                    state_model,
-                )?;
-                let previous_network_cost = feature.network_cost_rate.network_cost(
-                    &ctx,
-                    previous_state,
-                    state_model,
-                )?;
+                let current_network_cost =
+                    feature
+                        .network_cost_rate
+                        .network_cost(&ctx, current_state, state_model)?;
+                let previous_network_cost =
+                    feature
+                        .network_cost_rate
+                        .network_cost(&ctx, previous_state, state_model)?;
                 current_network_cost - previous_network_cost
             } else {
-                feature.network_cost_rate.network_cost(
-                    &ctx,
-                    current_state,
-                    state_model,
-                )?
+                feature
+                    .network_cost_rate
+                    .network_cost(&ctx, current_state, state_model)?
             };
 
             let cost = v_cost + n_cost;
@@ -292,7 +288,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model,
-            CostConstraint::StrictlyPositive
+            CostConstraint::StrictlyPositive,
         );
         assert!(result.is_ok());
     }
@@ -326,7 +322,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model,
-            CostConstraint::StrictlyPositive
+            CostConstraint::StrictlyPositive,
         );
         assert!(matches!(
             result,
@@ -363,7 +359,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model,
-            CostConstraint::StrictlyPositive
+            CostConstraint::StrictlyPositive,
         );
         assert!(matches!(
             result,
@@ -408,7 +404,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model.clone(),
-            CostConstraint::StrictlyPositive
+            CostConstraint::StrictlyPositive,
         )
         .expect("Failed to create cost model");
 
@@ -425,12 +421,7 @@ mod test {
         let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
-            .traversal_cost(
-                &ctx,
-                &previous_state,
-                &current_state,
-                &state_model,
-            )
+            .traversal_cost(&ctx, &previous_state, &current_state, &state_model)
             .expect("Failed to compute traversal cost");
 
         // For accumulators, we compute the delta
@@ -473,7 +464,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model.clone(),
-            CostConstraint::StrictlyPositive
+            CostConstraint::StrictlyPositive,
         )
         .expect("Failed to create cost model");
 
@@ -490,12 +481,7 @@ mod test {
         let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
-            .traversal_cost(
-                &ctx,
-                &previous_state,
-                &current_state,
-                &state_model,
-            )
+            .traversal_cost(&ctx, &previous_state, &current_state, &state_model)
             .expect("Failed to compute traversal cost");
 
         // For non-accumulators, we use the current value: 25.0
@@ -569,7 +555,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model.clone(),
-            CostConstraint::StrictlyPositive
+            CostConstraint::StrictlyPositive,
         )
         .expect("Failed to create cost model");
 
@@ -596,12 +582,7 @@ mod test {
         let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
-            .traversal_cost(
-                &ctx,
-                &previous_state,
-                &current_state,
-                &state_model,
-            )
+            .traversal_cost(&ctx, &previous_state, &current_state, &state_model)
             .expect("Failed to compute traversal cost");
 
         // Verify we got a non-zero cost (actual values depend on unit conversions)
@@ -657,7 +638,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model.clone(),
-            CostConstraint::StrictlyPositive
+            CostConstraint::StrictlyPositive,
         )
         .expect("Failed to create cost model");
 
@@ -674,12 +655,7 @@ mod test {
         let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
-            .traversal_cost(
-                &ctx,
-                &previous_state,
-                &current_state,
-                &state_model,
-            )
+            .traversal_cost(&ctx, &previous_state, &current_state, &state_model)
             .expect("Failed to compute traversal cost");
 
         // For accumulators: vehicle cost should be the delta
@@ -726,7 +702,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model.clone(),
-            CostConstraint::StrictlyPositive
+            CostConstraint::StrictlyPositive,
         )
         .expect("Failed to create cost model");
 
@@ -782,7 +758,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model.clone(),
-            CostConstraint::StrictlyPositive
+            CostConstraint::StrictlyPositive,
         );
 
         assert!(result.is_err());
@@ -831,7 +807,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model.clone(),
-            CostConstraint::StrictlyPositive
+            CostConstraint::StrictlyPositive,
         )
         .expect("Failed to create cost model");
 
@@ -846,12 +822,7 @@ mod test {
         let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
-            .traversal_cost(
-                &ctx,
-                &previous_state,
-                &current_state,
-                &state_model,
-            )
+            .traversal_cost(&ctx, &previous_state, &current_state, &state_model)
             .expect("Failed to compute traversal cost");
 
         // Network cost is vertex lookup (based on source vertex)
@@ -893,7 +864,7 @@ mod test {
             Arc::new(HashMap::new()),
             CostAggregation::Sum,
             state_model_acc.clone(),
-            CostConstraint::StrictlyPositive
+            CostConstraint::StrictlyPositive,
         )
         .expect("Failed to create accumulator cost model");
 
@@ -917,7 +888,7 @@ mod test {
             Arc::new(HashMap::new()),
             CostAggregation::Sum,
             state_model_non_acc.clone(),
-            CostConstraint::StrictlyPositive
+            CostConstraint::StrictlyPositive,
         )
         .expect("Failed to create non-accumulator cost model");
 
@@ -933,21 +904,11 @@ mod test {
         let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
 
         let result_acc = cost_model_acc
-            .traversal_cost(
-                &ctx,
-                &previous_state,
-                &current_state,
-                &state_model_acc,
-            )
+            .traversal_cost(&ctx, &previous_state, &current_state, &state_model_acc)
             .expect("Failed to compute accumulator cost");
 
         let result_non_acc = cost_model_non_acc
-            .traversal_cost(
-                &ctx,
-                &previous_state,
-                &current_state,
-                &state_model_non_acc,
-            )
+            .traversal_cost(&ctx, &previous_state, &current_state, &state_model_non_acc)
             .expect("Failed to compute non-accumulator cost");
 
         // For accumulator: cost = current - previous = 150.0 - 100.0 = 50.0

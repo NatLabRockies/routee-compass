@@ -125,7 +125,9 @@ mod tests {
     use geo::coord;
     use routee_compass_core::{
         model::{
-            label::Label, network::{Edge, EdgeId, EdgeListId, Vertex, VertexId}, state::{StateModel, StateVariable}
+            label::Label,
+            network::{Edge, EdgeId, EdgeListId, Vertex, VertexId},
+            state::{StateModel, StateVariable},
         },
         util::geo::InternalCoord,
     };
@@ -266,14 +268,8 @@ mod tests {
             valid_power_types: vec![PowerType::DCFC, PowerType::L2].into_iter().collect(),
         };
 
-        
-
         charging_model
-            .traverse_edge(
-                &ctx,
-                &mut state,
-                &state_model,
-            )
+            .traverse_edge(&ctx, &mut state, &state_model)
             .unwrap();
 
         // Check that SOC was updated to full (100%)
@@ -315,11 +311,7 @@ mod tests {
         };
 
         charging_model
-            .traverse_edge(
-                &ctx,
-                &mut state,
-                &state_model,
-            )
+            .traverse_edge(&ctx, &mut state, &state_model)
             .unwrap();
 
         // Check that SOC remained unchanged
@@ -358,11 +350,7 @@ mod tests {
         };
 
         charging_model
-            .traverse_edge(
-                &ctx,
-                &mut state,
-                &state_model,
-            )
+            .traverse_edge(&ctx, &mut state, &state_model)
             .unwrap();
 
         // Check that SOC remained unchanged
@@ -400,11 +388,7 @@ mod tests {
         };
 
         charging_model
-            .traverse_edge(
-                &ctx_dc,
-                &mut state_dc,
-                &state_model,
-            )
+            .traverse_edge(&ctx_dc, &mut state_dc, &state_model)
             .unwrap();
         let dc_charge_time = state_model
             .get_time(&state_dc, fieldname::TRIP_TIME)
@@ -416,13 +400,8 @@ mod tests {
         let l2 = Label::Vertex(v0.vertex_id);
         let ctx_ac = EdgeTraversalContext::new(&l2, &v0, &e1, &v2, &tree);
 
-
         charging_model
-            .traverse_edge(
-                &ctx_ac,
-                &mut state_ac,
-                &state_model,
-            )
+            .traverse_edge(&ctx_ac, &mut state_ac, &state_model)
             .unwrap();
         let ac_charge_time = state_model
             .get_time(&state_ac, fieldname::TRIP_TIME)
@@ -472,11 +451,7 @@ mod tests {
         let ctx = EdgeTraversalContext::new(&l2, &v0, &e1, &v2, &tree);
 
         charging_model
-            .traverse_edge(
-                &ctx,
-                &mut state,
-                &state_model,
-            )
+            .traverse_edge(&ctx, &mut state, &state_model)
             .unwrap();
 
         // Should not charge because L2 is not in valid_power_types
