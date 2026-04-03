@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775159505281,
+  "lastUpdate": 1775251376293,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3089,6 +3089,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2979085,
             "range": "± 187265",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "anshrest@asu.edu",
+            "name": "Ananta Narayan Shrestha",
+            "username": "iantei"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "020cd761bf4f6e97519f1d754ff8dfe67102eb6d",
+          "message": "Merge pull request #483 from iantei/support_gzip_query_file_CLI\n\nAdd support for gzip compressed query file inputs in CLI",
+          "timestamp": "2026-04-03T17:18:26-04:00",
+          "tree_id": "d0a2b91ae0e532f8abee632cff2baa63cb245e57",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/020cd761bf4f6e97519f1d754ff8dfe67102eb6d"
+        },
+        "date": 1775251375544,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2977961,
+            "range": "± 310586",
             "unit": "ns/iter"
           }
         ]
