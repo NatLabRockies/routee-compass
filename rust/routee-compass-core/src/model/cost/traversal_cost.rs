@@ -94,7 +94,7 @@ impl AccumulatedTraversalCost {
     pub fn new(values: &[EdgeTraversal]) -> Self {
         // Compute total route cost by summing all edge costs
         values.iter().fold(Self::default(), |mut acc, edge| {
-            acc.trip_cost += edge.cost.edge_cost;
+            acc.total_cost += edge.cost.edge_cost;
             acc.objective_cost += edge.cost.objective_cost;
             acc
         })
