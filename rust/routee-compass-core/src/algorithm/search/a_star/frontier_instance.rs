@@ -42,40 +42,38 @@ impl FrontierInstance {
         solution: &SearchTree,
         initial_state: &[StateVariable],
     ) -> Result<Option<FrontierInstance>, SearchError> {
-        loop {
-            match (frontier.pop(), target) {
-                (None, Some(target_vertex_id)) => {
-                    return Err(SearchError::NoPathExistsBetweenVertices(
-                        source,
-                        target_vertex_id,
-                        solution.len(),
-                    ))
-                }
-                (None, None) => return Ok(None),
-                (Some((prev_label, _)), Some(target_v)) if prev_label.vertex_id() == &target_v => {
-                    return Ok(None)
-                }
-                (Some((prev_label, _)), _) => {
-                    let node_opt = solution.get(&prev_label);
-                    let prev_edge_traversal_opt = node_opt.and_then(|n| n.incoming_edge()).cloned();
+        match (frontier.pop(), target) {
+            (None, Some(target_vertex_id)) => {
+                return Err(SearchError::NoPathExistsBetweenVertices(
+                    source,
+                    target_vertex_id,
+                    solution.len(),
+                ))
+            }
+            (None, None) => return Ok(None),
+            (Some((prev_label, _)), Some(target_v)) if prev_label.vertex_id() == &target_v => {
+                return Ok(None)
+            }
+            (Some((prev_label, _)), _) => {
+                let node_opt = solution.get(&prev_label);
+                let prev_edge_traversal_opt = node_opt.and_then(|n| n.incoming_edge()).cloned();
 
-                    // grab the current state from the solution, or get initial state if we are at the search root
-                    let prev_edge = prev_edge_traversal_opt
-                        .as_ref()
-                        .map(|et| (et.edge_list_id, et.edge_id));
-                    let prev_state = match prev_edge_traversal_opt.as_ref() {
-                        None => initial_state.to_vec(),
-                        Some(et) => et.result_state.clone(),
-                    };
+                // grab the current state from the solution, or get initial state if we are at the search root
+                let prev_edge = prev_edge_traversal_opt
+                    .as_ref()
+                    .map(|et| (et.edge_list_id, et.edge_id));
+                let prev_state = match prev_edge_traversal_opt.as_ref() {
+                    None => initial_state.to_vec(),
+                    Some(et) => et.result_state.clone(),
+                };
 
-                    let result = FrontierInstance {
-                        prev_label,
-                        prev_edge,
-                        prev_state,
-                    };
+                let result = FrontierInstance {
+                    prev_label,
+                    prev_edge,
+                    prev_state,
+                };
 
-                    return Ok(Some(result));
-                }
+                return Ok(Some(result));
             }
         }
     }
