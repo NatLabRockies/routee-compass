@@ -46,7 +46,7 @@ pub fn generate_route_output(
     let state_model = si.state_model.serialize_state_model();
 
     // Compute total route cost by summing all edge costs
-    let route_cost = AccumulatedTraversalCost::new(&route);
+    let route_cost = AccumulatedTraversalCost::new(route);
 
     let cost = json![route_cost];
     let cost_model = si
