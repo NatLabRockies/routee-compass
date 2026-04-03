@@ -1,6 +1,6 @@
 use super::CustomTraversalEngine;
 use crate::algorithm::search::SearchTree;
-use crate::model::network::{Edge, Vertex};
+use crate::model::network::Vertex;
 use crate::model::state::StateModel;
 use crate::model::state::StateVariable;
 use crate::model::state::{InputFeature, StateVariableConfig};
@@ -40,13 +40,11 @@ impl TraversalModel for CustomTraversalModel {
     /// records the value that will be assigned to this edge into the state vector.
     fn traverse_edge(
         &self,
-        trajectory: (&Vertex, &Edge, &Vertex),
+        ctx: &crate::model::traversal::EdgeTraversalContext,
         state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
-        let (_, edge, _) = trajectory;
-        self.engine.insert_value(&edge.edge_id, state, state_model)
+        self.engine.insert_value(&ctx.edge.edge_id, state, state_model)
     }
 
     /// records the value that will be assigned to this edge into the state vector.

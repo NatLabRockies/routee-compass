@@ -3,7 +3,7 @@ use uom::ConstZero;
 
 use super::speed_traversal_engine::SpeedTraversalEngine;
 use crate::algorithm::search::SearchTree;
-use crate::model::network::{Edge, EdgeId, Vertex};
+use crate::model::network::{EdgeId, Vertex};
 use crate::model::state::StateModel;
 use crate::model::state::StateVariable;
 use crate::model::state::{InputFeature, StateVariableConfig};
@@ -62,13 +62,11 @@ impl TraversalModel for SpeedTraversalModel {
     /// records the speed that will be driven over this edge into the state vector.
     fn traverse_edge(
         &self,
-        trajectory: (&Vertex, &Edge, &Vertex),
+        ctx: &crate::model::traversal::EdgeTraversalContext,
         state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
-        let (_, edge, _) = trajectory;
-        let lookup_speed = get_speed(&self.engine.speed_table, edge.edge_id)?;
+        let lookup_speed = get_speed(&self.engine.speed_table, ctx.edge.edge_id)?;
         let speed = apply_speed_limit(lookup_speed, self.speed_limit);
         state_model.set_speed(state, fieldname::EDGE_SPEED, &speed)?;
         Ok(())
@@ -87,7 +85,6 @@ impl TraversalModel for SpeedTraversalModel {
             None => self.engine.max_speed,
         };
         state_model.set_speed(state, fieldname::EDGE_SPEED, &speed)?;
-
         Ok(())
     }
 }
@@ -121,7 +118,9 @@ fn apply_speed_limit(lookup_speed: Velocity, speed_limit: Option<Velocity>) -> V
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::model::label::Label;
     use crate::model::network::{Edge, EdgeId, EdgeListId, Vertex, VertexId};
+    use crate::model::traversal::EdgeTraversalContext;
     use crate::model::unit::SpeedUnit;
     use crate::testing::mock::traversal_model::TestTraversalModel;
     use crate::util::geo::InternalCoord;
@@ -181,12 +180,13 @@ mod tests {
 
         let mut state = state_model.initial_state(None).unwrap();
         let v = mock_vertex();
+        let l = Label::Vertex(v.vertex_id);
         let e1 = mock_edge(0);
+
         test_model
             .traverse_edge(
-                (&v, &e1, &v),
+                &EdgeTraversalContext::new(&l, &v, &e1, &v, &SearchTree::default()),
                 &mut state,
-                &SearchTree::default(),
                 &state_model,
             )
             .unwrap();
@@ -225,22 +225,24 @@ mod tests {
                 test_regular_model.output_features(),
             )
             .expect("test invariant failed");
-        let tree = SearchTree::default();
 
         let mut state_with_limit = state_model.initial_state(None).unwrap();
         let mut state_without_limit = state_model.initial_state(None).unwrap();
 
         let v = mock_vertex();
+        let l = Label::Vertex(v.vertex_id);
         let e = mock_edge(0);
+        let t = SearchTree::default();
+        let mock_ctx = EdgeTraversalContext::new(&l, &v, &e, &v, &t);
 
         // Traverse with speed limit
         test_limited_model
-            .traverse_edge((&v, &e, &v), &mut state_with_limit, &tree, &state_model)
+            .traverse_edge(&mock_ctx, &mut state_with_limit, &state_model)
             .unwrap();
 
         // Traverse without speed limit
         test_regular_model
-            .traverse_edge((&v, &e, &v), &mut state_without_limit, &tree, &state_model)
+            .traverse_edge(&mock_ctx, &mut state_without_limit, &state_model)
             .unwrap();
 
         // The time with speed limit should be about twice the time without limit

@@ -4,7 +4,7 @@ use super::TurnDelayTraversalModelEngine;
 use crate::{
     algorithm::search::SearchTree,
     model::{
-        network::{Edge, Vertex},
+        network::Vertex,
         state::{StateModel, StateVariable, StateVariableConfig},
         traversal::{default::fieldname, TraversalModel, TraversalModelError},
         unit::TimeUnit,
@@ -69,21 +69,21 @@ impl TraversalModel for TurnDelayTraversalModel {
 
     fn traverse_edge(
         &self,
-        traversal: (&Vertex, &Edge, &Vertex),
+        ctx: &crate::model::traversal::EdgeTraversalContext,
         state: &mut Vec<StateVariable>,
-        tree: &SearchTree,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
-        if tree.is_empty() {
-            // we need a previous edge to complete a turn
-            return Ok(());
-        }
-        let (src, edge, _) = traversal;
-        let prev_edge_id = match tree.get_incoming_edge(src.vertex_id) {
+        let prev_edge_traversal = ctx.previous_edge_traversal()
+            .map_err(|e| {
+                let msg = format!("while accessing previous edge during turn delay calculation, {e}");
+                TraversalModelError::TraversalModelFailure(msg)
+            })?;
+        let prev_edge_id = match prev_edge_traversal {
             Some(prev_traversal) => prev_traversal.edge_id,
             None => return Ok(()), // no previous edge, no turn delay to apply
         };
-        let delay = self.engine.get_delay(prev_edge_id, edge.edge_id)?;
+
+        let delay = self.engine.get_delay(prev_edge_id, ctx.edge.edge_id)?;
         state_model.set_time(state, fieldname::EDGE_TURN_DELAY, &delay)?;
         state_model.add_time(state, fieldname::EDGE_TIME, &delay)?;
         if self.include_trip_time {

@@ -1,9 +1,8 @@
 use super::{EdgeTraversal, SearchTreeNode};
 use crate::model::network::{EdgeId, EdgeListId, Graph, NetworkError, VertexId};
-use crate::model::unit::{AsF64, Cost};
+use crate::model::unit::Cost;
 use crate::{algorithm::search::Direction, model::label::Label};
 use allocative::Allocative;
-use ordered_float::OrderedFloat;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
@@ -286,6 +285,11 @@ impl SearchTree {
         self.reconstruct_path(label, None)
     }
 
+    /// convenience method to backtrack from some label to some depth.
+    pub fn backtrack_label_with_depth(&self, label: &Label, depth: u64) -> Result<Vec<EdgeTraversal>, SearchTreeError> {
+        self.reconstruct_path(label, Some(depth))
+    }
+
     /// backtrack for edge-oriented search, begins from source vertex of target edge.
     pub fn backtrack_edge_oriented_route(
         &self,
@@ -334,22 +338,16 @@ impl SearchTree {
             if exceeds_depth {
                 break;
             }
-            let current_node = self
-                .get(current_label)
-                .ok_or_else(|| SearchTreeError::LabelNotFound(current_label.clone()))?;
-
-            // If this is the root, we're done, otherwise traverse path
-            match current_node {
-                SearchTreeNode::Root { .. } => break,
-                SearchTreeNode::Branch {
-                    incoming_edge,
-                    parent,
-                    ..
-                } => {
+            
+            let predecessor = self.predecessor(current_label)?;
+            match predecessor {
+                Some((incoming_edge, parent)) => {
                     path.push(incoming_edge.clone());
                     current_label = parent;
-                }
+                },
+                None => break
             }
+
             steps += 1;
         }
 
@@ -364,6 +362,19 @@ impl SearchTree {
         }
     }
 
+    /// get the edge traversal and parent [Label] that leads to some child [Label], aka, 
+    /// where (parent) -[incoming_edge]-> (child)
+    pub fn predecessor(&self, child: &Label) -> Result<Option<(&EdgeTraversal, &Label)>, SearchTreeError> {
+        let current_node = self
+            .get(child)
+            .ok_or_else(|| SearchTreeError::LabelNotFound(child.clone()))?;
+
+        match current_node {
+            SearchTreeNode::Root { .. } => Ok(None),
+            SearchTreeNode::Branch { incoming_edge, parent, .. } => Ok(Some((incoming_edge, parent)))
+        }
+    }
+
     /// Get all labels in the tree
     pub fn labels(&self) -> impl Iterator<Item = &Label> {
         self.nodes.keys()
@@ -374,29 +385,8 @@ impl SearchTree {
         self.nodes.values()
     }
 
-    // /// Get the incoming edge for a vertex by finding its minimum cost label.
-    // /// This is an optimized version for getting just the parent edge without full backtracking.
-    // ///
-    // /// # Arguments
-    // /// * `vertex` - The vertex ID to get the incoming edge for
-    // ///
-    // /// # Returns
-    // /// The incoming EdgeTraversal if the vertex exists and is not the root, None otherwise
-    // pub fn get_incoming_edge(&self, vertex: VertexId) -> Option<&EdgeTraversal> {
-    //     let label = self.get_label_by(vertex, min_cost_ordering, true)?;
-    //     let node = self.get(label)?;
-    //     node.incoming_edge()
-    // }
 }
 
-/// helper function to construct the min cost ordering
-fn min_cost_ordering(pair: &(&Label, Option<&EdgeTraversal>)) -> OrderedFloat<f64> {
-    let (_, et) = pair;
-    match et {
-        None => OrderedFloat(f64::MAX),
-        Some(e) => OrderedFloat(e.cost.edge_cost.as_f64()),
-    }
-}
 
 #[derive(Debug, thiserror::Error)]
 pub enum SearchTreeError {
@@ -414,6 +404,8 @@ pub enum SearchTreeError {
     InvalidBranchStructure(String),
     #[error("Vertex not found in tree: {0}")]
     VertexNotFound(VertexId),
+    #[error("while backtracking from '{0}', {1}")]
+    BacktrackingError(Label, String),
     #[error("Search tree error while interacting with Graph: {source}")]
     NetworkError {
         #[from]

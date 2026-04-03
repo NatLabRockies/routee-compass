@@ -120,7 +120,7 @@ pub fn run_vertex_oriented(
             }
 
             let next_edge = (*edge_list_id, *edge_id);
-            let et = EdgeTraversal::new(next_edge, &solution, &f.prev_state, si)?;
+            let et = EdgeTraversal::new(&f.prev_label, next_edge, &solution, &f.prev_state, si)?;
             let key_label = si.label_model.label_from_state(
                 key_vertex_id,
                 &et.result_state,

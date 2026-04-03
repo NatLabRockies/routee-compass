@@ -5,7 +5,7 @@ use uom::{si::f64::Length, ConstZero};
 use crate::{
     algorithm::search::SearchTree,
     model::{
-        network::{Edge, Vertex},
+        network::Vertex,
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
         traversal::{
             default::fieldname, TraversalModel, TraversalModelError, TraversalModelService,
@@ -69,9 +69,8 @@ impl TraversalModel for ElevationTraversalModel {
     /// compute the change in elevation along this edge and store it to the state vector
     fn traverse_edge(
         &self,
-        _trajectory: (&Vertex, &Edge, &Vertex),
+        _ctx: &crate::model::traversal::EdgeTraversalContext,
         state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         let distance = state_model.get_distance(state, fieldname::EDGE_DISTANCE)?;

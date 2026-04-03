@@ -2,7 +2,7 @@ use uom::si::f64::Length;
 use uom::ConstZero;
 
 use crate::algorithm::search::SearchTree;
-use crate::model::network::{Edge, Vertex};
+use crate::model::network::Vertex;
 use crate::model::state::StateModel;
 use crate::model::state::StateVariable;
 use crate::model::state::{InputFeature, StateVariableConfig};
@@ -37,16 +37,13 @@ impl TraversalModel for DistanceTraversalModel {
     /// [Graph]: crate::model::network::Graph
     fn traverse_edge(
         &self,
-        trajectory: (&Vertex, &Edge, &Vertex),
+        ctx: &crate::model::traversal::EdgeTraversalContext,
         state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
-        let (_, edge, _) = trajectory;
-
-        state_model.add_distance(state, fieldname::EDGE_DISTANCE, &edge.distance)?;
+        state_model.add_distance(state, fieldname::EDGE_DISTANCE, &ctx.edge.distance)?;
         if self.include_trip_distance {
-            state_model.add_distance(state, fieldname::TRIP_DISTANCE, &edge.distance)?;
+            state_model.add_distance(state, fieldname::TRIP_DISTANCE, &ctx.edge.distance)?;
         }
         Ok(())
     }

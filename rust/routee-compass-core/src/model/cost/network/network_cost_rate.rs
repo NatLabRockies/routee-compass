@@ -1,8 +1,8 @@
 use itertools::Itertools;
 
-use crate::algorithm::search::SearchTree;
-use crate::model::network::{Edge, Vertex, VertexId};
+use crate::model::network::{Edge, VertexId};
 use crate::model::state::{StateModel, StateVariable};
+use crate::model::traversal::EdgeTraversalContext;
 use crate::model::unit::Cost;
 use crate::model::{cost::CostModelError, network::EdgeId};
 use std::collections::HashMap;
@@ -66,27 +66,24 @@ impl NetworkCostRate {
     /// computes the cost for accessing this part of the network.
     pub fn network_cost(
         &self,
-        trajectory: (&Vertex, &Edge, &Vertex),
+        ctx: &EdgeTraversalContext,
         _state: &[StateVariable],
-        _tree: &SearchTree,
         _state_model: &StateModel,
     ) -> Result<Cost, CostModelError> {
         match self {
             NetworkCostRate::Zero => Ok(Cost::ZERO),
             NetworkCostRate::EdgeLookup { lookup } => {
-                let (_, edge, _) = trajectory;
-                let cost = lookup.get(&edge.edge_id).copied().unwrap_or_default();
+                let cost = lookup.get(&ctx.edge.edge_id).copied().unwrap_or_default();
                 Ok(cost)
             }
             NetworkCostRate::VertexLookup { lookup } => {
-                let (src, _, _) = trajectory;
-                let cost = lookup.get(&src.vertex_id).copied().unwrap_or_default();
+                let cost = lookup.get(&ctx.src.vertex_id).copied().unwrap_or_default();
                 Ok(cost)
             }
             NetworkCostRate::Combined(rates) => {
                 let mapped = rates
                     .iter()
-                    .map(|f| f.network_cost(trajectory, _state, _tree, _state_model))
+                    .map(|f| f.network_cost(ctx, _state,  _state_model))
                     .collect::<Result<Vec<Cost>, CostModelError>>()?;
                 let cost = mapped.iter().fold(Cost::ZERO, |a, b| a + *b);
 

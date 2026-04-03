@@ -2,13 +2,11 @@ use super::{
     cost_ops, network::NetworkCostRate, CostAggregation, CostFeature, TraversalCost,
     VehicleCostRate,
 };
-use crate::algorithm::search::SearchTree;
 use crate::model::cost::CostConstraint;
 use crate::model::cost::CostModelError;
-use crate::model::network::Edge;
-use crate::model::network::Vertex;
 use crate::model::state::StateModel;
 use crate::model::state::StateVariable;
+use crate::model::traversal::EdgeTraversalContext;
 use indexmap::IndexMap;
 use itertools::Itertools;
 use serde_json::json;
@@ -103,10 +101,9 @@ impl CostModel {
     /// represents just the edge traversal).
     pub fn traversal_cost(
         &self,
-        trajectory: (&Vertex, &Edge, &Vertex),
+        ctx: &EdgeTraversalContext,
         previous_state: &[StateVariable],
         current_state: &[StateVariable],
-        tree: &SearchTree,
         state_model: &StateModel,
     ) -> Result<TraversalCost, CostModelError> {
         let mut result = TraversalCost::default();
@@ -129,23 +126,20 @@ impl CostModel {
 
             let n_cost = if feature.is_accumulator {
                 let current_network_cost = feature.network_cost_rate.network_cost(
-                    trajectory,
+                    &ctx,
                     current_state,
-                    tree,
                     state_model,
                 )?;
                 let previous_network_cost = feature.network_cost_rate.network_cost(
-                    trajectory,
+                    &ctx,
                     previous_state,
-                    tree,
                     state_model,
                 )?;
                 current_network_cost - previous_network_cost
             } else {
                 feature.network_cost_rate.network_cost(
-                    trajectory,
+                    &ctx,
                     current_state,
-                    tree,
                     state_model,
                 )?
             };
@@ -222,8 +216,9 @@ impl CostModel {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::algorithm::search::Direction;
-    use crate::model::network::{EdgeId, EdgeListId, VertexId};
+    use crate::algorithm::search::{Direction, SearchTree};
+    use crate::model::label::Label;
+    use crate::model::network::{Edge, EdgeId, EdgeListId, Vertex, VertexId};
     use crate::model::state::StateVariableConfig;
     use crate::model::unit::{AsF64, Cost, DistanceUnit, TimeUnit};
     use crate::util::geo::InternalCoord;
@@ -423,17 +418,17 @@ mod test {
         let current_state = vec![StateVariable(150.0)];
 
         let v1 = create_vertex(VertexId(0));
+        let l = Label::Vertex(v1.vertex_id);
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
-        let trajectory = (&v1, &e, &v2);
         let tree = create_test_tree();
+        let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
             .traversal_cost(
-                trajectory,
+                &ctx,
                 &previous_state,
                 &current_state,
-                &tree,
                 &state_model,
             )
             .expect("Failed to compute traversal cost");
@@ -488,17 +483,17 @@ mod test {
         let current_state = vec![StateVariable(25.0)];
 
         let v1 = create_vertex(VertexId(0));
+        let l = Label::Vertex(v1.vertex_id);
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
-        let trajectory = (&v1, &e, &v2);
         let tree = create_test_tree();
+        let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
             .traversal_cost(
-                trajectory,
+                &ctx,
                 &previous_state,
                 &current_state,
-                &tree,
                 &state_model,
             )
             .expect("Failed to compute traversal cost");
@@ -594,17 +589,17 @@ mod test {
         ];
 
         let v1 = create_vertex(VertexId(0));
+        let l = Label::Vertex(v1.vertex_id);
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
-        let trajectory = (&v1, &e, &v2);
         let tree = create_test_tree();
+        let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
             .traversal_cost(
-                trajectory,
+                &ctx,
                 &previous_state,
                 &current_state,
-                &tree,
                 &state_model,
             )
             .expect("Failed to compute traversal cost");
@@ -672,17 +667,17 @@ mod test {
         let current_state = vec![StateVariable(150.0)];
 
         let v1 = create_vertex(VertexId(0));
+        let l = Label::Vertex(v1.vertex_id);
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
-        let trajectory = (&v1, &e, &v2);
         let tree = create_test_tree();
+        let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
             .traversal_cost(
-                trajectory,
+                &ctx,
                 &previous_state,
                 &current_state,
-                &tree,
                 &state_model,
             )
             .expect("Failed to compute traversal cost");
@@ -844,17 +839,17 @@ mod test {
         let current_state = vec![StateVariable(150.0)];
 
         let v1 = create_vertex(VertexId(0));
+        let l = Label::Vertex(v1.vertex_id);
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
-        let trajectory = (&v1, &e, &v2);
         let tree = create_test_tree();
+        let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
             .traversal_cost(
-                trajectory,
+                &ctx,
                 &previous_state,
                 &current_state,
-                &tree,
                 &state_model,
             )
             .expect("Failed to compute traversal cost");
@@ -931,27 +926,26 @@ mod test {
         let current_state = vec![StateVariable(150.0)];
 
         let v1 = create_vertex(VertexId(0));
+        let l = Label::Vertex(v1.vertex_id);
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
-        let trajectory = (&v1, &e, &v2);
         let tree = create_test_tree();
+        let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
 
         let result_acc = cost_model_acc
             .traversal_cost(
-                trajectory,
+                &ctx,
                 &previous_state,
                 &current_state,
-                &tree,
                 &state_model_acc,
             )
             .expect("Failed to compute accumulator cost");
 
         let result_non_acc = cost_model_non_acc
             .traversal_cost(
-                trajectory,
+                &ctx,
                 &previous_state,
                 &current_state,
-                &tree,
                 &state_model_non_acc,
             )
             .expect("Failed to compute non-accumulator cost");

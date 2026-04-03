@@ -1,7 +1,7 @@
 use crate::{
     algorithm::search::SearchTree,
     model::{
-        network::{Edge, Vertex},
+        network::Vertex,
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
         traversal::{TraversalModel, TraversalModelError},
     },
@@ -48,13 +48,12 @@ impl TraversalModel for CombinedTraversalModel {
 
     fn traverse_edge(
         &self,
-        trajectory: (&Vertex, &Edge, &Vertex),
+        ctx: &crate::model::traversal::EdgeTraversalContext,
         state: &mut Vec<StateVariable>,
-        tree: &SearchTree,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         for model in self.models.iter() {
-            model.traverse_edge(trajectory, state, tree, state_model)?;
+            model.traverse_edge(ctx, state, state_model)?;
         }
         Ok(())
     }
