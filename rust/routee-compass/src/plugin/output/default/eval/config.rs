@@ -59,8 +59,7 @@ impl ExpressionConfig {
     /// create a new ExpressionConfig programmatically.
     ///
     /// # Arguments
-    /// * `inputs` - a pair of (variable_name, JSONPath) for each variable we
-    /// want to bind from the output row.
+    /// * `inputs` - a pair of (variable_name, JSONPath) for each variable we want to bind from the output row.
     /// * `expression` - mathematical expression
     pub fn new(inputs: &[(&str, &str)], expression: &str, output: &str) -> Self {
         Self {
