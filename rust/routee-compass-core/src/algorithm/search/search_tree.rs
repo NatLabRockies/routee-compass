@@ -134,8 +134,9 @@ impl SearchTree {
             }
         }
 
-        min_cost
-            .ok_or(SearchTreeError::MissingLabelsForDestinationVertex(destination_vertex))
+        min_cost.ok_or(SearchTreeError::MissingLabelsForDestinationVertex(
+            destination_vertex,
+        ))
     }
 
     /// Find labels for the given vertex ID

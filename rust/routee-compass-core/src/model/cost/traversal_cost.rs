@@ -25,7 +25,7 @@ impl TraversalCost {
     /// use [TraversalCost::min]. see [CostConstraint].
     pub fn empty() -> TraversalCost {
         TraversalCost {
-            edge_cost: Cost::ZERO, 
+            edge_cost: Cost::ZERO,
             objective_cost: Cost::ZERO,
             #[cfg(feature = "detailed_costs")]
             cost_component: std::collections::HashMap::new(),
