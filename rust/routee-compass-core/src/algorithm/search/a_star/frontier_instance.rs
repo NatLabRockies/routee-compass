@@ -43,13 +43,11 @@ impl FrontierInstance {
         initial_state: &[StateVariable],
     ) -> Result<Option<FrontierInstance>, SearchError> {
         match (frontier.pop(), target) {
-            (None, Some(target_vertex_id)) => {
-                Err(SearchError::NoPathExistsBetweenVertices(
-                    source,
-                    target_vertex_id,
-                    solution.len(),
-                ))
-            }
+            (None, Some(target_vertex_id)) => Err(SearchError::NoPathExistsBetweenVertices(
+                source,
+                target_vertex_id,
+                solution.len(),
+            )),
             (None, None) => Ok(None),
             (Some((prev_label, _)), Some(target_v)) if prev_label.vertex_id() == &target_v => {
                 Ok(None)
