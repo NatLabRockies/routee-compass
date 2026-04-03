@@ -135,7 +135,7 @@ impl SearchTree {
         }
 
         min_cost
-            .ok_or_else(|| SearchTreeError::MissingLabelsForDestinationVertex(destination_vertex))
+            .ok_or(SearchTreeError::MissingLabelsForDestinationVertex(destination_vertex))
     }
 
     /// Find labels for the given vertex ID
@@ -206,7 +206,7 @@ impl SearchTree {
                     ..
                 } => {
                     // add this objective cost and update the node cursor to the branch's parent
-                    total = total + incoming_edge.cost.objective_cost;
+                    total += incoming_edge.cost.objective_cost;
                     current_label = parent;
                 }
             }

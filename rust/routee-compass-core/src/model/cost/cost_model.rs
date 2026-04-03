@@ -128,16 +128,16 @@ impl CostModel {
                 let current_network_cost =
                     feature
                         .network_cost_rate
-                        .network_cost(&ctx, current_state, state_model)?;
+                        .network_cost(ctx, current_state, state_model)?;
                 let previous_network_cost =
                     feature
                         .network_cost_rate
-                        .network_cost(&ctx, previous_state, state_model)?;
+                        .network_cost(ctx, previous_state, state_model)?;
                 current_network_cost - previous_network_cost
             } else {
                 feature
                     .network_cost_rate
-                    .network_cost(&ctx, current_state, state_model)?
+                    .network_cost(ctx, current_state, state_model)?
             };
 
             let cost = v_cost + n_cost;
