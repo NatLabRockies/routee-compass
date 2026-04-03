@@ -3,7 +3,10 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "detailed_costs")]
 use std::collections::HashMap;
 
-use crate::{algorithm::search::EdgeTraversal, model::{cost::CostConstraint, unit::Cost}};
+use crate::{
+    algorithm::search::EdgeTraversal,
+    model::{cost::CostConstraint, unit::Cost},
+};
 
 /// the cost of an edge traversal.
 #[derive(Serialize, Deserialize, Clone, Debug, Allocative)]
