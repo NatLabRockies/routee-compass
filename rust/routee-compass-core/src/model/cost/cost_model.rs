@@ -3,6 +3,7 @@ use super::{
     VehicleCostRate,
 };
 use crate::algorithm::search::SearchTree;
+use crate::model::cost::CostConstraint;
 use crate::model::cost::CostModelError;
 use crate::model::network::Edge;
 use crate::model::network::Vertex;
@@ -23,6 +24,7 @@ pub struct CostModel {
     vehicle_rate_mapping: Arc<HashMap<String, VehicleCostRate>>,
     network_rate_mapping: Arc<HashMap<String, NetworkCostRate>>,
     cost_aggregation: CostAggregation,
+    cost_constraint: CostConstraint
 }
 
 impl CostModel {
@@ -46,6 +48,7 @@ impl CostModel {
         network_rate_mapping: Arc<HashMap<String, NetworkCostRate>>,
         cost_aggregation: CostAggregation,
         state_model: Arc<StateModel>,
+        cost_constraint: CostConstraint,
     ) -> Result<CostModel, CostModelError> {
         let ignored_weights = weights_mapping
             .keys()
@@ -88,6 +91,7 @@ impl CostModel {
             vehicle_rate_mapping,
             network_rate_mapping,
             cost_aggregation,
+            cost_constraint
         })
     }
 
@@ -147,7 +151,7 @@ impl CostModel {
             };
 
             let cost = v_cost + n_cost;
-            result.insert(name, cost, feature.weight);
+            result.insert(name, cost, feature.weight, self.cost_constraint);
         }
         Ok(result)
     }
@@ -163,7 +167,7 @@ impl CostModel {
             let v_cost = feature
                 .vehicle_cost_rate
                 .compute_cost(name, state, state_model)?;
-            result.insert(name, v_cost, feature.weight);
+            result.insert(name, v_cost, feature.weight, self.cost_constraint);
         }
         Ok(result)
     }
@@ -293,6 +297,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model,
+            CostConstraint::StrictlyPositive
         );
         assert!(result.is_ok());
     }
@@ -326,6 +331,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model,
+            CostConstraint::StrictlyPositive
         );
         assert!(matches!(
             result,
@@ -362,6 +368,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model,
+            CostConstraint::StrictlyPositive
         );
         assert!(matches!(
             result,
@@ -406,6 +413,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model.clone(),
+            CostConstraint::StrictlyPositive
         )
         .expect("Failed to create cost model");
 
@@ -434,9 +442,9 @@ mod test {
         // The actual cost value will depend on unit conversions,
         // but we can verify the delta is being computed by checking
         // that the cost is positive and reasonable
-        assert!(result.total_cost.as_f64() > 0.0);
+        assert!(result.edge_cost.as_f64() > 0.0);
         // With weight = 1.0, objective cost should equal total cost
-        assert_eq!(result.total_cost, result.objective_cost);
+        assert_eq!(result.edge_cost, result.objective_cost);
     }
 
     #[test]
@@ -470,6 +478,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model.clone(),
+            CostConstraint::StrictlyPositive
         )
         .expect("Failed to create cost model");
 
@@ -495,7 +504,7 @@ mod test {
             .expect("Failed to compute traversal cost");
 
         // For non-accumulators, we use the current value: 25.0
-        assert_eq!(result.total_cost, Cost::new(25.0));
+        assert_eq!(result.edge_cost, Cost::new(25.0));
         // Objective cost applies weight: 25.0 * 2.0 = 50.0
         assert_eq!(result.objective_cost, Cost::new(50.0));
     }
@@ -565,6 +574,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model.clone(),
+            CostConstraint::StrictlyPositive
         )
         .expect("Failed to create cost model");
 
@@ -600,11 +610,11 @@ mod test {
             .expect("Failed to compute traversal cost");
 
         // Verify we got a non-zero cost (actual values depend on unit conversions)
-        assert!(result.total_cost.as_f64() > 0.0);
+        assert!(result.edge_cost.as_f64() > 0.0);
         assert!(result.objective_cost.as_f64() > 0.0);
         // For mixed features with weights, the objective and total costs will differ
         // (not all weights are 1.0)
-        assert_ne!(result.total_cost, result.objective_cost);
+        assert_ne!(result.edge_cost, result.objective_cost);
     }
 
     #[test]
@@ -652,6 +662,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model.clone(),
+            CostConstraint::StrictlyPositive
         )
         .expect("Failed to create cost model");
 
@@ -679,9 +690,9 @@ mod test {
         // For accumulators: vehicle cost should be the delta
         // Network cost is computed at both states (same edge), so delta should be 0
         // The result should be > 0 due to vehicle cost delta
-        assert!(result.total_cost.as_f64() > 0.0);
+        assert!(result.edge_cost.as_f64() > 0.0);
         // With weight 1.0, objective == total
-        assert_eq!(result.total_cost, result.objective_cost);
+        assert_eq!(result.edge_cost, result.objective_cost);
     }
 
     #[test]
@@ -720,6 +731,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model.clone(),
+            CostConstraint::StrictlyPositive
         )
         .expect("Failed to create cost model");
 
@@ -733,7 +745,7 @@ mod test {
         // Weight is 3.0, so objective cost should be 3x total cost
         assert_eq!(
             result.objective_cost.as_f64(),
-            result.total_cost.as_f64() * 3.0
+            result.edge_cost.as_f64() * 3.0
         );
     }
 
@@ -775,6 +787,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model.clone(),
+            CostConstraint::StrictlyPositive
         );
 
         assert!(result.is_err());
@@ -823,6 +836,7 @@ mod test {
             network_rates,
             cost_aggregation,
             state_model.clone(),
+            CostConstraint::StrictlyPositive
         )
         .expect("Failed to create cost model");
 
@@ -851,7 +865,7 @@ mod test {
         // delta = 5.0 - 5.0 = 0.0
         // vehicle cost = 0.0 (Zero rate)
         // Total should be very close to 0.0 (allowing for floating point precision)
-        assert!(result.total_cost.as_f64().abs() < 1e-6);
+        assert!(result.edge_cost.as_f64().abs() < 1e-6);
     }
 
     #[test]
@@ -884,6 +898,7 @@ mod test {
             Arc::new(HashMap::new()),
             CostAggregation::Sum,
             state_model_acc.clone(),
+            CostConstraint::StrictlyPositive
         )
         .expect("Failed to create accumulator cost model");
 
@@ -907,6 +922,7 @@ mod test {
             Arc::new(HashMap::new()),
             CostAggregation::Sum,
             state_model_non_acc.clone(),
+            CostConstraint::StrictlyPositive
         )
         .expect("Failed to create non-accumulator cost model");
 
@@ -942,19 +958,19 @@ mod test {
 
         // For accumulator: cost = current - previous = 150.0 - 100.0 = 50.0
         let expected_delta = current_state[0].0 - previous_state[0].0;
-        assert_eq!(result_acc.total_cost, Cost::new(expected_delta));
+        assert_eq!(result_acc.edge_cost, Cost::new(expected_delta));
 
         // For non-accumulator: cost = current = 150.0
-        assert_eq!(result_non_acc.total_cost, Cost::new(current_state[0].0));
+        assert_eq!(result_non_acc.edge_cost, Cost::new(current_state[0].0));
 
         // The two costs should be different
-        assert_ne!(result_acc.total_cost, result_non_acc.total_cost);
+        assert_ne!(result_acc.edge_cost, result_non_acc.edge_cost);
 
         // Non-accumulator cost should be exactly 3x the accumulator cost in this case
         // (150.0 vs 50.0)
         assert_eq!(
-            result_non_acc.total_cost.as_f64(),
-            result_acc.total_cost.as_f64() * 3.0
+            result_non_acc.edge_cost.as_f64(),
+            result_acc.edge_cost.as_f64() * 3.0
         );
     }
 }

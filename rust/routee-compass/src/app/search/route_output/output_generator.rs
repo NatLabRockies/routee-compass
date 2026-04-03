@@ -49,7 +49,7 @@ pub fn generate_route_output(
     let route_cost = route
         .iter()
         .fold(TraversalCost::default(), |mut acc, edge| {
-            acc.total_cost += edge.cost.total_cost;
+            acc.edge_cost += edge.cost.edge_cost;
             acc.objective_cost += edge.cost.objective_cost;
             acc
         });

@@ -8,6 +8,7 @@ pub mod cost_ops;
 pub mod network;
 pub mod traversal_cost;
 mod vehicle;
+mod cost_constraint;
 
 pub use cost_aggregation::CostAggregation;
 pub use cost_feature::CostFeature;
@@ -16,3 +17,4 @@ pub use cost_model_config::CostModelConfig;
 pub use cost_model_error::CostModelError;
 pub use traversal_cost::TraversalCost;
 pub use vehicle::vehicle_cost_rate::VehicleCostRate;
+pub use cost_constraint::CostConstraint;

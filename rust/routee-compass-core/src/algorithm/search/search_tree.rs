@@ -335,7 +335,7 @@ fn min_cost_ordering(pair: &(&Label, Option<&EdgeTraversal>)) -> OrderedFloat<f6
     let (_, et) = pair;
     match et {
         None => OrderedFloat(f64::MAX),
-        Some(e) => OrderedFloat(e.cost.total_cost.as_f64()),
+        Some(e) => OrderedFloat(e.cost.edge_cost.as_f64()),
     }
 }
 

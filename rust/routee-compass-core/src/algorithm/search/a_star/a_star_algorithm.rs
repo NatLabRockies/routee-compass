@@ -232,6 +232,7 @@ mod tests {
     use super::*;
     use crate::model::constraint::default::no_restriction::NoRestriction;
     use crate::model::cost::CostAggregation;
+    use crate::model::cost::CostConstraint;
     use crate::model::cost::CostModel;
     use crate::model::cost::VehicleCostRate;
     use crate::model::label::default::vertex_label_model::VertexLabelModel;
@@ -358,7 +359,6 @@ mod tests {
                 .unwrap(),
         );
         let cost_model = CostModel::new(
-            // vec![(String::from("distance"), 0usize)],
             Arc::new(HashMap::from([(String::from("trip_distance"), 1.0)])),
             Arc::new(HashMap::from([(
                 String::from("trip_distance"),
@@ -367,6 +367,7 @@ mod tests {
             Arc::new(HashMap::new()),
             CostAggregation::Sum,
             state_model.clone(),
+            CostConstraint::StrictlyPositive
         )
         .unwrap();
         SearchInstance {

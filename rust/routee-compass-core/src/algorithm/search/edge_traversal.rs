@@ -22,7 +22,7 @@ impl Display for EdgeTraversal {
         write!(
             f,
             "edge {} cost:{} state:{:?}",
-            self.edge_id, self.cost.total_cost, self.result_state
+            self.edge_id, self.cost.edge_cost, self.result_state
         )
     }
 }

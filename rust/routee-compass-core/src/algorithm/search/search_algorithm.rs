@@ -9,6 +9,7 @@ use super::SearchInstance;
 use super::{a_star, direction::Direction};
 use crate::algorithm::search::search_algorithm_config::SearchAlgorithmConfig;
 use crate::algorithm::search::TerminationFailurePolicy;
+use crate::model::cost::CostConstraint;
 use crate::model::cost::TraversalCost;
 use crate::model::network::EdgeListId;
 use crate::model::network::{EdgeId, VertexId};
@@ -162,6 +163,15 @@ impl SearchAlgorithm {
                 similarity: _,
                 termination: _,
             } => run_edge_oriented(src, dst_opt, query, direction, self, si),
+        }
+    }
+
+    /// constraint applied to cost values due to the type of algorithm run.
+    pub fn cost_constraint(&self) -> CostConstraint {
+        match self {
+            SearchAlgorithm::SingleSourceShortestPath { .. } => CostConstraint::StrictlyPositive,
+            SearchAlgorithm::KspSingleVia { underlying, .. } => underlying.cost_constraint(),
+            SearchAlgorithm::Yens { underlying, .. } => underlying.cost_constraint(),
         }
     }
 }

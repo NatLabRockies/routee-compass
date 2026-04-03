@@ -382,7 +382,7 @@ mod tests {
         for idx in 0..(size - 1) {
             let cost = TraversalCost {
                 objective_cost: Cost::MIN_COST,
-                total_cost: Cost::MIN_COST,
+                edge_cost: Cost::MIN_COST,
                 #[cfg(feature = "detailed_costs")]
                 cost_component: std::collections::HashMap::new(),
             };
