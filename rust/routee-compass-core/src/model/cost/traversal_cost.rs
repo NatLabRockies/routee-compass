@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "detailed_costs")]
 use std::collections::HashMap;
 
-use crate::model::{cost::CostConstraint, unit::Cost};
+use crate::{algorithm::search::EdgeTraversal, model::{cost::CostConstraint, unit::Cost}};
 
 /// the cost of an edge traversal.
 #[derive(Serialize, Deserialize, Clone, Debug, Allocative)]
@@ -15,6 +15,15 @@ pub struct TraversalCost {
     #[cfg(feature = "detailed_costs")]
     /// the cost components making up this traversal
     pub cost_component: HashMap<String, Cost>,
+}
+
+/// an accumulation of [TraversalCost] values over the course of a path.
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct AccumulatedTraversalCost {
+    /// the cost components with user-defined weighting objectives applied
+    pub objective_cost: Cost,
+    /// the cost of traversing this edge
+    pub trip_cost: Cost,
 }
 
 impl TraversalCost {
@@ -76,5 +85,18 @@ impl TraversalCost {
             #[cfg(feature = "detailed_costs")]
             cost_component: std::collections::HashMap::new(),
         }
+    }
+}
+
+impl AccumulatedTraversalCost {
+    /// creates an [AccumulatedTraversalCost] instance by summing the values
+    /// stored in each EdgeTraversal.
+    pub fn new(values: &[EdgeTraversal]) -> Self {
+        // Compute total route cost by summing all edge costs
+        values.iter().fold(Self::default(), |mut acc, edge| {
+            acc.trip_cost += edge.cost.edge_cost;
+            acc.objective_cost += edge.cost.objective_cost;
+            acc
+        })
     }
 }

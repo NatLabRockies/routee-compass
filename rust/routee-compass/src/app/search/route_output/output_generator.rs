@@ -2,7 +2,7 @@ use super::summary_op::SummaryOp;
 use crate::plugin::output::default::traversal::TraversalOutputFormat;
 use routee_compass_core::algorithm::search::EdgeTraversal;
 use routee_compass_core::algorithm::search::SearchInstance;
-use routee_compass_core::model::cost::TraversalCost;
+use routee_compass_core::model::cost::traversal_cost::AccumulatedTraversalCost;
 use serde_json::json;
 use std::collections::HashMap;
 
@@ -46,11 +46,7 @@ pub fn generate_route_output(
     let state_model = si.state_model.serialize_state_model();
 
     // Compute total route cost by summing all edge costs
-    let route_cost = route.iter().fold(TraversalCost::empty(), |mut acc, edge| {
-        acc.edge_cost += edge.cost.edge_cost;
-        acc.objective_cost += edge.cost.objective_cost;
-        acc
-    });
+    let route_cost = AccumulatedTraversalCost::new(&route);
 
     let cost = json![route_cost];
     let cost_model = si
