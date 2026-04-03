@@ -247,7 +247,7 @@ pub fn run_edge_oriented(
     let src_et = EdgeTraversal {
         edge_list_id: source.0,
         edge_id: source.1,
-        cost: TraversalCost::default(),
+        cost: TraversalCost::empty(),
         result_state: si.state_model.initial_state(None)?,
     };
 
@@ -312,7 +312,7 @@ pub fn run_edge_oriented(
                 let dst_et = EdgeTraversal {
                     edge_list_id: target_edge.0,
                     edge_id: target_edge.1,
-                    cost: TraversalCost::default(),
+                    cost: TraversalCost::empty(),
                     result_state: final_state.result_state.to_vec(),
                 };
                 route.insert(0, src_et.clone());

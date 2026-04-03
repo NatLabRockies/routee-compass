@@ -48,7 +48,7 @@ pub fn generate_route_output(
     // Compute total route cost by summing all edge costs
     let route_cost = route
         .iter()
-        .fold(TraversalCost::default(), |mut acc, edge| {
+        .fold(TraversalCost::empty(), |mut acc, edge| {
             acc.edge_cost += edge.cost.edge_cost;
             acc.objective_cost += edge.cost.objective_cost;
             acc

@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use crate::model::{cost::CostConstraint, unit::Cost};
 
 /// the cost of an edge traversal.
-#[derive(Serialize, Deserialize, Clone, Debug, Default, Allocative)]
+#[derive(Serialize, Deserialize, Clone, Debug, Allocative)]
 pub struct TraversalCost {
     /// the cost components with user-defined weighting objectives applied
     pub objective_cost: Cost,
@@ -18,30 +18,18 @@ pub struct TraversalCost {
 }
 
 impl TraversalCost {
-    /// helper for building one-off [TraversalCost] values that can be
-    /// used in prescribed scenarios such as testing.
-    pub fn new(edge_cost: Cost, objective_cost: Cost) -> TraversalCost {
-        TraversalCost {
-            edge_cost,
-            objective_cost,
-            #[cfg(feature = "detailed_costs")]
-            cost_component: std::collections::HashMap::new(),
-        }
-    }
-
-    /// creates a TraversalCost where the cost value is the true zero.
+    /// creates a TraversalCost with no values.
     ///
     /// IMPORTANT! zero is _not_ a valid cost value to assign to an edge in a search algorithm
     /// that requires values are monotonic to avoid cycles (such as Dijkstra's). in that case,
     /// use [TraversalCost::min]. see [CostConstraint].
-    pub fn zero() -> TraversalCost {
-        TraversalCost::new(Cost::ZERO, Cost::ZERO)
-    }
-
-    /// creates a TraversalCost where the cost value is a low value > zero, used when assigning
-    /// edge costs in breadth-first tree building search algorithms such as Dijkstra's.
-    pub fn min() -> TraversalCost {
-        TraversalCost::new(Cost::MIN_COST, Cost::MIN_COST)
+    pub fn empty() -> TraversalCost {
+        TraversalCost {
+            edge_cost: Cost::ZERO, 
+            objective_cost: Cost::ZERO,
+            #[cfg(feature = "detailed_costs")]
+            cost_component: std::collections::HashMap::new(),
+        }
     }
 
     /// inserts a new cost into this traversal.
@@ -62,6 +50,7 @@ impl TraversalCost {
         weight: f64,
         constraint: CostConstraint,
     ) {
+        // handle non-positive costs in the case of monotonic search algorithms
         let insert_cost = match constraint {
             CostConstraint::StrictlyPositive => Cost::enforce_strictly_positive(cost),
             CostConstraint::Unconstrained => cost,
@@ -74,6 +63,18 @@ impl TraversalCost {
                 .entry(name.to_string())
                 .and_modify(|c| *c += insert_cost)
                 .or_insert(insert_cost);
+        }
+    }
+
+    /// helper for building one-off [TraversalCost] values that can be
+    /// used in prescribed scenarios such as testing.
+    #[cfg(test)]
+    pub fn mock(edge_cost: Cost, objective_cost: Cost) -> TraversalCost {
+        TraversalCost {
+            edge_cost,
+            objective_cost,
+            #[cfg(feature = "detailed_costs")]
+            cost_component: std::collections::HashMap::new(),
         }
     }
 }

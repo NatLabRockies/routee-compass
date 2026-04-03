@@ -1168,7 +1168,7 @@ mod tests {
         EdgeTraversal {
             edge_id: EdgeId(edge_id),
             edge_list_id: EdgeListId(0),
-            cost: TraversalCost::new(Cost::new(cost), Cost::new(cost)),
+            cost: TraversalCost::mock(Cost::new(cost), Cost::new(cost)),
             result_state: vec![],
         }
     }
