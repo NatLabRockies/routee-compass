@@ -46,6 +46,14 @@ jobs:
         working-directory: ./rust
         run: cargo fmt --all -- --check
 
+      - name: Run lint checker
+        working-directory: ./rust
+        env:
+          RUSTFLAGS: "-W warnings"
+        # # if we want to be strict about warnings as well
+        # run: cargo clippy --workspace --verbose --all-targets -- -D warnings
+        run: cargo clippy --workspace --verbose
+
       - name: Run cargo sort --check
         working-directory: ./rust
         run: cargo sort --check --workspace
