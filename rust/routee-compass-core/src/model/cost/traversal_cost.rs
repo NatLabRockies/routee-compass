@@ -23,7 +23,7 @@ pub struct AccumulatedTraversalCost {
     /// the cost components with user-defined weighting objectives applied
     pub objective_cost: Cost,
     /// the cost of traversing this edge
-    pub trip_cost: Cost,
+    pub total_cost: Cost,
 }
 
 impl TraversalCost {
