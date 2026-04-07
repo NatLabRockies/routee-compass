@@ -110,7 +110,7 @@ impl StateModel {
         self.0.is_empty()
     }
 
-    pub fn contains_key(&self, k: &String) -> bool {
+    pub fn contains_key(&self, k: &str) -> bool {
         self.0.contains_key(k)
     }
 
