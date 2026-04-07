@@ -139,7 +139,7 @@ fn visit_edge(
     queue: &mut VecDeque<(EdgeListId, EdgeId)>,
     forward_adjacency: &DenseAdjacencyList,
     backward_adjacency: &DenseAdjacencyList,
-) -> () {
+) {
     let (edge_list_id, edge_id) = (edge.edge_list_id, edge.edge_id);
 
     // get all neighbors, add them to queue
@@ -209,7 +209,7 @@ fn is_component_island_parallel(
 
             // Expand queue
             visit_edge(
-                &current_edge,
+                current_edge,
                 &mut visited,
                 &mut visit_queue,
                 forward_adjacency,
