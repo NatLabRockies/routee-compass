@@ -111,13 +111,13 @@ pub fn command_line_runner(
 
     // execute queries on app
     let result = match (args.chunksize, args.newline_delimited) {
-        (None, false) => run_json(&query_file_path, &compass_app, run_config),
+        (None, false) => run_json(query_file_path, &compass_app, run_config),
         (Some(_), false) => Err(CompassAppError::InternalError(String::from(
             "not yet implemented",
         ))),
         (_, true) => {
             let chunksize = args.get_chunksize_option()?;
-            run_newline_json(&query_file_path, chunksize, &compass_app, run_config)
+            run_newline_json(query_file_path, chunksize, &compass_app, run_config)
         }
     };
 
