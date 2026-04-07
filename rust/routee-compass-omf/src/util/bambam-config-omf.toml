@@ -41,13 +41,13 @@ traversal.models = [
     { type = "distance", distance_unit = "miles" }, 
     { type = "fixed_speed", name = "walk", speed = 5.0, speed_unit = "kph" },
     { type = "time", time_unit = "minutes" },
-    { type = "multimodal", this_mode = "walk", available_modes = ["walk", "bike", "drive"], available_route_ids = [], use_route_ids = false, max_trip_legs = 5 }
+    { type = "multimodal", this_mode = "walk", available_modes = ["walk", "bike", "drive"] }
 ]
 
 frontier.type = "combined"
 frontier.models = [
     { type = "time_limit", time_limit = { time = 40.0, time_unit = "minutes" }},
-    { type = "multimodal", this_mode = "walk", available_modes = ["walk", "bike", "drive"], available_route_ids = [], max_trip_legs = 5 }
+    { type = "multimodal", this_mode = "walk", available_modes = ["walk", "bike", "drive"] }
 ]
 
 ###
@@ -59,13 +59,13 @@ traversal.models = [
     { type = "distance", distance_unit = "miles" }, 
     { type = "fixed_speed", name = "bike", speed = 16.0, speed_unit = "kph" },
     { type = "time", time_unit = "minutes" },
-    { type = "multimodal", this_mode = "bike", available_modes = ["walk", "bike", "drive"], available_route_ids = [], use_route_ids = false, max_trip_legs = 5 }
+    { type = "multimodal", this_mode = "bike", available_modes = ["walk", "bike", "drive"] }
 ]
 
 frontier.type = "combined"
 frontier.models = [
     { type = "time_limit", time_limit = { time = 40.0, time_unit = "minutes" }},
-    { type = "multimodal", this_mode = "bike", available_modes = ["walk", "bike", "drive"], available_route_ids = [], max_trip_legs = 5 }
+    { type = "multimodal", this_mode = "bike", available_modes = ["walk", "bike", "drive"] }
 ]
 
 ###
@@ -77,13 +77,13 @@ traversal.models = [
     { type = "distance", distance_unit = "miles" }, 
     { type = "speed", name = "drive", speed_unit = "mph", speed_table_input_file = "drive/edges-speeds-mph-enumerated.txt.gz" },
     { type = "time", time_unit = "minutes" },
-    { type = "multimodal", this_mode = "drive", available_modes = ["walk", "bike", "drive"], available_route_ids = [], use_route_ids = false, max_trip_legs = 5 }
+    { type = "multimodal", this_mode = "drive", available_modes = ["walk", "bike", "drive"] }
 ]
 
 frontier.type = "combined"
 frontier.models = [
     { type = "time_limit", time_limit = { time = 40.0, time_unit = "minutes" }},
-    { type = "multimodal", this_mode = "drive", available_modes = ["walk", "bike", "drive"], available_route_ids = [], max_trip_legs = 5 }
+    { type = "multimodal", this_mode = "drive", available_modes = ["walk", "bike", "drive"] }
 ]
 
 
@@ -103,7 +103,36 @@ type = "inject"
 format = "key_value"
 write_mode = "overwrite"
 key = "grid_search"
-value.mode = ["walk", "bike", "drive"]
+[[plugin.input_plugins.value._modes]]
+trip_mode = "walk"
+constraints = [
+    { type = "time_limit", limit = 40.0, unit = "minutes" },
+    { type = "allowed_modes", values = ["walk"]}
+]
+max_trip_legs = 1
+[[plugin.input_plugins.value._modes]]
+trip_mode = "bike"
+constraints = [
+    { type = "time_limit", limit = 40.0, unit = "minutes" },
+    { type = "mode_time_limit", values = { walk = { value = 10.0, unit = "minutes" }}},
+    { type = "allowed_modes", values = ["walk", "bike"]}
+]
+max_trip_legs = 3
+[[plugin.input_plugins.value._modes]]
+trip_mode = "drive"
+constraints = [
+    { type = "time_limit", limit = 40.0, unit = "minutes" },
+    { type = "mode_leg_distance_limit", values.walk = { leg = "first", constraint = { value = 0.33, unit = "miles" }}},
+    { type = "allowed_modes", values = ["walk", "drive"]}
+]
+max_trip_legs = 3
+
+[[plugin.input_plugins]]
+type = "inject"
+format = "key_value"
+write_mode = "overwrite"
+key = "max_trip_legs"
+value = 3
 
 [[plugin.output_plugins]]
 type = "traversal"
