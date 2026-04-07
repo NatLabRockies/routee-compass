@@ -21,6 +21,7 @@ matching_type = ["point", "vertex_id", "edge_id"]
 
 [algorithm]
 type = "a*"
+termination_behavior = "allow_tree_termination"
 
 # cut off searches that exceed these termination policies. 
 [termination]
@@ -44,9 +45,8 @@ traversal.models = [
     { type = "multimodal", this_mode = "walk", available_modes = ["walk", "bike", "drive"] }
 ]
 
-frontier.type = "combined"
-frontier.models = [
-    { type = "time_limit", time_limit = { time = 40.0, time_unit = "minutes" }},
+constraint.type = "combined"
+constraint.models = [
     { type = "multimodal", this_mode = "walk", available_modes = ["walk", "bike", "drive"] }
 ]
 
@@ -62,9 +62,8 @@ traversal.models = [
     { type = "multimodal", this_mode = "bike", available_modes = ["walk", "bike", "drive"] }
 ]
 
-frontier.type = "combined"
-frontier.models = [
-    { type = "time_limit", time_limit = { time = 40.0, time_unit = "minutes" }},
+constraint.type = "combined"
+constraint.models = [
     { type = "multimodal", this_mode = "bike", available_modes = ["walk", "bike", "drive"] }
 ]
 
@@ -80,9 +79,8 @@ traversal.models = [
     { type = "multimodal", this_mode = "drive", available_modes = ["walk", "bike", "drive"] }
 ]
 
-frontier.type = "combined"
-frontier.models = [
-    { type = "time_limit", time_limit = { time = 40.0, time_unit = "minutes" }},
+constraint.type = "combined"
+constraint.models = [
     { type = "multimodal", this_mode = "drive", available_modes = ["walk", "bike", "drive"] }
 ]
 
@@ -98,6 +96,9 @@ acs_year = 2022
 acs_resolution = "census_tract"
 acs_categories = ["B01001_001E"]
 
+# split this row into three for walk/bike/drive analysis using
+# different modal constraints in each search and a shared overall
+# time limit of 40 minutes.
 [[plugin.input_plugins]]
 type = "inject"
 format = "key_value"
@@ -122,7 +123,8 @@ max_trip_legs = 3
 trip_mode = "drive"
 constraints = [
     { type = "time_limit", limit = 40.0, unit = "minutes" },
-    { type = "mode_leg_distance_limit", values.walk = { leg = "first", constraint = { value = 0.33, unit = "miles" }}},
+    { type = "mode_leg_distance_limit", values.walk = { leg = "first", constraint = { value = 0.5, unit = "miles" }}},
+    { type = "mode_leg_distance_limit", values.walk = { leg = "last", constraint = { value = 0.5, unit = "miles" }}},
     { type = "allowed_modes", values = ["walk", "drive"]}
 ]
 max_trip_legs = 3
@@ -142,11 +144,16 @@ tree = "geo_json"
 type = "summary"
 
 [[plugin.output_plugins]]
-type = "isochrone"
-time_bin = { type = "list", times = [10, 20, 30, 40] }
+type = "bambam"
+format = "aggregate"
+binning = { type = "time", feature = "trip_time", values = [10,20,30,40], unit = "minutes" }
+geometry_model = { type = "destination_point" }
 isochrone_algorithm = { type = "k_nearest_concave_hull", k = 3 }
-destination_point_generator = { type = "destination_point" }
-isochrone_output_format = "wkb"
+isochrone_format = "wkb"
+
+
+[[plugin.output_plugins]]
+type = "isochrone"
 
 ### MEP OPPORTUNITY DATA CONFIGURATION #################################
 # assigns opportunities to search results based on a file or api data source
@@ -155,7 +162,6 @@ isochrone_output_format = "wkb"
 # assigning activity types by NAICS sector id. 
 [[plugin.output_plugins]]
 type = "opportunity"
-collect_format = "aggregate"
 
 [plugin.output_plugins.model]
 type = "combined"
