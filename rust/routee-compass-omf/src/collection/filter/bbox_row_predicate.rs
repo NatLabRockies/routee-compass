@@ -1,6 +1,6 @@
 use super::Bbox;
 use arrow::{
-    array::{Array, BooleanArray, Float32Array, StructArray},
+    array::{Array, BooleanArray, Float64Array, StructArray},
     error::ArrowError,
 };
 use parquet::arrow::arrow_reader::ArrowPredicate;
@@ -42,10 +42,10 @@ impl ArrowPredicate for BboxRowPredicate {
                 "Cannot cast column `bbox` to StructArray type",
             )))?;
 
-        let xmins = get_column::<Float32Array>("xmin", bbox_struct)?;
-        let ymins = get_column::<Float32Array>("ymin", bbox_struct)?;
-        let xmaxs = get_column::<Float32Array>("xmax", bbox_struct)?;
-        let ymaxs = get_column::<Float32Array>("ymax", bbox_struct)?;
+        let xmins = get_column::<Float64Array>("xmin", bbox_struct)?;
+        let ymins = get_column::<Float64Array>("ymin", bbox_struct)?;
+        let xmaxs = get_column::<Float64Array>("xmax", bbox_struct)?;
+        let ymaxs = get_column::<Float64Array>("ymax", bbox_struct)?;
 
         let boolean_values: Vec<bool> = (0..bbox_struct.len())
             .map(|i| within_box(i, xmins, ymins, xmaxs, ymaxs, &self.bbox))
@@ -75,14 +75,14 @@ where
 /// helper function to test whether a given row's values are contained within the bounding box.
 fn within_box(
     index: usize,
-    xmins: &Float32Array,
-    ymins: &Float32Array,
-    xmaxs: &Float32Array,
-    ymaxs: &Float32Array,
+    xmins: &Float64Array,
+    ymins: &Float64Array,
+    xmaxs: &Float64Array,
+    ymaxs: &Float64Array,
     bbox: &Bbox,
 ) -> bool {
-    bbox.xmin <= xmins.value(index)
-        && xmaxs.value(index) <= bbox.xmax
-        && bbox.ymin <= ymins.value(index)
-        && ymaxs.value(index) <= bbox.ymax
+    bbox.xmin <= xmins.value(index) as f32
+        && xmaxs.value(index) as f32 <= bbox.xmax
+        && bbox.ymin <= ymins.value(index) as f32
+        && ymaxs.value(index) as f32 <= bbox.ymax
 }
