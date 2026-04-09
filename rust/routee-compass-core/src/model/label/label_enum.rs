@@ -3,6 +3,7 @@ use std::{fmt::Display, hash::Hash};
 use allocative::Allocative;
 use serde::Serialize;
 
+use super::{U8StateVec, UsizeStateVec};
 use crate::model::{label::label_model_error::LabelModelError, network::VertexId};
 
 /// The required length for OS-aligned state vectors.
@@ -14,44 +15,15 @@ pub const OS_ALIGNED_STATE_LEN: usize = 4;
 pub const OS_ALIGNED_STATE_LEN: usize = 8;
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone, Serialize, Allocative)]
-pub struct IntStateVec(pub Vec<usize>);
-
-#[derive(Debug, Clone, Serialize, Allocative)]
-pub struct U8StateVec {
-    /// the memory-padded storage
-    state: Vec<u8>,
-    /// the length of usable storage dedicated to this state, <= self.state.len()
-    state_len: u8,
-}
-
-impl PartialEq for U8StateVec {
-    fn eq(&self, other: &Self) -> bool {
-        let len = self.state_len as usize;
-        let other_len = other.state_len as usize;
-        len == other_len && self.state[..len] == other.state[..other_len]
-    }
-}
-
-impl Eq for U8StateVec {}
-
-impl Hash for U8StateVec {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        let len = self.state_len as usize;
-        self.state_len.hash(state);
-        self.state[..len].hash(state);
-    }
-}
-
-#[derive(PartialEq, Eq, Hash, Debug, Clone, Serialize, Allocative)]
 pub enum Label {
     Vertex(VertexId),
     VertexWithIntState {
         vertex_id: VertexId,
         state: usize,
     },
-    VertexWithIntStateVec {
+    VertexWithUsizeStateVec {
         vertex_id: VertexId,
-        state: Box<IntStateVec>,
+        state: Box<UsizeStateVec>,
     },
     /// Store u8 state data. more efficient memory layout for smaller
     /// numbers or categorical data with 256 or fewer categories.
@@ -74,12 +46,35 @@ pub enum Label {
 }
 
 impl Label {
+    /// Creates a new VertexWithIntState.
+    ///
+    /// # Arguments
+    ///
+    /// * `vertex_id` - The vertex identifier
+    /// * `state` - The integer state value
+    pub fn new_int_state(vertex_id: VertexId, state: usize) -> Self {
+        Label::VertexWithIntState { vertex_id, state }
+    }
+
+    /// Creates a new VertexWithUsizeStateVec.
+    ///
+    /// # Arguments
+    ///
+    /// * `vertex_id` - The vertex identifier
+    /// * `state` - The integer state vector
+    pub fn new_usize_state_vec(vertex_id: VertexId, state: Vec<usize>) -> Self {
+        Label::VertexWithUsizeStateVec {
+            vertex_id,
+            state: Box::new(UsizeStateVec::new(state)),
+        }
+    }
+
     /// Creates a new VertexWithU8StateVec with validation.
     ///
     /// # Arguments
     ///
     /// * `vertex_id` - The vertex identifier
-    /// * `state` - The u8 state vector, must be exactly OS_ALIGNED_STATE_LEN bytes long
+    /// * `state` - The u8 state vector which can be up to 255 values long.
     ///
     /// # Returns
     ///
@@ -97,27 +92,28 @@ impl Label {
     /// assert_eq!(state.as_slice(), out_state);
     /// ```
     pub fn new_u8_state(vertex_id: VertexId, state: &[u8]) -> Result<Self, LabelModelError> {
-        let mut label_state = state.to_vec();
-        let state_len: u8 = state
-            .len()
-            .try_into()
-            .map_err(|_| LabelModelError::BadLabelVecSize(state.len(), u8::MAX as usize))?;
-
-        // Calculate total memory needed: state data + 1 byte for state_len
-        let total_data_len = label_state.len() + 1;
-        let remainder = total_data_len % OS_ALIGNED_STATE_LEN;
-        if remainder != 0 {
-            let padding_needed = OS_ALIGNED_STATE_LEN - remainder;
-            label_state.extend(vec![0u8; padding_needed]);
-        }
+        let state = U8StateVec::new(state)?;
 
         Ok(Label::VertexWithU8StateVec {
             vertex_id,
-            state: Box::new(U8StateVec {
-                state: label_state,
-                state_len,
-            }),
+            state: Box::new(state),
         })
+    }
+
+    /// Gets the integer state if this label contains one.
+    pub fn get_int_state(&self) -> Option<usize> {
+        match self {
+            Label::VertexWithIntState { state, .. } => Some(*state),
+            _ => None,
+        }
+    }
+
+    /// Gets the integer state vector if this label contains one.
+    pub fn get_usize_state_vec(&self) -> Option<&[usize]> {
+        match self {
+            Label::VertexWithUsizeStateVec { state, .. } => Some(state.as_slice()),
+            _ => None,
+        }
     }
 
     /// Gets the OS-aligned state if this label contains one.
@@ -127,10 +123,7 @@ impl Label {
     /// Some reference to the state vector if this is a VertexWithU8StateVec, None otherwise
     pub fn get_u8_state(&self) -> Option<&[u8]> {
         match self {
-            Label::VertexWithU8StateVec { state, .. } => {
-                let len: usize = state.state_len.into();
-                Some(&state.state[0..len])
-            }
+            Label::VertexWithU8StateVec { state, .. } => Some(state.as_slice()),
             _ => None,
         }
     }
@@ -139,7 +132,7 @@ impl Label {
         match self {
             Label::Vertex(vertex_id) => vertex_id,
             Label::VertexWithIntState { vertex_id, .. } => vertex_id,
-            Label::VertexWithIntStateVec { vertex_id, .. } => vertex_id,
+            Label::VertexWithUsizeStateVec { vertex_id, .. } => vertex_id,
             Label::VertexWithU8StateVec { vertex_id, .. } => vertex_id,
         }
     }
@@ -149,8 +142,8 @@ impl Label {
         match self {
             Label::Vertex(..) => 0,
             Label::VertexWithIntState { .. } => 1,
-            Label::VertexWithIntStateVec { state, .. } => state.0.len(),
-            Label::VertexWithU8StateVec { state, .. } => state.state_len as usize,
+            Label::VertexWithUsizeStateVec { state, .. } => state.len(),
+            Label::VertexWithU8StateVec { state, .. } => state.len(),
         }
     }
 }
@@ -162,14 +155,15 @@ impl Display for Label {
             Label::VertexWithIntState { vertex_id, state } => {
                 write!(f, "VertexWithIntState({vertex_id}, {state})")
             }
-            Label::VertexWithIntStateVec { vertex_id, state } => {
-                write!(f, "VertexWithIntStateVec({vertex_id}, {:?})", state.0)
+            Label::VertexWithUsizeStateVec { vertex_id, state } => {
+                write!(f, "VertexWithUsizeStateVec({vertex_id}, {:?})", state.as_slice())
             }
             Label::VertexWithU8StateVec { vertex_id, state } => {
                 write!(
                     f,
                     "VertexWithU8StateVec({vertex_id}, {}, {:?})",
-                    state.state_len, state.state
+                    state.len(),
+                    state.as_slice()
                 )
             }
         }
@@ -199,66 +193,5 @@ mod tests {
             trip_modes,
             "walk,drive,transit,walk,transit,tnc".to_string()
         );
-    }
-
-    #[test]
-    fn test_new_u8_state_valid() {
-        let vertex_id = VertexId(42);
-        let state = vec![0u8; OS_ALIGNED_STATE_LEN];
-
-        let label = Label::new_u8_state(vertex_id, &state).expect("test failed");
-
-        assert_eq!(label.vertex_id(), &vertex_id);
-        assert_eq!(label.get_u8_state(), Some(state.as_slice()));
-    }
-
-    #[test]
-    fn test_new_u8_state_aligned() {
-        let vertex_id = VertexId(42);
-        let state = vec![1, 2, 3];
-
-        let label = Label::new_u8_state(vertex_id, &state).expect("test failed");
-        match label {
-            Label::VertexWithU8StateVec {
-                state: inner_state, ..
-            } => {
-                // should pad to OS_ALIGNED_STATE_LEN - 1
-                // (minus one due to storing state_len value)
-                assert_eq!(inner_state.state.len(), super::OS_ALIGNED_STATE_LEN - 1);
-            }
-            _ => panic!("wrong label variant!"),
-        };
-    }
-
-    #[test]
-    fn test_u8_state_none_for_other_variants() {
-        let vertex_id = VertexId(42);
-
-        let vertex_label = Label::Vertex(vertex_id);
-        assert_eq!(vertex_label.get_u8_state(), None);
-
-        let int_state_label = Label::VertexWithIntState {
-            vertex_id,
-            state: 123,
-        };
-        assert_eq!(int_state_label.get_u8_state(), None);
-
-        // Test that VertexWithU8StateVec does return the state
-        let valid_state = vec![1, 2, 3];
-        let u8_vec_label = Label::new_u8_state(vertex_id, &valid_state).expect("test failed");
-        let result = u8_vec_label.get_u8_state().unwrap();
-        let expected = [1, 2, 3];
-        assert_eq!(result, &expected);
-    }
-
-    #[test]
-    fn test_u8_state_label_display() {
-        let vertex_id = VertexId(42);
-        let state = vec![1u8; OS_ALIGNED_STATE_LEN];
-        let label = Label::new_u8_state(vertex_id, &state).expect("test failed");
-
-        let display_string = format!("{}", label);
-        assert!(display_string.contains("VertexWithU8StateVec"));
-        assert!(display_string.contains("42"));
     }
 }
