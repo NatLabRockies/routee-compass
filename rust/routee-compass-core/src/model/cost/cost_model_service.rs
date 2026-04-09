@@ -1,5 +1,5 @@
 use crate::config::{CompassConfigurationError, ConfigJsonExtensions};
-use crate::model::cost::{CostModelConfig, CostModelError};
+use crate::model::cost::{CostConstraint, CostModelConfig, CostModelError};
 use crate::model::{
     cost::{network::NetworkCostRate, CostAggregation, CostModel, VehicleCostRate},
     state::StateModel,
@@ -45,6 +45,7 @@ impl CostModelService {
         &self,
         query: &serde_json::Value,
         state_model: Arc<StateModel>,
+        cost_constraint: CostConstraint,
     ) -> Result<CostModel, CompassConfigurationError> {
         // user-provided coefficients used to prioritize each state variable in the cost model
         // at minimum, we default to the "distance" traveled.
@@ -114,6 +115,7 @@ impl CostModelService {
             self.network_rates.clone(),
             cost_aggregation,
             state_model,
+            cost_constraint,
         )
         .map_err(|e| {
             CompassConfigurationError::UserConfigurationError(format!(

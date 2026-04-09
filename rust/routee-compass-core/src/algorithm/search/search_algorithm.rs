@@ -9,6 +9,7 @@ use super::SearchInstance;
 use super::{a_star, direction::Direction};
 use crate::algorithm::search::search_algorithm_config::SearchAlgorithmConfig;
 use crate::algorithm::search::TerminationFailurePolicy;
+use crate::model::cost::CostConstraint;
 use crate::model::cost::TraversalCost;
 use crate::model::network::EdgeListId;
 use crate::model::network::{EdgeId, VertexId};
@@ -164,6 +165,15 @@ impl SearchAlgorithm {
             } => run_edge_oriented(src, dst_opt, query, direction, self, si),
         }
     }
+
+    /// constraint applied to cost values due to the type of algorithm run.
+    pub fn cost_constraint(&self) -> CostConstraint {
+        match self {
+            SearchAlgorithm::SingleSourceShortestPath { .. } => CostConstraint::StrictlyPositive,
+            SearchAlgorithm::KspSingleVia { underlying, .. } => underlying.cost_constraint(),
+            SearchAlgorithm::Yens { underlying, .. } => underlying.cost_constraint(),
+        }
+    }
 }
 
 impl From<&SearchAlgorithmConfig> for SearchAlgorithm {
@@ -237,7 +247,7 @@ pub fn run_edge_oriented(
     let src_et = EdgeTraversal {
         edge_list_id: source.0,
         edge_id: source.1,
-        cost: TraversalCost::default(),
+        cost: TraversalCost::empty(),
         result_state: si.state_model.initial_state(None)?,
     };
 
@@ -256,12 +266,7 @@ pub fn run_edge_oriented(
 
             for tree in trees.iter_mut() {
                 if !tree.contains(&dst_label) {
-                    tree.insert(
-                        e1_label.clone(),
-                        src_et.clone(),
-                        dst_label.clone(),
-                        si.label_model.clone(),
-                    )?;
+                    tree.insert_trajectory(e1_label.clone(), src_et.clone(), dst_label.clone())?;
                 }
             }
             for route in routes.iter_mut() {
@@ -307,7 +312,7 @@ pub fn run_edge_oriented(
                 let dst_et = EdgeTraversal {
                     edge_list_id: target_edge.0,
                     edge_id: target_edge.1,
-                    cost: TraversalCost::default(),
+                    cost: TraversalCost::empty(),
                     result_state: final_state.result_state.to_vec(),
                 };
                 route.insert(0, src_et.clone());

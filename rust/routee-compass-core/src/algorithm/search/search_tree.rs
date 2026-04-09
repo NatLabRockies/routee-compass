@@ -1,11 +1,8 @@
 use super::{EdgeTraversal, SearchTreeNode};
-use crate::algorithm::search::search_pruning;
-use crate::model::label::LabelModel;
 use crate::model::network::{EdgeId, EdgeListId, Graph, NetworkError, VertexId};
-use crate::model::unit::AsF64;
+use crate::model::unit::Cost;
 use crate::{algorithm::search::Direction, model::label::Label};
 use allocative::Allocative;
-use ordered_float::OrderedFloat;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
@@ -13,9 +10,9 @@ use std::sync::Arc;
 /// Designed for route planning algorithms that need both indexing and backtracking capabilities
 #[derive(Clone, Debug, Allocative)]
 pub struct SearchTree {
-    /// Fast lookup by label
+    /// Fast [SearchTreeNode] lookup by [Label]
     nodes: HashMap<Label, SearchTreeNode>,
-    /// Fast Label lookup by VertexId
+    /// Fast [Label] lookup by [VertexId]
     labels: HashMap<VertexId, HashSet<Label>>,
     /// The root node (None if empty tree)
     root: Option<Label>,
@@ -51,28 +48,19 @@ impl SearchTree {
     pub fn set_root(&mut self, root_label: Label) {
         let root_node = SearchTreeNode::new_root(self.direction);
         self.nodes.insert(root_label.clone(), root_node);
-        if root_label.needs_vertex_map_storage() {
-            self.labels
-                .entry(*root_label.vertex_id())
-                .and_modify(|l| {
-                    let _ = l.insert(root_label.clone());
-                })
-                .or_insert(HashSet::from([root_label.clone()]));
-        }
+        self.insert_label(root_label.clone());
         self.root = Some(root_label);
     }
 
-    /// Insert the trajectory (parent) -[edge]-> (child) as a node in the tree.
-    /// Note: dominated entries should be pruned by the caller before insertion.
-    pub fn insert(
+    /// Insert the trajectory (parent) -[edge]-> (child) as a node in the tree. it is
+    /// assumed that the incoming edge traversal has already been deemed dominant over
+    /// any matching trajectory already existing in the tree.
+    pub fn insert_trajectory(
         &mut self,
         parent_label: Label,
         edge_traversal: EdgeTraversal,
         child_label: Label,
-        label_model: Arc<dyn LabelModel>,
     ) -> Result<(), SearchTreeError> {
-        search_pruning::prune_tree(self, &child_label, &edge_traversal, label_model)?;
-
         // Verify parent exists - special case on empty tree
         // If parent doesn't exist but tree is empty, make parent the root
         if !self.nodes.contains_key(&parent_label) {
@@ -83,58 +71,29 @@ impl SearchTree {
             }
         }
 
-        // Increment child count of parent
-        if let Some(parent_node) = self.nodes.get_mut(&parent_label) {
-            parent_node.increment_child_count();
+        // update the label lookup
+        let vertex_labels = self.labels.entry(*child_label.vertex_id()).or_default();
+        if !vertex_labels.contains(&child_label) {
+            vertex_labels.insert(child_label.clone());
         }
 
-        // Create the new node
+        // update the nodes collection
         let new_node =
             SearchTreeNode::new_child(edge_traversal, parent_label.clone(), self.direction);
-
-        // Insert the new node
-        self.nodes.insert(child_label.clone(), new_node);
-        if child_label.needs_vertex_map_storage() {
-            self.labels
-                .entry(*child_label.vertex_id())
-                .and_modify(|l| {
-                    let _ = l.insert(child_label.clone());
-                })
-                .or_insert(HashSet::from([child_label.clone()]));
-        }
+        self.nodes.insert(child_label, new_node);
 
         Ok(())
     }
 
-    /// removes a label from the search tree. occurs during pruning when making a comparison
-    /// between two labels, where one is pareto-dominant.
-    pub fn remove(&mut self, label: &Label) -> Result<(), SearchTreeError> {
-        // Remove from nodes map
-        let node = self
-            .nodes
-            .remove(label)
-            .ok_or_else(|| SearchTreeError::LabelNotFound(label.clone()))?;
-
-        // Decrement child count of parent
-        if let Some(parent_label) = node.parent_label() {
-            if let Some(parent_node) = self.nodes.get_mut(parent_label) {
-                parent_node.decrement_child_count();
-            }
+    /// inserts a new [Label] into the set of labels associated with a [VertexId].
+    fn insert_label(&mut self, label: Label) {
+        if let Some(vertex_labels) = self.labels.get_mut(label.vertex_id()) {
+            let _ = vertex_labels.insert(label);
+        } else {
+            let _ = self
+                .labels
+                .insert(*label.vertex_id(), HashSet::from([label]));
         }
-
-        // Remove from labels map if not a Vertex label
-        if !matches!(label, Label::Vertex(_)) {
-            let vertex_id = label.vertex_id();
-            if let Some(label_set) = self.labels.get_mut(vertex_id) {
-                label_set.remove(label);
-                // Clean up empty sets
-                if label_set.is_empty() {
-                    self.labels.remove(vertex_id);
-                }
-            }
-        }
-
-        Ok(())
     }
 
     pub fn iter<'a>(&'a self) -> Box<dyn Iterator<Item = (&'a Label, &'a SearchTreeNode)> + 'a> {
@@ -154,61 +113,109 @@ impl SearchTree {
         self.nodes.get(label)
     }
 
-    /// gets the label with the minimum cost associated with a vertex
-    pub fn get_min_cost_label(&self, vertex: VertexId) -> Option<&Label> {
-        self.get_label_by(vertex, min_cost_ordering, true)
+    /// gets the label with the minimum accumulated tree cost associated with the
+    /// destination vertex of a search.
+    pub fn get_min_accumulated_cost_label(
+        &self,
+        destination_vertex: VertexId,
+    ) -> Result<(Label, Cost), SearchTreeError> {
+        let labels = self
+            .labels
+            .get(&destination_vertex)
+            .ok_or(SearchTreeError::VertexNotFound(destination_vertex))?;
+
+        let mut min_cost: Option<(Label, Cost)> = None;
+        for label in labels.iter() {
+            // performs tree backtracking to calculate total objective cost for this label
+            let cost = self.calculate_total_objective_cost(label)?;
+            let improves_cost = min_cost.as_ref().map(|(_, c)| cost < *c).unwrap_or(true);
+            if improves_cost {
+                min_cost = Some((label.clone(), cost));
+            }
+        }
+
+        min_cost.ok_or(SearchTreeError::MissingLabelsForDestinationVertex(
+            destination_vertex,
+        ))
     }
 
     /// Find labels for the given vertex ID
     pub fn get_labels(&self, vertex: VertexId) -> Box<dyn Iterator<Item = Label> + '_> {
-        // we always perform a lookup for the Vertex label, as it is excluded from the labels map
-        let vertex_label = Label::Vertex(vertex);
-        let vertex_iter = std::iter::once(vertex_label);
-
         match self.labels.get(&vertex) {
-            Some(labels) => Box::new(vertex_iter.chain(labels.iter().cloned())),
-            None => Box::new(vertex_iter),
-        }
-    }
-
-    /// Find labels for the given vertex ID as an owned iterator
-    pub fn get_labels_iter(&self, vertex: VertexId) -> Box<dyn Iterator<Item = Label>> {
-        match self.labels.get(&vertex) {
-            Some(labels) => Box::new(labels.clone().into_iter()),
+            Some(labels) => Box::new(labels.iter().cloned()),
             None => Box::new(std::iter::empty()),
         }
     }
 
-    /// Find labels for the given vertex ID with mutable access.
-    pub fn get_labels_mut(&mut self, vertex: VertexId) -> Option<&mut HashSet<Label>> {
-        self.labels.get_mut(&vertex)
-    }
+    // /// finds a single label by picking the one that is maximal/minimal wrt some comparison function.
+    // /// for most cases, using the method get_min_cost_label is the correct choice.
+    // ///
+    // /// # Arguments
+    // ///
+    // /// * `vertex` - the vertex expected to match some label
+    // /// * `compare` - a comparison function
+    // /// * `min` - if true, find the minimal value according to the ordering function F, otherwise, the max
+    // pub fn get_label_by<F>(&self, vertex: VertexId, mut compare: F, min: bool) -> Option<&Label>
+    // where
+    //     F: FnMut(&(&Label, Option<&EdgeTraversal>)) -> OrderedFloat<f64>,
+    // {
+    //     let label_edge_iter = self.get_labels(vertex).filter_map(|label| {
+    //         let (stored_label, node) = self.nodes.get_key_value(&label)?;
+    //         let edge_traversal = node.incoming_edge();
+    //         Some((stored_label, edge_traversal))
+    //     });
 
-    /// finds a single label by picking the one that is maximal/minimal wrt some comparison function.
-    /// for most cases, using the method get_min_cost_label is the correct choice.
+    //     let found = if min {
+    //         label_edge_iter.min_by_key(|item| compare(item))
+    //     } else {
+    //         label_edge_iter.max_by_key(|item| compare(item))
+    //     };
+
+    //     found.map(|(label, _)| label)
+    // }
+
+    /// walk up the tree from the given label to the root, summing the marginal objective costs.
+    /// fails if the tree is malformed by counting labels visited and comparing to the count of
+    /// [Label]s in the tree.
     ///
     /// # Arguments
-    ///
-    /// * `vertex` - the vertex expected to match some label
-    /// * `compare` - a comparison function
-    /// * `min` - if true, find the minimal value according to the ordering function F, otherwise, the max
-    pub fn get_label_by<F>(&self, vertex: VertexId, mut compare: F, min: bool) -> Option<&Label>
-    where
-        F: FnMut(&(&Label, Option<&EdgeTraversal>)) -> OrderedFloat<f64>,
-    {
-        let label_edge_iter = self.get_labels(vertex).filter_map(|label| {
-            let (stored_label, node) = self.nodes.get_key_value(&label)?;
-            let edge_traversal = node.incoming_edge();
-            Some((stored_label, edge_traversal))
-        });
+    /// * `label` - trip destination label to backtrack from and calculate cost
+    pub fn calculate_total_objective_cost(&self, label: &Label) -> Result<Cost, SearchTreeError> {
+        let mut total = Cost::ZERO;
+        let mut current_label = label;
+        let mut steps: usize = 0;
+        let max_steps = self.nodes.len();
 
-        let found = if min {
-            label_edge_iter.min_by_key(|item| compare(item))
-        } else {
-            label_edge_iter.max_by_key(|item| compare(item))
-        };
+        loop {
+            // Guard against infinite loops in malformed trees
+            if steps > max_steps {
+                return Err(SearchTreeError::InvalidBranchStructure(format!(
+                    "Cycle detected: exceeded tree size {} while calculating cost from {}",
+                    max_steps, label
+                )));
+            }
 
-        found.map(|(label, _)| label)
+            let node = self
+                .get(current_label)
+                .ok_or_else(|| SearchTreeError::LabelNotFound(current_label.clone()))?;
+
+            match node {
+                SearchTreeNode::Root { .. } => break,
+                SearchTreeNode::Branch {
+                    incoming_edge,
+                    parent,
+                    ..
+                } => {
+                    // add this objective cost and update the node cursor to the branch's parent
+                    total += incoming_edge.cost.objective_cost;
+                    current_label = parent;
+                }
+            }
+
+            steps += 1;
+        }
+
+        Ok(total)
     }
 
     /// Get a mutable reference to a node by its label
@@ -262,11 +269,9 @@ impl SearchTree {
         leaf_vertex: VertexId,
         depth: u64,
     ) -> Result<Vec<EdgeTraversal>, SearchTreeError> {
-        let target_label = self
-            .get_label_by(leaf_vertex, min_cost_ordering, true)
-            .ok_or(SearchTreeError::VertexNotFound(leaf_vertex))?;
+        let (target_label, _) = self.get_min_accumulated_cost_label(leaf_vertex)?;
 
-        self.reconstruct_path(target_label, Some(depth))
+        self.reconstruct_path(&target_label, Some(depth))
     }
 
     /// Backtrack from a leaf vertex to construct a path using the tree's inherent direction
@@ -277,11 +282,23 @@ impl SearchTree {
     /// # Returns
     /// A path of EdgeTraversals from root to leaf (forward) or leaf to root (reverse)
     pub fn backtrack(&self, leaf_vertex: VertexId) -> Result<Vec<EdgeTraversal>, SearchTreeError> {
-        let target_label = self
-            .get_label_by(leaf_vertex, min_cost_ordering, true)
-            .ok_or(SearchTreeError::VertexNotFound(leaf_vertex))?;
+        let (target_label, _) = self.get_min_accumulated_cost_label(leaf_vertex)?;
 
-        self.reconstruct_path(target_label, None)
+        self.reconstruct_path(&target_label, None)
+    }
+
+    /// convenience method to backtrack from some label.
+    pub fn backtrack_label(&self, label: &Label) -> Result<Vec<EdgeTraversal>, SearchTreeError> {
+        self.reconstruct_path(label, None)
+    }
+
+    /// convenience method to backtrack from some label to some depth.
+    pub fn backtrack_label_with_depth(
+        &self,
+        label: &Label,
+        depth: u64,
+    ) -> Result<Vec<EdgeTraversal>, SearchTreeError> {
+        self.reconstruct_path(label, Some(depth))
     }
 
     /// backtrack for edge-oriented search, begins from source vertex of target edge.
@@ -332,22 +349,16 @@ impl SearchTree {
             if exceeds_depth {
                 break;
             }
-            let current_node = self
-                .get(current_label)
-                .ok_or_else(|| SearchTreeError::LabelNotFound(current_label.clone()))?;
 
-            // If this is the root, we're done, otherwise traverse path
-            match current_node {
-                SearchTreeNode::Root { .. } => break,
-                SearchTreeNode::Branch {
-                    incoming_edge,
-                    parent,
-                    ..
-                } => {
+            let predecessor = self.predecessor(current_label)?;
+            match predecessor {
+                Some((incoming_edge, parent)) => {
                     path.push(incoming_edge.clone());
                     current_label = parent;
                 }
+                None => break,
             }
+
             steps += 1;
         }
 
@@ -362,6 +373,26 @@ impl SearchTree {
         }
     }
 
+    /// get the edge traversal and parent [Label] that leads to some child [Label], aka,
+    /// where (parent) -[incoming_edge]-> (child)
+    pub fn predecessor(
+        &self,
+        child: &Label,
+    ) -> Result<Option<(&EdgeTraversal, &Label)>, SearchTreeError> {
+        let current_node = self
+            .get(child)
+            .ok_or_else(|| SearchTreeError::LabelNotFound(child.clone()))?;
+
+        match current_node {
+            SearchTreeNode::Root { .. } => Ok(None),
+            SearchTreeNode::Branch {
+                incoming_edge,
+                parent,
+                ..
+            } => Ok(Some((incoming_edge, parent))),
+        }
+    }
+
     /// Get all labels in the tree
     pub fn labels(&self) -> impl Iterator<Item = &Label> {
         self.nodes.keys()
@@ -370,29 +401,6 @@ impl SearchTree {
     /// Get all nodes in the tree
     pub fn nodes(&self) -> impl Iterator<Item = &SearchTreeNode> {
         self.nodes.values()
-    }
-
-    /// Get the incoming edge for a vertex by finding its minimum cost label.
-    /// This is an optimized version for getting just the parent edge without full backtracking.
-    ///
-    /// # Arguments
-    /// * `vertex` - The vertex ID to get the incoming edge for
-    ///
-    /// # Returns
-    /// The incoming EdgeTraversal if the vertex exists and is not the root, None otherwise
-    pub fn get_incoming_edge(&self, vertex: VertexId) -> Option<&EdgeTraversal> {
-        let label = self.get_label_by(vertex, min_cost_ordering, true)?;
-        let node = self.get(label)?;
-        node.incoming_edge()
-    }
-}
-
-/// helper function to construct the min cost ordering
-fn min_cost_ordering(pair: &(&Label, Option<&EdgeTraversal>)) -> OrderedFloat<f64> {
-    let (_, et) = pair;
-    match et {
-        None => OrderedFloat(f64::MAX),
-        Some(e) => OrderedFloat(e.cost.total_cost.as_f64()),
     }
 }
 
@@ -404,21 +412,21 @@ pub enum SearchTreeError {
     LabelNotFound(Label),
     #[error("Label '{0}' exists in tree without matching SearchTreeNode")]
     MissingNodeForLabel(Label),
+    #[error("Destination vertex '{0}' has no labels at end of search")]
+    MissingLabelsForDestinationVertex(VertexId),
     #[error("Node is missing parent reference: {0}")]
     MissingParent(Label),
     #[error("Invalid branch structure: {0}")]
     InvalidBranchStructure(String),
     #[error("Vertex not found in tree: {0}")]
     VertexNotFound(VertexId),
-    #[error("Cycle detected: {0}")]
-    CycleDetected(String),
+    #[error("while backtracking from '{0}', {1}")]
+    BacktrackingError(Label, String),
     #[error("Search tree error while interacting with Graph: {source}")]
     NetworkError {
         #[from]
         source: NetworkError,
     },
-    #[error("Failure while pruning tree: {0}")]
-    PruningError(String),
 }
 
 #[cfg(test)]
@@ -426,7 +434,6 @@ mod tests {
     use super::*;
     use crate::model::{
         cost::TraversalCost,
-        label::default::vertex_label_model::VertexLabelModel,
         network::{EdgeId, EdgeListId, VertexId},
         unit::Cost,
     };
@@ -462,22 +469,20 @@ mod tests {
         // Insert first child
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
+        tree.insert_trajectory(
             root_label.clone(),
             child1_traversal.clone(),
             child1_label.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
         // Insert second child
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        tree.insert(
+        tree.insert_trajectory(
             root_label.clone(),
             child2_traversal.clone(),
             child2_label.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
@@ -504,12 +509,8 @@ mod tests {
         let child_traversal = create_test_edge_traversal(1, 10.0);
         let nonexistent_parent = create_test_label(99);
 
-        let result = tree.insert(
-            nonexistent_parent.clone(),
-            child_traversal,
-            child_label,
-            mock_label_model(),
-        );
+        let result =
+            tree.insert_trajectory(nonexistent_parent.clone(), child_traversal, child_label);
         assert!(matches!(result, Err(SearchTreeError::ParentNotFound(_))));
     }
 
@@ -520,13 +521,8 @@ mod tests {
 
         let child_label = create_test_label(1);
         let child_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
-            root_label.clone(),
-            child_traversal,
-            child_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(root_label.clone(), child_traversal, child_label.clone())
+            .unwrap();
 
         // Root has no parent
         assert!(tree.get_parent(&root_label).is_none());
@@ -544,31 +540,28 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
+        tree.insert_trajectory(
             root_label.clone(),
             child1_traversal.clone(),
             child1_label.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        tree.insert(
+        tree.insert_trajectory(
             child1_label.clone(),
             child2_traversal.clone(),
             child2_label.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        tree.insert(
+        tree.insert_trajectory(
             child2_label.clone(),
             child3_traversal.clone(),
             child3_label.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
@@ -588,31 +581,28 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
+        tree.insert_trajectory(
             root_label.clone(),
             child1_traversal.clone(),
             child1_label.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        tree.insert(
+        tree.insert_trajectory(
             child1_label.clone(),
             child2_traversal.clone(),
             child2_label.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        tree.insert(
+        tree.insert_trajectory(
             child2_label.clone(),
             child3_traversal.clone(),
             child3_label.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
@@ -641,23 +631,13 @@ mod tests {
 
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(root_label.clone(), child1_traversal, child1_label.clone())
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        tree.insert(
-            root_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(root_label.clone(), child2_traversal, child2_label.clone())
+            .unwrap();
 
         // Test labels iterator
         let labels: HashSet<_> = tree.labels().cloned().collect();
@@ -685,31 +665,28 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
+        tree.insert_trajectory(
             root_label.clone(),
             child1_traversal.clone(),
             child1_label.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        tree.insert(
+        tree.insert_trajectory(
             child1_label.clone(),
             child2_traversal.clone(),
             child2_label.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        tree.insert(
+        tree.insert_trajectory(
             child2_label.clone(),
             child3_traversal.clone(),
             child3_label.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
@@ -729,31 +706,28 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
+        tree.insert_trajectory(
             root_label.clone(),
             child1_traversal.clone(),
             child1_label.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        tree.insert(
+        tree.insert_trajectory(
             child1_label.clone(),
             child2_traversal.clone(),
             child2_label.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        tree.insert(
+        tree.insert_trajectory(
             child2_label.clone(),
             child3_traversal.clone(),
             child3_label.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
@@ -787,29 +761,24 @@ mod tests {
         assert_eq!(path.len(), 0);
     }
 
-    #[test]
-    fn test_find_label_for_vertex() {
-        let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+    // #[test]
+    // fn test_find_label_for_vertex() {
+    //     let root_label = create_test_label(0);
+    //     let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
 
-        let child1_label = create_test_label(1);
-        let child1_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+    //     let child1_label = create_test_label(1);
+    //     let child1_traversal = create_test_edge_traversal(1, 10.0);
+    //     tree.insert_trajectory(root_label.clone(), child1_traversal, child1_label.clone())
+    //         .unwrap();
 
-        // Test finding existing vertex
-        let found_label = tree.get_min_cost_label(VertexId(1));
-        assert_eq!(found_label, Some(&child1_label));
+    //     // Test finding existing vertex
+    //     let found_label = tree.get_min_accumulated_cost_label(VertexId(1));
+    //     assert_eq!(found_label, Some(&child1_label));
 
-        // Test finding non-existent vertex
-        let not_found = tree.get_min_cost_label(VertexId(99));
-        assert_eq!(not_found, None);
-    }
+    //     // Test finding non-existent vertex
+    //     let not_found = tree.get_min_accumulated_cost_label(VertexId(99));
+    //     assert_eq!(not_found, None);
+    // }
 
     #[test]
     fn test_auto_root_creation() {
@@ -822,11 +791,10 @@ mod tests {
         let child_label = create_test_label(1);
         let edge_traversal = create_test_edge_traversal(1, 10.0);
 
-        tree.insert(
+        tree.insert_trajectory(
             parent_label.clone(),
             edge_traversal.clone(),
             child_label.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
@@ -858,27 +826,24 @@ mod tests {
         let label3 = create_test_label(3);
 
         // First insert creates root automatically
-        tree.insert(
+        tree.insert_trajectory(
             label0.clone(),
             create_test_edge_traversal(1, 10.0),
             label1.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
         // Subsequent inserts work normally
-        tree.insert(
+        tree.insert_trajectory(
             label1.clone(),
             create_test_edge_traversal(2, 15.0),
             label2.clone(),
-            mock_label_model(),
         )
         .unwrap();
-        tree.insert(
+        tree.insert_trajectory(
             label2.clone(),
             create_test_edge_traversal(3, 20.0),
             label3.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
@@ -905,13 +870,8 @@ mod tests {
         // Insert should work normally without creating a new root
         let child_label = create_test_label(1);
         let edge_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
-            root_label.clone(),
-            edge_traversal,
-            child_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(root_label.clone(), edge_traversal, child_label.clone())
+            .unwrap();
 
         // Root should still be the same
         assert_eq!(tree.len(), 2);
@@ -920,11 +880,10 @@ mod tests {
         // Trying to insert with non-existent parent should still fail
         let orphan_label = create_test_label(99);
         let nonexistent_parent = create_test_label(999);
-        let result = tree.insert(
+        let result = tree.insert_trajectory(
             orphan_label,
             create_test_edge_traversal(99, 5.0),
             nonexistent_parent.clone(),
-            mock_label_model(),
         );
         assert!(matches!(result, Err(SearchTreeError::ParentNotFound(_))));
     }
@@ -937,43 +896,23 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3 -> 4
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(root_label.clone(), child1_traversal, child1_label.clone())
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        tree.insert(
-            child1_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child1_label.clone(), child2_traversal, child2_label.clone())
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        tree.insert(
-            child2_label.clone(),
-            child3_traversal,
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child2_label.clone(), child3_traversal, child3_label.clone())
+            .unwrap();
 
         let child4_label = create_test_label(4);
         let child4_traversal = create_test_edge_traversal(4, 25.0);
-        tree.insert(
-            child3_label.clone(),
-            child4_traversal,
-            child4_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child3_label.clone(), child4_traversal, child4_label.clone())
+            .unwrap();
 
         // Backtrack with depth equal to total path length
         let path = tree.backtrack_with_depth(VertexId(4), 4).unwrap();
@@ -993,43 +932,23 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3 -> 4
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(root_label.clone(), child1_traversal, child1_label.clone())
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        tree.insert(
-            child1_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child1_label.clone(), child2_traversal, child2_label.clone())
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        tree.insert(
-            child2_label.clone(),
-            child3_traversal,
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child2_label.clone(), child3_traversal, child3_label.clone())
+            .unwrap();
 
         let child4_label = create_test_label(4);
         let child4_traversal = create_test_edge_traversal(4, 25.0);
-        tree.insert(
-            child3_label.clone(),
-            child4_traversal,
-            child4_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child3_label.clone(), child4_traversal, child4_label.clone())
+            .unwrap();
 
         // Backtrack with depth less than total path length
         let path = tree.backtrack_with_depth(VertexId(4), 2).unwrap();
@@ -1048,33 +967,18 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(root_label.clone(), child1_traversal, child1_label.clone())
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        tree.insert(
-            child1_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child1_label.clone(), child2_traversal, child2_label.clone())
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        tree.insert(
-            child2_label.clone(),
-            child3_traversal,
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child2_label.clone(), child3_traversal, child3_label.clone())
+            .unwrap();
 
         // Backtrack with depth of 1
         let path = tree.backtrack_with_depth(VertexId(3), 1).unwrap();
@@ -1092,43 +996,23 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3 -> 4
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(root_label.clone(), child1_traversal, child1_label.clone())
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        tree.insert(
-            child1_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child1_label.clone(), child2_traversal, child2_label.clone())
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        tree.insert(
-            child2_label.clone(),
-            child3_traversal,
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child2_label.clone(), child3_traversal, child3_label.clone())
+            .unwrap();
 
         let child4_label = create_test_label(4);
         let child4_traversal = create_test_edge_traversal(4, 25.0);
-        tree.insert(
-            child3_label.clone(),
-            child4_traversal,
-            child4_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child3_label.clone(), child4_traversal, child4_label.clone())
+            .unwrap();
 
         // Backtrack with depth equal to total path length (reverse orientation)
         let path = tree.backtrack_with_depth(VertexId(4), 4).unwrap();
@@ -1149,43 +1033,23 @@ mod tests {
         // Build a linear path: 0 -> 1 -> 2 -> 3 -> 4
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(root_label.clone(), child1_traversal, child1_label.clone())
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        tree.insert(
-            child1_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child1_label.clone(), child2_traversal, child2_label.clone())
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        tree.insert(
-            child2_label.clone(),
-            child3_traversal,
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child2_label.clone(), child3_traversal, child3_label.clone())
+            .unwrap();
 
         let child4_label = create_test_label(4);
         let child4_traversal = create_test_edge_traversal(4, 25.0);
-        tree.insert(
-            child3_label.clone(),
-            child4_traversal,
-            child4_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child3_label.clone(), child4_traversal, child4_label.clone())
+            .unwrap();
 
         // Backtrack with depth less than total path length
         let path = tree.backtrack_with_depth(VertexId(4), 2).unwrap();
@@ -1226,23 +1090,13 @@ mod tests {
         // Build a short path: 0 -> 1 -> 2
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(root_label.clone(), child1_traversal, child1_label.clone())
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        tree.insert(
-            child1_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child1_label.clone(), child2_traversal, child2_label.clone())
+            .unwrap();
 
         // Request more depth than available
         let path = tree.backtrack_with_depth(VertexId(2), 10).unwrap();
@@ -1269,53 +1123,28 @@ mod tests {
 
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(root_label.clone(), child1_traversal, child1_label.clone())
+            .unwrap();
 
         let child2_label = create_test_label(2);
         let child2_traversal = create_test_edge_traversal(2, 15.0);
-        tree.insert(
-            root_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(root_label.clone(), child2_traversal, child2_label.clone())
+            .unwrap();
 
         let child3_label = create_test_label(3);
         let child3_traversal = create_test_edge_traversal(3, 20.0);
-        tree.insert(
-            child1_label.clone(),
-            child3_traversal,
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child1_label.clone(), child3_traversal, child3_label.clone())
+            .unwrap();
 
         let child4_label = create_test_label(4);
         let child4_traversal = create_test_edge_traversal(4, 25.0);
-        tree.insert(
-            child2_label.clone(),
-            child4_traversal,
-            child4_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child2_label.clone(), child4_traversal, child4_label.clone())
+            .unwrap();
 
         let child5_label = create_test_label(5);
         let child5_traversal = create_test_edge_traversal(5, 30.0);
-        tree.insert(
-            child4_label.clone(),
-            child5_traversal,
-            child5_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(child4_label.clone(), child5_traversal, child5_label.clone())
+            .unwrap();
 
         // Test backtrack from leaf node 3 with depth 1
         let path = tree.backtrack_with_depth(VertexId(3), 1).unwrap();
@@ -1340,12 +1169,7 @@ mod tests {
         EdgeTraversal {
             edge_id: EdgeId(edge_id),
             edge_list_id: EdgeListId(0),
-            cost: TraversalCost {
-                total_cost: Cost::new(cost),
-                objective_cost: Cost::new(cost),
-                #[cfg(feature = "detailed_costs")]
-                cost_component: std::collections::HashMap::new(),
-            },
+            cost: TraversalCost::mock(Cost::new(cost), Cost::new(cost)),
             result_state: vec![],
         }
     }
@@ -1366,22 +1190,15 @@ mod tests {
         };
 
         // This will set root as Label::Vertex(0)
-        // Label::Vertex is NOT added to self.labels
-        tree.insert(
+        tree.insert_trajectory(
             root_label.clone(),
             create_test_edge_traversal(1, 10.0),
             child_label.clone(),
-            mock_label_model(),
         )
         .unwrap();
 
-        // child_label IS added to self.labels because it is not Label::Vertex
-
-        // Now self.labels is NOT empty (contains key VertexId(1))
-
         // Try to backtrack from root.
-        // We expect this to SUCCEED (return empty path for root), but currently it might fail
-        // with VertexNotFound(0) because get_labels skips Label::Vertex when self.labels is populated.
+        // We expect this to SUCCEED (return empty path for root).
         let result = tree.backtrack(VertexId(0));
         assert!(
             result.is_ok(),
@@ -1389,120 +1206,73 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_vertex_label_model_optimization_correctness() {
-        // This test verifies that the specialized handling for Label::Vertex (skipping the aux labels map)
-        // works correctly with backtracking.
-        let mut tree = SearchTree::new(Direction::Forward);
+    // #[test]
+    // fn test_get_incoming_edge() {
+    //     // Test the optimized get_incoming_edge method
+    //     let root_label = create_test_label(0);
+    //     let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
 
-        // 1. Setup a tree with only Vertex labels (simulating VertexLabelModel)
-        let root_id = VertexId(0);
-        let child_id = VertexId(1);
+    //     // Build a linear path: 0 -> 1 -> 2 -> 3
+    //     let child1_label = create_test_label(1);
+    //     let child1_traversal = create_test_edge_traversal(1, 10.0);
+    //     tree.insert_trajectory(root_label.clone(), child1_traversal, child1_label.clone())
+    //         .unwrap();
 
-        let root_label = Label::Vertex(root_id);
-        let child_label = Label::Vertex(child_id);
+    //     let child2_label = create_test_label(2);
+    //     let child2_traversal = create_test_edge_traversal(2, 15.0);
+    //     tree.insert_trajectory(child1_label.clone(), child2_traversal, child2_label.clone())
+    //         .unwrap();
 
-        // Create an edge traversal
-        let et = create_test_edge_traversal(1, 10.0);
+    //     let child3_label = create_test_label(3);
+    //     let child3_traversal = create_test_edge_traversal(3, 20.0);
+    //     tree.insert_trajectory(child2_label.clone(), child3_traversal, child3_label.clone())
+    //         .unwrap();
 
-        // Insert (root -> child)
-        // This trigger's root creation and child insertion
-        tree.insert(
-            root_label.clone(),
-            et,
-            child_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+    //     // Test: get incoming edge for vertex 1 (should be edge 1: 0->1)
+    //     let edge1 = tree.get_incoming_edge(VertexId(1));
+    //     assert!(edge1.is_some());
+    //     assert_eq!(edge1.unwrap().edge_id, EdgeId(1));
 
-        // 2. Verify OPTIMIZATION: labels map should be EMPTY
-        // Because Label::Vertex is optimized to NOT be stored in the secondary index
-        assert!(
-            tree.labels.is_empty(),
-            "Tree labels map should be empty for pure Vertex labels"
-        );
+    //     // Test: get incoming edge for vertex 2 (should be edge 2: 1->2)
+    //     let edge2 = tree.get_incoming_edge(VertexId(2));
+    //     assert!(edge2.is_some());
+    //     assert_eq!(edge2.unwrap().edge_id, EdgeId(2));
 
-        // 3. Verify backtracking works despite empty labels map
-        // This confirms get_labels correctly synthesizes the Vertex label lookup
-        let result = tree.backtrack(child_id);
-        assert!(
-            result.is_ok(),
-            "Backtracking failed for Vertex label: {:?}",
-            result.err()
-        );
+    //     // Test: get incoming edge for vertex 3 (should be edge 3: 2->3)
+    //     let edge3 = tree.get_incoming_edge(VertexId(3));
+    //     assert!(edge3.is_some());
+    //     assert_eq!(edge3.unwrap().edge_id, EdgeId(3));
 
-        let path = result.unwrap();
-        assert_eq!(path.len(), 1);
-        assert_eq!(path[0].edge_id, EdgeId(1));
+    //     // Test: root has no incoming edge
+    //     let edge_root = tree.get_incoming_edge(VertexId(0));
+    //     assert!(edge_root.is_none());
 
-        // 4. Verify backtracking from root
-        let root_result = tree.backtrack(root_id);
-        assert!(root_result.is_ok());
-        assert_eq!(root_result.unwrap().len(), 0);
-    }
+    //     // Test: nonexistent vertex returns None
+    //     let edge_none = tree.get_incoming_edge(VertexId(99));
+    //     assert!(edge_none.is_none());
+    // }
 
     #[test]
-    fn test_get_incoming_edge() {
-        // Test the optimized get_incoming_edge method
+    fn test_reconstruct_path_cycle_detection() {
         let root_label = create_test_label(0);
         let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
 
-        // Build a linear path: 0 -> 1 -> 2 -> 3
-        let child1_label = create_test_label(1);
-        let child1_traversal = create_test_edge_traversal(1, 10.0);
-        tree.insert(
-            root_label.clone(),
-            child1_traversal,
-            child1_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        let child_label = create_test_label(1);
+        let traversal = create_test_edge_traversal(1, 10.0);
 
-        let child2_label = create_test_label(2);
-        let child2_traversal = create_test_edge_traversal(2, 15.0);
-        tree.insert(
-            child1_label.clone(),
-            child2_traversal,
-            child2_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        tree.insert_trajectory(root_label.clone(), traversal.clone(), child_label.clone())
+            .unwrap();
 
-        let child3_label = create_test_label(3);
-        let child3_traversal = create_test_edge_traversal(3, 20.0);
-        tree.insert(
-            child2_label.clone(),
-            child3_traversal,
-            child3_label.clone(),
-            mock_label_model(),
-        )
-        .unwrap();
+        // Force a cycle: make root point back to child, creating a loop
+        let bad_root_node =
+            SearchTreeNode::new_child(traversal, child_label.clone(), Direction::Forward);
+        tree.nodes.insert(root_label.clone(), bad_root_node);
 
-        // Test: get incoming edge for vertex 1 (should be edge 1: 0->1)
-        let edge1 = tree.get_incoming_edge(VertexId(1));
-        assert!(edge1.is_some());
-        assert_eq!(edge1.unwrap().edge_id, EdgeId(1));
-
-        // Test: get incoming edge for vertex 2 (should be edge 2: 1->2)
-        let edge2 = tree.get_incoming_edge(VertexId(2));
-        assert!(edge2.is_some());
-        assert_eq!(edge2.unwrap().edge_id, EdgeId(2));
-
-        // Test: get incoming edge for vertex 3 (should be edge 3: 2->3)
-        let edge3 = tree.get_incoming_edge(VertexId(3));
-        assert!(edge3.is_some());
-        assert_eq!(edge3.unwrap().edge_id, EdgeId(3));
-
-        // Test: root has no incoming edge
-        let edge_root = tree.get_incoming_edge(VertexId(0));
-        assert!(edge_root.is_none());
-
-        // Test: nonexistent vertex returns None
-        let edge_none = tree.get_incoming_edge(VertexId(99));
-        assert!(edge_none.is_none());
-    }
-
-    fn mock_label_model() -> Arc<dyn LabelModel> {
-        Arc::new(VertexLabelModel)
+        // Attempt backtrack from child which hits root, which bounces back to child
+        let result = tree.backtrack(VertexId(1));
+        assert!(matches!(
+            result,
+            Err(SearchTreeError::InvalidBranchStructure(_))
+        ));
     }
 }

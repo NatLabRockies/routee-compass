@@ -4,7 +4,7 @@ use super::GradeTraversalEngine;
 use crate::{
     algorithm::search::SearchTree,
     model::{
-        network::{Edge, Vertex},
+        network::Vertex,
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
         traversal::{default::fieldname, TraversalModel, TraversalModelError},
         unit::RatioUnit,
@@ -45,13 +45,11 @@ impl TraversalModel for GradeTraversalModel {
 
     fn traverse_edge(
         &self,
-        trajectory: (&Vertex, &Edge, &Vertex),
+        ctx: &crate::model::traversal::EdgeTraversalContext,
         state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
-        let (_, edge, _) = trajectory;
-        let grade = self.engine.get_grade(edge.edge_id)?;
+        let grade = self.engine.get_grade(ctx.edge.edge_id)?;
         state_model.set_ratio(state, fieldname::EDGE_GRADE, &grade)?;
         Ok(())
     }

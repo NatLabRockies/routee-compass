@@ -120,7 +120,7 @@ pub fn run_vertex_oriented(
             }
 
             let next_edge = (*edge_list_id, *edge_id);
-            let et = EdgeTraversal::new(next_edge, &solution, &f.prev_state, si)?;
+            let et = EdgeTraversal::new(&f.prev_label, next_edge, &solution, &f.prev_state, si)?;
             let key_label = si.label_model.label_from_state(
                 key_vertex_id,
                 &et.result_state,
@@ -137,12 +137,7 @@ pub fn run_vertex_oriented(
             if tentative_gscore < existing_gscore {
                 // accept this traversal, updating search state
                 traversal_costs.insert(key_label.clone(), tentative_gscore);
-                solution.insert(
-                    terminal_label,
-                    et.clone(),
-                    key_label.clone(),
-                    si.label_model.clone(),
-                )?;
+                solution.insert_trajectory(terminal_label, et.clone(), key_label.clone())?;
 
                 let dst_h_cost = match (target, a_star) {
                     (Some(target), true) => {
@@ -237,6 +232,7 @@ mod tests {
     use super::*;
     use crate::model::constraint::default::no_restriction::NoRestriction;
     use crate::model::cost::CostAggregation;
+    use crate::model::cost::CostConstraint;
     use crate::model::cost::CostModel;
     use crate::model::cost::VehicleCostRate;
     use crate::model::label::default::vertex_label_model::VertexLabelModel;
@@ -363,7 +359,6 @@ mod tests {
                 .unwrap(),
         );
         let cost_model = CostModel::new(
-            // vec![(String::from("distance"), 0usize)],
             Arc::new(HashMap::from([(String::from("trip_distance"), 1.0)])),
             Arc::new(HashMap::from([(
                 String::from("trip_distance"),
@@ -372,6 +367,7 @@ mod tests {
             Arc::new(HashMap::new()),
             CostAggregation::Sum,
             state_model.clone(),
+            CostConstraint::StrictlyPositive,
         )
         .unwrap();
         SearchInstance {

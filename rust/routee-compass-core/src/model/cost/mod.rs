@@ -1,4 +1,5 @@
 mod cost_aggregation;
+mod cost_constraint;
 mod cost_feature;
 mod cost_model;
 mod cost_model_config;
@@ -10,6 +11,7 @@ pub mod traversal_cost;
 mod vehicle;
 
 pub use cost_aggregation::CostAggregation;
+pub use cost_constraint::CostConstraint;
 pub use cost_feature::CostFeature;
 pub use cost_model::CostModel;
 pub use cost_model_config::CostModelConfig;

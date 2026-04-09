@@ -187,16 +187,13 @@ impl TerminationModel {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        sync::Arc,
-        time::{Duration, Instant},
-    };
+    use std::time::{Duration, Instant};
 
     use crate::{
         algorithm::search::{Direction, EdgeTraversal, SearchTree},
         model::{
             cost::TraversalCost,
-            label::{default::vertex_label_model::VertexLabelModel, Label},
+            label::Label,
             network::{EdgeId, EdgeListId, VertexId},
             termination::MemoryUnit,
             unit::Cost,
@@ -385,7 +382,7 @@ mod tests {
         for idx in 0..(size - 1) {
             let cost = TraversalCost {
                 objective_cost: Cost::MIN_COST,
-                total_cost: Cost::MIN_COST,
+                edge_cost: Cost::MIN_COST,
                 #[cfg(feature = "detailed_costs")]
                 cost_component: std::collections::HashMap::new(),
             };
@@ -395,11 +392,10 @@ mod tests {
                 cost,
                 result_state: vec![],
             };
-            tree.insert(
+            tree.insert_trajectory(
                 Label::Vertex(VertexId(idx)),
                 edge_traversal,
                 Label::Vertex(VertexId(idx + 1)),
-                Arc::new(VertexLabelModel {}),
             )
             .expect("test invariant failed")
         }

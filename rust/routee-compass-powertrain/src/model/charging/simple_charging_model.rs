@@ -3,9 +3,9 @@ use std::{collections::HashSet, sync::Arc};
 use routee_compass_core::{
     algorithm::search::SearchTree,
     model::{
-        network::{Edge, Vertex},
+        network::Vertex,
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
-        traversal::{TraversalModel, TraversalModelError},
+        traversal::{EdgeTraversalContext, TraversalModel, TraversalModelError},
         unit::TimeUnit,
     },
 };
@@ -87,17 +87,15 @@ impl TraversalModel for SimpleChargingModel {
     }
     fn traverse_edge(
         &self,
-        trajectory: (&Vertex, &Edge, &Vertex),
+        ctx: &EdgeTraversalContext,
         state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         let current_soc = state_model.get_ratio(state, fieldname::TRIP_SOC)?;
         let battery_capacity = state_model.get_energy(state, fieldname::BATTERY_CAPACITY)?;
-        let (_start_vertex, _edge, end_vertex) = trajectory;
         if let Some(charging_station) = self
             .charging_station_locator
-            .get_station(&end_vertex.vertex_id)
+            .get_station(&ctx.dst.vertex_id)
         {
             let should_charge = current_soc < self.charge_soc_threshold
                 && self
@@ -127,6 +125,7 @@ mod tests {
     use geo::coord;
     use routee_compass_core::{
         model::{
+            label::Label,
             network::{Edge, EdgeId, EdgeListId, Vertex, VertexId},
             state::{StateModel, StateVariable},
         },
@@ -257,7 +256,9 @@ mod tests {
         let mut state = state_vector(&state_model, low_soc, battery_capacity);
 
         // Traverse to vertex 1 (DC fast charging station)
-        let trajectory = mock_trajectory(1);
+        let (src, edge, dst) = mock_trajectory(1);
+        let label = Label::Vertex(src.vertex_id);
+        let ctx = EdgeTraversalContext::new(&label, &src, &edge, &dst, &tree);
 
         let charging_model = SimpleChargingModel {
             charging_station_locator: mock_charging_station_locator(),
@@ -268,12 +269,7 @@ mod tests {
         };
 
         charging_model
-            .traverse_edge(
-                (&trajectory.0, &trajectory.1, &trajectory.2),
-                &mut state,
-                &tree,
-                &state_model,
-            )
+            .traverse_edge(&ctx, &mut state, &state_model)
             .unwrap();
 
         // Check that SOC was updated to full (100%)
@@ -302,7 +298,9 @@ mod tests {
         let mut state = state_vector(&state_model, high_soc, battery_capacity);
 
         // Traverse to vertex 1 (DC fast charging station)
-        let trajectory = mock_trajectory(1);
+        let (src, edge, dst) = mock_trajectory(1);
+        let label = Label::Vertex(src.vertex_id);
+        let ctx = EdgeTraversalContext::new(&label, &src, &edge, &dst, &tree);
 
         let charging_model = SimpleChargingModel {
             charging_station_locator: mock_charging_station_locator(),
@@ -313,12 +311,7 @@ mod tests {
         };
 
         charging_model
-            .traverse_edge(
-                (&trajectory.0, &trajectory.1, &trajectory.2),
-                &mut state,
-                &tree,
-                &state_model,
-            )
+            .traverse_edge(&ctx, &mut state, &state_model)
             .unwrap();
 
         // Check that SOC remained unchanged
@@ -344,7 +337,9 @@ mod tests {
         let mut state = state_vector(&state_model, low_soc, battery_capacity);
 
         // Traverse to vertex 99 (no charging station)
-        let trajectory = mock_trajectory(99);
+        let (src, edge, dst) = mock_trajectory(99);
+        let label = Label::Vertex(src.vertex_id);
+        let ctx = EdgeTraversalContext::new(&label, &src, &edge, &dst, &tree);
 
         let charging_model = SimpleChargingModel {
             charging_station_locator: mock_charging_station_locator(),
@@ -355,12 +350,7 @@ mod tests {
         };
 
         charging_model
-            .traverse_edge(
-                (&trajectory.0, &trajectory.1, &trajectory.2),
-                &mut state,
-                &tree,
-                &state_model,
-            )
+            .traverse_edge(&ctx, &mut state, &state_model)
             .unwrap();
 
         // Check that SOC remained unchanged
@@ -385,7 +375,9 @@ mod tests {
         let battery_capacity = Energy::new::<uom::si::energy::kilowatt_hour>(60.0);
         let mut state_dc = state_vector(&state_model, low_soc, battery_capacity);
 
-        let trajectory_dc = mock_trajectory(1); // DC charging station
+        let (v1, e1, v2) = mock_trajectory(1);
+        let l2 = Label::Vertex(v1.vertex_id);
+        let ctx_dc = EdgeTraversalContext::new(&l2, &v1, &e1, &v2, &tree);
 
         let charging_model = SimpleChargingModel {
             charging_station_locator: mock_charging_station_locator(),
@@ -396,12 +388,7 @@ mod tests {
         };
 
         charging_model
-            .traverse_edge(
-                (&trajectory_dc.0, &trajectory_dc.1, &trajectory_dc.2),
-                &mut state_dc,
-                &tree,
-                &state_model,
-            )
+            .traverse_edge(&ctx_dc, &mut state_dc, &state_model)
             .unwrap();
         let dc_charge_time = state_model
             .get_time(&state_dc, fieldname::TRIP_TIME)
@@ -409,15 +396,12 @@ mod tests {
 
         // Test AC Level 2 charging
         let mut state_ac = state_vector(&state_model, low_soc, battery_capacity);
-        let trajectory_ac = mock_trajectory(2); // AC charging station
+        let (v0, e1, v2) = mock_trajectory(2); // AC charging station
+        let l2 = Label::Vertex(v0.vertex_id);
+        let ctx_ac = EdgeTraversalContext::new(&l2, &v0, &e1, &v2, &tree);
 
         charging_model
-            .traverse_edge(
-                (&trajectory_ac.0, &trajectory_ac.1, &trajectory_ac.2),
-                &mut state_ac,
-                &tree,
-                &state_model,
-            )
+            .traverse_edge(&ctx_ac, &mut state_ac, &state_model)
             .unwrap();
         let ac_charge_time = state_model
             .get_time(&state_ac, fieldname::TRIP_TIME)
@@ -462,14 +446,12 @@ mod tests {
         };
 
         // Try to charge at L2 station (vertex 2)
-        let trajectory = mock_trajectory(2);
+        let (v0, e1, v2) = mock_trajectory(2); // AC charging station
+        let l2 = Label::Vertex(v0.vertex_id);
+        let ctx = EdgeTraversalContext::new(&l2, &v0, &e1, &v2, &tree);
+
         charging_model
-            .traverse_edge(
-                (&trajectory.0, &trajectory.1, &trajectory.2),
-                &mut state,
-                &tree,
-                &state_model,
-            )
+            .traverse_edge(&ctx, &mut state, &state_model)
             .unwrap();
 
         // Should not charge because L2 is not in valid_power_types

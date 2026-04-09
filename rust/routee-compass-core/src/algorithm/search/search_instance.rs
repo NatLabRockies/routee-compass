@@ -8,7 +8,7 @@ use crate::{
         network::{EdgeId, EdgeListId, Graph},
         state::StateModel,
         termination::TerminationModel,
-        traversal::TraversalModel,
+        traversal::{EdgeTraversalContext, TraversalModel},
     },
 };
 use std::sync::Arc;
@@ -116,13 +116,11 @@ impl SearchInstance {
         };
 
         for (i, (edge_list_id, edge_id)) in path.iter().enumerate() {
-            let trajectory = self.graph.edge_triplet(edge_list_id, edge_id)?;
-            let (_, _, dst) = trajectory;
+            let (src, edge, dst) = self.graph.edge_triplet(edge_list_id, edge_id)?;
             let tm = self.get_traversal_model(edge_list_id)?;
-
+            let ctx = EdgeTraversalContext::new(&prev_label, src, edge, dst, &tree);
             let traversal = EdgeTraversal::new_local(
-                trajectory,
-                &tree,
+                ctx,
                 &current_state,
                 &self.state_model,
                 tm.as_ref(),
@@ -134,13 +132,8 @@ impl SearchInstance {
                 vertex_id: dst.vertex_id,
                 state: i,
             };
-            tree.insert(
-                prev_label,
-                traversal.clone(),
-                child_label.clone(),
-                self.label_model.clone(),
-            )
-            .map_err(|e| SearchError::InternalError(e.to_string()))?;
+            tree.insert_trajectory(prev_label, traversal.clone(), child_label.clone())
+                .map_err(|e| SearchError::InternalError(e.to_string()))?;
 
             prev_label = child_label;
             current_state = traversal.result_state.clone();

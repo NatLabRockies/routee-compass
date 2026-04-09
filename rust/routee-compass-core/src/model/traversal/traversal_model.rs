@@ -1,7 +1,8 @@
 use super::traversal_model_error::TraversalModelError;
 use crate::algorithm::search::SearchTree;
-use crate::model::network::{Edge, Vertex};
+use crate::model::network::Vertex;
 use crate::model::state::{InputFeature, StateModel, StateVariable, StateVariableConfig};
+use crate::model::traversal::EdgeTraversalContext;
 
 /// Dictates how state transitions occur while traversing a graph in a search algorithm.
 ///
@@ -36,9 +37,8 @@ pub trait TraversalModel: Send + Sync {
     /// Either a traversal result or an error.
     fn traverse_edge(
         &self,
-        trajectory: (&Vertex, &Edge, &Vertex),
+        ctx: &EdgeTraversalContext,
         state: &mut Vec<StateVariable>,
-        tree: &SearchTree,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError>;
 

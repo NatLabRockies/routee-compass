@@ -417,20 +417,6 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    use crate::plugin::output::default::eval::config::ExpressionConfig;
-
-    fn make_compiled_expr(inputs: &[(&str, &str)], expr: &str, output: &str) -> CompiledExpression {
-        compile_expression(ExpressionConfig {
-            inputs: inputs
-                .iter()
-                .map(|(k, v)| (k.to_string(), v.to_string()))
-                .collect(),
-            expr: expr.to_string(),
-            output: output.to_string(),
-        })
-        .expect("expression should compile")
-    }
-
     // -----------------------------------------------------------------------
     // parse_path_segments
     // -----------------------------------------------------------------------

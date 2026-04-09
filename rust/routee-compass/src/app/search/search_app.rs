@@ -152,9 +152,10 @@ impl SearchApp {
         let state_model_instance = self.state_model.register(vec![], output_features)?;
         let state_model = Arc::new(state_model_instance);
 
+        let cost_constraint = self.search_algorithm.cost_constraint();
         let cost_model = self
             .cost_model_service
-            .build(query, state_model.clone())
+            .build(query, state_model.clone(), cost_constraint)
             .map_err(|e| SearchError::BuildError(e.to_string()))?;
         let constraint_models = self
             .constraint_model_services
