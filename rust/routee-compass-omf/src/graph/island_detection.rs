@@ -3,14 +3,39 @@ use std::collections::{HashSet, VecDeque};
 use geo::{line_string, Haversine, Length, Point};
 use indexmap::IndexMap;
 use kdam::{tqdm, BarExt};
-use rayon::prelude::*;
 use routee_compass_core::model::{
     network::{Edge, EdgeId, EdgeList, EdgeListId, Vertex, VertexId},
     unit::DistanceUnit,
 };
+use serde::{Deserialize, Serialize};
 use uom::si::f64::Length as uom_length;
 
 use crate::collection::OvertureMapsCollectionError;
+
+/// runs a weakly-connected components algorithm to identify edges
+/// that can be removed from the graph.
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct IslandDetectionAlgorithm {
+    /// the minimum distance across the diagonal of the bounding box covering
+    /// the island. if the island is bounded by (xmin, ymin) and (xmax, ymax),
+    /// the island is accepted if the LINESTRING (xmin, ymin, xmax ymax) is at
+    /// least as long as min_distance in distance_unit.
+    pub min_distance: f64,
+    /// distance unit of the min_distance value.
+    pub distance_unit: DistanceUnit,
+}
+
+impl IslandDetectionAlgorithm {
+    /// run the algorithm, producing the list of edges that are part of
+    /// mobility islands which we want to remove from the algorithm.
+    pub fn run(
+        &self,
+        edge_lists: &[&EdgeList],
+        vertices: &[Vertex],
+    ) -> Result<Vec<(EdgeListId, EdgeId)>, OvertureMapsCollectionError> {
+        island_detection_algorithm(edge_lists, vertices, self.min_distance, self.distance_unit)
+    }
+}
 
 pub type DenseAdjacencyList = Box<[IndexMap<(EdgeListId, EdgeId), VertexId>]>;
 
@@ -22,7 +47,6 @@ pub fn island_detection_algorithm(
     vertices: &[Vertex],
     distance_threshold: f64,
     distance_threshold_unit: DistanceUnit,
-    parallel_execution: bool,
 ) -> Result<Vec<(EdgeListId, EdgeId)>, OvertureMapsCollectionError> {
     let forward_adjacency: DenseAdjacencyList = build_adjacency(edge_lists, vertices.len(), true)
         .map_err(|s| {
@@ -37,99 +61,82 @@ pub fn island_detection_algorithm(
             ))
         })?;
 
-    let island_edges: Result<Vec<_>, _> = if parallel_execution {
-        edge_lists
-            .par_iter()
-            .flat_map(|&el| el.0.par_iter())
-            .filter_map(|edge| {
-                match is_component_island_parallel(
-                    edge,
-                    distance_threshold,
-                    distance_threshold_unit,
-                    edge_lists,
-                    vertices,
-                    &forward_adjacency,
-                    &backward_adjacency,
-                ) {
-                    Ok(true) => Some(Ok((edge.edge_list_id, edge.edge_id))),
-                    Ok(false) => None,
-                    Err(e) => Some(Err(e)),
-                }
-            })
-            .collect()
-    } else {
-        // Progress bar
-        let total_edges = edge_lists.iter().map(|el| el.len()).sum::<usize>();
-        let mut pb = tqdm!(
-            total = total_edges,
-            desc = "computing components - scanning edges"
-        );
+    // Progress bar
+    let total_edges = edge_lists.iter().map(|el| el.len()).sum::<usize>();
+    let mut pb = tqdm!(
+        total = total_edges,
+        desc = "computing components - scanning edges"
+    );
 
-        // Initialization
-        let mut visited = HashSet::<(EdgeListId, EdgeId)>::new();
-        let mut queue = VecDeque::<(EdgeListId, EdgeId)>::new();
-        let mut flagged = Vec::<(EdgeListId, EdgeId)>::new();
+    // Initialization
+    let mut visited = HashSet::<(EdgeListId, EdgeId)>::new();
+    let mut queue = VecDeque::<(EdgeListId, EdgeId)>::new();
+    let mut flagged = Vec::<(EdgeListId, EdgeId)>::new();
 
-        // Main Loop
-        // Each non-skipped iteration of the large loop is a separate component
-        for start_edge in edge_lists.iter().flat_map(|el| el.edges()) {
-            // NOTE: Due to directionality and the fact that I am using only forward connectivity
-            // it is necessary to have two `if visited contains` checks.
-            if visited.contains(&(start_edge.edge_list_id, start_edge.edge_id)) {
-                continue;
-            }
-
-            // Initialize the component
-            queue.push_back((start_edge.edge_list_id, start_edge.edge_id));
-            let mut max_distance_reached = uom_length::new::<uom::si::length::meter>(0.0);
-            let mut component = Vec::<(EdgeListId, EdgeId)>::new();
-            let start_midpoint = compute_midpoint(start_edge, vertices);
-
-            // Loop through the queue (explore the component)
-            loop {
-                if let Some((current_el_id, current_e_id)) = queue.pop_front() {
-                    if visited.contains(&(current_el_id, current_e_id)) {
-                        continue;
-                    }
-                    component.push((current_el_id, current_e_id));
-                    let current_edge = edge_lists[current_el_id.0].0[current_e_id.0];
-
-                    // Update the max_distance
-                    let current_midpoint = compute_midpoint(&current_edge, vertices);
-                    let current_distance =
-                        Haversine.length(&line_string![start_midpoint.0, current_midpoint.0]);
-                    let current_distance_uom =
-                        uom_length::new::<uom::si::length::meter>(current_distance as f64);
-                    max_distance_reached = max_distance_reached.max(current_distance_uom);
-
-                    visit_edge(
-                        &current_edge,
-                        &mut visited,
-                        &mut queue,
-                        &forward_adjacency,
-                        &backward_adjacency,
-                    );
-
-                    // Update bar
-                    if let Err(e) = pb.update(1) {
-                        log::warn!("error during update of progress bar: {e}")
-                    };
-                } else {
-                    break;
-                };
-            }
-
-            // At the end, flag all the edges in the component for deletion
-            if max_distance_reached < distance_threshold_unit.to_uom(distance_threshold) {
-                flagged.append(&mut component);
-            }
+    // Main Loop
+    // Each non-skipped iteration of the large loop is a separate component
+    for start_edge in edge_lists.iter().flat_map(|el| el.edges()) {
+        // NOTE: Due to directionality and the fact that I am using only forward connectivity
+        // it is necessary to have two `if visited contains` checks.
+        if visited.contains(&(start_edge.edge_list_id, start_edge.edge_id)) {
+            continue;
         }
 
-        eprintln!();
-        Ok(flagged)
-    };
+        // Initialize the component
+        queue.push_back((start_edge.edge_list_id, start_edge.edge_id));
+        let mut min_x = f32::MAX;
+        let mut max_x = f32::MIN;
+        let mut min_y = f32::MAX;
+        let mut max_y = f32::MIN;
+        let mut component = Vec::<(EdgeListId, EdgeId)>::new();
 
-    island_edges
+        // Loop through the queue (explore the component)
+        loop {
+            if let Some((current_el_id, current_e_id)) = queue.pop_front() {
+                if visited.contains(&(current_el_id, current_e_id)) {
+                    continue;
+                }
+                component.push((current_el_id, current_e_id));
+                let current_edge = edge_lists[current_el_id.0].0[current_e_id.0];
+
+                // Expand bounding box
+                let src_vertex = vertices[current_edge.src_vertex_id.0];
+                let dst_vertex = vertices[current_edge.dst_vertex_id.0];
+                min_x = min_x.min(src_vertex.x()).min(dst_vertex.x());
+                max_x = max_x.max(src_vertex.x()).max(dst_vertex.x());
+                min_y = min_y.min(src_vertex.y()).min(dst_vertex.y());
+                max_y = max_y.max(src_vertex.y()).max(dst_vertex.y());
+
+                visit_edge(
+                    &current_edge,
+                    &mut visited,
+                    &mut queue,
+                    &forward_adjacency,
+                    &backward_adjacency,
+                );
+
+                // Update bar
+                if let Err(e) = pb.update(1) {
+                    log::warn!("error during update of progress bar: {e}")
+                };
+            } else {
+                break;
+            };
+        }
+
+        // At the end, check the bounding box diagonal distance to determine flag
+        let component_diagonal_meters =
+            Haversine.length(&line_string![(min_x, min_y).into(), (max_x, max_y).into()]);
+        let diameter_uom =
+            uom_length::new::<uom::si::length::meter>(component_diagonal_meters as f64);
+
+        if diameter_uom < distance_threshold_unit.to_uom(distance_threshold) {
+            flagged.append(&mut component);
+        }
+    }
+
+    eprintln!();
+    Ok(flagged)
 }
 
 /// visit operation for weakly-connected BFS traversal

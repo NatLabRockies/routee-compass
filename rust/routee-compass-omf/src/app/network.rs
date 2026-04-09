@@ -2,7 +2,6 @@ use std::{collections::HashSet, path::Path, sync::Arc};
 
 use geo::{BoundingRect, Geometry, Intersects};
 use rayon::prelude::*;
-use routee_compass_core::model::unit::DistanceUnit;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -12,7 +11,10 @@ use crate::{
         OvertureMapsCollectorConfig, ReleaseVersion, SegmentAccessRestrictionWhen,
         TransportationCollection,
     },
-    graph::{OmfGraphSource, OmfGraphStats, OmfGraphSummary, OmfGraphVectorized},
+    graph::{
+        island_detection::IslandDetectionAlgorithm, OmfGraphSource, OmfGraphStats, OmfGraphSummary,
+        OmfGraphVectorized,
+    },
     util,
 };
 
@@ -20,7 +22,7 @@ use crate::{
 pub struct NetworkEdgeListConfiguration {
     pub mode: String,
     pub filter: Vec<TravelModeFilter>,
-    pub island_algorithm_config: Option<IslandDetectionAlgorithmConfiguration>,
+    pub island_algorithm_config: Option<IslandDetectionAlgorithm>,
 }
 
 impl From<&NetworkEdgeListConfiguration> for SegmentAccessRestrictionWhen {
@@ -37,13 +39,6 @@ impl From<&NetworkEdgeListConfiguration> for SegmentAccessRestrictionWhen {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct IslandDetectionAlgorithmConfiguration {
-    pub min_distance: f64,
-    pub distance_unit: DistanceUnit,
-    pub parallel_execution: bool,
-}
-
 /// runs an OMF network import using the provided configuration.
 pub fn run(
     name: &str,
@@ -52,7 +47,7 @@ pub fn run(
     output_directory: &Path,
     local_source: Option<&Path>,
     write_json: bool,
-    island_detection_configuration: Option<IslandDetectionAlgorithmConfiguration>,
+    island_detection_configuration: Option<IslandDetectionAlgorithm>,
     export_omf_ids: bool,
     extent: Option<Geometry<f32>>,
 ) -> Result<(), OvertureMapsCollectionError> {

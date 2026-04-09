@@ -5,13 +5,13 @@ use std::{
 
 use super::serialize_ops as ops;
 use crate::{
-    app::network::{IslandDetectionAlgorithmConfiguration, NetworkEdgeListConfiguration},
+    app::network::NetworkEdgeListConfiguration,
     collection::{
         record::SegmentHeading, OvertureMapsCollectionError, SegmentAccessRestrictionWhen,
         SegmentFullType, TransportationCollection, TransportationSegmentRecord,
     },
     graph::{
-        component_algorithm::island_detection_algorithm,
+        island_detection::IslandDetectionAlgorithm,
         segment_ops,
         serialize_ops::{clean_omf_edge_list, compute_vertex_remapping},
         vertex_serializable::VertexSerializable,
@@ -60,7 +60,7 @@ impl OmfGraphVectorized {
     pub fn new(
         collection: &TransportationCollection,
         configuration: &[NetworkEdgeListConfiguration],
-        island_detection_configuration: Option<IslandDetectionAlgorithmConfiguration>,
+        island_detection_configuration: Option<IslandDetectionAlgorithm>,
     ) -> Result<Self, OvertureMapsCollectionError> {
         // process all connectors into vertices
         log::info!("Creating vertex lookup");
@@ -194,13 +194,7 @@ impl OmfGraphVectorized {
                 .iter()
                 .map(|e| &e.edges)
                 .collect::<Vec<&EdgeList>>();
-            let island_edges = island_detection_algorithm(
-                &ref_edge_lists,
-                &vertices,
-                algorithm_config.min_distance,
-                algorithm_config.distance_unit,
-                algorithm_config.parallel_execution,
-            )?;
+            let island_edges = algorithm_config.run(&ref_edge_lists, &vertices)?;
 
             // Refactor Vec into Hashmap
             let mut edges_lookup: HashMap<EdgeListId, Vec<EdgeId>> = HashMap::new();
