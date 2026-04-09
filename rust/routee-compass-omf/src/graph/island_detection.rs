@@ -68,59 +68,90 @@ pub fn island_detection_algorithm(
         desc = "computing components - scanning edges"
     );
 
-    // Initialization
-    let mut visited = HashSet::<(EdgeListId, EdgeId)>::new();
-    let mut queue = VecDeque::<(EdgeListId, EdgeId)>::new();
-    let mut flagged = Vec::<(EdgeListId, EdgeId)>::new();
+    // Main Loop: Kosaraju's Algorithm for SCCs
 
-    // Main Loop
-    // Each non-skipped iteration of the large loop is a separate component
+    // Pass 1: Forward DFS to get post-order finishing times
+    let mut visited_forward = HashSet::<(EdgeListId, EdgeId)>::new();
+    let mut post_order = Vec::<(EdgeListId, EdgeId)>::new();
+
     for start_edge in edge_lists.iter().flat_map(|el| el.edges()) {
-        // NOTE: Due to directionality and the fact that I am using only forward connectivity
-        // it is necessary to have two `if visited contains` checks.
-        if visited.contains(&(start_edge.edge_list_id, start_edge.edge_id)) {
+        let edge_key = (start_edge.edge_list_id, start_edge.edge_id);
+        if visited_forward.contains(&edge_key) {
             continue;
         }
 
-        // Initialize the component
-        queue.push_back((start_edge.edge_list_id, start_edge.edge_id));
+        // Iterative DFS
+        let mut stack = vec![(edge_key, false)];
+        while let Some((curr, is_post)) = stack.pop() {
+            if is_post {
+                post_order.push(curr);
+                continue;
+            }
+
+            if visited_forward.contains(&curr) {
+                continue;
+            }
+            visited_forward.insert(curr);
+            stack.push((curr, true));
+
+            let curr_edge = edge_lists[curr.0 .0].0[curr.1 .0];
+            let outward_edges: Vec<&(EdgeListId, EdgeId)> = forward_adjacency
+                [curr_edge.dst_vertex_id.0]
+                .keys()
+                .collect();
+
+            for &next_edge_key in outward_edges {
+                if !visited_forward.contains(&next_edge_key) {
+                    stack.push((next_edge_key, false));
+                }
+            }
+        }
+    }
+
+    // Pass 2: Backward DFS to find SCCs
+    let mut visited_backward = HashSet::<(EdgeListId, EdgeId)>::new();
+    let mut flagged = Vec::<(EdgeListId, EdgeId)>::new();
+
+    for &start_edge_key in post_order.iter().rev() {
+        if visited_backward.contains(&start_edge_key) {
+            continue;
+        }
+
         let mut min_x = f32::MAX;
         let mut max_x = f32::MIN;
         let mut min_y = f32::MAX;
         let mut max_y = f32::MIN;
-        let mut component = Vec::<(EdgeListId, EdgeId)>::new();
+        let mut scc = Vec::<(EdgeListId, EdgeId)>::new();
 
-        // Loop through the queue (explore the component)
-        loop {
-            if let Some((current_el_id, current_e_id)) = queue.pop_front() {
-                if visited.contains(&(current_el_id, current_e_id)) {
-                    continue;
+        let mut queue = VecDeque::<(EdgeListId, EdgeId)>::new();
+        queue.push_back(start_edge_key);
+        visited_backward.insert(start_edge_key);
+
+        while let Some(curr) = queue.pop_front() {
+            scc.push(curr);
+            let current_edge = edge_lists[curr.0 .0].0[curr.1 .0];
+
+            let src_vertex = vertices[current_edge.src_vertex_id.0];
+            let dst_vertex = vertices[current_edge.dst_vertex_id.0];
+            min_x = min_x.min(src_vertex.x()).min(dst_vertex.x());
+            max_x = max_x.max(src_vertex.x()).max(dst_vertex.x());
+            min_y = min_y.min(src_vertex.y()).min(dst_vertex.y());
+            max_y = max_y.max(src_vertex.y()).max(dst_vertex.y());
+
+            let inward_edges: Vec<&(EdgeListId, EdgeId)> = backward_adjacency
+                [current_edge.src_vertex_id.0]
+                .keys()
+                .collect();
+
+            for &next_edge_key in inward_edges {
+                if !visited_backward.contains(&next_edge_key) {
+                    visited_backward.insert(next_edge_key);
+                    queue.push_back(next_edge_key);
                 }
-                component.push((current_el_id, current_e_id));
-                let current_edge = edge_lists[current_el_id.0].0[current_e_id.0];
+            }
 
-                // Expand bounding box
-                let src_vertex = vertices[current_edge.src_vertex_id.0];
-                let dst_vertex = vertices[current_edge.dst_vertex_id.0];
-                min_x = min_x.min(src_vertex.x()).min(dst_vertex.x());
-                max_x = max_x.max(src_vertex.x()).max(dst_vertex.x());
-                min_y = min_y.min(src_vertex.y()).min(dst_vertex.y());
-                max_y = max_y.max(src_vertex.y()).max(dst_vertex.y());
-
-                visit_edge(
-                    &current_edge,
-                    &mut visited,
-                    &mut queue,
-                    &forward_adjacency,
-                    &backward_adjacency,
-                );
-
-                // Update bar
-                if let Err(e) = pb.update(1) {
-                    log::warn!("error during update of progress bar: {e}")
-                };
-            } else {
-                break;
+            if let Err(e) = pb.update(1) {
+                log::warn!("error during update of progress bar: {e}")
             };
         }
 
@@ -131,7 +162,7 @@ pub fn island_detection_algorithm(
             uom_length::new::<uom::si::length::meter>(component_diagonal_meters as f64);
 
         if diameter_uom < distance_threshold_unit.to_uom(distance_threshold) {
-            flagged.append(&mut component);
+            flagged.append(&mut scc);
         }
     }
 
