@@ -345,7 +345,7 @@ mod tests {
     }
 
     fn build_search_instance(graph: Arc<Graph>) -> SearchInstance {
-        let map_model = Arc::new(MapModel::new(graph.clone(), &MapModelConfig::default()).unwrap());
+        let map_model = Arc::new(MapModel::new(graph.clone(), MapModelConfig::default()).unwrap());
         let traversal_model = Arc::new(DistanceTraversalModel::new(DistanceUnit::default(), true));
 
         // setup the graph, traversal model, and a* heuristic to be shared across the queries in parallel
