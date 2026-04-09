@@ -15,12 +15,14 @@ pub fn process_simple_connector_splits(
     when: Option<&SegmentAccessRestrictionWhen>,
 ) -> Result<Vec<SegmentSplit>, OvertureMapsCollectionError> {
     let headings = get_headings(segment, when)?;
-    let result = segment
-        .connectors
-        .as_ref()
-        .ok_or(OvertureMapsCollectionError::InvalidSegmentConnectors(
-            format!("connectors is empty for segment record '{}'", segment.id),
-        ))?
+    // sort by "at" values to ensure monotonicity
+    let mut sorted_connectors = segment.connectors.clone().ok_or_else(|| {
+        OvertureMapsCollectionError::InvalidUserInput(String::from(
+            "no connectors in downloaded dataset",
+        ))
+    })?;
+    sorted_connectors.sort_by(|a, b| a.at.partial_cmp(&b.at).unwrap_or(std::cmp::Ordering::Equal));
+    let result = sorted_connectors
         .iter()
         .tuple_windows()
         .flat_map(|(src, dst)| {

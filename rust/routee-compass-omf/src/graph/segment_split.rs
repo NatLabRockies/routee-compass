@@ -9,7 +9,7 @@ use crate::{
         record::SegmentHeading, OvertureMapsCollectionError, SegmentFullType, SegmentSpeedLimit,
         TransportationSegmentRecord,
     },
-    graph::connector_in_segment::ConnectorInSegment,
+    graph::{connector_in_segment::ConnectorInSegment, serialize_ops},
 };
 
 pub enum SegmentSplit {
@@ -172,7 +172,7 @@ impl SegmentSplit {
                     let line_distance = Haversine.length(&line);
                     total_distance += line_distance;
 
-                    if total_distance <= distance_to_src {
+                    if total_distance <= distance_to_src + serialize_ops::FLOAT_DISTANCE_TOLERANCE {
                         continue;
                     }
                     if total_distance >= distance_to_dst {

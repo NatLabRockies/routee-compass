@@ -1,4 +1,4 @@
-use geo::{Bearing, Coord, Haversine, LineString};
+use geo::{Bearing, Coord, Haversine, Length, Line, LineString};
 use itertools::Itertools;
 use kdam::{tqdm, Bar, BarExt};
 use rayon::prelude::*;
@@ -15,6 +15,20 @@ use crate::{
     },
     graph::{omf_graph::OmfEdgeList, segment_split::SegmentSplit, ConnectorInSegment},
 };
+
+/// A distance tolerance (in meters) used to mitigate floating-point drift when extracting
+/// LineString geometries for segment splits.
+///
+/// When computing the coordinates that strictly lie between `src` and `dst` connectors,
+/// the cumulative sum of individual line segment lengths (`total_distance += line_distance`)
+/// can slightly exceed the directly computed `distance_to_src` due to floating-point
+/// inaccuracies.
+///
+/// If this tolerance is not applied, the algorithm may falsely identify the starting
+/// coordinate of the split as an intermediate point. This results in pushing the exact
+/// same coordinate twice in a row, creating a 0-distance segment fragment that can
+/// mangle downstream network computations such as intersection bearings.
+pub const FLOAT_DISTANCE_TOLERANCE: f32 = 1e-6;
 
 /// serializes the Connector records into Vertices and creates a GERS id -> index mapping.
 /// optionally filter to a 'keep list' of Connector ids. the vertex creation is parallelized.
@@ -299,6 +313,8 @@ pub fn get_global_average_speed(
 pub fn bearing_deg_from_geometries(
     geometries: &[LineString<f32>],
 ) -> Result<Vec<f64>, OvertureMapsCollectionError> {
+    const FLOAT_DISTANCE_TOLERANCE: f32 = 1e-6; // Minimum distance threshold
+
     geometries
         .par_iter()
         .map(|linestring| {
@@ -308,8 +324,21 @@ pub fn bearing_deg_from_geometries(
                     "cannot compute bearing on linestring with less than two points: {linestring:?}"
                 )));
             }
-            let p0 = linestring.0[n - 2];
+
             let p1 = linestring.0[n - 1];
+            let mut p0 = linestring.0[n - 2];
+
+            // Loop backwards to find a point far enough away to yield a valid bearing vector
+            for i in (0..n - 1).rev() {
+                let candidate = linestring.0[i];
+                let line = Line::new(candidate, p1);
+
+                if Haversine.length(&line) > FLOAT_DISTANCE_TOLERANCE {
+                    p0 = candidate;
+                    break;
+                }
+            }
+
             Ok(Haversine.bearing(p0.into(), p1.into()) as f64)
         })
         .collect()
