@@ -353,48 +353,37 @@ pub fn compute_vertex_remapping(
     edge_lists: &[OmfEdgeList],
     island_edges: &[(EdgeListId, EdgeId)],
 ) -> Result<Vec<Option<VertexId>>, OvertureMapsCollectionError> {
-    // Identify orphan vertices
-    // Because we are using weak connectivity (two adjacency lists)
-    // all vertices that are part of a component of an edge that needs
-    // to be removed, should also be removed
-    let island_vertices = island_edges
-        .iter()
-        .map(|(el_id, e_id)| {
-            let edge = edge_lists
-                .get(el_id.0)
-                .ok_or(OvertureMapsCollectionError::InternalError(format!(
-                    "edge list id {} does not exist in OMF Edge Lists",
-                    el_id
-                )))?
-                .edges
-                .0
-                .get(e_id.0)
-                .ok_or(OvertureMapsCollectionError::InternalError(format!(
-                    "edge id {} does not exist in OMF Edge List {}",
-                    e_id, el_id
-                )))?;
+    // 1. Create a fast lookup for edges being removed
+    let removed_edges: HashSet<(EdgeListId, EdgeId)> = island_edges.iter().cloned().collect();
 
-            Ok(vec![edge.src_vertex_id, edge.dst_vertex_id])
-        })
-        .collect::<Result<Vec<Vec<VertexId>>, OvertureMapsCollectionError>>()?
-        .into_iter()
-        .flatten()
-        .collect::<HashSet<VertexId>>();
+    // 2. Identify all vertices that are part of at least one valid (non-island) edge
+    // across ALL edge lists.
+    let mut valid_vertices = HashSet::new();
 
-    // Create the mapping
+    for edge_list in edge_lists {
+        for edge in edge_list.edges.0.iter() {
+            if !removed_edges.contains(&(edge.edge_list_id, edge.edge_id)) {
+                valid_vertices.insert(edge.src_vertex_id);
+                valid_vertices.insert(edge.dst_vertex_id);
+            }
+        }
+    }
+
+    // 3. Create the mapping
     let mut new_id: usize = 0;
     Ok((0..vertices.len())
         .map(|old_id| {
-            if island_vertices.contains(&VertexId(old_id)) {
-                None
-            } else {
+            if valid_vertices.contains(&VertexId(old_id)) {
+                // If it is used by at least one connected mode, we keep it
                 new_id += 1;
                 Some(VertexId(new_id - 1))
+            } else {
+                // Orphaned entirely
+                None
             }
         })
         .collect())
 }
-
 /// Given an OmfEdgeList and a boolean mask, returns an updated edge list
 /// with the mask applied.
 pub fn clean_omf_edge_list(
