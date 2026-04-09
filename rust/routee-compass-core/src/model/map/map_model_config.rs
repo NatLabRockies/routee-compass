@@ -71,6 +71,7 @@ impl TryFrom<Option<&Value>> for MapModelConfig {
     }
 }
 
+/// distance tolerance to apply while map matching, specified as a magnitude and unit pair.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DistanceTolerance {
     pub distance: f64,
@@ -80,5 +81,11 @@ pub struct DistanceTolerance {
 impl DistanceTolerance {
     pub fn to_uom(&self) -> Length {
         self.unit.to_uom(self.distance)
+    }
+}
+
+impl std::fmt::Display for DistanceTolerance {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} {}", self.distance, self.unit)
     }
 }
