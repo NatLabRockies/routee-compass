@@ -143,6 +143,16 @@ impl Label {
             Label::VertexWithU8StateVec { vertex_id, .. } => vertex_id,
         }
     }
+
+    /// length of the label state. does not include the VertexId.
+    pub fn len(&self) -> usize {
+        match self {
+            Label::Vertex(..) => 0,
+            Label::VertexWithIntState { .. } => 1,
+            Label::VertexWithIntStateVec { state, .. } => state.0.len(),
+            Label::VertexWithU8StateVec { state, .. } => state.state_len as usize,
+        }
+    }
 }
 
 impl Display for Label {
