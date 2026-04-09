@@ -189,12 +189,12 @@ impl OmfGraphVectorized {
 
         // Compute islands in resulting edge lists and remove island edges
         log::info!("Compute islands");
-        if let Some(algorithm_config) = island_detection_configuration {
+        if let Some(island_detection) = island_detection_configuration {
             let ref_edge_lists = edge_lists
                 .iter()
                 .map(|e| &e.edges)
                 .collect::<Vec<&EdgeList>>();
-            let island_edges = algorithm_config.run(&ref_edge_lists, &vertices)?;
+            let island_edges = island_detection.run(&ref_edge_lists, &vertices)?;
 
             // Refactor Vec into Hashmap
             let mut edges_lookup: HashMap<EdgeListId, Vec<EdgeId>> = HashMap::new();
