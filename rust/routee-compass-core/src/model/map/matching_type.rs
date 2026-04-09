@@ -186,10 +186,15 @@ impl MatchingType {
                         }
                     }
                 }
+                let tolerance_string = match &si.map_model.config.tolerance {
+                    Some(t) => format!(" within tolerance of {t}"),
+                    None => "".to_string(),
+                };
                 Err(MapError::MapMatchError(format!(
-                    "attempted to match query origin coordinate ({}, {}) to map but exausted all possibilities",
+                    "attempted to match query origin coordinate ({}, {}) to map but no valid connections were found{}",
                     src_point.x(),
                     src_point.y(),
+                    tolerance_string
                 )))
             }
         }
@@ -296,10 +301,15 @@ impl MatchingType {
                         }
                     }
                 }
+                let tolerance_string = match &si.map_model.config.tolerance {
+                    Some(t) => format!(" within tolerance of {t}"),
+                    None => "".to_string(),
+                };
                 Err(MapError::MapMatchError(format!(
-                    "attempted to match query destination coordinate ({}, {}) to map but exausted all possibilities",
+                    "attempted to match query destination coordinate ({}, {}) to map but no valid connections were found{}",
                     dst_point.x(),
                     dst_point.y(),
+                    tolerance_string
                 )))
             }
         }
