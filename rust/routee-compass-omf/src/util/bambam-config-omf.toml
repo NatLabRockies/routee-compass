@@ -17,7 +17,7 @@ geometry = [
 tolerance.distance = 0.531414010
 tolerance.unit = "kilometers"
 queries_without_destinations = true
-matching_type = ["point", "vertex_id", "edge_id"]
+matching_type = ["point"]
 
 [algorithm]
 type = "a*"
@@ -74,7 +74,7 @@ constraint.models = [
 traversal.type = "combined"
 traversal.models = [
     { type = "distance", distance_unit = "miles" }, 
-    { type = "speed", name = "drive", speed_unit = "mph", speed_table_input_file = "drive/edges-speeds-mph-enumerated.txt.gz" },
+    { type = "speed", speed_unit = "mph", speed_table_input_file = "drive/edges-speeds-mph-enumerated.txt.gz" },
     { type = "time", time_unit = "minutes" },
     { type = "multimodal", this_mode = "drive", available_modes = ["walk", "bike", "drive"] }
 ]
@@ -115,7 +115,7 @@ max_trip_legs = 1
 trip_mode = "bike"
 constraints = [
     { type = "time_limit", limit = 40.0, unit = "minutes" },
-    { type = "mode_time_limit", values = { walk = { value = 10.0, unit = "minutes" }}},
+    { type = "mode_time_limit", values = { walk = { limit = 10.0, unit = "minutes" }}},
     { type = "allowed_modes", values = ["walk", "bike"]}
 ]
 max_trip_legs = 3
@@ -123,8 +123,8 @@ max_trip_legs = 3
 trip_mode = "drive"
 constraints = [
     { type = "time_limit", limit = 40.0, unit = "minutes" },
-    { type = "mode_leg_distance_limit", values.walk = { leg = "first", constraint = { value = 0.5, unit = "miles" }}},
-    { type = "mode_leg_distance_limit", values.walk = { leg = "last", constraint = { value = 0.5, unit = "miles" }}},
+    { type = "mode_leg_distance_limit", values.walk = { leg.type = "first", constraint = { limit = 0.5, unit = "miles" }}},
+    { type = "mode_leg_distance_limit", values.walk = { leg.type = "last", constraint = { limit = 0.5, unit = "miles" }}},
     { type = "allowed_modes", values = ["walk", "drive"]}
 ]
 max_trip_legs = 3
@@ -136,9 +136,12 @@ write_mode = "overwrite"
 key = "max_trip_legs"
 value = 3
 
+[[plugin.input_plugins]]
+type = "grid_search"
+
 [[plugin.output_plugins]]
 type = "traversal"
-tree = "geo_json"
+# tree = "geo_json"
 
 [[plugin.output_plugins]]
 type = "summary"
@@ -264,9 +267,10 @@ sorted = true
 grid_id = "request.grid_id"
 lon = "request.origin_x"
 lat = "request.origin_y"
-mode = "request.mode"
+mode = "request.trip_mode"
 runtime = "search_runtime"
-error = "error"
+tree_size = "tree_size_count"
+error = { optional = "error" }
 
 opps_entertainment_total = "opportunity_totals.entertainment"
 opps_retail_total = "opportunity_totals.retail"
@@ -275,33 +279,37 @@ opps_services_total = "opportunity_totals.services"
 opps_food_total = "opportunity_totals.food"
 opps_jobs_total = "opportunity_totals.jobs"
 
-opps_entertainment_10 = "bin.10.opportunities.entertainment"
-opps_retail_10 = "bin.10.opportunities.retail"
-opps_healthcare_10 = "bin.10.opportunities.healthcare"
-opps_services_10 = "bin.10.opportunities.services"
-opps_food_10 = "bin.10.opportunities.food"
-opps_jobs_10 = "bin.10.opportunities.jobs"
-opps_entertainment_20 = "bin.20.opportunities.entertainment"
-opps_retail_20 = "bin.20.opportunities.retail"
-opps_healthcare_20 = "bin.20.opportunities.healthcare"
-opps_services_20 = "bin.20.opportunities.services"
-opps_food_20 = "bin.20.opportunities.food"
-opps_jobs_20 = "bin.20.opportunities.jobs"
-opps_entertainment_30 = "bin.30.opportunities.entertainment"
-opps_retail_30 = "bin.30.opportunities.retail"
-opps_healthcare_30 = "bin.30.opportunities.healthcare"
-opps_services_30 = "bin.30.opportunities.services"
-opps_food_30 = "bin.30.opportunities.food"
-opps_jobs_30 = "bin.30.opportunities.jobs"
-opps_entertainment_40 = "bin.40.opportunities.entertainment"
-opps_retail_40 = "bin.40.opportunities.retail"
-opps_healthcare_40 = "bin.40.opportunities.healthcare"
-opps_services_40 = "bin.40.opportunities.services"
-opps_food_40 = "bin.40.opportunities.food"
-opps_jobs_40 = "bin.40.opportunities.jobs"
+opps_count_10 = "aggregate_opportunities.10.n_destinations"
+opps_count_20 = "aggregate_opportunities.20.n_destinations"
+opps_count_30 = "aggregate_opportunities.30.n_destinations"
+opps_count_40 = "aggregate_opportunities.40.n_destinations"
+opps_entertainment_10 = "aggregate_opportunities.10.opportunities.entertainment"
+opps_retail_10 = "aggregate_opportunities.10.opportunities.retail"
+opps_healthcare_10 = "aggregate_opportunities.10.opportunities.healthcare"
+opps_services_10 = "aggregate_opportunities.10.opportunities.services"
+opps_food_10 = "aggregate_opportunities.10.opportunities.food"
+opps_jobs_10 = "aggregate_opportunities.10.opportunities.jobs"
+opps_entertainment_20 = "aggregate_opportunities.20.opportunities.entertainment"
+opps_retail_20 = "aggregate_opportunities.20.opportunities.retail"
+opps_healthcare_20 = "aggregate_opportunities.20.opportunities.healthcare"
+opps_services_20 = "aggregate_opportunities.20.opportunities.services"
+opps_food_20 = "aggregate_opportunities.20.opportunities.food"
+opps_jobs_20 = "aggregate_opportunities.20.opportunities.jobs"
+opps_entertainment_30 = "aggregate_opportunities.30.opportunities.entertainment"
+opps_retail_30 = "aggregate_opportunities.30.opportunities.retail"
+opps_healthcare_30 = "aggregate_opportunities.30.opportunities.healthcare"
+opps_services_30 = "aggregate_opportunities.30.opportunities.services"
+opps_food_30 = "aggregate_opportunities.30.opportunities.food"
+opps_jobs_30 = "aggregate_opportunities.30.opportunities.jobs"
+opps_entertainment_40 = "aggregate_opportunities.40.opportunities.entertainment"
+opps_retail_40 = "aggregate_opportunities.40.opportunities.retail"
+opps_healthcare_40 = "aggregate_opportunities.40.opportunities.healthcare"
+opps_services_40 = "aggregate_opportunities.40.opportunities.services"
+opps_food_40 = "aggregate_opportunities.40.opportunities.food"
+opps_jobs_40 = "aggregate_opportunities.40.opportunities.jobs"
 
-isochrone_10 = "bin.10.isochrone"
-isochrone_20 = "bin.20.isochrone"
-isochrone_30 = "bin.30.isochrone"
-isochrone_40 = "bin.40.isochrone"
+isochrone_10 = "aggregate_opportunities.10.isochrone"
+isochrone_20 = "aggregate_opportunities.20.isochrone"
+isochrone_30 = "aggregate_opportunities.30.isochrone"
+isochrone_40 = "aggregate_opportunities.40.isochrone"
 
