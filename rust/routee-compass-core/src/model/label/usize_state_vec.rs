@@ -1,7 +1,7 @@
 use allocative::Allocative;
 use serde::Serialize;
 
-/// A state vector of usize values. provides a massive store of categorical 
+/// A state vector of usize values. provides a massive store of categorical
 /// values at the expense of inefficient memory usage. for a more memory-
 /// efficient label vector, choose [super::U8StateVec].
 #[derive(PartialEq, Eq, Hash, Debug, Clone, Serialize, Allocative)]

@@ -156,7 +156,11 @@ impl Display for Label {
                 write!(f, "VertexWithIntState({vertex_id}, {state})")
             }
             Label::VertexWithUsizeStateVec { vertex_id, state } => {
-                write!(f, "VertexWithUsizeStateVec({vertex_id}, {:?})", state.as_slice())
+                write!(
+                    f,
+                    "VertexWithUsizeStateVec({vertex_id}, {:?})",
+                    state.as_slice()
+                )
             }
             Label::VertexWithU8StateVec { vertex_id, state } => {
                 write!(

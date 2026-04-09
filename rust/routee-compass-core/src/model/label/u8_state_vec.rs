@@ -59,7 +59,10 @@ impl U8StateVec {
         v.extend_from_slice(state);
         v.resize(state.len() + padding_needed, 0);
 
-        Ok(U8StateVec { state: v, state_len })
+        Ok(U8StateVec {
+            state: v,
+            state_len,
+        })
     }
 
     /// gets a value from this vector. memory padding slots are ignored.
@@ -98,14 +101,14 @@ impl U8StateVec {
 mod tests {
     use super::*;
 
-        #[test]
+    #[test]
     fn test_empty_vec() {
         let u8_state_vec = U8StateVec::new(&[]).expect("empty vec should be valid");
         assert!(u8_state_vec.is_empty());
         assert_eq!(u8_state_vec.len(), 0);
         assert_eq!(u8_state_vec.get(0), None);
         // Should still have padding to OS_ALIGNED_STATE_LEN
-        assert!(u8_state_vec.storage_len() >= 1); 
+        assert!(u8_state_vec.storage_len() >= 1);
     }
 
     #[test]
@@ -117,7 +120,10 @@ mod tests {
         // 256 exceeds u8 capacity
         let too_big = vec![0u8; 256];
         let result = U8StateVec::new(&too_big);
-        assert!(matches!(result, Err(LabelModelError::BadLabelVecSize(256, 255))));
+        assert!(matches!(
+            result,
+            Err(LabelModelError::BadLabelVecSize(256, 255))
+        ));
     }
 
     #[test]
