@@ -5,7 +5,10 @@ use parquet::{
         async_reader::{ParquetObjectReader, ParquetRecordBatchStream},
         ParquetRecordBatchStreamBuilder,
     },
-    file::{metadata::RowGroupMetaData, statistics::Statistics},
+    file::{
+        metadata::{PageIndexPolicy, RowGroupMetaData},
+        statistics::Statistics,
+    },
 };
 use std::sync::Arc;
 use tokio::runtime::Handle;
@@ -63,7 +66,7 @@ pub async fn process_meta_obj_into_tasks(
     row_group_chunk_size: Option<usize>,
 ) -> Result<Vec<RowGroupTask>, OvertureMapsCollectionError> {
     // readers are cheap to build
-    let opts = ArrowReaderOptions::new().with_page_index(true);
+    let opts = ArrowReaderOptions::new().with_page_index_policy(PageIndexPolicy::Required);
     let mut reader = if let Some(handle) = io_handle {
         ParquetObjectReader::new(store, meta.location.clone()).with_runtime(handle)
     } else {
