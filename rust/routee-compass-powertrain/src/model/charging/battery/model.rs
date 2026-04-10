@@ -20,7 +20,7 @@ impl ConstraintModel for BatteryFilter {
         state: &[StateVariable],
         state_model: &StateModel,
     ) -> Result<bool, ConstraintModelError> {
-        if !state_model.contains_key(&fieldname::TRIP_SOC.to_string()) {
+        if !state_model.contains_key(fieldname::TRIP_SOC) {
             // if we don't have the trip_soc, then this frontier is valid
             return Ok(true);
         }
