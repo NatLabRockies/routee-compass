@@ -15,9 +15,24 @@ use crate::collection::OvertureMapsCollectionError;
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ComponentsAlgorithmType {
-    Kosaraju,
+    /// Strongly Connected Components (SCC).
+    /// Treats the road network as strictly directed. To avoid being flagged, every road
+    /// segment must be part of a cyclic path (a loop). This tends to aggressively
+    /// destroy acyclic map structures like long one-way streets, divided highways,
+    /// and terminal branches, identifying them as isolated components.
+    Scc,
     #[default]
+    /// Weakly Connected Components (WCC).
+    /// Treats the road network as undirected. Grouping relies purely on physical
+    /// intersection, completely ignoring one-way flow. This safely preserves
+    /// functional acyclic structures (like divided highways or avenues) while
+    /// accurately isolating genuinely physically disconnected road clusters ("islands").
     Wcc,
+    /// Iterative Leaf Pruning.
+    /// Topologically grooms the network by iteratively snipping off map "traps".
+    /// It explicitly targets and deletes dangling dead-end paths (where nodes have
+    /// `in_degree == 0` or `out_degree == 0`), progressively pruning branches up to
+    /// the point where they join a valid intersection or cycle.
     IterativeLeafPruning,
 }
 
@@ -46,7 +61,7 @@ impl IslandDetectionAlgorithm {
         vertices: &[Vertex],
     ) -> Result<Vec<(EdgeListId, EdgeId)>, OvertureMapsCollectionError> {
         match self.algorithm_type {
-            ComponentsAlgorithmType::Kosaraju => {
+            ComponentsAlgorithmType::Scc => {
                 kosaraju_scc(edge_lists, vertices, self.min_distance, self.distance_unit)
             }
             ComponentsAlgorithmType::Wcc => {
@@ -282,7 +297,7 @@ pub fn wcc_components(
                 }
             }
 
-            if let Err(_) = pb.update(1) {}
+            let _ = pb.update(1);
         }
 
         let component_diagonal_meters =
@@ -352,7 +367,7 @@ pub fn iterative_leaf_pruning(
             for (&edge_key, _) in backward_adjacency[v.0].iter() {
                 if active_edges.remove(&edge_key) {
                     flagged.push(edge_key);
-                    if let Err(_) = pb.update(1) {}
+                    let _ = pb.update(1);
                     let e_info = edge_lists[edge_key.0 .0].0[edge_key.1 .0];
                     let src = e_info.src_vertex_id;
                     out_degree[src.0] -= 1;
@@ -368,7 +383,7 @@ pub fn iterative_leaf_pruning(
             for (&edge_key, _) in forward_adjacency[v.0].iter() {
                 if active_edges.remove(&edge_key) {
                     flagged.push(edge_key);
-                    if let Err(_) = pb.update(1) {}
+                    let _ = pb.update(1);
                     let e_info = edge_lists[edge_key.0 .0].0[edge_key.1 .0];
                     let dst = e_info.dst_vertex_id;
                     in_degree[dst.0] -= 1;
