@@ -446,6 +446,9 @@ mod tests {
         assert_eq!(results.len(), 1, "expected one result");
         let result = &results[0];
 
+        if let Some(err) = result.get("error") {
+            panic!("{:?}", err);
+        }
         let route = result.get("route").expect("result should have route");
         let path = route.get("path").expect("route should have path");
         assert_eq!(path, &serde_json::json!(vec![0, 2]));
