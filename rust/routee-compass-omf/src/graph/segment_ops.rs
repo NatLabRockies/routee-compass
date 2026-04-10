@@ -1109,4 +1109,36 @@ mod tests {
         let result_bwd = get_headings(&segment, Some(&when_bwd)).unwrap();
         assert_eq!(result_bwd, vec![SegmentHeading::Backward]);
     }
+    #[test]
+    fn test_process_simple_connector_splits_dead_end() {
+        let mut segment = create_test_segment(None);
+        segment.id = "seg1".to_string();
+        segment.connectors = Some(vec![crate::collection::record::segment::ConnectorReference {
+            connector_id: "conn1".to_string(),
+            at: 1.0,
+        }]);
+
+        let splits = process_simple_connector_splits(&segment, None).unwrap();
+        assert_eq!(splits.len(), 2); // 1 for fwd, 1 for bwd
+        let fwd_split = splits.iter().find(|s| s.heading == SegmentHeading::Forward).unwrap();
+        assert_eq!(fwd_split.src.connector_id, "seg1_start");
+        assert_eq!(fwd_split.dst.connector_id, "conn1");
+    }
+
+    #[test]
+    fn test_process_simple_connector_splits_cul_de_sac() {
+        let mut segment = create_test_segment(None);
+        segment.id = "seg2".to_string();
+        segment.connectors = Some(vec![crate::collection::record::segment::ConnectorReference {
+            connector_id: "conn2".to_string(),
+            at: 0.0,
+        }]);
+
+        let splits = process_simple_connector_splits(&segment, None).unwrap();
+        assert_eq!(splits.len(), 2); // 1 for fwd, 1 for bwd
+        let fwd_split = splits.iter().find(|s| s.heading == SegmentHeading::Forward).unwrap();
+        assert_eq!(fwd_split.src.connector_id, "conn2");
+        assert_eq!(fwd_split.dst.connector_id, "seg2_end");
+    }
 }
+

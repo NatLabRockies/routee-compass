@@ -103,17 +103,6 @@ impl OmfGraphVectorized {
                 splits.extend(directed_splits);
             }
 
-            // depending on the split method, we may need to create additional vertices at locations
-            // which are not OvertureMaps-defined connector types.
-            log::info!("Extending vertices");
-            ops::extend_vertices(
-                &splits,
-                &segments,
-                &segment_lookup,
-                &mut vertices,
-                &mut vertex_lookup,
-            )?;
-
             // create all edges based on the above split points using all vertices.
             log::info!("Creating edges");
             let edges = ops::create_edges(
