@@ -121,6 +121,8 @@ impl ModeAccessAccumulator {
         match (&r.access_type, has_mode, heading, mods) {
             (SAT::Denied, None, None, None) => {
                 self.blanket_denial = true;
+                self.mode_denial = true;
+                self.mode_allowed = false;
             }
             (SAT::Denied, Some(true), None | Some(SH::Forward), _) => {
                 self.mode_denial = true;
