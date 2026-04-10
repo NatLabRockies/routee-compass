@@ -4,8 +4,10 @@ use crate::app::compass::CompassAppConfig;
 use crate::app::compass::{
     CompassApp, CompassAppError, CompassBuilderInventory, CompassJsonExtensions,
 };
+use flate2::read::GzDecoder;
 use itertools::{Either, Itertools};
 use log::{debug, error, info, warn};
+use routee_compass_core::util::fs::fs_utils;
 use serde_json::{json, Value};
 use std::io::BufRead;
 use std::time::Instant;
@@ -94,24 +96,28 @@ pub fn command_line_runner(
         load_duration.as_secs_f64()
     );
 
-    // read user file containing JSON query/queries
+    // read user file containing JSON query/queries (supports gzip compression and plain JSON)
+    let query_file_path = Path::new(&args.query_file);
     info!("reading queries from {}", &args.query_file);
-    let query_file = File::open(args.query_file.clone()).map_err(|_e| {
-        CompassAppError::BuildFailure(format!("Could not find query file {}", args.query_file))
-    })?;
+    if !query_file_path.exists() {
+        return Err(CompassAppError::BuildFailure(format!(
+            "Could not find query file {}",
+            args.query_file
+        )));
+    }
 
     // Start timing the run phase
     let run_start = Instant::now();
 
     // execute queries on app
     let result = match (args.chunksize, args.newline_delimited) {
-        (None, false) => run_json(&query_file, &compass_app, run_config),
+        (None, false) => run_json(query_file_path, &compass_app, run_config),
         (Some(_), false) => Err(CompassAppError::InternalError(String::from(
             "not yet implemented",
         ))),
         (_, true) => {
             let chunksize = args.get_chunksize_option()?;
-            run_newline_json(&query_file, chunksize, &compass_app, run_config)
+            run_newline_json(query_file_path, chunksize, &compass_app, run_config)
         }
     };
 
@@ -135,11 +141,21 @@ pub fn command_line_runner(
 /// parses a file as a valid JSON object and executes it as queries against
 /// the CompassApp.run command.
 fn run_json(
-    query_file: &File,
+    query_file_path: &Path,
     compass_app: &CompassApp,
     run_config: Option<&Value>,
 ) -> Result<(), CompassAppError> {
-    let reader = BufReader::new(query_file);
+    let file = File::open(query_file_path).map_err(|_e| {
+        CompassAppError::BuildFailure(format!(
+            "Could not open query file {}",
+            query_file_path.display()
+        ))
+    })?;
+    let reader: Box<dyn BufRead> = if fs_utils::is_gzip(query_file_path) {
+        Box::new(BufReader::new(GzDecoder::new(file)))
+    } else {
+        Box::new(BufReader::new(file))
+    };
     let user_json: serde_json::Value = serde_json::from_reader(reader)?;
     let mut user_queries = user_json.get_queries()?;
     let results = compass_app.run(&mut user_queries, run_config)?;
@@ -154,12 +170,22 @@ fn run_json(
 /// chunksize should be >> the configured CompassApp parallelism (from TOML file) for best
 /// performance.
 fn run_newline_json(
-    query_file: &File,
+    query_file_path: &Path,
     chunksize_option: Option<usize>,
     compass_app: &CompassApp,
     run_config: Option<&Value>,
 ) -> Result<(), CompassAppError> {
-    let reader = BufReader::new(query_file);
+    let file = File::open(query_file_path).map_err(|_e| {
+        CompassAppError::BuildFailure(format!(
+            "Could not open query file {}",
+            query_file_path.display()
+        ))
+    })?;
+    let reader: Box<dyn BufRead> = if fs_utils::is_gzip(query_file_path) {
+        Box::new(BufReader::new(GzDecoder::new(file)))
+    } else {
+        Box::new(BufReader::new(file))
+    };
     let iterator = reader.lines();
     let chunksize = chunksize_option.unwrap_or(usize::MAX);
     let chunks = iterator.chunks(chunksize);

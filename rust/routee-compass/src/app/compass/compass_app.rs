@@ -106,7 +106,7 @@ impl CompassApp {
         let graph = ops::with_timing("graph", || Ok(Arc::new(Graph::try_from(&config.graph)?)))?;
 
         let map_model = ops::with_timing("map model", || {
-            let mm = MapModel::new(graph.clone(), &config.mapping).map_err(|e| {
+            let mm = MapModel::new(graph.clone(), config.mapping.clone()).map_err(|e| {
                 CompassAppError::BuildFailure(format!("unable to load MapModel from config: {e}"))
             })?;
             Ok(Arc::new(mm))

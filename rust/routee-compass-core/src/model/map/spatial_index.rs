@@ -96,21 +96,40 @@ impl SpatialIndex {
     pub fn nearest_graph_id_iter<'a>(
         &'a self,
         point: &'a Point<f32>,
-    ) -> Box<dyn Iterator<Item = NearestSearchResult> + 'a> {
+    ) -> Box<dyn Iterator<Item = Result<NearestSearchResult, MapError>> + 'a> {
         match self {
             SpatialIndex::VertexOrientedIndex { rtree, tolerance } => {
                 let iter = rtree
                     .nearest_neighbor_iter_with_distance_2(point)
-                    .filter(|(obj, _)| obj.test_threshold(point, tolerance).unwrap_or(false))
-                    .map(|(next, _)| NearestSearchResult::NearestVertex(next.vertex_id));
+                    .map_while(|(obj, _)| {
+                        let valid = match obj.test_threshold(point, tolerance) {
+                            Ok(v) => v,
+                            Err(e) => return Some(Err(e)),
+                        };
+                        if valid {
+                            Some(Ok(NearestSearchResult::NearestVertex(obj.vertex_id)))
+                        } else {
+                            None
+                        }
+                    });
                 Box::new(iter)
             }
             SpatialIndex::EdgeOrientedIndex { rtree, tolerance } => {
                 let iter = rtree
                     .nearest_neighbor_iter_with_distance_2(point)
-                    .filter(|(obj, _)| obj.test_threshold(point, tolerance).unwrap_or(false))
-                    .map(|(next, _)| {
-                        NearestSearchResult::NearestEdge(next.edge_list_id, next.edge_id)
+                    .map_while(|(obj, _)| {
+                        let valid = match obj.test_threshold(point, tolerance) {
+                            Ok(v) => v,
+                            Err(e) => return Some(Err(e)),
+                        };
+                        if valid {
+                            Some(Ok(NearestSearchResult::NearestEdge(
+                                obj.edge_list_id,
+                                obj.edge_id,
+                            )))
+                        } else {
+                            None
+                        }
                     });
                 Box::new(iter)
             }
