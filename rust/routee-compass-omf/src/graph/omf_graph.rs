@@ -75,14 +75,14 @@ impl OmfGraphVectorized {
 
             // create arguments for segment processing into edges
             let mut filter = edge_list_config.filter.clone();
-            filter.sort(); // sort for performance
+            filter.sort(); // sort for performance (filter.iter().all() below is short-circuiting)
 
             log::info!("Filtering edge list {edge_list_id}");
             // filter to the segments that match our travel mode filter(s)
             let segments: Vec<&TransportationSegmentRecord> = collection
                 .segments
                 .par_iter()
-                .filter(|r| edge_list_config.filter.iter().all(|f| f.matches_filter(r)))
+                .filter(|r| filter.iter().all(|f| f.matches_filter(r)))
                 .collect();
             let segment_lookup = ops::create_segment_lookup(&segments);
 
