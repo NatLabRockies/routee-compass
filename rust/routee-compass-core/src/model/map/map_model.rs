@@ -19,10 +19,12 @@ pub struct MapModel {
     /// allow for queries without a destination location, such as when generating
     /// shortest path trees or isochrones.
     pub queries_without_destinations: bool,
+    /// the configuration used to create this map model
+    pub config: MapModelConfig,
 }
 
 impl MapModel {
-    pub fn new(graph: Arc<Graph>, config: &MapModelConfig) -> Result<MapModel, MapError> {
+    pub fn new(graph: Arc<Graph>, config: MapModelConfig) -> Result<MapModel, MapError> {
         let geometry = config
             .geometry
             .iter()
@@ -56,6 +58,7 @@ impl MapModel {
             spatial_index,
             geometry,
             queries_without_destinations,
+            config,
         })
     }
 

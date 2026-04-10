@@ -147,7 +147,7 @@ pub(crate) fn find_candidates(
 
     let mut candidates = Vec::new();
     for result in nearest_iter {
-        match result {
+        match result? {
             NearestSearchResult::NearestEdge(list_id, eid) => {
                 let distance = compute_distance_to_edge(point, &list_id, &eid, si);
                 candidates.push((list_id, eid, distance));

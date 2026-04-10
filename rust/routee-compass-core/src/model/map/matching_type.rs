@@ -161,7 +161,7 @@ impl MatchingType {
                 // are within our matching tolerance and validate them with the constraint model
                 let src_point = geo::Point(query.get_origin_coordinate()?);
                 for nearest in si.map_model.spatial_index.nearest_graph_id_iter(&src_point) {
-                    match nearest {
+                    match nearest? {
                         NearestSearchResult::NearestVertex(vertex_id) => {
                             // if any of the out-edges of this vertex are valid, we can finish
                             let edges = si.graph.out_edges(&vertex_id).iter().map(|(edge_list_id, edge_id)| si.graph.get_edge(edge_list_id, edge_id)).collect::<Result<Vec<_>, _>>().map_err(|e| MapError::MapMatchError(format!("while attempting to validate vertex id {vertex_id} for map matching, the underlying Graph model caused an error: {e}")))?;
@@ -186,10 +186,15 @@ impl MatchingType {
                         }
                     }
                 }
+                let tolerance_string = match &si.map_model.config.tolerance {
+                    Some(t) => format!(" within tolerance of {t}"),
+                    None => "".to_string(),
+                };
                 Err(MapError::MapMatchError(format!(
-                    "attempted to match query origin coordinate ({}, {}) to map but exausted all possibilities",
+                    "attempted to match query origin coordinate ({}, {}) to map but no valid connections were found{}",
                     src_point.x(),
                     src_point.y(),
+                    tolerance_string
                 )))
             }
         }
@@ -271,13 +276,13 @@ impl MatchingType {
                 };
 
                 for nearest in si.map_model.spatial_index.nearest_graph_id_iter(&dst_point) {
-                    match nearest {
+                    match nearest? {
                         NearestSearchResult::NearestVertex(vertex_id) => {
                             // if any of the out-edges of this vertex are valid, we can finish
                             let edges = si.graph.out_edges(&vertex_id).iter().map(|(edge_list_id, edge_id)| si.graph.get_edge(edge_list_id, edge_id)).collect::<Result<Vec<_>, _>>().map_err(|e| MapError::MapMatchError(format!("while attempting to validate vertex id {vertex_id} for map matching, the underlying Graph model caused an error: {e}")))?;
                             for edge in edges.into_iter() {
-                                let fm =  si.get_constraint_model(&edge.edge_list_id).map_err(|e| MapError::InternalError(format!("while map matching point '{}', failed to retrieve constraint model for out edge list '{}', edge '{}': {e}", dst_point.to_wkt(), edge.edge_list_id, edge.edge_id)))?;
-                                let is_valid = test_edge(edge, fm)?;
+                                let cm =  si.get_constraint_model(&edge.edge_list_id).map_err(|e| MapError::InternalError(format!("while map matching point '{}', failed to retrieve constraint model for out edge list '{}', edge '{}': {e}", dst_point.to_wkt(), edge.edge_list_id, edge.edge_id)))?;
+                                let is_valid = test_edge(edge, cm)?;
                                 if is_valid {
                                     query.add_destination_vertex(vertex_id)?;
                                     return Ok(MapInputResult::Found);
@@ -287,8 +292,8 @@ impl MatchingType {
                         }
                         NearestSearchResult::NearestEdge(edge_list_id, edge_id) => {
                             let edge = si.graph.get_edge(&edge_list_id, &edge_id).map_err(|e| MapError::MapMatchError(format!("while attempting to validate edge id {edge_id} from nearest neighbor search for map matching, the underlying Graph model caused an error: {e}")))?;
-                            let fm =  si.get_constraint_model(&edge_list_id).map_err(|e| MapError::InternalError(format!("while map matching edge_list_id '{edge_list_id}', edge_id '{edge_id}', failed to retrieve constraint model for out edge list '{edge_list_id}', edge '{edge_id}': {e}")))?;
-                            let is_valid = test_edge(edge, fm)?;
+                            let cm =  si.get_constraint_model(&edge_list_id).map_err(|e| MapError::InternalError(format!("while map matching edge_list_id '{edge_list_id}', edge_id '{edge_id}', failed to retrieve constraint model for out edge list '{edge_list_id}', edge '{edge_id}': {e}")))?;
+                            let is_valid = test_edge(edge, cm)?;
                             if is_valid {
                                 query.add_destination_edge(edge_list_id, edge_id)?;
                                 return Ok(MapInputResult::Found);
@@ -296,26 +301,33 @@ impl MatchingType {
                         }
                     }
                 }
+                let tolerance_string = match &si.map_model.config.tolerance {
+                    Some(t) => format!(" within tolerance of {t}"),
+                    None => "".to_string(),
+                };
                 Err(MapError::MapMatchError(format!(
-                    "attempted to match query destination coordinate ({}, {}) to map but exausted all possibilities",
+                    "attempted to match query destination coordinate ({}, {}) to map but no valid connections were found{}",
                     dst_point.x(),
                     dst_point.y(),
+                    tolerance_string
                 )))
             }
         }
     }
 }
 
-fn test_edge(edge: &Edge, fm: Arc<dyn ConstraintModel>) -> Result<bool, MapError> {
-    let is_valid = fm.valid_edge(edge).map_err(|e| MapError::MapMatchError(format!("while attempting to validate edge id {} for map matching, the underlying ConstraintModel caused an error: {}", edge.edge_id, e)))?;
-    Ok(is_valid)
+/// helper function wrapping the [ConstraintModel::valid_edge] method with a [MapMatchError] error type.
+fn test_edge(edge: &Edge, cm: Arc<dyn ConstraintModel>) -> Result<bool, MapError> {
+    cm.valid_edge(edge).map_err(|e| MapError::MapMatchError(format!("while attempting to validate edge id {} for map matching, the underlying ConstraintModel caused an error: {}", edge.edge_id, e)))
 }
 
-fn validate_edge(edge: &Edge, fm: Arc<dyn ConstraintModel>) -> Result<(), MapError> {
-    let is_valid = test_edge(edge, fm)?;
+/// helper function wrapping the [ConstraintModel::valid_edge] method that fails when the
+/// constraint model returns 'false' with a [MapMatchError] error type.
+fn validate_edge(edge: &Edge, cm: Arc<dyn ConstraintModel>) -> Result<(), MapError> {
+    let is_valid = test_edge(edge, cm)?;
     if !is_valid {
         Err(MapError::MapMatchError(format!(
-            "query assigned origin of edge {} is not valid according to the ConstraintModel",
+            "query assigned edge {} is not valid according to the ConstraintModel",
             edge.edge_id
         )))
     } else {
