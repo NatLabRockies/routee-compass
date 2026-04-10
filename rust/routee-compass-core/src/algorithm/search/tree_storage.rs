@@ -131,3 +131,71 @@ impl TreeStorage {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::algorithm::search::{Direction, SearchTreeError};
+    use crate::model::network::VertexId;
+
+    fn create_test_node() -> SearchTreeNode {
+        SearchTreeNode::new_root(Direction::Forward)
+    }
+
+    #[test]
+    fn test_vertex_only_storage() {
+        let mut storage = TreeStorage::new_vertex_oriented();
+        let label = Label::Vertex(VertexId(1));
+        let node = create_test_node();
+
+        assert!(storage.is_empty());
+        let result = storage.insert_node(label.clone(), node);
+        assert!(result.is_ok());
+
+        assert_eq!(storage.len(), 1);
+        assert!(storage.contains_key(&label));
+        assert!(storage.get(&label).is_some());
+    }
+
+    #[test]
+    fn test_stateful_storage() {
+        let mut storage = TreeStorage::new_stateful();
+        let label = Label::VertexWithIntState {
+            vertex_id: VertexId(2),
+            state: 42,
+        };
+        let node = create_test_node();
+
+        assert!(storage.is_empty());
+        let result = storage.insert_node(label.clone(), node);
+        assert!(result.is_ok());
+
+        assert_eq!(storage.len(), 1);
+        assert!(storage.contains_key(&label));
+        assert!(storage.get(&label).is_some());
+    }
+
+    #[test]
+    fn test_heterogeneous_label_types_rejected() {
+        let mut vertex_storage = TreeStorage::new_vertex_oriented();
+        let stateful_label = Label::VertexWithIntState {
+            vertex_id: VertexId(3),
+            state: 7,
+        };
+
+        let res1 = vertex_storage.insert_node(stateful_label, create_test_node());
+        assert!(
+            matches!(res1, Err(SearchTreeError::HeterogeneousLabelTypes(_, _))),
+            "VertexOnly storage should reject stateful labels"
+        );
+
+        let mut stateful_storage = TreeStorage::new_stateful();
+        let vertex_label = Label::Vertex(VertexId(4));
+
+        let res2 = stateful_storage.insert_node(vertex_label, create_test_node());
+        assert!(
+            matches!(res2, Err(SearchTreeError::HeterogeneousLabelTypes(_, _))),
+            "Stateful storage should reject Vertex labels"
+        );
+    }
+}
