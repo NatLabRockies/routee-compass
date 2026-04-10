@@ -24,3 +24,5 @@ pub use search_result::SearchResult;
 pub use search_tree::{SearchTree, SearchTreeError};
 pub use search_tree_node::SearchTreeNode;
 pub use termination_behavior::TerminationFailurePolicy;
+mod tree_storage;
+pub use tree_storage::TreeStorage;

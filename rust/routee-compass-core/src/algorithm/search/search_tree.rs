@@ -1,19 +1,17 @@
+use super::TreeStorage;
 use super::{EdgeTraversal, SearchTreeNode};
 use crate::model::network::{EdgeId, EdgeListId, Graph, NetworkError, VertexId};
 use crate::model::unit::Cost;
 use crate::{algorithm::search::Direction, model::label::Label};
 use allocative::Allocative;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::sync::Arc;
 
 /// A search tree that supports efficient lookups and bi-directional parent/child traversal
 /// Designed for route planning algorithms that need both indexing and backtracking capabilities
 #[derive(Clone, Debug, Allocative)]
 pub struct SearchTree {
-    /// Fast [SearchTreeNode] lookup by [Label]
-    nodes: HashMap<Label, SearchTreeNode>,
-    /// Fast [Label] lookup by [VertexId]
-    labels: HashMap<VertexId, HashSet<Label>>,
+    storage: TreeStorage,
     /// The root node (None if empty tree)
     root: Option<Label>,
     /// Tree orientation for bi-directional search support
@@ -22,16 +20,23 @@ pub struct SearchTree {
 
 impl Default for SearchTree {
     fn default() -> Self {
-        Self::new(Direction::Forward)
+        Self::new_stateful(Direction::Forward)
     }
 }
 
 impl SearchTree {
     /// Create a new empty search tree with the specified orientation
-    pub fn new(direction: Direction) -> Self {
+    pub fn new_stateful(direction: Direction) -> Self {
         Self {
-            nodes: HashMap::new(),
-            labels: HashMap::new(),
+            storage: TreeStorage::new_stateful(),
+            root: None,
+            direction,
+        }
+    }
+
+    pub fn new_vertex_oriented(direction: Direction) -> Self {
+        Self {
+            storage: TreeStorage::new_vertex_oriented(),
             root: None,
             direction,
         }
@@ -39,7 +44,7 @@ impl SearchTree {
 
     /// Create a new search tree with the given root node.
     pub fn with_root(root_label: Label, orientation: Direction) -> Self {
-        let mut tree = Self::new(orientation);
+        let mut tree = Self::new_stateful(orientation);
         tree.set_root(root_label);
         tree
     }
@@ -47,8 +52,7 @@ impl SearchTree {
     /// Set the root node of the tree
     pub fn set_root(&mut self, root_label: Label) {
         let root_node = SearchTreeNode::new_root(self.direction);
-        self.nodes.insert(root_label.clone(), root_node);
-        self.insert_label(root_label.clone());
+        self.storage.insert_node(root_label.clone(), root_node);
         self.root = Some(root_label);
     }
 
@@ -63,54 +67,35 @@ impl SearchTree {
     ) -> Result<(), SearchTreeError> {
         // Verify parent exists - special case on empty tree
         // If parent doesn't exist but tree is empty, make parent the root
-        if !self.nodes.contains_key(&parent_label) {
+        if !self.storage.contains_key(&parent_label) {
             if self.is_empty() {
                 self.set_root(parent_label.clone());
             } else {
                 return Err(SearchTreeError::ParentNotFound(parent_label));
             }
         }
-
-        // update the label lookup
-        let vertex_labels = self.labels.entry(*child_label.vertex_id()).or_default();
-        if !vertex_labels.contains(&child_label) {
-            vertex_labels.insert(child_label.clone());
-        }
-
-        // update the nodes collection
         let new_node =
             SearchTreeNode::new_child(edge_traversal, parent_label.clone(), self.direction);
-        self.nodes.insert(child_label, new_node);
+        self.storage.insert_node(child_label, new_node);
 
         Ok(())
     }
 
-    /// inserts a new [Label] into the set of labels associated with a [VertexId].
-    fn insert_label(&mut self, label: Label) {
-        if let Some(vertex_labels) = self.labels.get_mut(label.vertex_id()) {
-            let _ = vertex_labels.insert(label);
-        } else {
-            let _ = self
-                .labels
-                .insert(*label.vertex_id(), HashSet::from([label]));
-        }
+    pub fn iter<'a>(&'a self) -> Box<dyn Iterator<Item = (Label, &'a SearchTreeNode)> + 'a> {
+        Box::new(self.storage.branch_iter())
     }
 
-    pub fn iter<'a>(&'a self) -> Box<dyn Iterator<Item = (&'a Label, &'a SearchTreeNode)> + 'a> {
-        Box::new(self.nodes.iter())
-    }
-
-    pub fn keys<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Label> + 'a> {
-        Box::new(self.nodes.keys())
+    pub fn keys<'a>(&'a self) -> Box<dyn Iterator<Item = Label> + 'a> {
+        Box::new(self.storage.label_iter())
     }
 
     pub fn values<'a>(&'a self) -> Box<dyn Iterator<Item = &'a SearchTreeNode> + 'a> {
-        Box::new(self.nodes.values())
+        Box::new(self.storage.node_iter())
     }
 
     /// Get a node by its label
     pub fn get(&self, label: &Label) -> Option<&SearchTreeNode> {
-        self.nodes.get(label)
+        self.storage.get(label)
     }
 
     /// gets the label with the minimum accumulated tree cost associated with the
@@ -119,10 +104,10 @@ impl SearchTree {
         &self,
         destination_vertex: VertexId,
     ) -> Result<(Label, Cost), SearchTreeError> {
-        let labels = self
-            .labels
-            .get(&destination_vertex)
-            .ok_or(SearchTreeError::VertexNotFound(destination_vertex))?;
+        let labels: Vec<Label> = self.get_labels(destination_vertex).collect();
+        if labels.is_empty() {
+            return Err(SearchTreeError::VertexNotFound(destination_vertex));
+        }
 
         let mut min_cost: Option<(Label, Cost)> = None;
         for label in labels.iter() {
@@ -141,10 +126,7 @@ impl SearchTree {
 
     /// Find labels for the given vertex ID
     pub fn get_labels(&self, vertex: VertexId) -> Box<dyn Iterator<Item = Label> + '_> {
-        match self.labels.get(&vertex) {
-            Some(labels) => Box::new(labels.iter().cloned()),
-            None => Box::new(std::iter::empty()),
-        }
+        self.storage.get_labels(vertex)
     }
 
     // /// finds a single label by picking the one that is maximal/minimal wrt some comparison function.
@@ -184,7 +166,7 @@ impl SearchTree {
         let mut total = Cost::ZERO;
         let mut current_label = label;
         let mut steps: usize = 0;
-        let max_steps = self.nodes.len();
+        let max_steps = self.storage.len();
 
         loop {
             // Guard against infinite loops in malformed trees
@@ -220,7 +202,7 @@ impl SearchTree {
 
     /// Get a mutable reference to a node by its label
     pub fn get_mut(&mut self, label: &Label) -> Option<&mut SearchTreeNode> {
-        self.nodes.get_mut(label)
+        self.storage.get_mut(label)
     }
 
     /// Get the root label
@@ -237,17 +219,17 @@ impl SearchTree {
 
     /// Check if the tree contains a node with the given label
     pub fn contains(&self, label: &Label) -> bool {
-        self.nodes.contains_key(label)
+        self.storage.contains_key(label)
     }
 
     /// Get the number of nodes in the tree
     pub fn len(&self) -> usize {
-        self.nodes.len()
+        self.storage.len()
     }
 
     /// Check if the tree is empty
     pub fn is_empty(&self) -> bool {
-        self.nodes.is_empty()
+        self.storage.is_empty()
     }
 
     /// Get the tree orientation
@@ -337,10 +319,10 @@ impl SearchTree {
 
             // extra sanity check which should never be true given the cycle
             // check above, but, we always want to be defensive against infinite loops.
-            if steps > self.nodes.len() as u64 {
+            if steps > self.storage.len() as u64 {
                 return Err(SearchTreeError::InvalidBranchStructure(format!(
                     "Exceeded tree size {} while backtracking from {}",
-                    self.nodes.len(),
+                    self.storage.len(),
                     target_label
                 )));
             }
@@ -394,13 +376,13 @@ impl SearchTree {
     }
 
     /// Get all labels in the tree
-    pub fn labels(&self) -> impl Iterator<Item = &Label> {
-        self.nodes.keys()
+    pub fn labels(&self) -> impl Iterator<Item = Label> + '_ {
+        self.storage.label_iter()
     }
 
     /// Get all nodes in the tree
     pub fn nodes(&self) -> impl Iterator<Item = &SearchTreeNode> {
-        self.nodes.values()
+        self.storage.node_iter()
     }
 }
 
@@ -431,6 +413,8 @@ pub enum SearchTreeError {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
     use super::*;
     use crate::model::{
         cost::TraversalCost,
@@ -440,7 +424,7 @@ mod tests {
 
     #[test]
     fn test_new_empty_tree() {
-        let tree = SearchTree::new(Direction::Forward);
+        let tree = SearchTree::new_stateful(Direction::Forward);
         assert!(tree.is_empty());
         assert_eq!(tree.len(), 0);
         assert_eq!(tree.direction(), Direction::Forward);
@@ -640,7 +624,7 @@ mod tests {
             .unwrap();
 
         // Test labels iterator
-        let labels: HashSet<_> = tree.labels().cloned().collect();
+        let labels: HashSet<_> = tree.labels().collect();
         assert_eq!(labels.len(), 3);
         assert!(labels.contains(&root_label));
         assert!(labels.contains(&child1_label));
@@ -650,7 +634,7 @@ mod tests {
         let node_count = tree.nodes().count();
         assert_eq!(node_count, 3);
 
-        let vertex_ids: HashSet<_> = tree.labels().map(|l| l.vertex_id()).collect();
+        let vertex_ids: HashSet<_> = tree.labels().map(|l| l.vertex_id().clone()).collect();
         assert_eq!(vertex_ids.len(), 3);
         assert!(vertex_ids.contains(&VertexId(0)));
         assert!(vertex_ids.contains(&VertexId(1)));
@@ -782,7 +766,7 @@ mod tests {
 
     #[test]
     fn test_auto_root_creation() {
-        let mut tree = SearchTree::new(Direction::Forward);
+        let mut tree = SearchTree::new_stateful(Direction::Forward);
         assert!(tree.is_empty());
         assert!(tree.root().is_none());
 
@@ -807,7 +791,7 @@ mod tests {
         let root_node = tree.get(&parent_label).unwrap();
         assert!(root_node.is_root());
         // Verify automatic root creation logic via label presence in nodes map
-        assert!(tree.nodes.contains_key(&parent_label));
+        assert!(tree.storage.contains_key(&parent_label));
 
         let child_node = tree.get(&child_label).unwrap();
         assert!(!child_node.is_root());
@@ -817,7 +801,7 @@ mod tests {
 
     #[test]
     fn test_auto_root_creation_chain() {
-        let mut tree = SearchTree::new(Direction::Forward);
+        let mut tree = SearchTree::new_stateful(Direction::Forward);
 
         // Build a chain: 0 -> 1 -> 2 -> 3 by only calling insert
         let label0 = create_test_label(0);
@@ -861,7 +845,7 @@ mod tests {
 
     #[test]
     fn test_insert_without_auto_root_when_parent_exists() {
-        let mut tree = SearchTree::new(Direction::Forward);
+        let mut tree = SearchTree::new_stateful(Direction::Forward);
         let root_label = create_test_label(0);
 
         // Manually create root first
@@ -1181,7 +1165,7 @@ mod tests {
     #[test]
     fn test_backtrack_mixed_labels_bug() {
         // Reproduction of bug where mixed label types cause Label::Vertex lookup to fail
-        let mut tree = SearchTree::new(Direction::Forward);
+        let mut tree = SearchTree::new_stateful(Direction::Forward);
 
         let root_label = Label::Vertex(VertexId(0));
         let child_label = Label::VertexWithIntState {
@@ -1266,7 +1250,7 @@ mod tests {
         // Force a cycle: make root point back to child, creating a loop
         let bad_root_node =
             SearchTreeNode::new_child(traversal, child_label.clone(), Direction::Forward);
-        tree.nodes.insert(root_label.clone(), bad_root_node);
+        tree.storage.insert_node(root_label.clone(), bad_root_node);
 
         // Attempt backtrack from child which hits root, which bounces back to child
         let result = tree.backtrack(VertexId(1));

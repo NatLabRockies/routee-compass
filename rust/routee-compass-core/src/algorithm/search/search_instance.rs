@@ -104,7 +104,7 @@ impl SearchInstance {
     ) -> Result<Vec<EdgeTraversal>, SearchError> {
         let mut edge_traversals = Vec::with_capacity(path.len());
         let mut current_state = self.state_model.initial_state(None)?;
-        let mut tree = SearchTree::new(Direction::Forward);
+        let mut tree = SearchTree::new_stateful(Direction::Forward);
 
         let mut prev_label = if let Some((edge_list_id, edge_id)) = path.first() {
             let (src, _, _) = self.graph.edge_triplet(edge_list_id, edge_id)?;

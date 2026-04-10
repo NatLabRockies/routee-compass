@@ -79,7 +79,7 @@ pub fn run(
             None => continue,
             Some(et) => et,
         };
-        if let Some(SearchTreeNode::Branch { incoming_edge, .. }) = rev_labels.get(label) {
+        if let Some(SearchTreeNode::Branch { incoming_edge, .. }) = rev_labels.get(&label) {
             if rev_labels.contains_key(&label) {
                 let total_cost = fwd_et.cost.edge_cost + incoming_edge.cost.edge_cost;
                 intersection_queue.push(*label.vertex_id(), total_cost.into());

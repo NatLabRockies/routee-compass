@@ -44,7 +44,7 @@ pub fn run_vertex_oriented(
     // context for the search (graph, search functions, frontier priority queue)
     let mut frontier: InternalPriorityQueue<Label, ReverseCost> = InternalPriorityQueue::default();
     let mut traversal_costs: HashMap<Label, Cost> = HashMap::new();
-    let mut solution = SearchTree::new(*direction);
+    let mut solution = SearchTree::new_stateful(*direction);
 
     // setup initial search state
     let initial_state = si.state_model.initial_state(None)?;

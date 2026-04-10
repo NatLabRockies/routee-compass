@@ -113,7 +113,7 @@ impl TerminationModel {
                         .sum::<f64>();
                     let label_bytes = solution
                         .labels()
-                        .map(|l| allocative::size_of_unique(l) as f64)
+                        .map(|l| allocative::size_of_unique(&l) as f64)
                         .sum::<f64>();
                     let memory_bytes = root_bytes + node_bytes + label_bytes;
                     let memory = unit.convert(memory_bytes);
@@ -374,7 +374,7 @@ mod tests {
     }
 
     fn mock_tree(size: usize) -> SearchTree {
-        let mut tree = SearchTree::new(Direction::Forward);
+        let mut tree = SearchTree::new_stateful(Direction::Forward);
         if size == 0 {
             return tree;
         }

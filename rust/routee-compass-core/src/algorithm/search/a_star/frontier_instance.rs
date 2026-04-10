@@ -86,7 +86,7 @@ mod tests {
     #[test]
     fn test_pop_new_empty_queue() {
         let mut frontier = InternalPriorityQueue::default();
-        let solution = SearchTree::new(Direction::Forward);
+        let solution = SearchTree::new_stateful(Direction::Forward);
         let initial_state = vec![StateVariable::ZERO];
         let result =
             FrontierInstance::pop_new(&mut frontier, VertexId(0), None, &solution, &initial_state)
@@ -97,7 +97,7 @@ mod tests {
     #[test]
     fn test_pop_new_no_path_exists() {
         let mut frontier = InternalPriorityQueue::default();
-        let solution = SearchTree::new(Direction::Forward);
+        let solution = SearchTree::new_stateful(Direction::Forward);
         let initial_state = vec![StateVariable::ZERO];
         let result = FrontierInstance::pop_new(
             &mut frontier,
@@ -114,7 +114,7 @@ mod tests {
         let mut frontier = InternalPriorityQueue::default();
         let label = Label::Vertex(VertexId(0));
         frontier.push(label.clone(), ReverseCost::from(Cost::ZERO));
-        let solution = SearchTree::new(Direction::Forward);
+        let solution = SearchTree::new_stateful(Direction::Forward);
         let initial_state = vec![StateVariable::ZERO];
         let result =
             FrontierInstance::pop_new(&mut frontier, VertexId(0), None, &solution, &initial_state)
@@ -130,7 +130,7 @@ mod tests {
         let label = Label::Vertex(target);
         frontier.push(label, ReverseCost::from(Cost::ZERO));
 
-        let solution = SearchTree::new(Direction::Forward);
+        let solution = SearchTree::new_stateful(Direction::Forward);
         let initial_state = vec![StateVariable::ZERO];
 
         // Reaching target vertex should return Ok(None)

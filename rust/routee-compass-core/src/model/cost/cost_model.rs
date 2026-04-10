@@ -246,7 +246,7 @@ mod test {
 
     /// Helper to create a basic search tree for testing
     fn create_test_tree() -> SearchTree {
-        SearchTree::new(Direction::Forward)
+        SearchTree::new_stateful(Direction::Forward)
     }
 
     #[test]
