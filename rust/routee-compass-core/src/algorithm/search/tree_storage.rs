@@ -155,6 +155,10 @@ mod tests {
         assert_eq!(storage.len(), 1);
         assert!(storage.contains_key(&label));
         assert!(storage.get(&label).is_some());
+        assert_eq!(
+            std::mem::discriminant(&storage),
+            std::mem::discriminant(&TreeStorage::new_vertex_oriented())
+        )
     }
 
     #[test]
@@ -173,6 +177,10 @@ mod tests {
         assert_eq!(storage.len(), 1);
         assert!(storage.contains_key(&label));
         assert!(storage.get(&label).is_some());
+        assert_eq!(
+            std::mem::discriminant(&storage),
+            std::mem::discriminant(&TreeStorage::new_stateful())
+        )
     }
 
     #[test]
