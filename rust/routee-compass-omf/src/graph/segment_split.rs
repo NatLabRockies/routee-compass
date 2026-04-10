@@ -172,10 +172,10 @@ impl SegmentSplit {
                     let line_distance = Haversine.length(&line);
                     total_distance += line_distance;
 
-                    if total_distance <= distance_to_src + serialize_ops::FLOAT_DISTANCE_TOLERANCE {
+                    if total_distance <= distance_to_src + consts::F32_DISTANCE_TOLERANCE {
                         continue;
                     }
-                    if total_distance + serialize_ops::FLOAT_DISTANCE_TOLERANCE >= distance_to_dst {
+                    if total_distance + consts::F32_DISTANCE_TOLERANCE >= distance_to_dst {
                         break;
                     }
 

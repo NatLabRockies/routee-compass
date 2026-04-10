@@ -13,22 +13,8 @@ use crate::{
         OvertureMapsCollectionError, SegmentAccessRestrictionWhen, SegmentFullType,
         TransportationConnectorRecord, TransportationSegmentRecord,
     },
-    graph::{omf_graph::OmfEdgeList, segment_split::SegmentSplit, ConnectorInSegment},
+    graph::{consts, omf_graph::OmfEdgeList, segment_split::SegmentSplit, ConnectorInSegment},
 };
-
-/// A distance tolerance (in meters) used to mitigate floating-point drift when extracting
-/// LineString geometries for segment splits.
-///
-/// When computing the coordinates that strictly lie between `src` and `dst` connectors,
-/// the cumulative sum of individual line segment lengths (`total_distance += line_distance`)
-/// can slightly exceed the directly computed `distance_to_src` due to floating-point
-/// inaccuracies.
-///
-/// If this tolerance is not applied, the algorithm may falsely identify the starting
-/// coordinate of the split as an intermediate point. This results in pushing the exact
-/// same coordinate twice in a row, creating a 0-distance segment fragment that can
-/// mangle downstream network computations such as intersection bearings.
-pub const FLOAT_DISTANCE_TOLERANCE: f32 = 1e-6;
 
 /// serializes the Connector records into Vertices and creates a GERS id -> index mapping.
 /// optionally filter to a 'keep list' of Connector ids. the vertex creation is parallelized.
@@ -299,7 +285,7 @@ pub fn get_global_average_speed(
         weighted_sum += length * speed;
     }
 
-    if total_length < 1e-6 {
+    if total_length < consts::F64_DISTANCE_TOLERANCE {
         return Err(OvertureMapsCollectionError::InternalError(format!(
             "internal division by zero when computing average speed: {initial_speeds:?}"
         )));
@@ -313,8 +299,6 @@ pub fn get_global_average_speed(
 pub fn bearing_deg_from_geometries(
     geometries: &[LineString<f32>],
 ) -> Result<Vec<f64>, OvertureMapsCollectionError> {
-    const FLOAT_DISTANCE_TOLERANCE: f32 = 1e-6; // Minimum distance threshold
-
     geometries
         .par_iter()
         .map(|linestring| {
@@ -333,7 +317,7 @@ pub fn bearing_deg_from_geometries(
                 let candidate = linestring.0[i];
                 let line = Line::new(candidate, p1);
 
-                if Haversine.length(&line) > FLOAT_DISTANCE_TOLERANCE {
+                if Haversine.length(&line) > consts::F32_DISTANCE_TOLERANCE {
                     p0 = candidate;
                     break;
                 }

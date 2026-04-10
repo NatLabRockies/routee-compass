@@ -6,6 +6,7 @@ mod serialize_ops;
 mod summary;
 mod vertex_serializable;
 
+pub mod consts;
 pub mod segment_ops;
 pub use connector_in_segment::ConnectorInSegment;
 pub use omf_graph::OmfGraphVectorized;
