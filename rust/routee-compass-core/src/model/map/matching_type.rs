@@ -322,7 +322,7 @@ fn test_edge(edge: &Edge, cm: Arc<dyn ConstraintModel>) -> Result<bool, MapError
 }
 
 /// helper function wrapping the [ConstraintModel::valid_edge] method that fails when the
-/// constraint model return 'false' with a [MapMatchError] error type.
+/// constraint model returns 'false' with a [MapMatchError] error type.
 fn validate_edge(edge: &Edge, cm: Arc<dyn ConstraintModel>) -> Result<(), MapError> {
     let is_valid = test_edge(edge, cm)?;
     if !is_valid {
