@@ -81,8 +81,13 @@ fn within_box(
     ymaxs: &Float64Array,
     bbox: &Bbox,
 ) -> bool {
-    bbox.xmin <= xmins.value(index) as f32
-        && xmaxs.value(index) as f32 <= bbox.xmax
-        && bbox.ymin <= ymins.value(index) as f32
-        && ymaxs.value(index) as f32 <= bbox.ymax
+    let bbox_xmin = bbox.xmin as f64;
+    let bbox_xmax = bbox.xmax as f64;
+    let bbox_ymin = bbox.ymin as f64;
+    let bbox_ymax = bbox.ymax as f64;
+
+    bbox_xmin <= xmins.value(index)
+        && xmaxs.value(index) <= bbox_xmax
+        && bbox_ymin <= ymins.value(index)
+        && ymaxs.value(index) <= bbox_ymax
 }
