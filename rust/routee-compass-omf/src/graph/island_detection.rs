@@ -751,4 +751,122 @@ mod tests {
         assert!((midpoint.x() - expected_x).abs() < f32::EPSILON);
         assert!((midpoint.y() - expected_y).abs() < f32::EPSILON);
     }
+
+    #[test]
+    fn test_wcc_vs_kosaraju_long_one_way_arterial() {
+        // A single long one-way street A -> B -> C -> D
+        let base_lat = 39.7392;
+        let base_lon = -104.9903;
+        let offset = 0.001; // ~87m longitude
+
+        let vertices = vec![
+            Vertex::new(0, base_lon, base_lat),
+            Vertex::new(1, base_lon + offset, base_lat), // 87m east
+            Vertex::new(2, base_lon + 2.0 * offset, base_lat), // 174m east
+            Vertex::new(3, base_lon + 3.0 * offset, base_lat), // 261m east
+        ];
+
+        let edges = vec![
+            Edge::new(0, 0, 0, 1, Length::new::<uom::si::length::meter>(87.0)),
+            Edge::new(0, 1, 1, 2, Length::new::<uom::si::length::meter>(87.0)),
+            Edge::new(0, 2, 2, 3, Length::new::<uom::si::length::meter>(87.0)),
+        ];
+        let edge_list = EdgeList(edges.into_boxed_slice());
+        let edge_lists = vec![&edge_list];
+
+        // threshold 100 meters
+        let distance_threshold = 100.0;
+
+        let flagged_wcc = wcc_components(
+            &edge_lists,
+            &vertices,
+            distance_threshold,
+            DistanceUnit::Meters,
+        )
+        .unwrap();
+        // WCC sees (261m > 100m) and keeps it (returns empty flagged)
+        assert!(flagged_wcc.is_empty());
+
+        let flagged_scc = kosaraju_scc(
+            &edge_lists,
+            &vertices,
+            distance_threshold,
+            DistanceUnit::Meters,
+        )
+        .unwrap();
+        // SCC sees 3 independent 87m edges (< 100m) and flags all of them!
+        assert_eq!(flagged_scc.len(), 3);
+    }
+
+    #[test]
+    fn test_wcc_tiny_acyclic_island() {
+        // A single short one-way street A -> B
+        let base_lat = 39.7392;
+        let base_lon = -104.9903;
+        let offset = 0.0005; // ~43m longitude
+
+        let vertices = vec![
+            Vertex::new(0, base_lon, base_lat),
+            Vertex::new(1, base_lon + offset, base_lat), // 43m east
+        ];
+
+        let edges = vec![Edge::new(
+            0,
+            0,
+            0,
+            1,
+            Length::new::<uom::si::length::meter>(43.0),
+        )];
+        let edge_list = EdgeList(edges.into_boxed_slice());
+        let edge_lists = vec![&edge_list];
+
+        // threshold 100 meters
+        let distance_threshold = 100.0;
+
+        let flagged_wcc = wcc_components(
+            &edge_lists,
+            &vertices,
+            distance_threshold,
+            DistanceUnit::Meters,
+        )
+        .unwrap();
+        // WCC sees (43m < 100m) and flags it
+        assert_eq!(flagged_wcc.len(), 1);
+    }
+
+    #[test]
+    fn test_iterative_leaf_pruning_lollipop() {
+        // Roundabout A -> B -> C -> A, plus dangle C -> D -> E
+        let vertices = vec![
+            Vertex::new(0, 0.0, 0.0), // A
+            Vertex::new(1, 0.0, 0.0), // B
+            Vertex::new(2, 0.0, 0.0), // C
+            Vertex::new(3, 0.0, 0.0), // D
+            Vertex::new(4, 0.0, 0.0), // E
+        ];
+
+        let edges = vec![
+            // Roundabout A -> B, B -> C, C -> A
+            Edge::new(0, 0, 0, 1, Length::new::<uom::si::length::meter>(10.0)),
+            Edge::new(0, 1, 1, 2, Length::new::<uom::si::length::meter>(10.0)),
+            Edge::new(0, 2, 2, 0, Length::new::<uom::si::length::meter>(10.0)),
+            // Dangle C -> D, D -> E
+            Edge::new(0, 3, 2, 3, Length::new::<uom::si::length::meter>(10.0)),
+            Edge::new(0, 4, 3, 4, Length::new::<uom::si::length::meter>(10.0)),
+        ];
+        let edge_list = EdgeList(edges.into_boxed_slice());
+        let edge_lists = vec![&edge_list];
+
+        // Iterative Leaf Pruning
+        let flagged =
+            iterative_leaf_pruning(&edge_lists, &vertices, 100.0, DistanceUnit::Meters).unwrap();
+
+        // Should only prune dangle (edges 3 and 4)
+        assert_eq!(flagged.len(), 2);
+
+        let flagged_edges: std::collections::HashSet<_> =
+            flagged.into_iter().map(|e| e.1 .0).collect();
+        assert!(flagged_edges.contains(&3));
+        assert!(flagged_edges.contains(&4));
+    }
 }
