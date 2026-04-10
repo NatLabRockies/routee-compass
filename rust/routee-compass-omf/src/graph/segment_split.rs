@@ -52,7 +52,7 @@ impl SegmentSplit {
         // get the shared segment id for src + dst
         let segment_id = if src.segment_id != dst.segment_id {
             let msg = format!(
-                "attempting to create edge were src segment != dst segment ('{}' != '{}')",
+                "attempting to create edge where src segment != dst segment ('{}' != '{}')",
                 src.segment_id, dst.segment_id
             );
             return Err(E::InvalidSegmentConnectors(msg));
