@@ -25,17 +25,38 @@ impl TreeStorage {
         }
     }
 
-    pub fn insert_node(&mut self, label: Label, node: SearchTreeNode) {
+    pub fn insert_node(
+        &mut self,
+        label: Label,
+        node: SearchTreeNode,
+    ) -> Result<(), crate::algorithm::search::SearchTreeError> {
         match self {
             Self::VertexOnly(nodes) => {
+                if !matches!(label, Label::Vertex(_)) {
+                    return Err(
+                        crate::algorithm::search::SearchTreeError::HeterogeneousLabelTypes(
+                            "Label::Vertex".to_string(),
+                            format!("{:?}", label),
+                        ),
+                    );
+                }
                 nodes.insert(*label.vertex_id(), node);
             }
             Self::Stateful { nodes, labels } => {
+                if matches!(label, Label::Vertex(_)) {
+                    return Err(
+                        crate::algorithm::search::SearchTreeError::HeterogeneousLabelTypes(
+                            "Stateful (non-Vertex) Label".to_string(),
+                            "Label::Vertex".to_string(),
+                        ),
+                    );
+                }
                 let vertex_labels = labels.entry(*label.vertex_id()).or_default();
                 vertex_labels.insert(label.clone());
                 nodes.insert(label, node);
             }
         }
+        Ok(())
     }
 
     pub fn contains_key(&self, label: &Label) -> bool {

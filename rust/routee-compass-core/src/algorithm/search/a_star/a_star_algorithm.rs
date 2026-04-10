@@ -38,19 +38,19 @@ pub fn run_vertex_oriented(
             si.label_model
                 .label_from_state(source, &initial_state, &si.state_model)?;
         let tree = SearchTree::with_root(initial_label, *direction);
-        return Ok(SearchResult::completed(tree, 0));
+        return Ok(SearchResult::completed(tree?, 0));
     }
-
-    // context for the search (graph, search functions, frontier priority queue)
-    let mut frontier: InternalPriorityQueue<Label, ReverseCost> = InternalPriorityQueue::default();
-    let mut traversal_costs: HashMap<Label, Cost> = HashMap::new();
-    let mut solution = SearchTree::new_stateful(*direction);
 
     // setup initial search state
     let initial_state = si.state_model.initial_state(None)?;
     let inital_label = si
         .label_model
         .label_from_state(source, &initial_state, &si.state_model)?;
+
+    // context for the search (graph, search functions, frontier priority queue)
+    let mut frontier: InternalPriorityQueue<Label, ReverseCost> = InternalPriorityQueue::default();
+    let mut traversal_costs: HashMap<Label, Cost> = HashMap::new();
+    let mut solution = SearchTree::with_root(inital_label.clone(), *direction)?;
     traversal_costs.insert(inital_label.clone(), Cost::ZERO);
     let origin_cost = match (target, a_star) {
         (Some(target), true) => {
@@ -196,7 +196,7 @@ pub fn run_edge_oriented(
                     si.label_model
                         .label_from_state(e1_dst, &initial_state, &si.state_model)?;
                 let tree = SearchTree::with_root(initial_label, *direction);
-                Ok(SearchResult::completed(tree, 0))
+                Ok(SearchResult::completed(tree?, 0))
             } else {
                 run_vertex_oriented(e1_dst, Some(e2_src), direction, a_star, si)
             }

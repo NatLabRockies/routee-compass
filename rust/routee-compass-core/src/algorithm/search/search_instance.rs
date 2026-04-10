@@ -109,7 +109,7 @@ impl SearchInstance {
         let mut prev_label = if let Some((edge_list_id, edge_id)) = path.first() {
             let (src, _, _) = self.graph.edge_triplet(edge_list_id, edge_id)?;
             let root_label = Label::Vertex(src.vertex_id);
-            tree.set_root(root_label.clone());
+            tree.set_root(root_label.clone())?;
             root_label
         } else {
             return Ok(Vec::new());

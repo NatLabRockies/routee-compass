@@ -25,7 +25,8 @@ impl Default for SearchTree {
 }
 
 impl SearchTree {
-    /// Create a new empty search tree with the specified orientation
+    /// Create a new empty search tree with the specified orientation that
+    /// supports Labels that contain state.
     pub fn new_stateful(direction: Direction) -> Self {
         Self {
             storage: TreeStorage::new_stateful(),
@@ -34,6 +35,8 @@ impl SearchTree {
         }
     }
 
+    /// Create a new empty search tree with the specified orientation that
+    /// supports Labels that have no state ([Label::Vertex]).
     pub fn new_vertex_oriented(direction: Direction) -> Self {
         Self {
             storage: TreeStorage::new_vertex_oriented(),
@@ -43,17 +46,28 @@ impl SearchTree {
     }
 
     /// Create a new search tree with the given root node.
-    pub fn with_root(root_label: Label, orientation: Direction) -> Self {
-        let mut tree = Self::new_stateful(orientation);
-        tree.set_root(root_label);
-        tree
+    pub fn with_root(root_label: Label, orientation: Direction) -> Result<Self, SearchTreeError> {
+        let mut tree = match root_label {
+            Label::Vertex(_) => Self::new_vertex_oriented(orientation),
+            _ => Self::new_stateful(orientation),
+        };
+        tree.set_root(root_label)?;
+        Ok(tree)
     }
 
     /// Set the root node of the tree
-    pub fn set_root(&mut self, root_label: Label) {
+    pub fn set_root(&mut self, root_label: Label) -> Result<(), SearchTreeError> {
+        // If the tree is completely empty, upgrade/morph the storage into the correct variant
+        if self.is_empty() {
+            self.storage = match root_label {
+                Label::Vertex(_) => TreeStorage::new_vertex_oriented(),
+                _ => TreeStorage::new_stateful(),
+            };
+        }
         let root_node = SearchTreeNode::new_root(self.direction);
-        self.storage.insert_node(root_label.clone(), root_node);
+        self.storage.insert_node(root_label.clone(), root_node)?;
         self.root = Some(root_label);
+        Ok(())
     }
 
     /// Insert the trajectory (parent) -[edge]-> (child) as a node in the tree. it is
@@ -69,14 +83,14 @@ impl SearchTree {
         // If parent doesn't exist but tree is empty, make parent the root
         if !self.storage.contains_key(&parent_label) {
             if self.is_empty() {
-                self.set_root(parent_label.clone());
+                self.set_root(parent_label.clone())?;
             } else {
                 return Err(SearchTreeError::ParentNotFound(parent_label));
             }
         }
         let new_node =
             SearchTreeNode::new_child(edge_traversal, parent_label.clone(), self.direction);
-        self.storage.insert_node(child_label, new_node);
+        self.storage.insert_node(child_label, new_node)?;
 
         Ok(())
     }
@@ -409,6 +423,8 @@ pub enum SearchTreeError {
         #[from]
         source: NetworkError,
     },
+    #[error("LabelModel must produce a consistent Label type, but produced {1} after initially producing {0}")]
+    HeterogeneousLabelTypes(String, String),
 }
 
 #[cfg(test)]
@@ -434,7 +450,7 @@ mod tests {
     #[test]
     fn test_tree_with_root() {
         let root_label = create_test_label(0);
-        let tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+        let tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
 
         assert!(!tree.is_empty());
         assert_eq!(tree.len(), 1);
@@ -448,7 +464,7 @@ mod tests {
     #[test]
     fn test_insert_child_nodes() {
         let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
 
         // Insert first child
         let child1_label = create_test_label(1);
@@ -487,7 +503,7 @@ mod tests {
     #[test]
     fn test_insert_with_nonexistent_parent() {
         let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label, Direction::Forward);
+        let mut tree = SearchTree::with_root(root_label, Direction::Forward).unwrap();
 
         let child_label = create_test_label(1);
         let child_traversal = create_test_edge_traversal(1, 10.0);
@@ -501,7 +517,7 @@ mod tests {
     #[test]
     fn test_get_parent() {
         let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
 
         let child_label = create_test_label(1);
         let child_traversal = create_test_edge_traversal(1, 10.0);
@@ -519,7 +535,7 @@ mod tests {
     #[test]
     fn test_reconstruct_path_forward_orientation() {
         let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
 
         // Build a linear path: 0 -> 1 -> 2 -> 3
         let child1_label = create_test_label(1);
@@ -560,7 +576,7 @@ mod tests {
     #[test]
     fn test_reconstruct_path_reverse_orientation() {
         let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Reverse);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Reverse).unwrap();
 
         // Build a linear path: 0 -> 1 -> 2 -> 3
         let child1_label = create_test_label(1);
@@ -601,7 +617,7 @@ mod tests {
     #[test]
     fn test_reconstruct_path_nonexistent_label() {
         let root_label = create_test_label(0);
-        let tree = SearchTree::with_root(root_label, Direction::Forward);
+        let tree = SearchTree::with_root(root_label, Direction::Forward).unwrap();
 
         let nonexistent_label = create_test_label(99);
         let result = tree.reconstruct_path(&nonexistent_label, None);
@@ -611,7 +627,7 @@ mod tests {
     #[test]
     fn test_iterators() {
         let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
 
         let child1_label = create_test_label(1);
         let child1_traversal = create_test_edge_traversal(1, 10.0);
@@ -644,7 +660,7 @@ mod tests {
     #[test]
     fn test_backtrack_forward_tree() {
         let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
 
         // Build a linear path: 0 -> 1 -> 2 -> 3
         let child1_label = create_test_label(1);
@@ -685,7 +701,7 @@ mod tests {
     #[test]
     fn test_backtrack_reverse_tree() {
         let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Reverse);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Reverse).unwrap();
 
         // Build a linear path: 0 -> 1 -> 2 -> 3
         let child1_label = create_test_label(1);
@@ -726,7 +742,7 @@ mod tests {
     #[test]
     fn test_backtrack_nonexistent_vertex() {
         let root_label = create_test_label(0);
-        let tree = SearchTree::with_root(root_label, Direction::Forward);
+        let tree = SearchTree::with_root(root_label, Direction::Forward).unwrap();
 
         let result = tree.backtrack(VertexId(99));
         assert!(matches!(
@@ -738,7 +754,7 @@ mod tests {
     #[test]
     fn test_backtrack_root_vertex() {
         let root_label = create_test_label(0);
-        let tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+        let tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
 
         // Backtracking from root should return empty path
         let path = tree.backtrack(VertexId(0)).unwrap();
@@ -748,7 +764,7 @@ mod tests {
     // #[test]
     // fn test_find_label_for_vertex() {
     //     let root_label = create_test_label(0);
-    //     let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+    //     let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
 
     //     let child1_label = create_test_label(1);
     //     let child1_traversal = create_test_edge_traversal(1, 10.0);
@@ -849,7 +865,7 @@ mod tests {
         let root_label = create_test_label(0);
 
         // Manually create root first
-        tree.set_root(root_label.clone());
+        tree.set_root(root_label.clone()).unwrap();
 
         // Insert should work normally without creating a new root
         let child_label = create_test_label(1);
@@ -875,7 +891,7 @@ mod tests {
     #[test]
     fn test_backtrack_with_depth_forward_tree_full_path() {
         let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
 
         // Build a linear path: 0 -> 1 -> 2 -> 3 -> 4
         let child1_label = create_test_label(1);
@@ -911,7 +927,7 @@ mod tests {
     #[test]
     fn test_backtrack_with_depth_forward_tree_limited_depth() {
         let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
 
         // Build a linear path: 0 -> 1 -> 2 -> 3 -> 4
         let child1_label = create_test_label(1);
@@ -946,7 +962,7 @@ mod tests {
     #[test]
     fn test_backtrack_with_depth_forward_tree_depth_one() {
         let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
 
         // Build a linear path: 0 -> 1 -> 2 -> 3
         let child1_label = create_test_label(1);
@@ -975,7 +991,7 @@ mod tests {
     #[test]
     fn test_backtrack_with_depth_reverse_tree_full_path() {
         let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Reverse);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Reverse).unwrap();
 
         // Build a linear path: 0 -> 1 -> 2 -> 3 -> 4
         let child1_label = create_test_label(1);
@@ -1012,7 +1028,7 @@ mod tests {
     #[test]
     fn test_backtrack_with_depth_reverse_tree_limited_depth() {
         let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Reverse);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Reverse).unwrap();
 
         // Build a linear path: 0 -> 1 -> 2 -> 3 -> 4
         let child1_label = create_test_label(1);
@@ -1047,7 +1063,7 @@ mod tests {
     #[test]
     fn test_backtrack_with_depth_from_root() {
         let root_label = create_test_label(0);
-        let tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+        let tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
 
         // Backtracking from root with any depth should return empty path
         let path = tree.backtrack_with_depth(VertexId(0), 5).unwrap();
@@ -1057,7 +1073,7 @@ mod tests {
     #[test]
     fn test_backtrack_with_depth_nonexistent_vertex() {
         let root_label = create_test_label(0);
-        let tree = SearchTree::with_root(root_label, Direction::Forward);
+        let tree = SearchTree::with_root(root_label, Direction::Forward).unwrap();
 
         let result = tree.backtrack_with_depth(VertexId(99), 1);
         assert!(matches!(
@@ -1069,7 +1085,7 @@ mod tests {
     #[test]
     fn test_backtrack_with_depth_exceeds_available_path() {
         let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
 
         // Build a short path: 0 -> 1 -> 2
         let child1_label = create_test_label(1);
@@ -1094,7 +1110,7 @@ mod tests {
     #[test]
     fn test_backtrack_with_depth_branching_tree() {
         let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
 
         // Build a branching tree:
         //     0
@@ -1165,6 +1181,7 @@ mod tests {
     #[test]
     fn test_backtrack_mixed_labels_bug() {
         // Reproduction of bug where mixed label types cause Label::Vertex lookup to fail
+        // Now, we strictly forbid mixed label types in the tree.
         let mut tree = SearchTree::new_stateful(Direction::Forward);
 
         let root_label = Label::Vertex(VertexId(0));
@@ -1173,20 +1190,15 @@ mod tests {
             state: 1,
         };
 
-        // This will set root as Label::Vertex(0)
-        tree.insert_trajectory(
+        let result = tree.insert_trajectory(
             root_label.clone(),
             create_test_edge_traversal(1, 10.0),
             child_label.clone(),
-        )
-        .unwrap();
+        );
 
-        // Try to backtrack from root.
-        // We expect this to SUCCEED (return empty path for root).
-        let result = tree.backtrack(VertexId(0));
         assert!(
-            result.is_ok(),
-            "Backtracking from root Vertex label should succeed even if tree has mixed labels"
+            matches!(result, Err(SearchTreeError::HeterogeneousLabelTypes(_, _))),
+            "Tree must reject heterogeneous label types"
         );
     }
 
@@ -1194,7 +1206,7 @@ mod tests {
     // fn test_get_incoming_edge() {
     //     // Test the optimized get_incoming_edge method
     //     let root_label = create_test_label(0);
-    //     let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+    //     let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
 
     //     // Build a linear path: 0 -> 1 -> 2 -> 3
     //     let child1_label = create_test_label(1);
@@ -1239,7 +1251,7 @@ mod tests {
     #[test]
     fn test_reconstruct_path_cycle_detection() {
         let root_label = create_test_label(0);
-        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward);
+        let mut tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
 
         let child_label = create_test_label(1);
         let traversal = create_test_edge_traversal(1, 10.0);
@@ -1250,7 +1262,9 @@ mod tests {
         // Force a cycle: make root point back to child, creating a loop
         let bad_root_node =
             SearchTreeNode::new_child(traversal, child_label.clone(), Direction::Forward);
-        tree.storage.insert_node(root_label.clone(), bad_root_node);
+        tree.storage
+            .insert_node(root_label.clone(), bad_root_node)
+            .unwrap();
 
         // Attempt backtrack from child which hits root, which bounces back to child
         let result = tree.backtrack(VertexId(1));
