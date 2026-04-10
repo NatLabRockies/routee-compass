@@ -52,7 +52,7 @@ pub fn process_simple_connector_splits(
                     ConnectorInSegment::new(segment.id.clone(), src.connector_id.clone(), src.at);
                 let dst =
                     ConnectorInSegment::new(segment.id.clone(), dst.connector_id.clone(), dst.at);
-                SegmentSplit::SimpleConnectorSplit { src, dst, heading }
+                SegmentSplit { src, dst, heading }
             })
         })
         .collect::<Vec<SegmentSplit>>();
