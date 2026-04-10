@@ -12,6 +12,8 @@ use uom::si::f64::Length as uom_length;
 
 use crate::collection::OvertureMapsCollectionError;
 
+/// Algorithm used to identify disconnected sub-sections of the road network graph
+/// (referred to here as 'islands') and remove them.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ComponentsAlgorithmType {
