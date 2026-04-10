@@ -12,7 +12,16 @@ use uom::si::f64::Length as uom_length;
 
 use crate::collection::OvertureMapsCollectionError;
 
-/// runs a weakly-connected components algorithm to identify edges
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ComponentsAlgorithmType {
+    Kosaraju,
+    #[default]
+    Wcc,
+    IterativeLeafPruning,
+}
+
+/// runs a connected components algorithm to identify edges
 /// that can be removed from the graph.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct IslandDetectionAlgorithm {
@@ -23,6 +32,9 @@ pub struct IslandDetectionAlgorithm {
     pub min_distance: f64,
     /// distance unit of the min_distance value.
     pub distance_unit: DistanceUnit,
+    /// algorithm to run.
+    #[serde(default)]
+    pub algorithm_type: ComponentsAlgorithmType,
 }
 
 impl IslandDetectionAlgorithm {
@@ -33,7 +45,17 @@ impl IslandDetectionAlgorithm {
         edge_lists: &[&EdgeList],
         vertices: &[Vertex],
     ) -> Result<Vec<(EdgeListId, EdgeId)>, OvertureMapsCollectionError> {
-        island_detection_algorithm(edge_lists, vertices, self.min_distance, self.distance_unit)
+        match self.algorithm_type {
+            ComponentsAlgorithmType::Kosaraju => {
+                kosaraju_scc(edge_lists, vertices, self.min_distance, self.distance_unit)
+            }
+            ComponentsAlgorithmType::Wcc => {
+                wcc_components(edge_lists, vertices, self.min_distance, self.distance_unit)
+            }
+            ComponentsAlgorithmType::IterativeLeafPruning => {
+                iterative_leaf_pruning(edge_lists, vertices, self.min_distance, self.distance_unit)
+            }
+        }
     }
 }
 
@@ -42,7 +64,7 @@ pub type DenseAdjacencyList = Box<[IndexMap<(EdgeListId, EdgeId), VertexId>]>;
 /// compute potential islands in a set of edge lists based on a radius distance
 /// extension of each component. Returns the list of edges that need to be removed because they
 /// belong to an island
-pub fn island_detection_algorithm(
+pub fn kosaraju_scc(
     edge_lists: &[&EdgeList],
     vertices: &[Vertex],
     distance_threshold: f64,
@@ -167,6 +189,205 @@ pub fn island_detection_algorithm(
     }
 
     eprintln!();
+    Ok(flagged)
+}
+
+/// compute potential islands in a set of edge lists based on a Weakly Connected Components (WCC) algorithm.
+///
+/// Unlike Strongly Connected Components (SCC) which requires a full cycle for nodes to be grouped,
+/// WCC treats the graph as undirected (traversing both `forward` and `backward` edges unconditionally).
+/// This prevents acyclic components—like major one-way arteries, highway ramps, and long stretches
+/// of divided roads—from being classified as isolated "islands" and aggressively deleted.
+/// If the resultant weakly connected map segment's bounding-box diagonal falls below the
+/// `distance_threshold`, all its edges are returned to be stripped out of the network.
+pub fn wcc_components(
+    edge_lists: &[&EdgeList],
+    vertices: &[Vertex],
+    distance_threshold: f64,
+    distance_threshold_unit: DistanceUnit,
+) -> Result<Vec<(EdgeListId, EdgeId)>, OvertureMapsCollectionError> {
+    let forward_adjacency: DenseAdjacencyList = build_adjacency(edge_lists, vertices.len(), true)
+        .map_err(|s| {
+        OvertureMapsCollectionError::InternalError(format!(
+            "failed to compute forward adjacency matrix for wcc: {s}"
+        ))
+    })?;
+    let backward_adjacency: DenseAdjacencyList = build_adjacency(edge_lists, vertices.len(), false)
+        .map_err(|s| {
+            OvertureMapsCollectionError::InternalError(format!(
+                "failed to compute backward adjacency matrix for wcc: {s}"
+            ))
+        })?;
+
+    let total_edges = edge_lists.iter().map(|el| el.len()).sum::<usize>();
+    let mut pb = tqdm!(total = total_edges, desc = "computing wcc components");
+
+    let mut visited = HashSet::<(EdgeListId, EdgeId)>::new();
+    let mut flagged = Vec::<(EdgeListId, EdgeId)>::new();
+
+    for start_edge in edge_lists.iter().flat_map(|el| el.edges()) {
+        let start_edge_key = (start_edge.edge_list_id, start_edge.edge_id);
+        if visited.contains(&start_edge_key) {
+            continue;
+        }
+
+        let mut min_x = f32::MAX;
+        let mut max_x = f32::MIN;
+        let mut min_y = f32::MAX;
+        let mut max_y = f32::MIN;
+        let mut component = Vec::<(EdgeListId, EdgeId)>::new();
+
+        let mut queue = VecDeque::<(EdgeListId, EdgeId)>::new();
+        queue.push_back(start_edge_key);
+        visited.insert(start_edge_key);
+
+        while let Some(curr) = queue.pop_front() {
+            component.push(curr);
+            let current_edge = edge_lists[curr.0 .0].0[curr.1 .0];
+
+            let src_vertex = vertices[current_edge.src_vertex_id.0];
+            let dst_vertex = vertices[current_edge.dst_vertex_id.0];
+            min_x = min_x.min(src_vertex.x()).min(dst_vertex.x());
+            max_x = max_x.max(src_vertex.x()).max(dst_vertex.x());
+            min_y = min_y.min(src_vertex.y()).min(dst_vertex.y());
+            max_y = max_y.max(src_vertex.y()).max(dst_vertex.y());
+
+            // To explore the undirected graph, we look at all edges connected to `src` and `dst` vertices.
+            // 1) Outbound from `dst`
+            for (&next_edge_key, _) in forward_adjacency[current_edge.dst_vertex_id.0].iter() {
+                if !visited.contains(&next_edge_key) {
+                    visited.insert(next_edge_key);
+                    queue.push_back(next_edge_key);
+                }
+            }
+            // 2) Inbound to `dst`
+            for (&next_edge_key, _) in backward_adjacency[current_edge.dst_vertex_id.0].iter() {
+                if !visited.contains(&next_edge_key) {
+                    visited.insert(next_edge_key);
+                    queue.push_back(next_edge_key);
+                }
+            }
+            // 3) Outbound from `src`
+            for (&next_edge_key, _) in forward_adjacency[current_edge.src_vertex_id.0].iter() {
+                if !visited.contains(&next_edge_key) {
+                    visited.insert(next_edge_key);
+                    queue.push_back(next_edge_key);
+                }
+            }
+            // 4) Inbound to `src`
+            for (&next_edge_key, _) in backward_adjacency[current_edge.src_vertex_id.0].iter() {
+                if !visited.contains(&next_edge_key) {
+                    visited.insert(next_edge_key);
+                    queue.push_back(next_edge_key);
+                }
+            }
+
+            if let Err(_) = pb.update(1) {}
+        }
+
+        let component_diagonal_meters =
+            Haversine.length(&line_string![(min_x, min_y).into(), (max_x, max_y).into()]);
+        let diameter_uom =
+            uom_length::new::<uom::si::length::meter>(component_diagonal_meters as f64);
+
+        if diameter_uom < distance_threshold_unit.to_uom(distance_threshold) {
+            flagged.append(&mut component);
+        }
+    }
+
+    eprintln!();
+    Ok(flagged)
+}
+
+/// iteratively prune terminal edges (leaf nodes where in_degree == 0 or out_degree == 0).
+/// Continues removing dead-end edges until the network contains only paths that can be fully traversed.
+///
+/// This allows cleanly severing "traps" (dangling one-way paths exiting map boundaries or random data artifacts)
+/// without blanket-deleting non-cyclic but connected structures. It evaluates the network and repeatedly snipps
+/// edges attached to sink vertices (`in_degree > 0 && out_degree == 0`) or source vertices (`in_degree == 0 && out_degree > 0`),
+/// progressively pushing the pruning process inwards up the branch until a cycle or intersection is hit.
+pub fn iterative_leaf_pruning(
+    edge_lists: &[&EdgeList],
+    vertices: &[Vertex],
+    _distance_threshold: f64,
+    _distance_threshold_unit: DistanceUnit,
+) -> Result<Vec<(EdgeListId, EdgeId)>, OvertureMapsCollectionError> {
+    let forward_adjacency: DenseAdjacencyList = build_adjacency(edge_lists, vertices.len(), true)
+        .map_err(|s| {
+        OvertureMapsCollectionError::InternalError(format!(
+            "failed to compute forward adjacency matrix for leaf pruning: {s}"
+        ))
+    })?;
+    let backward_adjacency: DenseAdjacencyList = build_adjacency(edge_lists, vertices.len(), false)
+        .map_err(|s| {
+            OvertureMapsCollectionError::InternalError(format!(
+                "failed to compute backward adjacency matrix for leaf pruning: {s}"
+            ))
+        })?;
+
+    let total_edges = edge_lists.iter().map(|el| el.len()).sum::<usize>();
+    let mut pb = tqdm!(total = total_edges, desc = "computing leaf pruning");
+
+    let mut out_degree = vec![0; vertices.len()];
+    let mut in_degree = vec![0; vertices.len()];
+    let mut active_edges = HashSet::<(EdgeListId, EdgeId)>::new();
+
+    for edge in edge_lists.iter().flat_map(|el| el.edges()) {
+        out_degree[edge.src_vertex_id.0] += 1;
+        in_degree[edge.dst_vertex_id.0] += 1;
+        active_edges.insert((edge.edge_list_id, edge.edge_id));
+    }
+
+    let mut queue = VecDeque::<VertexId>::new();
+    for v in 0..vertices.len() {
+        if (in_degree[v] > 0 && out_degree[v] == 0) || (in_degree[v] == 0 && out_degree[v] > 0) {
+            queue.push_back(VertexId(v));
+        }
+    }
+
+    let mut flagged = Vec::<(EdgeListId, EdgeId)>::new();
+
+    while let Some(v) = queue.pop_front() {
+        if in_degree[v.0] > 0 && out_degree[v.0] == 0 {
+            for (&edge_key, _) in backward_adjacency[v.0].iter() {
+                if active_edges.remove(&edge_key) {
+                    flagged.push(edge_key);
+                    if let Err(_) = pb.update(1) {}
+                    let e_info = edge_lists[edge_key.0 .0].0[edge_key.1 .0];
+                    let src = e_info.src_vertex_id;
+                    out_degree[src.0] -= 1;
+                    if (in_degree[src.0] > 0 && out_degree[src.0] == 0)
+                        || (in_degree[src.0] == 0 && out_degree[src.0] > 0)
+                    {
+                        queue.push_back(src);
+                    }
+                    in_degree[v.0] -= 1;
+                }
+            }
+        } else if in_degree[v.0] == 0 && out_degree[v.0] > 0 {
+            for (&edge_key, _) in forward_adjacency[v.0].iter() {
+                if active_edges.remove(&edge_key) {
+                    flagged.push(edge_key);
+                    if let Err(_) = pb.update(1) {}
+                    let e_info = edge_lists[edge_key.0 .0].0[edge_key.1 .0];
+                    let dst = e_info.dst_vertex_id;
+                    in_degree[dst.0] -= 1;
+                    if (in_degree[dst.0] > 0 && out_degree[dst.0] == 0)
+                        || (in_degree[dst.0] == 0 && out_degree[dst.0] > 0)
+                    {
+                        queue.push_back(dst);
+                    }
+                    out_degree[v.0] -= 1;
+                }
+            }
+        }
+    }
+
+    // Since pruning may end early, update the progress bar to 100% just in case
+    // to keep kdam happy.
+    let _ = pb.update_to(total_edges);
+    eprintln!();
+
     Ok(flagged)
 }
 
