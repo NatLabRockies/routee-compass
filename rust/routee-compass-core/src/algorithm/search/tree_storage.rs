@@ -120,7 +120,7 @@ impl TreeStorage {
     pub fn label_iter<'a>(&'a self) -> Box<dyn Iterator<Item = Label> + 'a> {
         match self {
             Self::VertexOnly(store) => Box::new(store.keys().map(|v| Label::Vertex(*v))),
-            Self::Stateful { nodes, .. } => Box::new(nodes.keys().map(|l| l.clone())),
+            Self::Stateful { nodes, .. } => Box::new(nodes.keys().cloned()),
         }
     }
 
