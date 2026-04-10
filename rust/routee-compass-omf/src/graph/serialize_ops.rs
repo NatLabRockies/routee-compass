@@ -1,19 +1,15 @@
-use geo::{Bearing, Coord, Haversine, Length, Line, LineString};
+use geo::{Bearing, Haversine, Length, Line, LineString};
 use itertools::Itertools;
-use kdam::{tqdm, Bar, BarExt};
 use rayon::prelude::*;
 use routee_compass_core::model::network::{Edge, EdgeId, EdgeList, EdgeListId, Vertex, VertexId};
-use std::{
-    collections::{HashMap, HashSet},
-    sync::{Arc, Mutex},
-};
+use std::collections::{HashMap, HashSet};
 
 use crate::{
     collection::{
         OvertureMapsCollectionError, SegmentAccessRestrictionWhen, SegmentFullType,
         TransportationConnectorRecord, TransportationSegmentRecord,
     },
-    graph::{consts, omf_graph::OmfEdgeList, segment_split::SegmentSplit, ConnectorInSegment},
+    graph::{consts, omf_graph::OmfEdgeList, segment_split::SegmentSplit},
 };
 
 /// serializes the Connector records into Vertices and creates a GERS id -> index mapping.
