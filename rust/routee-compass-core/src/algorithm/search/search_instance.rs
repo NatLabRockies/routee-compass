@@ -108,7 +108,10 @@ impl SearchInstance {
 
         let mut prev_label = if let Some((edge_list_id, edge_id)) = path.first() {
             let (src, _, _) = self.graph.edge_triplet(edge_list_id, edge_id)?;
-            let root_label = Label::Vertex(src.vertex_id);
+            let root_label = Label::VertexWithIntState {
+                vertex_id: src.vertex_id,
+                state: 0,
+            };
             tree.set_root(root_label.clone())?;
             root_label
         } else {
@@ -127,10 +130,10 @@ impl SearchInstance {
                 &self.cost_model,
             )?;
 
-            // Use indexed labels to handle cycles in the path correctly
+            // Use indexed labels to handle cycles in the path correctly. i+1 is used as the root will have state 0.
             let child_label = Label::VertexWithIntState {
                 vertex_id: dst.vertex_id,
-                state: i,
+                state: i + 1,
             };
             tree.insert_trajectory(prev_label, traversal.clone(), child_label.clone())
                 .map_err(|e| SearchError::InternalError(e.to_string()))?;
