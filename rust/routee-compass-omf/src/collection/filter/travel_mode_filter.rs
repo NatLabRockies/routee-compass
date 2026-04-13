@@ -67,38 +67,42 @@ impl MatchBehavior {
     }
 }
 
+/// models a finite state machine of mode access which is modified
+/// when different segment access restrictions are encountered.
+#[derive(Clone, Debug, PartialEq)]
+enum ModeAccessState {
+    /// No restrictions encountered yet, default to allowed
+    DefaultAllowed,
+    /// A blanket denial was found, currently disallowed
+    BlanketDenied,
+    /// Specifically denied for our modes
+    SpecificallyDenied,
+    /// Blanket denied, but specifically allowed for our mode
+    AllowedException,
+}
+
 /// helper struct used when processing [MatchesModeAccess] travel mode filters.
 #[derive(Clone, Debug)]
 struct ModeAccessAccumulator {
     pub modes: Vec<SegmentMode>,
-    pub blanket_denial: bool,
-    pub mode_denial: bool,
-    pub mode_allowed: bool,
+    pub state: ModeAccessState,
 }
 
 impl ModeAccessAccumulator {
     pub fn new(modes: &[SegmentMode]) -> Self {
         Self {
             modes: modes.to_vec(),
-            blanket_denial: false,
-            mode_denial: false,
-            mode_allowed: true,
+            state: ModeAccessState::DefaultAllowed,
         }
     }
 
     /// whether the restrictions recorded by this accumulator imply
     /// that the mode is supported on this segment.
     pub fn supports_mode(&self) -> bool {
-        match (self.blanket_denial, self.mode_denial, self.mode_allowed) {
-            // blanket denial with exception
-            (true, false, true) => true,
-            // mode disallowed explicitly
-            (_, true, _) => false,
-            // mode disallowed implicitly
-            (_, _, false) => false,
-            // mode allowed implicitly
-            _ => true,
-        }
+        matches!(
+            self.state,
+            ModeAccessState::DefaultAllowed | ModeAccessState::AllowedException
+        )
     }
 
     /// updates the accumulator with an additional restriction
@@ -119,21 +123,28 @@ impl ModeAccessAccumulator {
         use SegmentAccessType as SAT;
         use SegmentHeading as SH;
         match (&r.access_type, has_mode, heading, mods) {
+            // 1. Blanket Denial
             (SAT::Denied, None, None, None) => {
-                self.blanket_denial = true;
+                if self.state == ModeAccessState::DefaultAllowed {
+                    self.state = ModeAccessState::BlanketDenied;
+                }
             }
+            // 2. Specific Denial overrides everything
             (SAT::Denied, Some(true), None | Some(SH::Forward), _) => {
-                self.mode_denial = true;
-                self.mode_allowed = false;
+                self.state = ModeAccessState::SpecificallyDenied;
             }
+            // 3. Exception Allowed (if we were blanket denied, or just explicitly allowed)
             (SAT::Allowed | SAT::Designated, Some(true), None | Some(SH::Forward), None) => {
-                self.mode_allowed = true;
+                if self.state != ModeAccessState::SpecificallyDenied {
+                    self.state = ModeAccessState::AllowedException;
+                }
             }
+            // 4. Conditional Exception (e.g. Employee only) -> We don't support special conditions, so deny access
             (SAT::Allowed | SAT::Designated, Some(true), None | Some(SH::Forward), Some(true)) => {
-                // currently not supporting the handling of "using" or "recognized"
-                // modifications indicating this mode is only supported for a subset
-                // of the population.
-                self.mode_allowed = false;
+                // If we relied on this conditional to be allowed, we must explicitly deny
+                if self.state != ModeAccessState::SpecificallyDenied {
+                    self.state = ModeAccessState::SpecificallyDenied;
+                }
             }
             _ => {}
         }
