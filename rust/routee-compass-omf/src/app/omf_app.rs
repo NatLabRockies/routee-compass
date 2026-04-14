@@ -7,12 +7,9 @@ use geozero::{wkt::Wkt as WktReader, ToGeo};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    app::{
-        cli_bbox::parse_bbox,
-        network::{IslandDetectionAlgorithmConfiguration, NetworkEdgeListConfiguration},
-        CliBoundingBox,
-    },
+    app::{cli_bbox::parse_bbox, network::NetworkEdgeListConfiguration, CliBoundingBox},
     collection::OvertureMapsCollectionError,
+    graph::island_detection::IslandDetectionAlgorithm,
 };
 
 /// Command line tool for batch downloading and summarizing of OMF (Overture Maps Foundation) data
@@ -95,7 +92,7 @@ impl OmfOperation {
                         OvertureMapsCollectionError::InvalidUserInput(msg)
                     })?;
                 let island_algorithm_configuration = config
-                    .get::<Option<IslandDetectionAlgorithmConfiguration>>(
+                    .get::<Option<IslandDetectionAlgorithm>>(
                         "island_algorithm_configuration",
                     )
                     .map_err(|e| {

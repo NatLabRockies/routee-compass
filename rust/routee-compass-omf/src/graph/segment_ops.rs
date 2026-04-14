@@ -15,12 +15,35 @@ pub fn process_simple_connector_splits(
     when: Option<&SegmentAccessRestrictionWhen>,
 ) -> Result<Vec<SegmentSplit>, OvertureMapsCollectionError> {
     let headings = get_headings(segment, when)?;
-    let result = segment
-        .connectors
-        .as_ref()
-        .ok_or(OvertureMapsCollectionError::InvalidSegmentConnectors(
-            format!("connectors is empty for segment record '{}'", segment.id),
-        ))?
+    // sort by "at" values to ensure monotonicity
+    let mut sorted_connectors = segment.connectors.clone().ok_or_else(|| {
+        OvertureMapsCollectionError::InvalidUserInput(String::from(
+            "no connectors in downloaded dataset",
+        ))
+    })?;
+    sorted_connectors.sort_by(|a, b| a.at.partial_cmp(&b.at).unwrap_or(std::cmp::Ordering::Equal));
+
+    // if let Some(first) = sorted_connectors.first() {
+    //     if first.at > consts::F64_DISTANCE_TOLERANCE {
+    //         sorted_connectors.insert(
+    //             0,
+    //             crate::collection::record::segment::ConnectorReference {
+    //                 connector_id: format!("{}_start", segment.id),
+    //                 at: 0.0,
+    //             },
+    //         );
+    //     }
+    // }
+    // if let Some(last) = sorted_connectors.last() {
+    //     if last.at < 1.0 - consts::F64_DISTANCE_TOLERANCE {
+    //         sorted_connectors.push(crate::collection::record::segment::ConnectorReference {
+    //             connector_id: format!("{}_end", segment.id),
+    //             at: 1.0,
+    //         });
+    //     }
+    // }
+
+    let result = sorted_connectors
         .iter()
         .tuple_windows()
         .flat_map(|(src, dst)| {
@@ -29,7 +52,7 @@ pub fn process_simple_connector_splits(
                     ConnectorInSegment::new(segment.id.clone(), src.connector_id.clone(), src.at);
                 let dst =
                     ConnectorInSegment::new(segment.id.clone(), dst.connector_id.clone(), dst.at);
-                SegmentSplit::SimpleConnectorSplit { src, dst, heading }
+                SegmentSplit { src, dst, heading }
             })
         })
         .collect::<Vec<SegmentSplit>>();
@@ -186,7 +209,8 @@ fn when_is_compatible(
     // Check mode compatibility
     if let Some(restriction_modes) = &restrictions.mode {
         if let Some(when_modes) = &when.mode {
-            if !when_modes.iter().all(|m| restriction_modes.contains(m)) {
+            // Change .all() to .any()
+            if !when_modes.iter().any(|m| restriction_modes.contains(m)) {
                 return false;
             }
         } else {
@@ -1086,4 +1110,46 @@ mod tests {
         let result_bwd = get_headings(&segment, Some(&when_bwd)).unwrap();
         assert_eq!(result_bwd, vec![SegmentHeading::Backward]);
     }
+
+    // #[test]
+    // fn test_process_simple_connector_splits_dead_end() {
+    //     let mut segment = create_test_segment(None);
+    //     segment.id = "seg1".to_string();
+    //     segment.connectors = Some(vec![
+    //         crate::collection::record::segment::ConnectorReference {
+    //             connector_id: "conn1".to_string(),
+    //             at: 1.0,
+    //         },
+    //     ]);
+
+    //     let splits = process_simple_connector_splits(&segment, None).unwrap();
+    //     assert_eq!(splits.len(), 2); // 1 for fwd, 1 for bwd
+    //     let fwd_split = splits
+    //         .iter()
+    //         .find(|s| s.heading == SegmentHeading::Forward)
+    //         .unwrap();
+    //     assert_eq!(fwd_split.src.connector_id, "seg1_start");
+    //     assert_eq!(fwd_split.dst.connector_id, "conn1");
+    // }
+
+    // #[test]
+    // fn test_process_simple_connector_splits_cul_de_sac() {
+    //     let mut segment = create_test_segment(None);
+    //     segment.id = "seg2".to_string();
+    //     segment.connectors = Some(vec![
+    //         crate::collection::record::segment::ConnectorReference {
+    //             connector_id: "conn2".to_string(),
+    //             at: 0.0,
+    //         },
+    //     ]);
+
+    //     let splits = process_simple_connector_splits(&segment, None).unwrap();
+    //     assert_eq!(splits.len(), 2); // 1 for fwd, 1 for bwd
+    //     let fwd_split = splits
+    //         .iter()
+    //         .find(|s| s.heading == SegmentHeading::Forward)
+    //         .unwrap();
+    //     assert_eq!(fwd_split.src.connector_id, "conn2");
+    //     assert_eq!(fwd_split.dst.connector_id, "seg2_end");
+    // }
 }

@@ -1,11 +1,12 @@
-mod component_algorithm;
 mod connector_in_segment;
+pub mod island_detection;
 mod omf_graph;
 mod segment_split;
 mod serialize_ops;
 mod summary;
 mod vertex_serializable;
 
+pub mod consts;
 pub mod segment_ops;
 pub use connector_in_segment::ConnectorInSegment;
 pub use omf_graph::OmfGraphVectorized;

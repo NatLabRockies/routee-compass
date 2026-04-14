@@ -5,13 +5,13 @@ use std::{
 
 use super::serialize_ops as ops;
 use crate::{
-    app::network::{IslandDetectionAlgorithmConfiguration, NetworkEdgeListConfiguration},
+    app::network::NetworkEdgeListConfiguration,
     collection::{
         record::SegmentHeading, OvertureMapsCollectionError, SegmentAccessRestrictionWhen,
         SegmentFullType, TransportationCollection, TransportationSegmentRecord,
     },
     graph::{
-        component_algorithm::island_detection_algorithm,
+        island_detection::IslandDetectionAlgorithm,
         segment_ops,
         serialize_ops::{clean_omf_edge_list, compute_vertex_remapping},
         vertex_serializable::VertexSerializable,
@@ -60,7 +60,7 @@ impl OmfGraphVectorized {
     pub fn new(
         collection: &TransportationCollection,
         configuration: &[NetworkEdgeListConfiguration],
-        island_detection_configuration: Option<IslandDetectionAlgorithmConfiguration>,
+        island_detection_configuration: Option<IslandDetectionAlgorithm>,
     ) -> Result<Self, OvertureMapsCollectionError> {
         // process all connectors into vertices
         log::info!("Creating vertex lookup");
@@ -75,14 +75,14 @@ impl OmfGraphVectorized {
 
             // create arguments for segment processing into edges
             let mut filter = edge_list_config.filter.clone();
-            filter.sort(); // sort for performance
+            filter.sort(); // sort for performance (filter.iter().all() below is short-circuiting)
 
             log::info!("Filtering edge list {edge_list_id}");
             // filter to the segments that match our travel mode filter(s)
             let segments: Vec<&TransportationSegmentRecord> = collection
                 .segments
                 .par_iter()
-                .filter(|r| edge_list_config.filter.iter().all(|f| f.matches_filter(r)))
+                .filter(|r| filter.iter().all(|f| f.matches_filter(r)))
                 .collect();
             let segment_lookup = ops::create_segment_lookup(&segments);
 
@@ -102,17 +102,6 @@ impl OmfGraphVectorized {
                 )?;
                 splits.extend(directed_splits);
             }
-
-            // depending on the split method, we may need to create additional vertices at locations
-            // which are not OvertureMaps-defined connector types.
-            log::info!("Extending vertices");
-            ops::extend_vertices(
-                &splits,
-                &segments,
-                &segment_lookup,
-                &mut vertices,
-                &mut vertex_lookup,
-            )?;
 
             // create all edges based on the above split points using all vertices.
             log::info!("Creating edges");
@@ -189,18 +178,12 @@ impl OmfGraphVectorized {
 
         // Compute islands in resulting edge lists and remove island edges
         log::info!("Compute islands");
-        if let Some(algorithm_config) = island_detection_configuration {
+        if let Some(island_detection) = island_detection_configuration {
             let ref_edge_lists = edge_lists
                 .iter()
                 .map(|e| &e.edges)
                 .collect::<Vec<&EdgeList>>();
-            let island_edges = island_detection_algorithm(
-                &ref_edge_lists,
-                &vertices,
-                algorithm_config.min_distance,
-                algorithm_config.distance_unit,
-                algorithm_config.parallel_execution,
-            )?;
+            let island_edges = island_detection.run(&ref_edge_lists, &vertices)?;
 
             // Refactor Vec into Hashmap
             let mut edges_lookup: HashMap<EdgeListId, Vec<EdgeId>> = HashMap::new();

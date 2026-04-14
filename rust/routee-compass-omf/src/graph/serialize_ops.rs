@@ -1,19 +1,15 @@
-use geo::{Bearing, Coord, Haversine, LineString};
+use geo::{Bearing, Haversine, Length, Line, LineString};
 use itertools::Itertools;
-use kdam::{tqdm, Bar, BarExt};
 use rayon::prelude::*;
 use routee_compass_core::model::network::{Edge, EdgeId, EdgeList, EdgeListId, Vertex, VertexId};
-use std::{
-    collections::{HashMap, HashSet},
-    sync::{Arc, Mutex},
-};
+use std::collections::{HashMap, HashSet};
 
 use crate::{
     collection::{
         OvertureMapsCollectionError, SegmentAccessRestrictionWhen, SegmentFullType,
         TransportationConnectorRecord, TransportationSegmentRecord,
     },
-    graph::{omf_graph::OmfEdgeList, segment_split::SegmentSplit, ConnectorInSegment},
+    graph::{consts, omf_graph::OmfEdgeList, segment_split::SegmentSplit},
 };
 
 /// serializes the Connector records into Vertices and creates a GERS id -> index mapping.
@@ -73,84 +69,6 @@ pub fn find_splits(
         .flatten()
         .collect();
     Ok(result)
-}
-
-/// identifies if any split points require creating new vertices and makes them, appending
-/// them to the collections of vertex data.
-pub fn extend_vertices(
-    splits: &[SegmentSplit],
-    segments: &[&TransportationSegmentRecord],
-    segment_lookup: &HashMap<String, usize>,
-    vertices: &mut Vec<Vertex>,
-    vertex_lookup: &mut HashMap<String, usize>,
-) -> Result<(), OvertureMapsCollectionError> {
-    let bar = Bar::builder()
-        .desc("locating missing connectors")
-        .build()
-        .map_err(|e| {
-            OvertureMapsCollectionError::InternalError(format!("progress bar error: {e}"))
-        })?;
-    let bar = Arc::new(Mutex::new(bar));
-    type MissingConnectorsResult =
-        Result<Vec<Vec<(ConnectorInSegment, Coord<f32>)>>, OvertureMapsCollectionError>;
-    let missing_connectors = splits
-        .par_iter()
-        .map(|split| {
-            if let Ok(mut b) = bar.clone().lock() {
-                let _ = b.update(1);
-            }
-            connectors_from_split(split, segments, segment_lookup)
-        })
-        .collect::<MissingConnectorsResult>()?
-        .into_iter()
-        .flatten()
-        .collect_vec();
-    eprintln!(); // end progress bar
-
-    if missing_connectors.is_empty() {
-        log::info!("all connectors accounted for");
-        return Ok(());
-    }
-
-    // use any missing connectors to create new vertices and inject them into the vertex collections.
-    let add_connectors_iter = tqdm!(
-        missing_connectors.iter().enumerate(),
-        total = missing_connectors.len(),
-        desc = "add missing connectors"
-    );
-    let base_id = vertices.len();
-    for (idx, (connector, coord)) in add_connectors_iter {
-        let vertex_id = base_id + idx;
-        let vertex_uuid = connector.connector_id.clone();
-        let vertex = Vertex::new(vertex_id, coord.x, coord.y);
-        vertices.push(vertex);
-        let _ = vertex_lookup.insert(vertex_uuid, vertex_id);
-    }
-    eprintln!(); // end progress bar
-
-    Ok(())
-}
-
-/// helper function to collect any [ConnectorInSegment] values that represent currently missing Vertices in the graph.
-fn connectors_from_split(
-    split: &SegmentSplit,
-    segments: &[&TransportationSegmentRecord],
-    segment_lookup: &HashMap<String, usize>,
-) -> Result<Vec<(ConnectorInSegment, Coord<f32>)>, OvertureMapsCollectionError> {
-    split.missing_connectors().into_iter().map(|c| {
-        let seg_idx = segment_lookup.get(&c.segment_id)
-            .ok_or_else(|| {
-                let msg = format!("while extending vertices, expected segment id {} missing from lookup", c.segment_id);
-                OvertureMapsCollectionError::InvalidSegmentConnectors(msg)
-            })?;
-        let segment = segments.get(*seg_idx)
-            .ok_or_else(|| {
-                let msg = format!("while extending vertices, expected segment id {} with index {} missing from lookup", c.segment_id, seg_idx);
-                OvertureMapsCollectionError::InvalidSegmentConnectors(msg)
-            })?;
-        let coord = segment.get_coord_at(c.linear_reference.0)?;
-        Ok((c, coord))
-    }).collect()
 }
 
 /// creates all edges along the provided set of splits.
@@ -285,7 +203,7 @@ pub fn get_global_average_speed(
         weighted_sum += length * speed;
     }
 
-    if total_length < 1e-6 {
+    if total_length < consts::F64_DISTANCE_TOLERANCE {
         return Err(OvertureMapsCollectionError::InternalError(format!(
             "internal division by zero when computing average speed: {initial_speeds:?}"
         )));
@@ -308,8 +226,21 @@ pub fn bearing_deg_from_geometries(
                     "cannot compute bearing on linestring with less than two points: {linestring:?}"
                 )));
             }
-            let p0 = linestring.0[n - 2];
+
             let p1 = linestring.0[n - 1];
+            let mut p0 = linestring.0[n - 2];
+
+            // Loop backwards to find a point far enough away to yield a valid bearing vector
+            for i in (0..n - 1).rev() {
+                let candidate = linestring.0[i];
+                let line = Line::new(candidate, p1);
+
+                if Haversine.length(&line) > consts::F32_DISTANCE_TOLERANCE {
+                    p0 = candidate;
+                    break;
+                }
+            }
+
             Ok(Haversine.bearing(p0.into(), p1.into()) as f64)
         })
         .collect()
@@ -324,48 +255,37 @@ pub fn compute_vertex_remapping(
     edge_lists: &[OmfEdgeList],
     island_edges: &[(EdgeListId, EdgeId)],
 ) -> Result<Vec<Option<VertexId>>, OvertureMapsCollectionError> {
-    // Identify orphan vertices
-    // Because we are using weak connectivity (two adjacency lists)
-    // all vertices that are part of a component of an edge that needs
-    // to be removed, should also be removed
-    let island_vertices = island_edges
-        .iter()
-        .map(|(el_id, e_id)| {
-            let edge = edge_lists
-                .get(el_id.0)
-                .ok_or(OvertureMapsCollectionError::InternalError(format!(
-                    "edge list id {} does not exist in OMF Edge Lists",
-                    el_id
-                )))?
-                .edges
-                .0
-                .get(e_id.0)
-                .ok_or(OvertureMapsCollectionError::InternalError(format!(
-                    "edge id {} does not exist in OMF Edge List {}",
-                    e_id, el_id
-                )))?;
+    // 1. Create a fast lookup for edges being removed
+    let removed_edges: HashSet<(EdgeListId, EdgeId)> = island_edges.iter().cloned().collect();
 
-            Ok(vec![edge.src_vertex_id, edge.dst_vertex_id])
-        })
-        .collect::<Result<Vec<Vec<VertexId>>, OvertureMapsCollectionError>>()?
-        .into_iter()
-        .flatten()
-        .collect::<HashSet<VertexId>>();
+    // 2. Identify all vertices that are part of at least one valid (non-island) edge
+    // across ALL edge lists.
+    let mut valid_vertices = HashSet::new();
 
-    // Create the mapping
+    for edge_list in edge_lists {
+        for edge in edge_list.edges.0.iter() {
+            if !removed_edges.contains(&(edge.edge_list_id, edge.edge_id)) {
+                valid_vertices.insert(edge.src_vertex_id);
+                valid_vertices.insert(edge.dst_vertex_id);
+            }
+        }
+    }
+
+    // 3. Create the mapping
     let mut new_id: usize = 0;
     Ok((0..vertices.len())
         .map(|old_id| {
-            if island_vertices.contains(&VertexId(old_id)) {
-                None
-            } else {
+            if valid_vertices.contains(&VertexId(old_id)) {
+                // If it is used by at least one connected mode, we keep it
                 new_id += 1;
                 Some(VertexId(new_id - 1))
+            } else {
+                // Orphaned entirely
+                None
             }
         })
         .collect())
 }
-
 /// Given an OmfEdgeList and a boolean mask, returns an updated edge list
 /// with the mask applied.
 pub fn clean_omf_edge_list(
