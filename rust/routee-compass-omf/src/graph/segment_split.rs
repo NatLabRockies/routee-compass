@@ -30,7 +30,6 @@ impl SegmentSplit {
     /// identifies any locations where additional coordinates are needed.
     /// when creating any missing connectors, call [ConnectorInSegment::new_without_connector_id]
     /// which generates a new connector_id based on the segment_id and linear referencing position.
-
     /// Modify in-place a vectorized graph according to a split logic.
     ///
     /// # Invariants
@@ -256,10 +255,7 @@ impl SegmentSplit {
         let opt_first_matching_sublcass = segment.subclass_rules.as_ref().and_then(|rules| {
             rules
                 .iter()
-                .find(|rule| match rule.check_open_intersection(start, end) {
-                    Ok(true) => true,
-                    _ => false,
-                })
+                .find(|rule| matches!(rule.check_open_intersection(start, end), Ok(true)))
         });
 
         // Get value from inside

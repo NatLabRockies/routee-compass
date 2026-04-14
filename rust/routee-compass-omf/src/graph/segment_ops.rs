@@ -5,7 +5,7 @@ use crate::{
         record::{SegmentAccessRestriction, SegmentHeading},
         OvertureMapsCollectionError, SegmentAccessRestrictionWhen, TransportationSegmentRecord,
     },
-    graph::{consts, segment_split::SegmentSplit, ConnectorInSegment},
+    graph::{segment_split::SegmentSplit, ConnectorInSegment},
 };
 use itertools::Itertools;
 
@@ -23,25 +23,25 @@ pub fn process_simple_connector_splits(
     })?;
     sorted_connectors.sort_by(|a, b| a.at.partial_cmp(&b.at).unwrap_or(std::cmp::Ordering::Equal));
 
-    if let Some(first) = sorted_connectors.first() {
-        if first.at > consts::F64_DISTANCE_TOLERANCE {
-            sorted_connectors.insert(
-                0,
-                crate::collection::record::segment::ConnectorReference {
-                    connector_id: format!("{}_start", segment.id),
-                    at: 0.0,
-                },
-            );
-        }
-    }
-    if let Some(last) = sorted_connectors.last() {
-        if last.at < 1.0 - consts::F64_DISTANCE_TOLERANCE {
-            sorted_connectors.push(crate::collection::record::segment::ConnectorReference {
-                connector_id: format!("{}_end", segment.id),
-                at: 1.0,
-            });
-        }
-    }
+    // if let Some(first) = sorted_connectors.first() {
+    //     if first.at > consts::F64_DISTANCE_TOLERANCE {
+    //         sorted_connectors.insert(
+    //             0,
+    //             crate::collection::record::segment::ConnectorReference {
+    //                 connector_id: format!("{}_start", segment.id),
+    //                 at: 0.0,
+    //             },
+    //         );
+    //     }
+    // }
+    // if let Some(last) = sorted_connectors.last() {
+    //     if last.at < 1.0 - consts::F64_DISTANCE_TOLERANCE {
+    //         sorted_connectors.push(crate::collection::record::segment::ConnectorReference {
+    //             connector_id: format!("{}_end", segment.id),
+    //             at: 1.0,
+    //         });
+    //     }
+    // }
 
     let result = sorted_connectors
         .iter()
@@ -1110,45 +1110,46 @@ mod tests {
         let result_bwd = get_headings(&segment, Some(&when_bwd)).unwrap();
         assert_eq!(result_bwd, vec![SegmentHeading::Backward]);
     }
-    #[test]
-    fn test_process_simple_connector_splits_dead_end() {
-        let mut segment = create_test_segment(None);
-        segment.id = "seg1".to_string();
-        segment.connectors = Some(vec![
-            crate::collection::record::segment::ConnectorReference {
-                connector_id: "conn1".to_string(),
-                at: 1.0,
-            },
-        ]);
 
-        let splits = process_simple_connector_splits(&segment, None).unwrap();
-        assert_eq!(splits.len(), 2); // 1 for fwd, 1 for bwd
-        let fwd_split = splits
-            .iter()
-            .find(|s| s.heading == SegmentHeading::Forward)
-            .unwrap();
-        assert_eq!(fwd_split.src.connector_id, "seg1_start");
-        assert_eq!(fwd_split.dst.connector_id, "conn1");
-    }
+    // #[test]
+    // fn test_process_simple_connector_splits_dead_end() {
+    //     let mut segment = create_test_segment(None);
+    //     segment.id = "seg1".to_string();
+    //     segment.connectors = Some(vec![
+    //         crate::collection::record::segment::ConnectorReference {
+    //             connector_id: "conn1".to_string(),
+    //             at: 1.0,
+    //         },
+    //     ]);
 
-    #[test]
-    fn test_process_simple_connector_splits_cul_de_sac() {
-        let mut segment = create_test_segment(None);
-        segment.id = "seg2".to_string();
-        segment.connectors = Some(vec![
-            crate::collection::record::segment::ConnectorReference {
-                connector_id: "conn2".to_string(),
-                at: 0.0,
-            },
-        ]);
+    //     let splits = process_simple_connector_splits(&segment, None).unwrap();
+    //     assert_eq!(splits.len(), 2); // 1 for fwd, 1 for bwd
+    //     let fwd_split = splits
+    //         .iter()
+    //         .find(|s| s.heading == SegmentHeading::Forward)
+    //         .unwrap();
+    //     assert_eq!(fwd_split.src.connector_id, "seg1_start");
+    //     assert_eq!(fwd_split.dst.connector_id, "conn1");
+    // }
 
-        let splits = process_simple_connector_splits(&segment, None).unwrap();
-        assert_eq!(splits.len(), 2); // 1 for fwd, 1 for bwd
-        let fwd_split = splits
-            .iter()
-            .find(|s| s.heading == SegmentHeading::Forward)
-            .unwrap();
-        assert_eq!(fwd_split.src.connector_id, "conn2");
-        assert_eq!(fwd_split.dst.connector_id, "seg2_end");
-    }
+    // #[test]
+    // fn test_process_simple_connector_splits_cul_de_sac() {
+    //     let mut segment = create_test_segment(None);
+    //     segment.id = "seg2".to_string();
+    //     segment.connectors = Some(vec![
+    //         crate::collection::record::segment::ConnectorReference {
+    //             connector_id: "conn2".to_string(),
+    //             at: 0.0,
+    //         },
+    //     ]);
+
+    //     let splits = process_simple_connector_splits(&segment, None).unwrap();
+    //     assert_eq!(splits.len(), 2); // 1 for fwd, 1 for bwd
+    //     let fwd_split = splits
+    //         .iter()
+    //         .find(|s| s.heading == SegmentHeading::Forward)
+    //         .unwrap();
+    //     assert_eq!(fwd_split.src.connector_id, "conn2");
+    //     assert_eq!(fwd_split.dst.connector_id, "seg2_end");
+    // }
 }
