@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775862338563,
+  "lastUpdate": 1776180270885,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3179,6 +3179,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2933828,
             "range": "± 170602",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "340b69086058e77df726b593473f75e0169d29f3",
+          "message": "Merge pull request #492 from NatLabRockies/rjf/pruning-grouped-labels\n\nfixing incorrect pruning + backtrack handling in SearchTree",
+          "timestamp": "2026-04-14T09:19:35-06:00",
+          "tree_id": "377e043491b9001b745033e66b6d330ea619d81d",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/340b69086058e77df726b593473f75e0169d29f3"
+        },
+        "date": 1776180269880,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 3027455,
+            "range": "± 292075",
             "unit": "ns/iter"
           }
         ]
