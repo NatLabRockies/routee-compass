@@ -49,16 +49,13 @@ jobs:
           override: true
 
       - name: add mac rust target
-        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+        run: rustup target add aarch64-apple-darwin
         if: matrix.os == 'macos'
 
       - name: add mac cargo config options
         run: |
           mkdir -p ~/.cargo
           cat > ~/.cargo/config.toml <<EOF
-          [target.x86_64-apple-darwin]
-          rustflags = ["-C", "link-args=-Wl,-undefined,dynamic_lookup"]
-
           [target.aarch64-apple-darwin]
           rustflags = ["-C", "link-args=-Wl,-undefined,dynamic_lookup"]
           EOF
@@ -98,7 +95,7 @@ jobs:
           CIBW_ENVIRONMENT: 'PATH="$HOME/.cargo/bin:$PATH"'
           CIBW_ENVIRONMENT_WINDOWS: 'PATH="$UserProfile\.cargo\bin;$PATH"'
           CIBW_ENVIRONMENT_MACOS: 'PATH="$HOME/.cargo/bin:$PATH" OPENSSL_DIR=/opt/homebrew/opt/openssl@3 OPENSSL_INCLUDE_DIR=/opt/homebrew/opt/openssl@3/include OPENSSL_LIB_DIR=/opt/homebrew/opt/openssl@3/lib PKG_CONFIG_PATH=/opt/homebrew/opt/openssl@3/lib/pkgconfig'
-          CIBW_ARCHS_MACOS: "universal2"
+          CIBW_ARCHS_MACOS: "arm64"
           CIBW_BEFORE_ALL_LINUX: yum install -y openssl-devel perl-IPC-Cmd || apk add --no-cache openssl-dev perl
           CIBW_BEFORE_BUILD: >
             pip install -U maturin==1.9 &&
