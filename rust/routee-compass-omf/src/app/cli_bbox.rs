@@ -20,11 +20,14 @@ pub fn parse_bbox(s: &str) -> Result<CliBoundingBox, String> {
     let ymin = parse_lat(parts[2])?;
     let ymax = parse_lat(parts[3])?;
 
-    if !(xmin < xmax) {
+    let valid_lon = xmin < xmax;
+    let valid_lat = ymin < ymax;
+
+    if !valid_lon {
         Err(format!(
             "bbox: xmin must be less than xmax, but found [{xmin},{xmax}]"
         ))
-    } else if !(ymin < ymax) {
+    } else if !valid_lat {
         Err(format!(
             "bbox: ymin must be less than ymax, but found [{ymin},{ymax}]"
         ))

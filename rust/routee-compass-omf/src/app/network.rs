@@ -40,6 +40,7 @@ impl From<&NetworkEdgeListConfiguration> for SegmentAccessRestrictionWhen {
 }
 
 /// runs an OMF network import using the provided configuration.
+#[allow(clippy::too_many_arguments)]
 pub fn run(
     name: &str,
     bbox: Option<&CliBoundingBox>,
