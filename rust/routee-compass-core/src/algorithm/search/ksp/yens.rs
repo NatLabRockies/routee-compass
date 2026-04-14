@@ -138,7 +138,7 @@ pub fn run(
                 )?;
                 if !similar {
                     let candidate_cost: Cost =
-                        candidate_test_path.iter().map(|e| e.cost.total_cost).sum();
+                        candidate_test_path.iter().map(|e| e.cost.edge_cost).sum();
                     match best_candidate {
                         Some((_, best_cost)) if candidate_cost < best_cost => {
                             best_candidate = Some((candidate_path.clone(), candidate_cost));

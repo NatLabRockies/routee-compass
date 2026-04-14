@@ -12,7 +12,6 @@ mod termination_behavior;
 
 pub mod a_star;
 pub mod ksp;
-pub mod search_pruning;
 pub mod util;
 pub use direction::Direction;
 pub use edge_traversal::EdgeTraversal;
@@ -25,3 +24,5 @@ pub use search_result::SearchResult;
 pub use search_tree::{SearchTree, SearchTreeError};
 pub use search_tree_node::SearchTreeNode;
 pub use termination_behavior::TerminationFailurePolicy;
+mod tree_storage;
+pub use tree_storage::TreeStorage;

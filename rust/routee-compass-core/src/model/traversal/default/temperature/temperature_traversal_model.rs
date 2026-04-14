@@ -3,7 +3,7 @@ use uom::{si::f64::ThermodynamicTemperature, ConstZero};
 use crate::{
     algorithm::search::SearchTree,
     model::{
-        network::{Edge, Vertex},
+        network::Vertex,
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
         traversal::{default::fieldname, TraversalModel, TraversalModelError},
         unit::TemperatureUnit,
@@ -36,9 +36,8 @@ impl TraversalModel for TemperatureTraversalModel {
 
     fn traverse_edge(
         &self,
-        _trajectory: (&Vertex, &Edge, &Vertex),
+        _ctx: &crate::model::traversal::EdgeTraversalContext,
         state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         state_model.set_temperature(

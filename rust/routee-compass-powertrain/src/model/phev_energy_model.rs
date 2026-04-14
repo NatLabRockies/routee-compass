@@ -7,9 +7,11 @@ use super::{
 use routee_compass_core::{
     algorithm::search::SearchTree,
     model::{
-        network::{Edge, Vertex},
+        network::Vertex,
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
-        traversal::{TraversalModel, TraversalModelError, TraversalModelService},
+        traversal::{
+            EdgeTraversalContext, TraversalModel, TraversalModelError, TraversalModelService,
+        },
         unit::{EnergyRateUnit, EnergyUnit, RatioUnit},
     },
 };
@@ -217,9 +219,8 @@ impl TraversalModel for PhevEnergyModel {
 
     fn traverse_edge(
         &self,
-        _trajectory: (&Vertex, &Edge, &Vertex),
+        _ctx: &EdgeTraversalContext,
         state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         phev_traversal(

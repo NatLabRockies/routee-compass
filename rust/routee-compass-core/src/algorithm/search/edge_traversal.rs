@@ -2,9 +2,10 @@ use super::search_error::SearchError;
 use super::SearchInstance;
 use crate::algorithm::search::SearchTree;
 use crate::model::cost::{CostModel, TraversalCost};
-use crate::model::network::{Edge, EdgeId, EdgeListId, Vertex};
+use crate::model::label::Label;
+use crate::model::network::{EdgeId, EdgeListId};
 use crate::model::state::{StateModel, StateVariable};
-use crate::model::traversal::TraversalModel;
+use crate::model::traversal::{EdgeTraversalContext, TraversalModel};
 use allocative::Allocative;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
@@ -22,7 +23,7 @@ impl Display for EdgeTraversal {
         write!(
             f,
             "edge {} cost:{} state:{:?}",
-            self.edge_id, self.cost.total_cost, self.result_state
+            self.edge_id, self.cost.edge_cost, self.result_state
         )
     }
 }
@@ -52,6 +53,7 @@ impl EdgeTraversal {
     ///
     /// An edge traversal summarizing the costs and result state of accessing and traversing the next edge.
     pub fn new(
+        prev_label: &Label,
         next_edge: (EdgeListId, EdgeId),
         tree: &SearchTree,
         prev_state: &[StateVariable],
@@ -59,11 +61,11 @@ impl EdgeTraversal {
     ) -> Result<EdgeTraversal, SearchError> {
         // find this traversal in the graph
         let (edge_list_id, edge_id) = next_edge;
-        let trajectory = si.graph.edge_triplet(&edge_list_id, &edge_id)?;
+        let (src, edge, dst) = si.graph.edge_triplet(&edge_list_id, &edge_id)?;
+        let ctx = EdgeTraversalContext::new(prev_label, src, edge, dst, tree);
         let tm = si.get_traversal_model(&edge_list_id)?;
         Self::new_local(
-            trajectory,
-            tree,
+            ctx,
             prev_state,
             &si.state_model.clone(),
             tm.clone().as_ref(),
@@ -77,24 +79,20 @@ impl EdgeTraversal {
     /// this function signature makes uses lower-level constructs than the associated [`EdgeTraversal::new`]
     /// method and does not require [`Arc`]-wrapped types.
     pub fn new_local(
-        trajectory: (&Vertex, &Edge, &Vertex),
-        tree: &SearchTree,
+        ctx: EdgeTraversalContext,
         prev_state: &[StateVariable],
         state_model: &StateModel,
         traversal_model: &dyn TraversalModel,
         cost_model: &CostModel,
     ) -> Result<EdgeTraversal, SearchError> {
-        let (_, edge, _) = trajectory;
         let mut result_state = state_model.initial_state(Some(prev_state))?;
+        traversal_model.traverse_edge(&ctx, &mut result_state, state_model)?;
 
-        traversal_model.traverse_edge(trajectory, &mut result_state, tree, state_model)?;
-
-        let cost =
-            cost_model.traversal_cost(trajectory, prev_state, &result_state, tree, state_model)?;
+        let cost = cost_model.traversal_cost(&ctx, prev_state, &result_state, state_model)?;
 
         let result = EdgeTraversal {
-            edge_list_id: edge.edge_list_id,
-            edge_id: edge.edge_id,
+            edge_list_id: ctx.edge.edge_list_id,
+            edge_id: ctx.edge.edge_id,
             cost,
             result_state,
         };

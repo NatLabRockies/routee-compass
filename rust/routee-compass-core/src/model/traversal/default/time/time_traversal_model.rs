@@ -6,7 +6,7 @@ use uom::{
 use crate::{
     algorithm::search::SearchTree,
     model::{
-        network::{Edge, Vertex},
+        network::Vertex,
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
         traversal::{
             default::{fieldname, time::TimeTraversalConfig},
@@ -78,9 +78,8 @@ impl TraversalModel for TimeTraversalModel {
 
     fn traverse_edge(
         &self,
-        _trajectory: (&Vertex, &Edge, &Vertex),
+        _ctx: &crate::model::traversal::EdgeTraversalContext,
         state: &mut Vec<StateVariable>,
-        _tree: &SearchTree,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
         let distance: Length = state_model.get_distance(state, fieldname::EDGE_DISTANCE)?;

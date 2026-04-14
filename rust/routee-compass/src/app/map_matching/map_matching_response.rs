@@ -103,8 +103,8 @@ mod tests {
                 PointMatchResponse::new(0, 2, 3.2),
             ],
             matched_path: json!([
-                MatchedEdgeResponse::new(0, 1, None, TraversalCost::default(), vec![]),
-                MatchedEdgeResponse::new(0, 2, None, TraversalCost::default(), vec![]),
+                MatchedEdgeResponse::new(0, 1, None, TraversalCost::empty(), vec![]),
+                MatchedEdgeResponse::new(0, 2, None, TraversalCost::empty(), vec![]),
             ]),
             traversal_summary: None,
         };

@@ -12,8 +12,6 @@ pub enum SearchTreeNode {
     Root {
         /// Tree orientation this node belongs to
         direction: Direction,
-        /// Number of nodes in the tree that have this node as a parent
-        child_count: usize,
     },
     Branch {
         /// The edge traversal that led to this node (None for root)
@@ -22,28 +20,26 @@ pub enum SearchTreeNode {
         parent: Label,
         /// Tree orientation this node belongs to
         direction: Direction,
-        /// Number of nodes in the tree that have this node as a parent
-        child_count: usize,
     },
 }
 
 impl SearchTreeNode {
-    pub fn new_root(orientation: Direction) -> Self {
-        Self::Root {
-            direction: orientation,
-            child_count: 0,
-        }
+    /// create a new root node.
+    pub fn new_root(direction: Direction) -> Self {
+        Self::Root { direction }
     }
 
-    pub fn new_child(edge_traversal: EdgeTraversal, parent: Label, direction: Direction) -> Self {
+    /// create a new child node from some trajectory (parent) -> [incoming_edge] -> (), for some
+    /// direction in the network.
+    pub fn new_child(incoming_edge: EdgeTraversal, parent: Label, direction: Direction) -> Self {
         Self::Branch {
-            incoming_edge: edge_traversal,
+            incoming_edge,
             parent,
             direction,
-            child_count: 0,
         }
     }
 
+    /// Retrieves the label of the parent node, if this node is not the root.
     pub fn parent_label(&self) -> Option<&Label> {
         match self {
             SearchTreeNode::Root { .. } => None,
@@ -51,6 +47,7 @@ impl SearchTreeNode {
         }
     }
 
+    /// Retrieves the edge traversal that led to this node, if this node is not the root.
     pub fn incoming_edge(&self) -> Option<&EdgeTraversal> {
         match self {
             SearchTreeNode::Root { .. } => None,
@@ -58,6 +55,7 @@ impl SearchTreeNode {
         }
     }
 
+    /// Returns `true` if this node is the root of the search tree.
     pub fn is_root(&self) -> bool {
         match self {
             SearchTreeNode::Root { .. } => true,
@@ -65,6 +63,7 @@ impl SearchTreeNode {
         }
     }
 
+    /// Retrieves the direction of the search tree this node belongs to.
     pub fn direction(&self) -> Direction {
         match self {
             SearchTreeNode::Root { direction, .. } => *direction,
@@ -72,43 +71,11 @@ impl SearchTreeNode {
         }
     }
 
+    /// Retrieves the cost of the edge traversal that led to this node, if this node is not the root.
     pub fn traversal_cost(&self) -> Option<&TraversalCost> {
         match self {
             SearchTreeNode::Root { .. } => None,
             SearchTreeNode::Branch { incoming_edge, .. } => Some(&incoming_edge.cost),
         }
-    }
-
-    pub fn child_count(&self) -> usize {
-        match self {
-            SearchTreeNode::Root { child_count, .. } => *child_count,
-            SearchTreeNode::Branch { child_count, .. } => *child_count,
-        }
-    }
-
-    pub fn increment_child_count(&mut self) {
-        match self {
-            SearchTreeNode::Root { child_count, .. } => *child_count += 1,
-            SearchTreeNode::Branch { child_count, .. } => *child_count += 1,
-        }
-    }
-
-    pub fn decrement_child_count(&mut self) {
-        match self {
-            SearchTreeNode::Root { child_count, .. } => {
-                if *child_count > 0 {
-                    *child_count -= 1;
-                }
-            }
-            SearchTreeNode::Branch { child_count, .. } => {
-                if *child_count > 0 {
-                    *child_count -= 1;
-                }
-            }
-        }
-    }
-
-    pub fn is_prunable(&self) -> bool {
-        self.child_count() == 0
     }
 }

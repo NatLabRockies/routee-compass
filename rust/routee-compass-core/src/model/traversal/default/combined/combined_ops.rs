@@ -91,7 +91,7 @@ mod test {
     use crate::{
         algorithm::search::SearchTree,
         model::{
-            network::{Edge, Vertex},
+            network::Vertex,
             state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
             traversal::{TraversalModel, TraversalModelError},
         },
@@ -312,9 +312,9 @@ mod test {
                 .collect_vec()
         }
 
-        fn traverse_edge(
+        fn estimate_traversal(
             &self,
-            _trajectory: (&Vertex, &Edge, &Vertex),
+            _od: (&Vertex, &Vertex),
             _state: &mut Vec<StateVariable>,
             _tree: &SearchTree,
             _state_model: &StateModel,
@@ -322,11 +322,10 @@ mod test {
             todo!()
         }
 
-        fn estimate_traversal(
+        fn traverse_edge(
             &self,
-            _od: (&Vertex, &Vertex),
+            _ctx: &crate::model::traversal::EdgeTraversalContext,
             _state: &mut Vec<StateVariable>,
-            _tree: &SearchTree,
             _state_model: &StateModel,
         ) -> Result<(), TraversalModelError> {
             todo!()
