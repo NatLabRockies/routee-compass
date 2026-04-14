@@ -51,7 +51,7 @@ impl TaxonomyModel {
     ///
     /// Arguments
     ///
-    /// * `tree_nodes` - Vector of cateogry, parent node relationships. All nodes are
+    /// * `tree_nodes` - Vector of category, parent node relationships. All nodes are
     ///   expected to be represented by strings. If no parent is given,
     ///   i.e. the second element is None, the entry is treated as a root
     /// * `group_mappings` - HashMap specifying the categories (nodes) that are associated with
