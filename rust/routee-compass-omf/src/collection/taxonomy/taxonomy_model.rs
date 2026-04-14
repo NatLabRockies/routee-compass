@@ -52,10 +52,10 @@ impl TaxonomyModel {
     /// Arguments
     ///
     /// * `tree_nodes` - Vector of cateogry, parent node relationships. All nodes are
-    ///             expected to be represented by strings. If no parent is given,
-    ///             i.e. the second element is None, the entry is treated as a root
+    ///   expected to be represented by strings. If no parent is given,
+    ///   i.e. the second element is None, the entry is treated as a root
     /// * `group_mappings` - HashMap specifying the categories (nodes) that are associated with
-    ///             each group.
+    ///   each group.
     pub fn from_tree_nodes(
         tree_nodes: Vec<(String, Option<String>)>,
         group_mappings: HashMap<String, Vec<String>>,

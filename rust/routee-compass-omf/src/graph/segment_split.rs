@@ -255,10 +255,7 @@ impl SegmentSplit {
         let opt_first_matching_sublcass = segment.subclass_rules.as_ref().and_then(|rules| {
             rules
                 .iter()
-                .find(|rule| match rule.check_open_intersection(start, end) {
-                    Ok(true) => true,
-                    _ => false,
-                })
+                .find(|rule| matches!(rule.check_open_intersection(start, end), Ok(true)))
         });
 
         // Get value from inside

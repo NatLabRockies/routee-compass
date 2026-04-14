@@ -227,7 +227,7 @@ impl PartialEq for TravelModeFilter {
 
 impl PartialOrd for TravelModeFilter {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.ordering_value().cmp(&other.ordering_value()))
+        Some(self.cmp(other))
     }
 }
 

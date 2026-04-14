@@ -17,7 +17,7 @@ use crate::{
 pub struct OmfGraphSummary {
     /// information describing how this dataset was generated
     pub source: OmfGraphSource,
-    ///
+    /// statistics gathered on the graph dataset
     pub stats: OmfGraphStats,
 }
 
