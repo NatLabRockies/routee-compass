@@ -5,7 +5,7 @@ use crate::{
         record::{SegmentAccessRestriction, SegmentHeading},
         OvertureMapsCollectionError, SegmentAccessRestrictionWhen, TransportationSegmentRecord,
     },
-    graph::{consts, segment_split::SegmentSplit, ConnectorInSegment},
+    graph::{segment_split::SegmentSplit, ConnectorInSegment},
 };
 use itertools::Itertools;
 
