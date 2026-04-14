@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776186381902,
+  "lastUpdate": 1776189422714,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3239,6 +3239,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2958263,
             "range": "± 73730",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "Nicholas.Reinicke@nrel.gov",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "committer": {
+            "email": "Nicholas.Reinicke@nrel.gov",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "distinct": true,
+          "id": "825e3f5b0a5e5a4df80c8d9835eb390c6251b4e8",
+          "message": "install openssl in ci build wheel environment",
+          "timestamp": "2026-04-14T11:47:30-06:00",
+          "tree_id": "b39229a8b720c063e2dbeb7669740c32648e7ede",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/825e3f5b0a5e5a4df80c8d9835eb390c6251b4e8"
+        },
+        "date": 1776189421686,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2971438,
+            "range": "± 100463",
             "unit": "ns/iter"
           }
         ]
