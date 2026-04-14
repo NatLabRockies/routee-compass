@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776189422714,
+  "lastUpdate": 1776201374208,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3269,6 +3269,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2971438,
             "range": "± 100463",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "Nicholas.Reinicke@nrel.gov",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "committer": {
+            "email": "Nicholas.Reinicke@nrel.gov",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "distinct": true,
+          "id": "1c06e25eab3dc06592126ede521d04f98cc03aa0",
+          "message": "Drop x86_64 mac os wheel support\n\nONNX runtimes no longer support intel mac and Rust has demoted that target to tier 2 so we're not building wheels for that target.",
+          "timestamp": "2026-04-14T15:10:35-06:00",
+          "tree_id": "37409c46ce95856869cb410497cf200cf4134318",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/1c06e25eab3dc06592126ede521d04f98cc03aa0"
+        },
+        "date": 1776201373577,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 3012080,
+            "range": "± 347762",
             "unit": "ns/iter"
           }
         ]
