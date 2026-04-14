@@ -23,25 +23,25 @@ pub fn process_simple_connector_splits(
     })?;
     sorted_connectors.sort_by(|a, b| a.at.partial_cmp(&b.at).unwrap_or(std::cmp::Ordering::Equal));
 
-    if let Some(first) = sorted_connectors.first() {
-        if first.at > consts::F64_DISTANCE_TOLERANCE {
-            sorted_connectors.insert(
-                0,
-                crate::collection::record::segment::ConnectorReference {
-                    connector_id: format!("{}_start", segment.id),
-                    at: 0.0,
-                },
-            );
-        }
-    }
-    if let Some(last) = sorted_connectors.last() {
-        if last.at < 1.0 - consts::F64_DISTANCE_TOLERANCE {
-            sorted_connectors.push(crate::collection::record::segment::ConnectorReference {
-                connector_id: format!("{}_end", segment.id),
-                at: 1.0,
-            });
-        }
-    }
+    // if let Some(first) = sorted_connectors.first() {
+    //     if first.at > consts::F64_DISTANCE_TOLERANCE {
+    //         sorted_connectors.insert(
+    //             0,
+    //             crate::collection::record::segment::ConnectorReference {
+    //                 connector_id: format!("{}_start", segment.id),
+    //                 at: 0.0,
+    //             },
+    //         );
+    //     }
+    // }
+    // if let Some(last) = sorted_connectors.last() {
+    //     if last.at < 1.0 - consts::F64_DISTANCE_TOLERANCE {
+    //         sorted_connectors.push(crate::collection::record::segment::ConnectorReference {
+    //             connector_id: format!("{}_end", segment.id),
+    //             at: 1.0,
+    //         });
+    //     }
+    // }
 
     let result = sorted_connectors
         .iter()
