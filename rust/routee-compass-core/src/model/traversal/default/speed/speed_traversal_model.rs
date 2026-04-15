@@ -8,8 +8,8 @@ use crate::model::state::StateModel;
 use crate::model::state::StateVariable;
 use crate::model::state::{InputFeature, StateVariableConfig};
 use crate::model::traversal::default::fieldname;
-use crate::model::traversal::model::TraversalModel;
 use crate::model::traversal::error::TraversalModelError;
+use crate::model::traversal::model::TraversalModel;
 use crate::model::unit::SpeedUnit;
 use std::sync::Arc;
 

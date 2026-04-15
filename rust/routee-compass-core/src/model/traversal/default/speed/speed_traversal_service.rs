@@ -3,8 +3,7 @@ use super::{
 };
 use crate::model::{
     traversal::{
-        model::TraversalModel, error::TraversalModelError,
-        service::TraversalModelService,
+        error::TraversalModelError, model::TraversalModel, service::TraversalModelService,
     },
     unit::SpeedUnit,
 };

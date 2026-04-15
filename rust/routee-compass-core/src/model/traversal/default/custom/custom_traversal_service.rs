@@ -1,7 +1,6 @@
 use super::{CustomTraversalEngine, CustomTraversalModel};
 use crate::model::traversal::{
-    model::TraversalModel, error::TraversalModelError,
-    service::TraversalModelService,
+    error::TraversalModelError, model::TraversalModel, service::TraversalModelService,
 };
 use std::sync::Arc;
 
