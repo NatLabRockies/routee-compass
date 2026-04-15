@@ -1,6 +1,6 @@
 [package]
 name = "routee-compass"
-version = "0.19.1"
+version = "0.19.2"
 edition = "2021"
 readme = "README.md"
 license = "BSD-3-Clause"
@@ -56,8 +56,8 @@ ordered-float = { workspace = true }
 ordered_hash_map = { workspace = true }
 parquet = { workspace = true }
 rayon = { workspace = true }
-routee-compass-core = { path = "../routee-compass-core", version = "0.19.1" }
-routee-compass-powertrain = { path = "../routee-compass-powertrain", version = "0.19.1", default-features = false }
+routee-compass-core = { path = "../routee-compass-core", version = "0.19.2" }
+routee-compass-powertrain = { path = "../routee-compass-powertrain", version = "0.19.2", default-features = false }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_json_path = { workspace = true }
