@@ -8,7 +8,7 @@ use std::sync::Arc;
 /// [`TraversalModelService`] must be read across the thread pool and so it implements
 /// Send and Sync.
 ///
-/// [TraversalModel]: compass_core::model::traversal::traversal_model::TraversalModel
+/// [TraversalModel]: compass_core::model::traversal::model::TraversalModel
 pub trait TraversalModelService: Send + Sync {
     /// Builds a [TraversalModel] for the incoming query, used as parameters for this
     /// build operation.
@@ -24,7 +24,7 @@ pub trait TraversalModelService: Send + Sync {
     ///
     /// The [TraversalModel] instance for this query, or an error
     ///
-    /// [TraversalModel]: compass_core::model::traversal::traversal_model::TraversalModel
+    /// [TraversalModel]: compass_core::model::traversal::model::TraversalModel
     fn build(
         &self,
         query: &serde_json::Value,

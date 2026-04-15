@@ -10,7 +10,7 @@ use crate::model::{
 /// This may be desireable when a traversal model has complex cost logic but an edge
 /// may not be traversable for this query, such as due to height restrictions.
 ///
-/// [TraversalModel]: crate::model::traversal::traversal_model::TraversalModel
+/// [TraversalModel]: crate::model::traversal::model::TraversalModel
 pub trait ConstraintModel: Send + Sync {
     /// Validates an edge before allowing it to be added to the search frontier.
     ///
