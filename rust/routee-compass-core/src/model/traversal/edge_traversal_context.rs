@@ -39,6 +39,16 @@ impl<'a> EdgeTraversalContext<'a> {
         }
     }
 
+    /// create a new context for an edge traversal from an edge triplet, label + tree
+    pub fn new_from_trajectory(
+        parent_label: &'a Label,
+        trajectory: (&'a Vertex, &'a Edge, &'a Vertex),
+        tree: &'a SearchTree,
+    ) -> Self {
+        let (src, edge, dst) = trajectory;
+        EdgeTraversalContext::new(parent_label, src, edge, dst, tree)
+    }
+
     /// convenience method to backtrack from the parent label toward the tree root.
     ///
     /// # Arguments

@@ -2,6 +2,7 @@ use routee_compass_core::model::{
     constraint::{ConstraintModel, ConstraintModelError},
     network::Edge,
     state::{StateModel, StateVariable},
+    traversal::EdgeTraversalContext,
 };
 use uom::si::f64::Ratio;
 
@@ -15,8 +16,7 @@ pub struct BatteryFilter {
 impl ConstraintModel for BatteryFilter {
     fn valid_frontier(
         &self,
-        _edge: &Edge,
-        _previous_edge: Option<&Edge>,
+        _ctx: &EdgeTraversalContext,
         state: &[StateVariable],
         state_model: &StateModel,
     ) -> Result<bool, ConstraintModelError> {

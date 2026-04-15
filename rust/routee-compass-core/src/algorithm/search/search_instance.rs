@@ -123,7 +123,7 @@ impl SearchInstance {
             let tm = self.get_traversal_model(edge_list_id)?;
             let ctx = EdgeTraversalContext::new(&prev_label, src, edge, dst, &tree);
             let traversal = EdgeTraversal::new_local(
-                ctx,
+                &ctx,
                 &current_state,
                 &self.state_model,
                 tm.as_ref(),

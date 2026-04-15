@@ -1,8 +1,6 @@
 use super::search_error::SearchError;
 use super::SearchInstance;
-use crate::algorithm::search::SearchTree;
 use crate::model::cost::{CostModel, TraversalCost};
-use crate::model::label::Label;
 use crate::model::network::{EdgeId, EdgeListId};
 use crate::model::state::{StateModel, StateVariable};
 use crate::model::traversal::{EdgeTraversalContext, TraversalModel};
@@ -53,17 +51,12 @@ impl EdgeTraversal {
     ///
     /// An edge traversal summarizing the costs and result state of accessing and traversing the next edge.
     pub fn new(
-        prev_label: &Label,
-        next_edge: (EdgeListId, EdgeId),
-        tree: &SearchTree,
+        ctx: &EdgeTraversalContext,
         prev_state: &[StateVariable],
         si: &SearchInstance,
     ) -> Result<EdgeTraversal, SearchError> {
         // find this traversal in the graph
-        let (edge_list_id, edge_id) = next_edge;
-        let (src, edge, dst) = si.graph.edge_triplet(&edge_list_id, &edge_id)?;
-        let ctx = EdgeTraversalContext::new(prev_label, src, edge, dst, tree);
-        let tm = si.get_traversal_model(&edge_list_id)?;
+        let tm = si.get_traversal_model(&ctx.edge.edge_list_id)?;
         Self::new_local(
             ctx,
             prev_state,
@@ -79,7 +72,7 @@ impl EdgeTraversal {
     /// this function signature makes uses lower-level constructs than the associated [`EdgeTraversal::new`]
     /// method and does not require [`Arc`]-wrapped types.
     pub fn new_local(
-        ctx: EdgeTraversalContext,
+        ctx: &EdgeTraversalContext,
         prev_state: &[StateVariable],
         state_model: &StateModel,
         traversal_model: &dyn TraversalModel,

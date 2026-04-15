@@ -3,6 +3,7 @@ use crate::model::{
     constraint::{ConstraintModel, ConstraintModelError},
     network::Edge,
     state::{StateModel, StateVariable},
+    traversal::EdgeTraversalContext,
 };
 use std::sync::Arc;
 
@@ -14,12 +15,11 @@ pub struct VehicleRestrictionConstraintModel {
 impl ConstraintModel for VehicleRestrictionConstraintModel {
     fn valid_frontier(
         &self,
-        edge: &Edge,
-        _previos_edge: Option<&Edge>,
+        ctx: &EdgeTraversalContext,
         _state: &[StateVariable],
         _state_model: &StateModel,
     ) -> Result<bool, ConstraintModelError> {
-        validate_edge(self, edge)
+        validate_edge(self, ctx.edge)
     }
 
     fn valid_edge(&self, edge: &Edge) -> Result<bool, ConstraintModelError> {

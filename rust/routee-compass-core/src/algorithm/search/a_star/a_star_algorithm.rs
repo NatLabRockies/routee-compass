@@ -10,6 +10,7 @@ use crate::model::label::Label;
 use crate::model::network::EdgeListId;
 use crate::model::network::{EdgeId, VertexId};
 use crate::model::state::StateVariable;
+use crate::model::traversal::EdgeTraversalContext;
 use crate::model::unit::Cost;
 use crate::model::unit::ReverseCost;
 use crate::util::priority_queue::InternalPriorityQueue;
@@ -102,15 +103,14 @@ pub fn run_vertex_oriented(
                 &si.state_model,
             )?;
             let key_vertex_id = direction.tree_key_vertex_id(e);
+            let trajectory = si.graph.edge_triplet(edge_list_id, edge_id)?;
+            let ctx =
+                EdgeTraversalContext::new_from_trajectory(&f.prev_label, trajectory, &solution);
 
-            let previous_edge = match f.prev_edge {
-                Some((edge_list_id, edge_id)) => Some(si.graph.get_edge(&edge_list_id, &edge_id)?),
-                None => None,
-            };
+            // run the ConstraintModel to validate this frontier.
             let valid_frontier = {
                 si.get_constraint_model(edge_list_id)?.valid_frontier(
-                    e,
-                    previous_edge,
+                    &ctx,
                     &f.prev_state,
                     &si.state_model,
                 )?
@@ -119,8 +119,8 @@ pub fn run_vertex_oriented(
                 continue;
             }
 
-            let next_edge = (*edge_list_id, *edge_id);
-            let et = EdgeTraversal::new(&f.prev_label, next_edge, &solution, &f.prev_state, si)?;
+            // perform an edge traversal, running the TraversalModel.
+            let et = EdgeTraversal::new(&ctx, &f.prev_state, si)?;
             let key_label = si.label_model.label_from_state(
                 key_vertex_id,
                 &et.result_state,
