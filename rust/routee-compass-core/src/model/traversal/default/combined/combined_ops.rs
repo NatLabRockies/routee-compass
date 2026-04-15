@@ -324,7 +324,7 @@ mod test {
 
         fn traverse_edge(
             &self,
-            _ctx: &crate::model::traversal::EdgeTraversalContext,
+            _ctx: &crate::model::traversal::EdgeFrontierContext,
             _state: &mut Vec<StateVariable>,
             _state_model: &StateModel,
         ) -> Result<(), TraversalModelError> {

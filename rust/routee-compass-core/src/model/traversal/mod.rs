@@ -6,7 +6,7 @@ mod traversal_model_error;
 mod traversal_model_service;
 mod traversal_result;
 
-pub use edge_traversal_context::EdgeTraversalContext;
+pub use edge_traversal_context::EdgeFrontierContext;
 pub use traversal_model::TraversalModel;
 pub use traversal_model_builder::TraversalModelBuilder;
 pub use traversal_model_error::TraversalModelError;

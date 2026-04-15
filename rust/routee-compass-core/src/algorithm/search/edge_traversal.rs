@@ -3,7 +3,7 @@ use super::SearchInstance;
 use crate::model::cost::{CostModel, TraversalCost};
 use crate::model::network::{EdgeId, EdgeListId};
 use crate::model::state::{StateModel, StateVariable};
-use crate::model::traversal::{EdgeTraversalContext, TraversalModel};
+use crate::model::traversal::{EdgeFrontierContext, TraversalModel};
 use allocative::Allocative;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
@@ -51,7 +51,7 @@ impl EdgeTraversal {
     ///
     /// An edge traversal summarizing the costs and result state of accessing and traversing the next edge.
     pub fn new(
-        ctx: &EdgeTraversalContext,
+        ctx: &EdgeFrontierContext,
         prev_state: &[StateVariable],
         si: &SearchInstance,
     ) -> Result<EdgeTraversal, SearchError> {
@@ -72,7 +72,7 @@ impl EdgeTraversal {
     /// this function signature makes uses lower-level constructs than the associated [`EdgeTraversal::new`]
     /// method and does not require [`Arc`]-wrapped types.
     pub fn new_local(
-        ctx: &EdgeTraversalContext,
+        ctx: &EdgeFrontierContext,
         prev_state: &[StateVariable],
         state_model: &StateModel,
         traversal_model: &dyn TraversalModel,

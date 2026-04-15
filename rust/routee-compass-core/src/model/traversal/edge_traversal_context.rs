@@ -6,9 +6,10 @@ use crate::{
     },
 };
 
-/// context for an edge traversal from (src)->[edge]->(dst) that will be
-/// added to the tree.
-pub struct EdgeTraversalContext<'a> {
+/// context in the search algorithm for evaluating the next edge in the frontier
+/// of the search, from (src)->[edge]->(dst), that will be evaluated and possibly
+/// added to the search tree.
+pub struct EdgeFrontierContext<'a> {
     /// [Label] associated with the src [Vertex]
     pub parent_label: &'a Label,
     /// source of the trajectory
@@ -21,8 +22,8 @@ pub struct EdgeTraversalContext<'a> {
     pub tree: &'a SearchTree,
 }
 
-impl<'a> EdgeTraversalContext<'a> {
-    /// create a new context for an edge traversal.
+impl<'a> EdgeFrontierContext<'a> {
+    /// create a new context for an edge traversal from its constituent parts.
     pub fn new(
         parent_label: &'a Label,
         src: &'a Vertex,
@@ -39,14 +40,15 @@ impl<'a> EdgeTraversalContext<'a> {
         }
     }
 
-    /// create a new context for an edge traversal from an edge triplet, label + tree
+    /// create a new context for an edge traversal from an edge triplet, label + tree.
+    /// a convenience method to unpack a graph triplet.
     pub fn new_from_trajectory(
         parent_label: &'a Label,
         trajectory: (&'a Vertex, &'a Edge, &'a Vertex),
         tree: &'a SearchTree,
     ) -> Self {
         let (src, edge, dst) = trajectory;
-        EdgeTraversalContext::new(parent_label, src, edge, dst, tree)
+        EdgeFrontierContext::new(parent_label, src, edge, dst, tree)
     }
 
     /// convenience method to backtrack from the parent label toward the tree root.

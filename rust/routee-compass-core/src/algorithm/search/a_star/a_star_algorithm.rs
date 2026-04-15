@@ -10,7 +10,7 @@ use crate::model::label::Label;
 use crate::model::network::EdgeListId;
 use crate::model::network::{EdgeId, VertexId};
 use crate::model::state::StateVariable;
-use crate::model::traversal::EdgeTraversalContext;
+use crate::model::traversal::EdgeFrontierContext;
 use crate::model::unit::Cost;
 use crate::model::unit::ReverseCost;
 use crate::util::priority_queue::InternalPriorityQueue;
@@ -105,7 +105,7 @@ pub fn run_vertex_oriented(
             let key_vertex_id = direction.tree_key_vertex_id(e);
             let trajectory = si.graph.edge_triplet(edge_list_id, edge_id)?;
             let ctx =
-                EdgeTraversalContext::new_from_trajectory(&f.prev_label, trajectory, &solution);
+                EdgeFrontierContext::new_from_trajectory(&f.prev_label, trajectory, &solution);
 
             // run the ConstraintModel to validate this frontier.
             let valid_frontier = {

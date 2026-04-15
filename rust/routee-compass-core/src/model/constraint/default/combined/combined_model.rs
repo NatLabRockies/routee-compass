@@ -2,7 +2,7 @@ use crate::model::{
     constraint::{ConstraintModel, ConstraintModelError},
     network::Edge,
     state::{StateModel, StateVariable},
-    traversal::EdgeTraversalContext,
+    traversal::EdgeFrontierContext,
 };
 use std::sync::Arc;
 
@@ -13,7 +13,7 @@ pub struct CombinedConstraintModel {
 impl ConstraintModel for CombinedConstraintModel {
     fn valid_frontier(
         &self,
-        ctx: &EdgeTraversalContext,
+        ctx: &EdgeFrontierContext,
         state: &[StateVariable],
         state_model: &StateModel,
     ) -> Result<bool, ConstraintModelError> {

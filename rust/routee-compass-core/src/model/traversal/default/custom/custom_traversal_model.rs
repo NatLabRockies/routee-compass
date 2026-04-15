@@ -40,7 +40,7 @@ impl TraversalModel for CustomTraversalModel {
     /// records the value that will be assigned to this edge into the state vector.
     fn traverse_edge(
         &self,
-        ctx: &crate::model::traversal::EdgeTraversalContext,
+        ctx: &crate::model::traversal::EdgeFrontierContext,
         state: &mut Vec<StateVariable>,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {

@@ -78,7 +78,7 @@ impl TraversalModel for TimeTraversalModel {
 
     fn traverse_edge(
         &self,
-        _ctx: &crate::model::traversal::EdgeTraversalContext,
+        _ctx: &crate::model::traversal::EdgeFrontierContext,
         state: &mut Vec<StateVariable>,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {

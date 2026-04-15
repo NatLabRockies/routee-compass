@@ -6,7 +6,7 @@ use crate::model::cost::CostConstraint;
 use crate::model::cost::CostModelError;
 use crate::model::state::StateModel;
 use crate::model::state::StateVariable;
-use crate::model::traversal::EdgeTraversalContext;
+use crate::model::traversal::EdgeFrontierContext;
 use indexmap::IndexMap;
 use itertools::Itertools;
 use serde_json::json;
@@ -101,7 +101,7 @@ impl CostModel {
     /// represents just the edge traversal).
     pub fn traversal_cost(
         &self,
-        ctx: &EdgeTraversalContext,
+        ctx: &EdgeFrontierContext,
         previous_state: &[StateVariable],
         current_state: &[StateVariable],
         state_model: &StateModel,
@@ -418,7 +418,7 @@ mod test {
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
         let tree = create_test_tree();
-        let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
+        let ctx = EdgeFrontierContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
             .traversal_cost(&ctx, &previous_state, &current_state, &state_model)
@@ -478,7 +478,7 @@ mod test {
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
         let tree = create_test_tree();
-        let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
+        let ctx = EdgeFrontierContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
             .traversal_cost(&ctx, &previous_state, &current_state, &state_model)
@@ -579,7 +579,7 @@ mod test {
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
         let tree = create_test_tree();
-        let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
+        let ctx = EdgeFrontierContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
             .traversal_cost(&ctx, &previous_state, &current_state, &state_model)
@@ -652,7 +652,7 @@ mod test {
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
         let tree = create_test_tree();
-        let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
+        let ctx = EdgeFrontierContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
             .traversal_cost(&ctx, &previous_state, &current_state, &state_model)
@@ -819,7 +819,7 @@ mod test {
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
         let tree = create_test_tree();
-        let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
+        let ctx = EdgeFrontierContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
             .traversal_cost(&ctx, &previous_state, &current_state, &state_model)
@@ -901,7 +901,7 @@ mod test {
         let v2 = create_vertex(VertexId(1));
         let e = create_edge(EdgeId(0), VertexId(0), VertexId(1));
         let tree = create_test_tree();
-        let ctx = EdgeTraversalContext::new(&l, &v1, &e, &v2, &tree);
+        let ctx = EdgeFrontierContext::new(&l, &v1, &e, &v2, &tree);
 
         let result_acc = cost_model_acc
             .traversal_cost(&ctx, &previous_state, &current_state, &state_model_acc)

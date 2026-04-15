@@ -1,7 +1,7 @@
 use crate::model::{
     constraint::{error::ConstraintModelError, ConstraintModel, ConstraintModelService},
     state::StateModel,
-    traversal::EdgeTraversalContext,
+    traversal::EdgeFrontierContext,
 };
 use std::sync::Arc;
 
@@ -11,7 +11,7 @@ pub struct NoRestriction {}
 impl ConstraintModel for NoRestriction {
     fn valid_frontier(
         &self,
-        _ctx: &EdgeTraversalContext,
+        _ctx: &EdgeFrontierContext,
         _state: &[crate::model::state::StateVariable],
         _state_model: &StateModel,
     ) -> Result<bool, ConstraintModelError> {

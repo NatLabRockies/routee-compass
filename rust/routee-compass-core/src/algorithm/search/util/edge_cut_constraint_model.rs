@@ -1,7 +1,7 @@
 use crate::model::{
     constraint::ConstraintModel,
     network::{Edge, EdgeId},
-    traversal::EdgeTraversalContext,
+    traversal::EdgeFrontierContext,
 };
 use std::{collections::HashSet, sync::Arc};
 
@@ -28,7 +28,7 @@ impl EdgeCutConstraintModel {
 impl ConstraintModel for EdgeCutConstraintModel {
     fn valid_frontier(
         &self,
-        ctx: &EdgeTraversalContext,
+        ctx: &EdgeFrontierContext,
         state: &[crate::model::state::StateVariable],
         state_model: &crate::model::state::StateModel,
     ) -> Result<bool, crate::model::constraint::ConstraintModelError> {

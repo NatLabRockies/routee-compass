@@ -62,7 +62,7 @@ impl TraversalModel for SpeedTraversalModel {
     /// records the speed that will be driven over this edge into the state vector.
     fn traverse_edge(
         &self,
-        ctx: &crate::model::traversal::EdgeTraversalContext,
+        ctx: &crate::model::traversal::EdgeFrontierContext,
         state: &mut Vec<StateVariable>,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
@@ -120,7 +120,7 @@ mod tests {
     use super::*;
     use crate::model::label::Label;
     use crate::model::network::{Edge, EdgeId, EdgeListId, Vertex, VertexId};
-    use crate::model::traversal::EdgeTraversalContext;
+    use crate::model::traversal::EdgeFrontierContext;
     use crate::model::unit::SpeedUnit;
     use crate::testing::mock::traversal_model::TestTraversalModel;
     use crate::util::geo::InternalCoord;
@@ -185,7 +185,7 @@ mod tests {
 
         test_model
             .traverse_edge(
-                &EdgeTraversalContext::new(&l, &v, &e1, &v, &SearchTree::default()),
+                &EdgeFrontierContext::new(&l, &v, &e1, &v, &SearchTree::default()),
                 &mut state,
                 &state_model,
             )
@@ -233,7 +233,7 @@ mod tests {
         let l = Label::Vertex(v.vertex_id);
         let e = mock_edge(0);
         let t = SearchTree::default();
-        let mock_ctx = EdgeTraversalContext::new(&l, &v, &e, &v, &t);
+        let mock_ctx = EdgeFrontierContext::new(&l, &v, &e, &v, &t);
 
         // Traverse with speed limit
         test_limited_model

@@ -10,7 +10,7 @@ use routee_compass_core::{
         network::Vertex,
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
         traversal::{
-            EdgeTraversalContext, TraversalModel, TraversalModelError, TraversalModelService,
+            EdgeFrontierContext, TraversalModel, TraversalModelError, TraversalModelService,
         },
         unit::{EnergyRateUnit, EnergyUnit, RatioUnit},
     },
@@ -219,7 +219,7 @@ impl TraversalModel for PhevEnergyModel {
 
     fn traverse_edge(
         &self,
-        _ctx: &EdgeTraversalContext,
+        _ctx: &EdgeFrontierContext,
         state: &mut Vec<StateVariable>,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
