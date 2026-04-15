@@ -1,4 +1,4 @@
-use super::{traversal_model::TraversalModel, traversal_model_error::TraversalModelError};
+use super::{error::TraversalModelError, model::TraversalModel};
 use std::sync::Arc;
 
 /// A [`TraversalModelService`] is a persistent builder of [TraversalModel] instances.

@@ -1,4 +1,4 @@
-use crate::algorithm::search::SearchTreeError;
+use crate::{algorithm::search::SearchTreeError, model::state::StateModelError};
 
 #[derive(thiserror::Error, Debug)]
 pub enum ConstraintModelError {
@@ -10,5 +10,10 @@ pub enum ConstraintModelError {
     SearchTreeError {
         #[from]
         source: SearchTreeError,
+    },
+    #[error("failure running constraint model due to state: {source}")]
+    StateModelError {
+        #[from]
+        source: StateModelError,
     },
 }

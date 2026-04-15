@@ -4,8 +4,8 @@ use crate::model::network::Vertex;
 use crate::model::state::StateModel;
 use crate::model::state::StateVariable;
 use crate::model::state::{InputFeature, StateVariableConfig};
-use crate::model::traversal::traversal_model::TraversalModel;
-use crate::model::traversal::traversal_model_error::TraversalModelError;
+use crate::model::traversal::model::TraversalModel;
+use crate::model::traversal::error::TraversalModelError;
 use std::sync::Arc;
 
 /// looks up values to assign to a traversal based on the edge id for some
