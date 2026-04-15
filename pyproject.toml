@@ -82,6 +82,7 @@ platforms = ["osx-arm64", "linux-64"]
 
 [tool.pixi.dependencies]
 rust = ">=1.90.0,<1.91"
+cmake = ">=3.28"
 
 [tool.pixi.feature.py310]
 dependencies = { python = "3.10.*" }
@@ -111,6 +112,7 @@ test-py313 = { features = ["py313", "all"], solve-group = "py313" }
 [tool.pixi.tasks]
 build_py = "maturin develop --uv"
 build_rust = { cmd = "cargo build --workspace --release", cwd = "rust" }
+build_hpc = "bash scripts/hpc_build.sh"
 
 fmt_fix = "ruff format"
 fmt_check = "ruff format --check"
