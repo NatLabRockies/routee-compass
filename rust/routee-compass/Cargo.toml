@@ -1,6 +1,6 @@
 [package]
 name = "routee-compass"
-version = "0.19.0"
+version = "0.19.1"
 edition = "2021"
 readme = "README.md"
 license = "BSD-3-Clause"
@@ -9,7 +9,13 @@ description = "The RouteE-Compass energy-aware routing engine"
 homepage = "https://nrel.github.io/routee-compass"
 repository = "https://github.com/NREL/routee-compass"
 documentation = "https://docs.rs/routee-compass"
-keywords = ["eco-routing", "route-planning", "routing", "networks", "road-networks"]
+keywords = [
+    "eco-routing",
+    "route-planning",
+    "routing",
+    "networks",
+    "road-networks",
+]
 categories = ["science", "science::geo"]
 
 [lib]
@@ -46,8 +52,8 @@ ordered-float = { workspace = true }
 ordered_hash_map = { workspace = true }
 parquet = { workspace = true }
 rayon = { workspace = true }
-routee-compass-core = { path = "../routee-compass-core", version = "0.19.0" }
-routee-compass-powertrain = { path = "../routee-compass-powertrain", version = "0.19.0" }
+routee-compass-core = { path = "../routee-compass-core", version = "0.19.1" }
+routee-compass-powertrain = { path = "../routee-compass-powertrain", version = "0.19.1" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_json_path = { workspace = true }
