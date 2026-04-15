@@ -650,7 +650,7 @@ mod tests {
         let node_count = tree.nodes().count();
         assert_eq!(node_count, 3);
 
-        let vertex_ids: HashSet<_> = tree.labels().map(|l| l.vertex_id().clone()).collect();
+        let vertex_ids: HashSet<_> = tree.labels().map(|l| *l.vertex_id()).collect();
         assert_eq!(vertex_ids.len(), 3);
         assert!(vertex_ids.contains(&VertexId(0)));
         assert!(vertex_ids.contains(&VertexId(1)));
