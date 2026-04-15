@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776201374208,
+  "lastUpdate": 1776263575485,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3299,6 +3299,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 3012080,
             "range": "± 347762",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "Nicholas.Reinicke@nrel.gov",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "committer": {
+            "email": "Nicholas.Reinicke@nrel.gov",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "distinct": true,
+          "id": "9259793cfd0d4d3c768f4a9a4f25d3ee2311adad",
+          "message": "update routee powertrain to have optional static linking feature for ort\n\nwe need to compile ONNX runtime on kestrel since the pre-compiled ort binaries need versions of things like glibc that kestrel does not have.\nthis allows us to default to downloading the binaries and then have a feature flag for doing static linking.",
+          "timestamp": "2026-04-15T08:26:15-06:00",
+          "tree_id": "7accce620ac7ff0bb0fecc7dca19a6323d8d99c2",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/9259793cfd0d4d3c768f4a9a4f25d3ee2311adad"
+        },
+        "date": 1776263574968,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2989388,
+            "range": "± 197472",
             "unit": "ns/iter"
           }
         ]
