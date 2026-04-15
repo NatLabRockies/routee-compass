@@ -17,7 +17,6 @@ detailed_costs = []
 [dependencies]
 allocative = { workspace = true }
 approx = { workspace = true }
-chrono = { workspace = true }
 csv = { workspace = true }
 derive_more = { workspace = true }
 env_logger = { workspace = true }
@@ -28,7 +27,6 @@ indexmap = { workspace = true }
 itertools = { workspace = true }
 kdam = { workspace = true }
 log = { workspace = true }
-lru = { workspace = true }
 ordered-float = { workspace = true }
 priority-queue = { workspace = true }
 rayon = { workspace = true }

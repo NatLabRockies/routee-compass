@@ -11,12 +11,12 @@ documentation = "https://docs.rs/routee-compass"
 exclude = ["test", "**/.DS_Store", "target/"]
 
 [features]
-default = []
+default = ["ort/download-binaries", "ort/tls-native"]
+ort-static = []
 
 [dependencies]
 bincode = { workspace = true }
 config = { workspace = true }
-csv = { workspace = true }
 env_logger = { workspace = true }
 geo = { workspace = true }
 itertools = { workspace = true }
@@ -24,13 +24,9 @@ kdam = { workspace = true }
 log = { workspace = true }
 ndarray = { workspace = true }
 ninterp = { workspace = true }
-ordered-float = { workspace = true }
 ort = { workspace = true }
-rayon = { workspace = true }
 routee-compass-core = { path = "../routee-compass-core", version = "0.19.0" }
 serde = { workspace = true }
 serde_json = { workspace = true }
-serde_repr = { workspace = true }
 smartcore = { workspace = true }
-thiserror = { workspace = true }
 uom = { workspace = true }

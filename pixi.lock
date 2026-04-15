@@ -3220,8 +3220,8 @@ packages:
   requires_python: '>=3.7'
 - pypi: ./
   name: nrel-routee-compass
-  version: 0.18.0
-  sha256: 03b34a8653c5085ebf216dd9904f90a16b5148da52ea58a9e1946c71758827f0
+  version: 0.19.0
+  sha256: 822b6adcd5277bba55f7f2e08e73aa4d6166c22a4d065fa5ec793520ba6b1fa6
   requires_dist:
   - tomlkit>=0.11.0,<1.0
   - pytest>=8.0,<9.0 ; extra == 'dev'
