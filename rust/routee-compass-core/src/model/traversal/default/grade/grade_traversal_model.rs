@@ -45,7 +45,7 @@ impl TraversalModel for GradeTraversalModel {
 
     fn traverse_edge(
         &self,
-        ctx: &crate::model::traversal::EdgeTraversalContext,
+        ctx: &crate::model::traversal::EdgeFrontierContext,
         state: &mut Vec<StateVariable>,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {

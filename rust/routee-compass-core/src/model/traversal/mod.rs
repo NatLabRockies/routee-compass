@@ -1,14 +1,14 @@
+mod builder;
 pub mod default;
 mod edge_traversal_context;
-mod traversal_model;
-mod traversal_model_builder;
-mod traversal_model_error;
-mod traversal_model_service;
-mod traversal_result;
+mod error;
+mod model;
+mod result;
+mod service;
 
-pub use edge_traversal_context::EdgeTraversalContext;
-pub use traversal_model::TraversalModel;
-pub use traversal_model_builder::TraversalModelBuilder;
-pub use traversal_model_error::TraversalModelError;
-pub use traversal_model_service::TraversalModelService;
-pub use traversal_result::TraversalResult;
+pub use builder::TraversalModelBuilder;
+pub use edge_traversal_context::EdgeFrontierContext;
+pub use error::TraversalModelError;
+pub use model::TraversalModel;
+pub use result::TraversalResult;
+pub use service::TraversalModelService;

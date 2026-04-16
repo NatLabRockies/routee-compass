@@ -2,6 +2,7 @@ use super::error::ConstraintModelError;
 use crate::model::{
     network::Edge,
     state::{StateModel, StateVariable},
+    traversal::EdgeFrontierContext,
 };
 
 /// Validates edge and traversal states. Provides an API for removing edges from
@@ -9,14 +10,13 @@ use crate::model::{
 /// This may be desireable when a traversal model has complex cost logic but an edge
 /// may not be traversable for this query, such as due to height restrictions.
 ///
-/// [TraversalModel]: crate::model::traversal::traversal_model::TraversalModel
+/// [TraversalModel]: crate::model::traversal::model::TraversalModel
 pub trait ConstraintModel: Send + Sync {
     /// Validates an edge before allowing it to be added to the search frontier.
     ///
     /// # Arguments
     ///
-    /// * `edge` - the edge to traverse
-    /// * `previous_edge` - the edge traversed before this one, used to determine if this edge is a valid part of the frontier
+    /// * `ctx` - the traversal context
     /// * `state` - the state of the traversal at the beginning of this edge
     /// * `state_model` - provides operations on the state vector
     ///
@@ -25,8 +25,7 @@ pub trait ConstraintModel: Send + Sync {
     /// True if the edge is a valid part of the frontier, false otherwise
     fn valid_frontier(
         &self,
-        edge: &Edge,
-        previous_edge: Option<&Edge>,
+        ctx: &EdgeFrontierContext,
         state: &[StateVariable],
         state_model: &StateModel,
     ) -> Result<bool, ConstraintModelError>;

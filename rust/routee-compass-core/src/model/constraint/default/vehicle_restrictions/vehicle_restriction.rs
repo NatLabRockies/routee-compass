@@ -42,7 +42,7 @@ impl TryFrom<&RestrictionRow> for VehicleRestriction {
     fn try_from(row: &RestrictionRow) -> Result<Self, Self::Error> {
         use VehicleParameterType as VPT;
         let vehicle_parameter = match row.name {
-            VPT::Height => Ok(VehicleParameter::Height {
+            VPT::Height => VehicleParameter::Height {
                 value: DistanceUnit::from_str(&row.unit)
                     .map_err(|e| {
                         ConstraintModelError::BuildError(format!(
@@ -51,8 +51,8 @@ impl TryFrom<&RestrictionRow> for VehicleRestriction {
                         ))
                     })?
                     .to_uom(row.value),
-            }),
-            VPT::Width => Ok(VehicleParameter::Width {
+            },
+            VPT::Width => VehicleParameter::Width {
                 value: DistanceUnit::from_str(&row.unit)
                     .map_err(|e| {
                         ConstraintModelError::BuildError(format!(
@@ -61,8 +61,8 @@ impl TryFrom<&RestrictionRow> for VehicleRestriction {
                         ))
                     })?
                     .to_uom(row.value),
-            }),
-            VPT::TotalLength => Ok(VehicleParameter::TotalLength {
+            },
+            VPT::TotalLength => VehicleParameter::TotalLength {
                 value: DistanceUnit::from_str(&row.unit)
                     .map_err(|e| {
                         ConstraintModelError::BuildError(format!(
@@ -71,8 +71,8 @@ impl TryFrom<&RestrictionRow> for VehicleRestriction {
                         ))
                     })?
                     .to_uom(row.value),
-            }),
-            VPT::TrailerLength => Ok(VehicleParameter::TrailerLength {
+            },
+            VPT::TrailerLength => VehicleParameter::TrailerLength {
                 value: DistanceUnit::from_str(&row.unit)
                     .map_err(|e| {
                         ConstraintModelError::BuildError(format!(
@@ -81,8 +81,8 @@ impl TryFrom<&RestrictionRow> for VehicleRestriction {
                         ))
                     })?
                     .to_uom(row.value),
-            }),
-            VPT::TotalWeight => Ok(VehicleParameter::TotalWeight {
+            },
+            VPT::TotalWeight => VehicleParameter::TotalWeight {
                 value: WeightUnit::from_str(&row.unit)
                     .map_err(|e| {
                         ConstraintModelError::BuildError(format!(
@@ -91,8 +91,8 @@ impl TryFrom<&RestrictionRow> for VehicleRestriction {
                         ))
                     })?
                     .to_uom(row.value),
-            }),
-            VPT::WeightPerAxle => Ok(VehicleParameter::WeightPerAxle {
+            },
+            VPT::WeightPerAxle => VehicleParameter::WeightPerAxle {
                 value: WeightUnit::from_str(&row.unit)
                     .map_err(|e| {
                         ConstraintModelError::BuildError(format!(
@@ -101,8 +101,8 @@ impl TryFrom<&RestrictionRow> for VehicleRestriction {
                         ))
                     })?
                     .to_uom(row.value),
-            }),
-        }?;
+            },
+        };
         let comparison_operation = row.operation.clone();
         Ok(VehicleRestriction {
             restriction_parameter: vehicle_parameter,

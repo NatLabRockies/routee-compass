@@ -1,5 +1,5 @@
 use super::DistanceTraversalModel;
-use crate::model::traversal::traversal_model::TraversalModel;
+use crate::model::traversal::model::TraversalModel;
 use crate::model::traversal::TraversalModelError;
 use crate::model::traversal::TraversalModelService;
 use crate::model::unit::DistanceUnit;

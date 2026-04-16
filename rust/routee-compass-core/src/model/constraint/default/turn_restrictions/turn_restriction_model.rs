@@ -2,6 +2,7 @@ use crate::model::{
     constraint::{ConstraintModel, ConstraintModelError},
     network::Edge,
     state::{StateModel, StateVariable},
+    traversal::EdgeFrontierContext,
 };
 use std::sync::Arc;
 
@@ -14,16 +15,16 @@ pub struct TurnRestrictionConstraintModel {
 impl ConstraintModel for TurnRestrictionConstraintModel {
     fn valid_frontier(
         &self,
-        edge: &Edge,
-        previous_edge: Option<&Edge>,
+        ctx: &EdgeFrontierContext,
         _state: &[StateVariable],
         _state_model: &StateModel,
     ) -> Result<bool, ConstraintModelError> {
+        let previous_edge = ctx.previous_edge_traversal()?;
         match previous_edge {
             Some(previous_edge) => {
                 let edge_pair = RestrictedEdgePair {
                     prev_edge_id: previous_edge.edge_id,
-                    next_edge_id: edge.edge_id,
+                    next_edge_id: ctx.edge.edge_id,
                 };
                 if self.service.restricted_edge_pairs.contains(&edge_pair) {
                     Ok(false)

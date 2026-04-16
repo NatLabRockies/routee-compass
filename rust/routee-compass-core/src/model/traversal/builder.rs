@@ -1,6 +1,4 @@
-use super::{
-    traversal_model_error::TraversalModelError, traversal_model_service::TraversalModelService,
-};
+use super::{error::TraversalModelError, service::TraversalModelService};
 use std::sync::Arc;
 
 /// A [`TraversalModelBuilder`] takes a JSON object describing the configuration of a

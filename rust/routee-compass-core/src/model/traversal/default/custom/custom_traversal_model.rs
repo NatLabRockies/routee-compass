@@ -4,8 +4,8 @@ use crate::model::network::Vertex;
 use crate::model::state::StateModel;
 use crate::model::state::StateVariable;
 use crate::model::state::{InputFeature, StateVariableConfig};
-use crate::model::traversal::traversal_model::TraversalModel;
-use crate::model::traversal::traversal_model_error::TraversalModelError;
+use crate::model::traversal::error::TraversalModelError;
+use crate::model::traversal::model::TraversalModel;
 use std::sync::Arc;
 
 /// looks up values to assign to a traversal based on the edge id for some
@@ -40,7 +40,7 @@ impl TraversalModel for CustomTraversalModel {
     /// records the value that will be assigned to this edge into the state vector.
     fn traverse_edge(
         &self,
-        ctx: &crate::model::traversal::EdgeTraversalContext,
+        ctx: &crate::model::traversal::EdgeFrontierContext,
         state: &mut Vec<StateVariable>,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {

@@ -69,7 +69,7 @@ impl TraversalModel for ElevationTraversalModel {
     /// compute the change in elevation along this edge and store it to the state vector
     fn traverse_edge(
         &self,
-        _ctx: &crate::model::traversal::EdgeTraversalContext,
+        _ctx: &crate::model::traversal::EdgeFrontierContext,
         state: &mut Vec<StateVariable>,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
