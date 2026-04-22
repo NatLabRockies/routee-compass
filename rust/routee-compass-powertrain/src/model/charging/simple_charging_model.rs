@@ -5,7 +5,7 @@ use routee_compass_core::{
     model::{
         network::Vertex,
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
-        traversal::{EdgeTraversalContext, TraversalModel, TraversalModelError},
+        traversal::{EdgeFrontierContext, TraversalModel, TraversalModelError},
         unit::TimeUnit,
     },
 };
@@ -87,7 +87,7 @@ impl TraversalModel for SimpleChargingModel {
     }
     fn traverse_edge(
         &self,
-        ctx: &EdgeTraversalContext,
+        ctx: &EdgeFrontierContext,
         state: &mut Vec<StateVariable>,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
@@ -258,7 +258,7 @@ mod tests {
         // Traverse to vertex 1 (DC fast charging station)
         let (src, edge, dst) = mock_trajectory(1);
         let label = Label::Vertex(src.vertex_id);
-        let ctx = EdgeTraversalContext::new(&label, &src, &edge, &dst, &tree);
+        let ctx = EdgeFrontierContext::new(&label, &src, &edge, &dst, &tree);
 
         let charging_model = SimpleChargingModel {
             charging_station_locator: mock_charging_station_locator(),
@@ -300,7 +300,7 @@ mod tests {
         // Traverse to vertex 1 (DC fast charging station)
         let (src, edge, dst) = mock_trajectory(1);
         let label = Label::Vertex(src.vertex_id);
-        let ctx = EdgeTraversalContext::new(&label, &src, &edge, &dst, &tree);
+        let ctx = EdgeFrontierContext::new(&label, &src, &edge, &dst, &tree);
 
         let charging_model = SimpleChargingModel {
             charging_station_locator: mock_charging_station_locator(),
@@ -339,7 +339,7 @@ mod tests {
         // Traverse to vertex 99 (no charging station)
         let (src, edge, dst) = mock_trajectory(99);
         let label = Label::Vertex(src.vertex_id);
-        let ctx = EdgeTraversalContext::new(&label, &src, &edge, &dst, &tree);
+        let ctx = EdgeFrontierContext::new(&label, &src, &edge, &dst, &tree);
 
         let charging_model = SimpleChargingModel {
             charging_station_locator: mock_charging_station_locator(),
@@ -377,7 +377,7 @@ mod tests {
 
         let (v1, e1, v2) = mock_trajectory(1);
         let l2 = Label::Vertex(v1.vertex_id);
-        let ctx_dc = EdgeTraversalContext::new(&l2, &v1, &e1, &v2, &tree);
+        let ctx_dc = EdgeFrontierContext::new(&l2, &v1, &e1, &v2, &tree);
 
         let charging_model = SimpleChargingModel {
             charging_station_locator: mock_charging_station_locator(),
@@ -398,7 +398,7 @@ mod tests {
         let mut state_ac = state_vector(&state_model, low_soc, battery_capacity);
         let (v0, e1, v2) = mock_trajectory(2); // AC charging station
         let l2 = Label::Vertex(v0.vertex_id);
-        let ctx_ac = EdgeTraversalContext::new(&l2, &v0, &e1, &v2, &tree);
+        let ctx_ac = EdgeFrontierContext::new(&l2, &v0, &e1, &v2, &tree);
 
         charging_model
             .traverse_edge(&ctx_ac, &mut state_ac, &state_model)
@@ -448,7 +448,7 @@ mod tests {
         // Try to charge at L2 station (vertex 2)
         let (v0, e1, v2) = mock_trajectory(2); // AC charging station
         let l2 = Label::Vertex(v0.vertex_id);
-        let ctx = EdgeTraversalContext::new(&l2, &v0, &e1, &v2, &tree);
+        let ctx = EdgeFrontierContext::new(&l2, &v0, &e1, &v2, &tree);
 
         charging_model
             .traverse_edge(&ctx, &mut state, &state_model)

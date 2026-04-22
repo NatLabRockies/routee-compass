@@ -1,3 +1,4 @@
+use crate::algorithm::search::SearchTreeError;
 use crate::model::network::NetworkError;
 use crate::model::state::StateModelError;
 use crate::model::unit::UnitError;
@@ -24,5 +25,10 @@ pub enum TraversalModelError {
     StateError {
         #[from]
         source: StateModelError,
+    },
+    #[error("failure executing traversal model due to search tree: {source}")]
+    TreeError {
+        #[from]
+        source: SearchTreeError,
     },
 }

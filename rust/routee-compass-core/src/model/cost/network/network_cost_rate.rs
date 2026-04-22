@@ -2,7 +2,7 @@ use itertools::Itertools;
 
 use crate::model::network::{Edge, VertexId};
 use crate::model::state::{StateModel, StateVariable};
-use crate::model::traversal::EdgeTraversalContext;
+use crate::model::traversal::EdgeFrontierContext;
 use crate::model::unit::Cost;
 use crate::model::{cost::CostModelError, network::EdgeId};
 use std::collections::HashMap;
@@ -66,7 +66,7 @@ impl NetworkCostRate {
     /// computes the cost for accessing this part of the network.
     pub fn network_cost(
         &self,
-        ctx: &EdgeTraversalContext,
+        ctx: &EdgeFrontierContext,
         _state: &[StateVariable],
         _state_model: &StateModel,
     ) -> Result<Cost, CostModelError> {

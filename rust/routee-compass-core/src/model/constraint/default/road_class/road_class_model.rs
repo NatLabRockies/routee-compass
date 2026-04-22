@@ -3,6 +3,7 @@ use crate::model::{
     constraint::{ConstraintModel, ConstraintModelError},
     network::Edge,
     state::{StateModel, StateVariable},
+    traversal::EdgeFrontierContext,
 };
 use std::{collections::HashSet, sync::Arc};
 
@@ -14,12 +15,11 @@ pub struct RoadClassConstraintModel {
 impl ConstraintModel for RoadClassConstraintModel {
     fn valid_frontier(
         &self,
-        edge: &Edge,
-        _previous_edge: Option<&Edge>,
+        ctx: &EdgeFrontierContext,
         _state: &[StateVariable],
         _state_model: &StateModel,
     ) -> Result<bool, ConstraintModelError> {
-        self.valid_edge(edge)
+        self.valid_edge(ctx.edge)
     }
 
     fn valid_edge(&self, edge: &Edge) -> Result<bool, ConstraintModelError> {

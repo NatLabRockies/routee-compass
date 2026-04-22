@@ -1,17 +1,11 @@
 use crate::{
     algorithm::search::{SearchError, SearchTree},
-    model::{
-        label::Label,
-        network::{EdgeId, EdgeListId, VertexId},
-        state::StateVariable,
-        unit::ReverseCost,
-    },
+    model::{label::Label, network::VertexId, state::StateVariable, unit::ReverseCost},
     util::priority_queue::InternalPriorityQueue,
 };
 
 pub struct FrontierInstance {
     pub prev_label: Label,
-    pub prev_edge: Option<(EdgeListId, EdgeId)>,
     pub prev_state: Vec<StateVariable>,
 }
 
@@ -56,10 +50,6 @@ impl FrontierInstance {
                 let node_opt = solution.get(&prev_label);
                 let prev_edge_traversal_opt = node_opt.and_then(|n| n.incoming_edge()).cloned();
 
-                // grab the current state from the solution, or get initial state if we are at the search root
-                let prev_edge = prev_edge_traversal_opt
-                    .as_ref()
-                    .map(|et| (et.edge_list_id, et.edge_id));
                 let prev_state = match prev_edge_traversal_opt.as_ref() {
                     None => initial_state.to_vec(),
                     Some(et) => et.result_state.clone(),
@@ -67,7 +57,6 @@ impl FrontierInstance {
 
                 let result = FrontierInstance {
                     prev_label,
-                    prev_edge,
                     prev_state,
                 };
 

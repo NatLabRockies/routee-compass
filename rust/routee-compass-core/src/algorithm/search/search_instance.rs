@@ -8,7 +8,7 @@ use crate::{
         network::{EdgeId, EdgeListId, Graph},
         state::StateModel,
         termination::TerminationModel,
-        traversal::{EdgeTraversalContext, TraversalModel},
+        traversal::{EdgeFrontierContext, TraversalModel},
     },
 };
 use std::sync::Arc;
@@ -121,9 +121,9 @@ impl SearchInstance {
         for (i, (edge_list_id, edge_id)) in path.iter().enumerate() {
             let (src, edge, dst) = self.graph.edge_triplet(edge_list_id, edge_id)?;
             let tm = self.get_traversal_model(edge_list_id)?;
-            let ctx = EdgeTraversalContext::new(&prev_label, src, edge, dst, &tree);
+            let ctx = EdgeFrontierContext::new(&prev_label, src, edge, dst, &tree);
             let traversal = EdgeTraversal::new_local(
-                ctx,
+                &ctx,
                 &current_state,
                 &self.state_model,
                 tm.as_ref(),

@@ -7,8 +7,8 @@ use crate::model::state::StateModel;
 use crate::model::state::StateVariable;
 use crate::model::state::{InputFeature, StateVariableConfig};
 use crate::model::traversal::default::fieldname;
-use crate::model::traversal::traversal_model::TraversalModel;
-use crate::model::traversal::traversal_model_error::TraversalModelError;
+use crate::model::traversal::error::TraversalModelError;
+use crate::model::traversal::model::TraversalModel;
 use crate::model::unit::DistanceUnit;
 use crate::util::geo::haversine;
 
@@ -37,7 +37,7 @@ impl TraversalModel for DistanceTraversalModel {
     /// [Graph]: crate::model::network::Graph
     fn traverse_edge(
         &self,
-        ctx: &crate::model::traversal::EdgeTraversalContext,
+        ctx: &crate::model::traversal::EdgeFrontierContext,
         state: &mut Vec<StateVariable>,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
