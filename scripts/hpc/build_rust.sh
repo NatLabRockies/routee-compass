@@ -16,11 +16,16 @@ for tool in cargo; do
   fi
 done
 
-: "${ORT_LIB_PATH:?ORT_LIB_PATH not set (expected from pixi hpc env)}"
+if [[ -z "${ORT_LIB_PATH:-}" ]]; then
+  : "${ONNXRUNTIME_DIR:?ONNXRUNTIME_DIR not set and ORT_LIB_PATH not provided}"
+  : "${ORT_BUILD_CONFIG:?ORT_BUILD_CONFIG not set and ORT_LIB_PATH not provided}"
+  ORT_LIB_PATH="${ONNXRUNTIME_DIR}/build/Linux/${ORT_BUILD_CONFIG}"
+fi
+export ORT_LIB_PATH
 
 if [[ ! -d "${ORT_LIB_PATH}" ]]; then
   echo "error: ORT_LIB_PATH=${ORT_LIB_PATH} does not exist" >&2
-  echo "hint: run 'pixi run -e hpc build_hpc_ort' first" >&2
+  echo "hint: set ORT_LIB_PATH explicitly or run 'pixi run -e hpc build_hpc_ort' first" >&2
   exit 1
 fi
 
