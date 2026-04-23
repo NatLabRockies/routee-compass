@@ -113,6 +113,7 @@ nrel-routee-compass = { path = ".", editable = true }
 
 [tool.pixi.environments]
 default    = { features = ["dev", "osm"], solve-group = "default" }
+minimal    = { features = [], solve-group = "default" }
 dev        = { features = ["dev"], solve-group = "default" }
 osm        = { features = ["osm"], solve-group = "default" }
 hpc        = { features = ["dev", "hpc"], solve-group = "default" }
