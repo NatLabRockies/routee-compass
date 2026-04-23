@@ -38,7 +38,7 @@ ndarray = "=0.17.2" # forces correct transitive dependency on ndarray by ninterp
 ninterp = "0.8.0"
 ordered-float = { version = "5.1.0", features = ["serde"] }
 ordered_hash_map = { version = "0.5.0", features = ["serde"] }
-ort = { version = "=2.0.0-rc.12", default-features = false, features = ["std", "ndarray", "copy-dylibs"]}
+ort = { version = "=2.0.0-rc.12", default-features = false, features = ["std", "ndarray", "copy-dylibs"] }
 parquet = "58.0.0"
 priority-queue = "2.7.0"
 proc-macro-error = "1.0"
@@ -60,7 +60,6 @@ topological-sort = "0.2.2"
 uom = { version = "=0.38.0", features = ["serde"] }
 wkb = "0.9.1"
 wkt = { version = "0.14.0", features = ["serde"] }
-
 
 [profile.profiling]
 inherits = "release"

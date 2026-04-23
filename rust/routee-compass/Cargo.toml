@@ -18,10 +18,6 @@ keywords = [
 ]
 categories = ["science", "science::geo"]
 
-[features]
-default = ["routee-compass-powertrain/default"]
-ort-static = ["routee-compass-powertrain/ort-static"]
-
 [lib]
 bench = false
 
@@ -34,6 +30,10 @@ bench = false
 name = "geom-app"
 path = "src/bin/geom-app.rs"
 bench = false
+
+[features]
+default = ["routee-compass-powertrain/default"]
+ort-static = ["routee-compass-powertrain/ort-static"]
 
 [dependencies]
 allocative = { workspace = true }
