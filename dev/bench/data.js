@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776350689156,
+  "lastUpdate": 1777392154292,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3419,6 +3419,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2985504,
             "range": "± 240615",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ca054031fc33113c11b7b64246f479943040f30b",
+          "message": "Merge pull request #507 from NatLabRockies/rjf/powertrain-feature\n\nmake powertrain dependency optional in routee-compass",
+          "timestamp": "2026-04-28T09:58:46-06:00",
+          "tree_id": "fe4fee81bac39f600b423e9b7a05f011578f94ad",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/ca054031fc33113c11b7b64246f479943040f30b"
+        },
+        "date": 1777392153552,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2294483,
+            "range": "± 88308",
             "unit": "ns/iter"
           }
         ]
