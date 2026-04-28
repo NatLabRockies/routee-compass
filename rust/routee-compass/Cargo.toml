@@ -9,18 +9,8 @@ description = "The RouteE-Compass energy-aware routing engine"
 homepage = "https://nrel.github.io/routee-compass"
 repository = "https://github.com/NREL/routee-compass"
 documentation = "https://docs.rs/routee-compass"
-keywords = [
-    "eco-routing",
-    "route-planning",
-    "routing",
-    "networks",
-    "road-networks",
-]
+keywords = ["eco-routing", "route-planning", "routing", "networks", "road-networks"]
 categories = ["science", "science::geo"]
-
-[features]
-default = ["routee-compass-powertrain/default"]
-ort-static = ["routee-compass-powertrain/ort-static"]
 
 [lib]
 bench = false
@@ -34,6 +24,10 @@ bench = false
 name = "geom-app"
 path = "src/bin/geom-app.rs"
 bench = false
+
+[features]
+default = ["routee-compass-powertrain/default"]
+ort-static = ["routee-compass-powertrain/ort-static"]
 
 [dependencies]
 allocative = { workspace = true }

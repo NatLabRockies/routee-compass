@@ -10,13 +10,13 @@ repository = "https://github.com/NREL/routee-compass"
 documentation = "https://docs.rs/routee-compass"
 exclude = ["test", "**/.DS_Store", "target/"]
 
-[features]
-default = ["routee-compass/default"]
-ort-static = ["routee-compass/ort-static"]
-
 [lib]
 name = "routee_compass_py"
 crate-type = ["cdylib"]
+
+[features]
+default = ["routee-compass/default"]
+ort-static = ["routee-compass/ort-static"]
 
 [dependencies]
 config = { workspace = true }
