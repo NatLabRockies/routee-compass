@@ -124,28 +124,25 @@ impl ModeAccessAccumulator {
         use SegmentHeading as SH;
         match (&r.access_type, has_mode, heading, mods) {
             // 1. Blanket Denial
-            (SAT::Denied, None, None, None) => {
-                if self.state == ModeAccessState::DefaultAllowed {
+            (SAT::Denied, None, None, None)
+                if self.state == ModeAccessState::DefaultAllowed => {
                     self.state = ModeAccessState::BlanketDenied;
                 }
-            }
             // 2. Specific Denial overrides everything
             (SAT::Denied, Some(true), None | Some(SH::Forward), _) => {
                 self.state = ModeAccessState::SpecificallyDenied;
             }
             // 3. Exception Allowed (if we were blanket denied, or just explicitly allowed)
-            (SAT::Allowed | SAT::Designated, Some(true), None | Some(SH::Forward), None) => {
-                if self.state != ModeAccessState::SpecificallyDenied {
+            (SAT::Allowed | SAT::Designated, Some(true), None | Some(SH::Forward), None)
+                if self.state != ModeAccessState::SpecificallyDenied => {
                     self.state = ModeAccessState::AllowedException;
                 }
-            }
             // 4. Conditional Exception (e.g. Employee only) -> We don't support special conditions, so deny access
-            (SAT::Allowed | SAT::Designated, Some(true), None | Some(SH::Forward), Some(true)) => {
+            (SAT::Allowed | SAT::Designated, Some(true), None | Some(SH::Forward), Some(true))
                 // If we relied on this conditional to be allowed, we must explicitly deny
-                if self.state != ModeAccessState::SpecificallyDenied {
+                if self.state != ModeAccessState::SpecificallyDenied => {
                     self.state = ModeAccessState::SpecificallyDenied;
                 }
-            }
             _ => {}
         }
     }
