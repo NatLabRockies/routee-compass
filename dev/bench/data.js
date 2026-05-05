@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777408767966,
+  "lastUpdate": 1777990861623,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3479,6 +3479,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 3066482,
             "range": "± 289938",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5987dab41ddbd2d7548892088b689f040d1ae1e7",
+          "message": "Update geo requirement from 0.32.0 to 0.33.1 in /rust (#506)\n\nUpdates the requirements on [geo](https://github.com/georust/geo) to permit the latest version.\n- [Changelog](https://github.com/georust/geo/blob/main/CHANGES.md)\n- [Commits](https://github.com/georust/geo/compare/geo-0.32.0...geo-0.33.1)\n\n---\nupdated-dependencies:\n- dependency-name: geo\n  dependency-version: 0.33.1\n  dependency-type: direct:production\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-05-05T08:16:19-06:00",
+          "tree_id": "0fc660286b1f243ebd3c407cc4feec6ce39a1164",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/5987dab41ddbd2d7548892088b689f040d1ae1e7"
+        },
+        "date": 1777990861183,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 3095763,
+            "range": "± 132266",
             "unit": "ns/iter"
           }
         ]
