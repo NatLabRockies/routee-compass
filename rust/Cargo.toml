@@ -23,7 +23,7 @@ derive_more = { version = "2.0.1", features = ["full"] }
 env_logger = "0.11.8"
 fasteval = "0.2.4"
 flate2 = "1.1.5"
-geo = { version = "0.32.0", features = ["use-serde"] }
+geo = { version = "0.33.1", features = ["use-serde"] }
 geo-traits = "0.3.0"
 geo-types = "0.7.17"
 geojson = { version = "1.0.0" }
