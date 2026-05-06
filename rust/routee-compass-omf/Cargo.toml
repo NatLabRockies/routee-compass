@@ -3,8 +3,12 @@ name = "bambam-omf"
 version = "0.3.0"
 edition = "2021"
 license = "BSD-3-Clause"
-include = ["src/util/bambam-config-omf.toml"]
-exclude = ["test", "**/.DS_Store", "target/"]
+include = [
+  "Cargo.toml",
+  "README.md",
+  "src/**/*.rs",
+  "src/util/bambam-config-omf.toml"
+]
 readme = "README.md"
 repository = "https://github.com/NatLabRockies/bambam"
 documentation = "https://docs.rs/bambam-omf"
