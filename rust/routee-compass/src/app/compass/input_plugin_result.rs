@@ -84,6 +84,3 @@ impl InputPluginRuntimes {
         self.proportional_contributions.push(prop);
     }
 }
-
-/// prevent exceeding system limits in denominator value for proportioning time deltas.
-const MAX_RESULTS: usize = i32::MAX as usize;
