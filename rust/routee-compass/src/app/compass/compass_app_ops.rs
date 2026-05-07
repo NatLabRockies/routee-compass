@@ -113,7 +113,7 @@ pub fn apply_input_plugins(
     // we might reshape the vector as input plugins can generate new queries.
     let mut queries_processed = queries
         .into_iter()
-        .map(|q| InputPluginResult::new(q))
+        .map(InputPluginResult::new)
         .collect_vec();
     let mut query_errors: Vec<Value> = vec![];
 
@@ -179,7 +179,7 @@ fn process_chunk(
             }
 
             // Move the value out of the mutable slice by swapping in a dummy value into the slice.
-            let mut owned_q = std::mem::replace(q, InputPluginResult::default());
+            let mut owned_q = std::mem::take(q);
 
             // run the input plugin and flatten the result if it is a JSON array
             let p = plugin.clone();
@@ -234,7 +234,7 @@ pub fn run_single_query(
     let search_result = search_app.run(row);
     let output = apply_output_processing(
         row,
-        Some(&runtimes),
+        Some(runtimes),
         search_result,
         search_app,
         output_plugins,
