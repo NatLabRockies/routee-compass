@@ -174,6 +174,7 @@ fn process_chunk(
 ) -> Vec<InputPluginResult> {
     qs.iter_mut()
         .flat_map(|q| {
+            let start_time = chrono::Local::now();
             if let Ok(mut pb_local) = inner_bar.lock() {
                 let _ = pb_local.update(1);
             }
@@ -188,7 +189,11 @@ fn process_chunk(
                     owned_q.error = Some(Arc::new(e));
                     vec![owned_q]
                 }
-                Ok(_) => in_ops::unpack_json_array_as_vec(owned_q),
+                Ok(_) => {
+                    let n_results = in_ops::len_result(&owned_q);
+                    owned_q.record_input_plugin_runtime(start_time, n_results);
+                    in_ops::unpack_json_array_as_vec(owned_q)
+                }
             }
         })
         .collect_vec()
@@ -316,6 +321,8 @@ pub fn apply_output_processing(
     };
 
     let mut initial = json!({ "request": request_json });
+
+    // set up "info" section with existing runtime metrics
     let mut runtimes = Runtimes::new(TimeUnit::Seconds);
     runtimes.add_search_runtime(sr.search_runtime);
     if let Some(ipr) = input_plugin_runtimes {

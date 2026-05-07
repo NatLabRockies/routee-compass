@@ -50,6 +50,7 @@ impl Runtimes {
         let time = to_serializable(&td, &self.time_unit);
         self.search = time;
         self.total += time;
+        self.wall += time;
     }
 
     /// adds the runtimes associated with running input plugins to this accumulator.
@@ -74,6 +75,7 @@ impl Runtimes {
         let time = to_serializable(&duration, &self.time_unit);
         self.output_plugins.push(time);
         self.total += time;
+        self.wall += time;
     }
 }
 

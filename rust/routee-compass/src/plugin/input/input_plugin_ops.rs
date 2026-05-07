@@ -145,6 +145,13 @@ pub fn json_array_flatten(result: &mut Value) -> Result<Vec<Value>, Value> {
     }
 }
 
+pub fn len_result(payload: &InputPluginResult) -> usize {
+    match &payload.row {
+        Value::Array(arr) => arr.len(),
+        _ => 1,
+    }
+}
+
 /// flattens the result of input processing in the case that the output of the
 /// input plugin is more than one JSON object. but if it is not a JSON array,
 /// then wrap it in a Vec.
