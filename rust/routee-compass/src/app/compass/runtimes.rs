@@ -24,7 +24,7 @@ pub struct Runtimes {
     input_plugins_wall: Vec<f64>,
     /// proportional time spent running input plugins
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    input_plugins_proportioned: Vec<f64>,
+    input_plugins: Vec<f64>,
     /// time spent running output plugins
     #[serde(skip_serializing_if = "Vec::is_empty")]
     output_plugins: Vec<f64>,
@@ -46,7 +46,7 @@ impl Runtimes {
             search: 0.0,
             output: 0.0,
             input_plugins_wall: vec![],
-            input_plugins_proportioned: vec![],
+            input_plugins: vec![],
             output_plugins: vec![],
             total: 0.0,
             wall: 0.0,
@@ -74,7 +74,7 @@ impl Runtimes {
             let time = to_serializable(td, &self.time_unit);
             self.total += time;
             self.input += time;
-            self.input_plugins_proportioned.push(time);
+            self.input_plugins.push(time);
         }
     }
 
