@@ -21,8 +21,6 @@ type = "load_balancer"
 
 [plugin.input_plugins.weight_heuristic]
 type = "haversine"
-[[plugin.output_plugins]]
-type = "summary"
 
 [[plugin.output_plugins]]
 type = "traversal"

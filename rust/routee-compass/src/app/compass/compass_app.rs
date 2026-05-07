@@ -126,6 +126,7 @@ impl CompassApp {
             config.termination.clone(),
             label_model_service,
             config.system.default_edge_list,
+            config.system.estimate_ram.unwrap_or_default(),
         ));
 
         let input_plugins = ops::with_timing("input plugins", || {

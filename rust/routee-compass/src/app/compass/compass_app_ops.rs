@@ -1,3 +1,5 @@
+use crate::app::compass::info::{Info, INFO_KEY};
+use crate::app::compass::runtimes::Runtimes;
 use crate::app::compass::CompassAppError;
 use crate::app::{
     compass::response::response_sink::ResponseSink,
@@ -5,7 +7,7 @@ use crate::app::{
 };
 use crate::plugin::{
     input::{input_plugin_ops as in_ops, InputJsonExtensions, InputPlugin},
-    output::{output_plugin_ops as out_ops, OutputPlugin},
+    output::OutputPlugin,
     PluginError,
 };
 use chrono::Local;
@@ -16,9 +18,10 @@ use rayon::prelude::*;
 use routee_compass_core::algorithm::search::SearchInstance;
 use routee_compass_core::config::ConfigJsonExtensions;
 use routee_compass_core::model::network::{EdgeId, EdgeListId};
+use routee_compass_core::model::unit::TimeUnit;
 use routee_compass_core::util::duration_extension::DurationExtension;
 use routee_compass_core::util::progress;
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::sync::{Arc, Mutex};
 
 /// Creates a shared progress bar wrapped in Arc<Mutex<>> for parallel processing.
@@ -273,19 +276,36 @@ pub fn apply_output_processing(
     search_app: &SearchApp,
     output_plugins: &[Arc<dyn OutputPlugin>],
 ) -> serde_json::Value {
-    let mut initial: Value = match out_ops::create_initial_output(request_json, &result, search_app)
-    {
-        Ok(value) => value,
-        Err(error_value) => return error_value,
+    let (sr, _si) = match &result {
+        Ok(pair) => pair,
+        Err(e) => return package_error(request_json, e),
     };
+
+    let mut initial = json!({ "request": request_json });
+    let mut runtimes = Runtimes::new(TimeUnit::Seconds);
+    runtimes.add_search_runtime(sr.search_runtime);
+
     for output_plugin in output_plugins.iter() {
+        let plugin_start_time = chrono::Local::now();
         match output_plugin.process(&mut initial, &result) {
             Ok(()) => {}
-            Err(e) => return out_ops::package_error(request_json, e),
+            Err(e) => return package_error(request_json, e),
         }
+        runtimes.push_output_plugin_runtime(plugin_start_time);
     }
 
+    let info = Info::new(sr, runtimes, search_app.estimate_ram);
+    initial[INFO_KEY] = json!(info);
     initial
+}
+
+/// helper to return errors as JSON response objects which include the
+/// original request along with the error message
+pub fn package_error<E: ToString>(req: &Value, error: E) -> Value {
+    json!({
+        "request": req,
+        "error": error.to_string()
+    })
 }
 
 /// Runs a batch of queries in parallel, updating a progress bar.
@@ -399,14 +419,12 @@ pub fn run_single_calculate_path(
         .map_err(CompassAppError::SearchFailure)?;
 
     let end_time = Local::now();
-    let runtime = (end_time - start_time)
-        .to_std()
-        .unwrap_or(std::time::Duration::ZERO);
+    let runtime = end_time - start_time;
 
     let search_app_result = crate::app::search::SearchAppResult {
         routes: vec![edge_traversals],
         trees: vec![],
-        search_executed_time: start_time.to_rfc3339(),
+        search_executed_time: start_time,
         search_runtime: runtime,
         iterations: 0,
         terminated: None,

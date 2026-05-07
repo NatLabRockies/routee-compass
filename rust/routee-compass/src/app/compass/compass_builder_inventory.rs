@@ -9,8 +9,8 @@ use crate::plugin::{
     },
     output::{
         default::{
-            eval::EvalOutputPluginBuilder, summary::SummaryOutputPluginBuilder,
-            traversal::TraversalPluginBuilder, uuid::UUIDOutputPluginBuilder,
+            eval::EvalOutputPluginBuilder, traversal::TraversalPluginBuilder,
+            uuid::UUIDOutputPluginBuilder,
         },
         OutputPlugin, OutputPluginBuilder,
     },
@@ -90,7 +90,6 @@ inventory::submit! {
         builder.add_input_plugin("inject".to_string(), Rc::new(InjectPluginBuilder {}));
         builder.add_input_plugin("debug".to_string(), Rc::new(DebugInputPluginBuilder {}));
         builder.add_output_plugin("traversal".to_string(), Rc::new(TraversalPluginBuilder {}));
-        builder.add_output_plugin("summary".to_string(), Rc::new(SummaryOutputPluginBuilder {}));
         builder.add_output_plugin("uuid".to_string(), Rc::new(UUIDOutputPluginBuilder {}));
         builder.add_output_plugin("eval".to_string(), Rc::new(EvalOutputPluginBuilder {}));
         builder.add_map_matching_model("lcss".to_string(), Rc::new(LcssMapMatchingBuilder {}));

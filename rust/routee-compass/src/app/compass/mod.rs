@@ -8,7 +8,9 @@ mod compass_component_error;
 mod compass_input_field;
 mod compass_json_extensions;
 pub mod compass_map_matching;
+mod info;
 pub mod response;
+pub mod runtimes;
 
 pub use compass_app::CompassApp;
 pub use compass_app_config::{CompassAppConfig, SearchConfig};

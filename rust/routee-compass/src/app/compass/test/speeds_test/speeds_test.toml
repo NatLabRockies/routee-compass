@@ -29,8 +29,6 @@ type = "raw"
 
 [plugin]
 input_plugins = []
-[[plugin.output_plugins]]
-type = "summary"
 
 [[plugin.output_plugins]]
 type = "traversal"
