@@ -157,8 +157,8 @@ fn run_json(
         Box::new(BufReader::new(file))
     };
     let user_json: serde_json::Value = serde_json::from_reader(reader)?;
-    let mut user_queries = user_json.get_queries()?;
-    let results = compass_app.run(&mut user_queries, run_config)?;
+    let user_queries = user_json.get_queries()?;
+    let results = compass_app.run(user_queries, run_config)?;
     for result in results.iter() {
         log_error(result);
     }
@@ -195,7 +195,7 @@ fn run_newline_json(
         debug!("executing batch {}", iteration + 1);
 
         // parse JSON output
-        let (mut chunk_queries, errors): (Vec<Value>, Vec<CompassAppError>) =
+        let (chunk_queries, errors): (Vec<Value>, Vec<CompassAppError>) =
             chunk.enumerate().partition_map(|(idx, row)| match row {
                 Ok(string) => match serde_json::from_str(&string) {
                     Ok(query) => Either::Left(query),
@@ -208,7 +208,7 @@ fn run_newline_json(
                 ))),
             });
         // run Compass on this chunk of queries
-        for result in compass_app.run(&mut chunk_queries, run_config)?.iter() {
+        for result in compass_app.run(chunk_queries, run_config)?.iter() {
             log_error(result)
         }
 
