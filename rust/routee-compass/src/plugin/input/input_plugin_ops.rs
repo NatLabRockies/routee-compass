@@ -1,7 +1,7 @@
 use indoc::indoc;
 use itertools::Itertools;
 use serde_json::{json, Value};
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
 
 use crate::app::compass::InputPluginPayload;
 
@@ -155,7 +155,10 @@ pub fn len_result(payload: &InputPluginPayload) -> usize {
 /// flattens the result of input processing in the case that the output of the
 /// input plugin is more than one JSON object. but if it is not a JSON array,
 /// then wrap it in a Vec.
-pub fn unpack_json_array_as_vec(payload: InputPluginPayload) -> Vec<InputPluginPayload> {
+pub fn unpack_json_array_as_vec(
+    name: &str,
+    payload: InputPluginPayload,
+) -> Vec<InputPluginPayload> {
     // destructure to allow us to separate ownership of "row", etc, from "payload". allows
     // us to use move semantics if we end up splitting on a row that is an array.
     let InputPluginPayload {
@@ -167,16 +170,22 @@ pub fn unpack_json_array_as_vec(payload: InputPluginPayload) -> Vec<InputPluginP
         Value::Array(arr) => arr
             .into_iter()
             .map(|inner_row| {
-                let row = if inner_row.is_object() {
-                    inner_row
+                if inner_row.is_object() {
+                    InputPluginPayload {
+                        row: inner_row,
+                        error: error.clone(),
+                        runtimes: runtimes.clone(),
+                    }
                 } else {
-                    package_invariant_error(None, Some(&inner_row))
-                };
+                    let error_row = package_invariant_error(None, Some(&inner_row));
 
-                InputPluginPayload {
-                    row,
-                    error: error.clone(),
-                    runtimes: runtimes.clone(),
+                    let error_msg =
+                        format!("{name} input plugin output a Value that was not a JSON object");
+                    InputPluginPayload {
+                        row: error_row,
+                        error: Some(Arc::new(InputPluginError::InputPluginFailed(error_msg))),
+                        runtimes: runtimes.clone(),
+                    }
                 }
             })
             .collect_vec(),
