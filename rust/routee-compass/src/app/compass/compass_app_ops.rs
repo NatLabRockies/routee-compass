@@ -1,8 +1,8 @@
 use crate::app::compass::info::{Info, INFO_KEY};
-use crate::app::compass::input_plugin_result::InputPluginRuntimes;
 use crate::app::compass::runtimes::Runtimes;
 use crate::app::compass::CompassAppError;
-use crate::app::compass::InputPluginResult;
+use crate::app::compass::InputPluginPayload;
+use crate::app::compass::InputPluginRuntimes;
 use crate::app::{
     compass::response::response_sink::ResponseSink,
     search::{SearchApp, SearchAppResult},
@@ -61,16 +61,16 @@ pub fn create_progress_bar(total: usize, desc: &str) -> Result<Arc<Mutex<Bar>>, 
 /// load balances the queries across processes based on the estimates. the resulting
 /// batches are not equal-sized
 pub fn apply_load_balancing_policy(
-    queries: Vec<InputPluginResult>,
+    queries: Vec<InputPluginPayload>,
     parallelism: usize,
     default: f64,
-) -> Result<Vec<Vec<InputPluginResult>>, CompassAppError> {
+) -> Result<Vec<Vec<InputPluginPayload>>, CompassAppError> {
     if queries.is_empty() {
         return Ok(vec![]);
     }
 
     let mut bin_totals = vec![0.0; parallelism];
-    let mut assignments: Vec<Vec<InputPluginResult>> = vec![vec![]; parallelism];
+    let mut assignments: Vec<Vec<InputPluginPayload>> = vec![vec![]; parallelism];
     let n_queries = queries.len();
 
     let bar_builder = Bar::builder()
@@ -108,12 +108,12 @@ pub fn apply_input_plugins(
     input_plugins: &[Arc<dyn InputPlugin>],
     search_app: Arc<SearchApp>,
     parallelism: usize,
-) -> Result<(Vec<InputPluginResult>, Vec<Value>), CompassAppError> {
+) -> Result<(Vec<InputPluginPayload>, Vec<Value>), CompassAppError> {
     // result of each iteration of plugin updates is stored here. we 'take' it since
     // we might reshape the vector as input plugins can generate new queries.
     let mut queries_processed = queries
         .into_iter()
-        .map(InputPluginResult::new)
+        .map(InputPluginPayload::new)
         .collect_vec();
     let mut query_errors: Vec<Value> = vec![];
 
@@ -167,11 +167,11 @@ pub fn apply_input_plugins(
 }
 
 fn process_chunk(
-    qs: &mut [InputPluginResult],
+    qs: &mut [InputPluginPayload],
     search_app: Arc<SearchApp>,
     plugin: Arc<dyn InputPlugin>,
     inner_bar: Arc<Mutex<Bar>>,
-) -> Vec<InputPluginResult> {
+) -> Vec<InputPluginPayload> {
     qs.iter_mut()
         .flat_map(|q| {
             let start_time = chrono::Local::now();
@@ -231,11 +231,11 @@ where
 ///
 /// * The result of the search and post-processing as a JSON object, or, an error
 pub fn run_single_query(
-    query: &mut InputPluginResult,
+    query: &mut InputPluginPayload,
     output_plugins: &[Arc<dyn OutputPlugin>],
     search_app: &SearchApp,
 ) -> Result<serde_json::Value, CompassAppError> {
-    let InputPluginResult { row, runtimes, .. } = query;
+    let InputPluginPayload { row, runtimes, .. } = query;
     let search_result = search_app.run(row);
     let output = apply_output_processing(
         row,
@@ -250,7 +250,7 @@ pub fn run_single_query(
 /// runs a query batch which has been sorted into parallel chunks
 /// and retains the responses from each search in memory.
 pub fn run_batch_with_responses(
-    load_balanced_inputs: &mut Vec<Vec<InputPluginResult>>,
+    load_balanced_inputs: &mut Vec<Vec<InputPluginPayload>>,
     output_plugins: &[Arc<dyn OutputPlugin>],
     search_app: &SearchApp,
     response_writer: &ResponseSink,
@@ -281,7 +281,7 @@ pub fn run_batch_with_responses(
 /// runs a query batch which has been sorted into parallel chunks.
 /// the search result is not persisted in memory.
 pub fn run_batch_without_responses(
-    load_balanced_inputs: &mut Vec<Vec<InputPluginResult>>,
+    load_balanced_inputs: &mut Vec<Vec<InputPluginPayload>>,
     output_plugins: &[Arc<dyn OutputPlugin>],
     search_app: &SearchApp,
     response_writer: &ResponseSink,
@@ -487,14 +487,14 @@ pub fn run_single_calculate_path(
 #[cfg(test)]
 mod test {
     use super::apply_load_balancing_policy;
-    use crate::{app::compass::InputPluginResult, plugin::input::InputField};
+    use crate::{app::compass::InputPluginPayload, plugin::input::InputField};
     use itertools::Itertools;
     use serde_json::json;
 
     fn test_run_policy(queries: Vec<serde_json::Value>, parallelism: usize) -> Vec<Vec<i64>> {
         let wrapped = queries
             .into_iter()
-            .map(InputPluginResult::new)
+            .map(InputPluginPayload::new)
             .collect_vec();
         apply_load_balancing_policy(wrapped, parallelism, 1.0)
             .unwrap()

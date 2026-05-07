@@ -3,7 +3,7 @@ use routee_compass_core::model::unit::TimeUnit;
 use serde::{Deserialize, Serialize};
 use uom::si::f64::Time;
 
-use crate::app::compass::input_plugin_result::InputPluginRuntimes;
+use crate::app::compass::input_plugin_payload::InputPluginRuntimes;
 
 /// accumulator that collects the runtimes of Compass components. collected in the target
 /// time unit so that Runtimes is idempotent across JSON serialization round-trips.

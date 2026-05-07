@@ -3,7 +3,7 @@ use itertools::Itertools;
 use serde_json::{json, Value};
 use std::rc::Rc;
 
-use crate::app::compass::InputPluginResult;
+use crate::app::compass::InputPluginPayload;
 
 use super::InputPluginError;
 
@@ -145,7 +145,7 @@ pub fn json_array_flatten(result: &mut Value) -> Result<Vec<Value>, Value> {
     }
 }
 
-pub fn len_result(payload: &InputPluginResult) -> usize {
+pub fn len_result(payload: &InputPluginPayload) -> usize {
     match &payload.row {
         Value::Array(arr) => arr.len(),
         _ => 1,
@@ -155,10 +155,10 @@ pub fn len_result(payload: &InputPluginResult) -> usize {
 /// flattens the result of input processing in the case that the output of the
 /// input plugin is more than one JSON object. but if it is not a JSON array,
 /// then wrap it in a Vec.
-pub fn unpack_json_array_as_vec(payload: InputPluginResult) -> Vec<InputPluginResult> {
+pub fn unpack_json_array_as_vec(payload: InputPluginPayload) -> Vec<InputPluginPayload> {
     // destructure to allow us to separate ownership of "row", etc, from "payload". allows
     // us to use move semantics if we end up splitting on a row that is an array.
-    let InputPluginResult {
+    let InputPluginPayload {
         row,
         error,
         runtimes,
@@ -173,14 +173,14 @@ pub fn unpack_json_array_as_vec(payload: InputPluginResult) -> Vec<InputPluginRe
                     package_invariant_error(None, Some(&mut inner_row))
                 };
 
-                InputPluginResult {
+                InputPluginPayload {
                     row,
                     error: error.clone(),
                     runtimes: runtimes.clone(),
                 }
             })
             .collect_vec(),
-        other => vec![InputPluginResult {
+        other => vec![InputPluginPayload {
             row: other,
             error,
             runtimes,
