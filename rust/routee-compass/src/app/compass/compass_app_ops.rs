@@ -191,7 +191,7 @@ fn process_chunk(
                 Ok(_) => {
                     let n_results = in_ops::len_result(&owned_q);
                     owned_q.record_input_plugin_runtime(p.name(), start_time, n_results);
-                    in_ops::unpack_json_array_as_vec(owned_q)
+                    in_ops::unpack_json_array_as_vec(p.name(), owned_q)
                 }
             }
         })
