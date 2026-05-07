@@ -72,13 +72,16 @@ impl InputPluginRuntimes {
     /// based on the number of result rows of the plugin.
     pub fn record(&mut self, start_time: DateTime<Local>, n_results: usize) {
         let duration = chrono::Local::now() - start_time;
-        let td_denom = if (i32::MAX as usize) < n_results {
+        // denominator sanitized for both TimeDelta and f64::Div operations.
+        let denom = if n_results == 0 {
+            1
+        } else if (i32::MAX as usize) < n_results {
             i32::MAX
         } else {
             n_results as i32
         };
-        let dur_prop = duration.checked_div(td_denom).unwrap_or_default();
-        let prop = 1.0 / td_denom as f64;
+        let dur_prop = duration.checked_div(denom).unwrap_or_default();
+        let prop = 1.0 / denom as f64;
         self.runtimes.push(duration);
         self.runtimes_proportioned.push(dur_prop);
         self.proportional_contributions.push(prop);
