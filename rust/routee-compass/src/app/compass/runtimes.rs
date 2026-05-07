@@ -54,6 +54,6 @@ fn to_fractional_seconds(td: &TimeDelta) -> f64 {
 /// helper to serialize a [TimeDelta] into a count of the given [TimeUnit].
 fn to_serializable(value: &TimeDelta, time_unit: &TimeUnit) -> f64 {
     let secs_uom: Time = TimeUnit::Seconds.to_uom(to_fractional_seconds(value));
-    let out = time_unit.from_uom(secs_uom);
-    out
+    
+    time_unit.from_uom(secs_uom)
 }

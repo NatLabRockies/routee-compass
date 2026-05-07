@@ -1,7 +1,7 @@
 use crate::app::{compass::runtimes::Runtimes, search::SearchAppResult};
 use serde::{Deserialize, Serialize};
 
-pub const INFO_KEY: &'static str = "info";
+pub const INFO_KEY: &str = "info";
 
 /// framework info associated with this row of a Compass input collecting run statistics.
 #[derive(Clone, Debug, Serialize, Deserialize)]
