@@ -12,12 +12,12 @@ pub struct Info {
     #[serde(skip_serializing_if = "Option::is_none")]
     ram_mib: Option<f64>,
     terminated: String,
-    runtimes: Runtimes,
+    runtime: Runtimes,
 }
 
 impl Info {
     /// creates a new record of the "info" section of a result. written to the output JSON at [INFO_KEY].
-    pub fn new(result: &SearchAppResult, runtimes: Runtimes, record_ram: bool) -> Self {
+    pub fn new(result: &SearchAppResult, runtime: Runtimes, record_ram: bool) -> Self {
         let route_edges = match result.routes.as_slice() {
             [] => None,
             rs => {
@@ -42,7 +42,7 @@ impl Info {
             route_edges,
             terminated,
             ram_mib,
-            runtimes,
+            runtime,
         }
     }
 }
