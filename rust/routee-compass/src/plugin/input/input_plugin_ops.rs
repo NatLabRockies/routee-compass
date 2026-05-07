@@ -166,10 +166,18 @@ pub fn unpack_json_array_as_vec(payload: InputPluginResult) -> Vec<InputPluginRe
     match row {
         Value::Array(arr) => arr
             .into_iter()
-            .map(|inner_row| InputPluginResult {
-                row: inner_row,
-                error: error.clone(),
-                runtimes: runtimes.clone(),
+            .map(|mut inner_row| {
+                let row = if inner_row.is_object() {
+                    inner_row
+                } else {
+                    package_invariant_error(None, Some(&mut inner_row))
+                };
+
+                InputPluginResult {
+                    row,
+                    error: error.clone(),
+                    runtimes: runtimes.clone(),
+                }
             })
             .collect_vec(),
         other => vec![InputPluginResult {
