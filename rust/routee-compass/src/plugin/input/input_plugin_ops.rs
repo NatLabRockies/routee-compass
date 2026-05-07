@@ -170,7 +170,7 @@ pub fn unpack_json_array_as_vec(payload: InputPluginPayload) -> Vec<InputPluginP
                 let row = if inner_row.is_object() {
                     inner_row
                 } else {
-                    package_invariant_error(None, Some(&mut inner_row))
+                    package_invariant_error(None, Some(&inner_row))
                 };
 
                 InputPluginPayload {
