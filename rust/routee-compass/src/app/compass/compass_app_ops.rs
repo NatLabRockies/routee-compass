@@ -334,7 +334,7 @@ pub fn apply_output_processing(
             Ok(()) => {}
             Err(e) => return package_error(request_json, e),
         }
-        runtimes.push_output_plugin_runtime(output_plugin.name(), plugin_start_time);
+        runtimes.add_output_plugin_runtime(output_plugin.name(), plugin_start_time);
     }
 
     let info = Info::new(sr, runtimes, search_app.estimate_ram);

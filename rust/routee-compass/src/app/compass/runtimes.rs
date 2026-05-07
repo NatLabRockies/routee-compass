@@ -17,15 +17,12 @@ pub struct Runtimes {
     search: f64,
     /// time spent running output plugins
     output: f64,
-    /// wall time spent running input plugins
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    input_plugins_wall: Vec<PluginRuntime>,
     /// proportional time spent running input plugins
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    input_plugins: Vec<PluginRuntime>,
+    input_plugins: Vec<InputPluginRuntime>,
     /// time spent running output plugins
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    output_plugins: Vec<PluginRuntime>,
+    output_plugins: Vec<OutputPluginRuntime>,
     /// total as a sum of search + proportional input plugin + output plugin time.
     total: f64,
     /// total as a sum of search + wall input plugin + output plugin time.
@@ -37,14 +34,36 @@ pub struct Runtimes {
 #[derive(Default, Clone, Debug)]
 pub struct InputPluginRuntimes {
     /// time required to run each input plugin.
-    pub runtimes: Vec<(String, TimeDelta)>,
-    /// proportion of time this row contributed to each input plugin runtime.
-    pub runtimes_proportioned: Vec<(String, TimeDelta)>,
+    pub runtimes: Vec<InputPluginRecordedRuntime>,
+}
+
+/// records the name and runtime of a plugin.
+#[derive(Debug, Clone)]
+pub struct InputPluginRecordedRuntime {
+    /// the plugin's name.
+    name: String,
+    /// the runtime of the plugin.
+    time: TimeDelta,
+    /// the wall time of the plugin, even if this row shared only a slice of this
+    /// wall time with a bunch of other rows.
+    wall: TimeDelta,
 }
 
 /// records the name and runtime of a plugin.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PluginRuntime {
+pub struct InputPluginRuntime {
+    /// the plugin's name.
+    name: String,
+    /// the runtime of the plugin.
+    time: f64,
+    /// the wall time of the plugin, even if this row shared only a slice of this
+    /// wall time with a bunch of other rows.
+    wall: f64,
+}
+
+/// records the name and runtime of a plugin.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OutputPluginRuntime {
     /// the plugin's name.
     name: String,
     /// the runtime of the plugin.
@@ -60,7 +79,6 @@ impl Runtimes {
             input_wall: 0.0,
             search: 0.0,
             output: 0.0,
-            input_plugins_wall: vec![],
             input_plugins: vec![],
             output_plugins: vec![],
             total: 0.0,
@@ -79,22 +97,17 @@ impl Runtimes {
 
     /// adds the runtimes associated with running input plugins to this accumulator.
     pub fn add_input_plugin_runtimes(&mut self, ipr: &InputPluginRuntimes) {
-        for (name, td) in ipr.runtimes.iter() {
-            let time = to_serializable(td, &self.time_unit);
-            self.wall += time;
-            self.input_wall += time;
-            self.input_plugins_wall.push(PluginRuntime {
-                name: name.clone(),
-                time,
-            });
-        }
-        for (name, td) in ipr.runtimes_proportioned.iter() {
-            let time = to_serializable(td, &self.time_unit);
+        for record in ipr.runtimes.iter() {
+            let time = to_serializable(&record.time, &self.time_unit);
+            let wall = to_serializable(&record.wall, &self.time_unit);
+            self.wall += wall;
+            self.input_wall += wall;
             self.total += time;
             self.input += time;
-            self.input_plugins.push(PluginRuntime {
-                name: name.clone(),
+            self.input_plugins.push(InputPluginRuntime {
+                name: record.name.clone(),
                 time,
+                wall,
             });
         }
     }
@@ -102,13 +115,13 @@ impl Runtimes {
     /// adds the next output plugin runtime to this accumulator. should be called in the
     /// order of output plugins so that the first runtime pushed corresponds to the output
     /// plugin with index 0 (the 1st plugin).
-    pub fn push_output_plugin_runtime(&mut self, name: &str, start_time: DateTime<Local>) {
+    pub fn add_output_plugin_runtime(&mut self, name: &str, start_time: DateTime<Local>) {
         let duration = chrono::Local::now() - start_time;
         let time = to_serializable(&duration, &self.time_unit);
         self.total += time;
         self.wall += time;
         self.output += time;
-        self.output_plugins.push(PluginRuntime {
+        self.output_plugins.push(OutputPluginRuntime {
             name: name.to_string(),
             time,
         });
@@ -129,9 +142,13 @@ impl InputPluginRuntimes {
             n_results as i32
         };
         let dur_prop = duration.checked_div(denom).unwrap_or_default();
-        self.runtimes.push((name.to_string(), duration));
-        self.runtimes_proportioned
-            .push((name.to_string(), dur_prop));
+
+        let recorded = InputPluginRecordedRuntime {
+            name: name.to_string(),
+            time: dur_prop,
+            wall: duration,
+        };
+        self.runtimes.push(recorded);
     }
 }
 
