@@ -1,8 +1,7 @@
 use crate::app::compass::info::{Info, INFO_KEY};
-use crate::app::compass::runtimes::Runtimes;
+use crate::app::compass::runtimes::{InputPluginRuntimes, Runtimes};
 use crate::app::compass::CompassAppError;
 use crate::app::compass::InputPluginPayload;
-use crate::app::compass::InputPluginRuntimes;
 use crate::app::{
     compass::response::response_sink::ResponseSink,
     search::{SearchApp, SearchAppResult},
@@ -191,7 +190,7 @@ fn process_chunk(
                 }
                 Ok(_) => {
                     let n_results = in_ops::len_result(&owned_q);
-                    owned_q.record_input_plugin_runtime(start_time, n_results);
+                    owned_q.record_input_plugin_runtime(p.name(), start_time, n_results);
                     in_ops::unpack_json_array_as_vec(owned_q)
                 }
             }
@@ -335,7 +334,7 @@ pub fn apply_output_processing(
             Ok(()) => {}
             Err(e) => return package_error(request_json, e),
         }
-        runtimes.push_output_plugin_runtime(plugin_start_time);
+        runtimes.push_output_plugin_runtime(output_plugin.name(), plugin_start_time);
     }
 
     let info = Info::new(sr, runtimes, search_app.estimate_ram);

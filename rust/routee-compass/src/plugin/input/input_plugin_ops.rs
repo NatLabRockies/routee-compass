@@ -166,7 +166,7 @@ pub fn unpack_json_array_as_vec(payload: InputPluginPayload) -> Vec<InputPluginP
     match row {
         Value::Array(arr) => arr
             .into_iter()
-            .map(|mut inner_row| {
+            .map(|inner_row| {
                 let row = if inner_row.is_object() {
                     inner_row
                 } else {

@@ -14,6 +14,8 @@ pub struct UUIDOutputPlugin {
     d_key: String,
 }
 
+const NAME: &str = "uuid";
+
 impl UUIDOutputPlugin {
     pub fn from_file<P: AsRef<Path>>(filename: &P) -> Result<UUIDOutputPlugin, OutputPluginError> {
         let uuids = read_raw_file(
@@ -73,5 +75,9 @@ impl OutputPlugin for UUIDOutputPlugin {
                 Ok(())
             }
         }
+    }
+
+    fn name(&self) -> &str {
+        NAME
     }
 }

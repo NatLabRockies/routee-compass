@@ -22,4 +22,4 @@ pub use compass_builder_inventory::CompassBuilderInventory;
 pub use compass_component_error::CompassComponentError;
 pub use compass_input_field::CompassInputField;
 pub use compass_json_extensions::CompassJsonExtensions;
-pub use input_plugin_payload::{InputPluginPayload, InputPluginRuntimes};
+pub use input_plugin_payload::InputPluginPayload;

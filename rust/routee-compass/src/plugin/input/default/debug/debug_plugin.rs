@@ -8,7 +8,13 @@ use std::sync::Arc;
 
 pub struct DebugInputPlugin {}
 
+const NAME: &str = "debug";
+
 impl InputPlugin for DebugInputPlugin {
+    fn name(&self) -> &str {
+        NAME
+    }
+
     fn process(
         &self,
         input: &mut serde_json::Value,

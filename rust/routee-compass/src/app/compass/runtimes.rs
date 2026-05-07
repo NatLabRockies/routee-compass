@@ -3,8 +3,6 @@ use routee_compass_core::model::unit::TimeUnit;
 use serde::{Deserialize, Serialize};
 use uom::si::f64::Time;
 
-use crate::app::compass::input_plugin_payload::InputPluginRuntimes;
-
 /// accumulator that collects the runtimes of Compass components. collected in the target
 /// time unit so that Runtimes is idempotent across JSON serialization round-trips.
 /// uses the proportional input plugin runtime as the value to contribute to the total
@@ -21,19 +19,36 @@ pub struct Runtimes {
     output: f64,
     /// wall time spent running input plugins
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    input_plugins_wall: Vec<f64>,
+    input_plugins_wall: Vec<PluginRuntime>,
     /// proportional time spent running input plugins
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    input_plugins: Vec<f64>,
+    input_plugins: Vec<PluginRuntime>,
     /// time spent running output plugins
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    output_plugins: Vec<f64>,
+    output_plugins: Vec<PluginRuntime>,
     /// total as a sum of search + proportional input plugin + output plugin time.
     total: f64,
     /// total as a sum of search + wall input plugin + output plugin time.
     wall: f64,
     /// time unit used for recording time values.
     time_unit: TimeUnit,
+}
+
+#[derive(Default, Clone, Debug)]
+pub struct InputPluginRuntimes {
+    /// time required to run each input plugin.
+    pub runtimes: Vec<(String, TimeDelta)>,
+    /// proportion of time this row contributed to each input plugin runtime.
+    pub runtimes_proportioned: Vec<(String, TimeDelta)>,
+}
+
+/// records the name and runtime of a plugin.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PluginRuntime {
+    /// the plugin's name.
+    name: String,
+    /// the runtime of the plugin.
+    time: f64,
 }
 
 impl Runtimes {
@@ -64,30 +79,59 @@ impl Runtimes {
 
     /// adds the runtimes associated with running input plugins to this accumulator.
     pub fn add_input_plugin_runtimes(&mut self, ipr: &InputPluginRuntimes) {
-        for td in ipr.runtimes.iter() {
+        for (name, td) in ipr.runtimes.iter() {
             let time = to_serializable(td, &self.time_unit);
             self.wall += time;
             self.input_wall += time;
-            self.input_plugins_wall.push(time);
+            self.input_plugins_wall.push(PluginRuntime {
+                name: name.clone(),
+                time,
+            });
         }
-        for td in ipr.runtimes_proportioned.iter() {
+        for (name, td) in ipr.runtimes_proportioned.iter() {
             let time = to_serializable(td, &self.time_unit);
             self.total += time;
             self.input += time;
-            self.input_plugins.push(time);
+            self.input_plugins.push(PluginRuntime {
+                name: name.clone(),
+                time,
+            });
         }
     }
 
     /// adds the next output plugin runtime to this accumulator. should be called in the
     /// order of output plugins so that the first runtime pushed corresponds to the output
     /// plugin with index 0 (the 1st plugin).
-    pub fn push_output_plugin_runtime(&mut self, start_time: DateTime<Local>) {
+    pub fn push_output_plugin_runtime(&mut self, name: &str, start_time: DateTime<Local>) {
         let duration = chrono::Local::now() - start_time;
         let time = to_serializable(&duration, &self.time_unit);
         self.total += time;
         self.wall += time;
         self.output += time;
-        self.output_plugins.push(time);
+        self.output_plugins.push(PluginRuntime {
+            name: name.to_string(),
+            time,
+        });
+    }
+}
+
+impl InputPluginRuntimes {
+    /// records a runtime for an input plugin. will generate proportional runtimes
+    /// based on the number of result rows of the plugin.
+    pub fn record(&mut self, name: &str, start_time: DateTime<Local>, n_results: usize) {
+        let duration = chrono::Local::now() - start_time;
+        // denominator sanitized for both TimeDelta and f64::Div operations.
+        let denom = if n_results == 0 {
+            1
+        } else if (i32::MAX as usize) < n_results {
+            i32::MAX
+        } else {
+            n_results as i32
+        };
+        let dur_prop = duration.checked_div(denom).unwrap_or_default();
+        self.runtimes.push((name.to_string(), duration));
+        self.runtimes_proportioned
+            .push((name.to_string(), dur_prop));
     }
 }
 

@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use chrono::{DateTime, Local, TimeDelta};
+use chrono::{DateTime, Local};
 use serde_json::Value;
 
-use crate::plugin::input::InputPluginError;
+use crate::{app::compass::runtimes::InputPluginRuntimes, plugin::input::InputPluginError};
 
 /// wrapper for queries passing through the input plugin processing phase of a run.
 /// after completing all input plugins, this record type contains the final row value,
@@ -52,38 +52,12 @@ impl InputPluginPayload {
 
     /// records a runtime for an input plugin. will generate proportional runtimes
     /// based on the number of result rows of the plugin.
-    pub fn record_input_plugin_runtime(&mut self, start_time: DateTime<Local>, n_results: usize) {
-        self.runtimes.record(start_time, n_results);
-    }
-}
-
-#[derive(Default, Clone, Debug)]
-pub struct InputPluginRuntimes {
-    /// time required to run each input plugin.
-    pub runtimes: Vec<TimeDelta>,
-    /// proportion of time this row contributed to each input plugin runtime.
-    pub runtimes_proportioned: Vec<TimeDelta>,
-    /// along the way, how many queries were split out due to input processing.
-    pub proportional_contributions: Vec<f64>,
-}
-
-impl InputPluginRuntimes {
-    /// records a runtime for an input plugin. will generate proportional runtimes
-    /// based on the number of result rows of the plugin.
-    pub fn record(&mut self, start_time: DateTime<Local>, n_results: usize) {
-        let duration = chrono::Local::now() - start_time;
-        // denominator sanitized for both TimeDelta and f64::Div operations.
-        let denom = if n_results == 0 {
-            1
-        } else if (i32::MAX as usize) < n_results {
-            i32::MAX
-        } else {
-            n_results as i32
-        };
-        let dur_prop = duration.checked_div(denom).unwrap_or_default();
-        let prop = 1.0 / denom as f64;
-        self.runtimes.push(duration);
-        self.runtimes_proportioned.push(dur_prop);
-        self.proportional_contributions.push(prop);
+    pub fn record_input_plugin_runtime(
+        &mut self,
+        name: &str,
+        start_time: DateTime<Local>,
+        n_results: usize,
+    ) {
+        self.runtimes.record(name, start_time, n_results);
     }
 }
