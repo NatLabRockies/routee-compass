@@ -11,8 +11,14 @@ use crate::app::compass::input_plugin_result::InputPluginRuntimes;
 /// time, and the un-proportioned input plugin runtime to contribute to the wall time.
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Runtimes {
+    /// proportional time spent running input plugins
+    input: f64,
+    /// wall time spent running input plugins
+    input_wall: f64,
     /// time spent running graph search
     search: f64,
+    /// time spent running output plugins
+    output: f64,
     /// wall time spent running input plugins
     #[serde(skip_serializing_if = "Vec::is_empty")]
     input_plugins_wall: Vec<f64>,
@@ -35,7 +41,10 @@ impl Runtimes {
     /// for an accumulator that uses the [Default] [TimeUnit], use [Runtimes::Default].
     pub fn new(time_unit: TimeUnit) -> Self {
         Self {
+            input: 0.0,
+            input_wall: 0.0,
             search: 0.0,
+            output: 0.0,
             input_plugins_wall: vec![],
             input_plugins_proportioned: vec![],
             output_plugins: vec![],
@@ -48,22 +57,24 @@ impl Runtimes {
     /// adds the search runtime value to this accumulator.
     pub fn add_search_runtime(&mut self, td: TimeDelta) {
         let time = to_serializable(&td, &self.time_unit);
-        self.search = time;
         self.total += time;
         self.wall += time;
+        self.search = time;
     }
 
     /// adds the runtimes associated with running input plugins to this accumulator.
     pub fn add_input_plugin_runtimes(&mut self, ipr: &InputPluginRuntimes) {
         for td in ipr.runtimes.iter() {
             let time = to_serializable(td, &self.time_unit);
-            self.input_plugins_wall.push(time);
             self.wall += time;
+            self.input_wall += time;
+            self.input_plugins_wall.push(time);
         }
         for td in ipr.runtimes_proportioned.iter() {
             let time = to_serializable(td, &self.time_unit);
-            self.input_plugins_proportioned.push(time);
             self.total += time;
+            self.input += time;
+            self.input_plugins_proportioned.push(time);
         }
     }
 
@@ -73,9 +84,10 @@ impl Runtimes {
     pub fn push_output_plugin_runtime(&mut self, start_time: DateTime<Local>) {
         let duration = chrono::Local::now() - start_time;
         let time = to_serializable(&duration, &self.time_unit);
-        self.output_plugins.push(time);
         self.total += time;
         self.wall += time;
+        self.output += time;
+        self.output_plugins.push(time);
     }
 }
 
