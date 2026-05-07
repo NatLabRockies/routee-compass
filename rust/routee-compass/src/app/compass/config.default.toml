@@ -41,6 +41,7 @@ parallelism = 2
 default_edge_list = 0
 response_persistence_policy = "persist_response_in_memory"
 response_output_policy.type = "none"
+estimate_ram = true
 
 [mapping]
 tolerance.distance = 30.0
