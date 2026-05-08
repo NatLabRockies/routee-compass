@@ -22,6 +22,10 @@ pub enum InjectInputPlugin {
     },
 }
 
+const BASIC_NAME: &str = "inject";
+
+const SPATIAL_NAME: &str = "spatial_inject";
+
 impl InputPlugin for InjectInputPlugin {
     fn process(
         &self,
@@ -29,6 +33,13 @@ impl InputPlugin for InjectInputPlugin {
         _search_app: Arc<SearchApp>,
     ) -> Result<(), InputPluginError> {
         process_inject(self, input)
+    }
+
+    fn name(&self) -> &str {
+        match self {
+            InjectInputPlugin::Basic { .. } => BASIC_NAME,
+            InjectInputPlugin::Spatial { .. } => SPATIAL_NAME,
+        }
     }
 }
 

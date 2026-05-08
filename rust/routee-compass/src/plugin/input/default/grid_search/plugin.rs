@@ -10,7 +10,13 @@ use std::sync::Arc;
 /// by stepping through each combination of value
 pub struct GridSearchPlugin {}
 
+const NAME: &str = "grid_search";
+
 impl InputPlugin for GridSearchPlugin {
+    fn name(&self) -> &str {
+        NAME
+    }
+
     fn process(
         &self,
         input: &mut serde_json::Value,

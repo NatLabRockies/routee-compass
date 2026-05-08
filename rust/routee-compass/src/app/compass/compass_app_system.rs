@@ -10,4 +10,5 @@ pub struct CompassAppSystemParameters {
     pub default_edge_list: Option<usize>,
     pub response_persistence_policy: Option<ResponsePersistencePolicy>,
     pub response_output_policy: Option<ResponseOutputPolicy>,
+    pub estimate_ram: Option<bool>,
 }

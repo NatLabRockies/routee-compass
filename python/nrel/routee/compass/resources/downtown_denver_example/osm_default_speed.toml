@@ -60,8 +60,6 @@ input_plugins = [
     { type = "grid_search" },
     { type = "load_balancer", weight_heuristic = { type = "haversine" } },
 ]
-[[plugin.output_plugins]]
-type = "summary"
 
 [[plugin.output_plugins]]
 type = "traversal"

@@ -10,6 +10,8 @@ pub struct EvalOutputPlugin {
     on_failure: CompiledOnFailure,
 }
 
+const NAME: &str = "eval";
+
 impl EvalOutputPlugin {
     pub fn new(conf: EvalOutputPluginConfig) -> Result<Self, crate::plugin::PluginError> {
         let expressions = conf
@@ -63,6 +65,10 @@ impl OutputPlugin for EvalOutputPlugin {
             }
         }
         Ok(())
+    }
+
+    fn name(&self) -> &str {
+        NAME
     }
 }
 

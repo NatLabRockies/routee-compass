@@ -222,12 +222,12 @@ pub trait CompassAppBindings {
             None => None,
         };
 
-        let mut json_queries = queries
+        let json_queries = queries
             .iter()
             .map(|q| serde_json::from_str(q))
             .collect::<Result<Vec<serde_json::Value>, serde_json::Error>>()?;
 
-        let results = self.app().run(&mut json_queries, config_inner.as_ref())?;
+        let results = self.app().run(json_queries, config_inner.as_ref())?;
 
         let string_results: Vec<String> = results.iter().map(|r| r.to_string()).collect();
         Ok(string_results)

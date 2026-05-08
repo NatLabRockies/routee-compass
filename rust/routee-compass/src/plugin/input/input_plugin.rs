@@ -25,6 +25,9 @@ use super::InputPluginError;
 /// [load balancer]: super::default::load_balancer::builder::LoadBalancerBuilder
 ///
 pub trait InputPlugin: Send + Sync {
+    /// unique name for this plugin, used in logging and metrics.
+    fn name(&self) -> &str;
+
     /// Applies this [`InputPlugin`] to a user query input, passing along a `Vec` of input
     /// queries as a result which will replace the input.
     ///

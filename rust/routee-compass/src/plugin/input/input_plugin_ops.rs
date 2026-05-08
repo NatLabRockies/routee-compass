@@ -1,6 +1,9 @@
 use indoc::indoc;
+use itertools::Itertools;
 use serde_json::{json, Value};
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
+
+use crate::app::compass::InputPluginPayload;
 
 use super::InputPluginError;
 
@@ -142,32 +145,54 @@ pub fn json_array_flatten(result: &mut Value) -> Result<Vec<Value>, Value> {
     }
 }
 
+pub fn len_result(payload: &InputPluginPayload) -> usize {
+    match &payload.row {
+        Value::Array(arr) => arr.len(),
+        _ => 1,
+    }
+}
+
 /// flattens the result of input processing in the case that the output of the
 /// input plugin is more than one JSON object. but if it is not a JSON array,
 /// then wrap it in a Vec.
-pub fn unpack_json_array_as_vec(result: &Value) -> Vec<Value> {
-    let mut error: Option<&Value> = None;
-    match result {
-        Value::Array(sub_array) => {
-            let mut flattened: Vec<Value> = vec![];
-            for sub_obj in sub_array.iter() {
-                match sub_obj {
-                    Value::Object(obj) => {
-                        flattened.push(json![obj]);
+pub fn unpack_json_array_as_vec(
+    name: &str,
+    payload: InputPluginPayload,
+) -> Vec<InputPluginPayload> {
+    // destructure to allow us to separate ownership of "row", etc, from "payload". allows
+    // us to use move semantics if we end up splitting on a row that is an array.
+    let InputPluginPayload {
+        row,
+        error,
+        runtimes,
+    } = payload;
+    match row {
+        Value::Array(arr) => arr
+            .into_iter()
+            .map(|inner_row| {
+                if inner_row.is_object() {
+                    InputPluginPayload {
+                        row: inner_row,
+                        error: error.clone(),
+                        runtimes: runtimes.clone(),
                     }
-                    other => {
-                        error = Some(other);
+                } else {
+                    let error_row = package_invariant_error(None, Some(&inner_row));
+
+                    let error_msg =
+                        format!("{name} input plugin output a Value that was not a JSON object");
+                    InputPluginPayload {
+                        row: error_row,
+                        error: Some(Arc::new(InputPluginError::InputPluginFailed(error_msg))),
+                        runtimes: runtimes.clone(),
                     }
                 }
-            }
-            match error {
-                Some(_) => {
-                    let error_response = package_invariant_error(None, error);
-                    vec![error_response]
-                }
-                None => flattened,
-            }
-        }
-        _ => vec![result.clone()],
+            })
+            .collect_vec(),
+        other => vec![InputPluginPayload {
+            row: other,
+            error,
+            runtimes,
+        }],
     }
 }
