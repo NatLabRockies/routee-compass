@@ -411,7 +411,6 @@
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output-plugins">Output Plugins</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#traversal">Traversal</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#eval">Eval</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#failure-modes">Failure modes</a></li>
@@ -963,26 +962,6 @@ based on observed search sizes for each travel mode.</p>
 <section id="output-plugins">
 <h2>Output Plugins<a class="headerlink" href="#output-plugins" title="Link to this heading">#</a></h2>
 <p>Here are the default output plugins that are provided:</p>
-<section id="summary">
-<h3>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h3>
-<p>Append a summary from the run directly from the search result. Adds:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;search_executed_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ISO 8601 time&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;search_runtime&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;hh:mm:ss&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;route_edges&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;tree_size_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;iterations&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;terminated&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;if terminated early, a message explaining why&quot;</span><span class="p">,</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>Simply add this type to your list of output plugins. Optionally, include memory estimation (experimental):</p>
-<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[plugin.output_plugins]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;summary&quot;</span>
-<span class="n">estimate_memory_consumption</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-</pre></div>
-</div>
-</section>
 <section id="traversal">
 <h3>Traversal<a class="headerlink" href="#traversal" title="Link to this heading">#</a></h3>
 <p>A plugin that appends various items to the result. It leverages the mapping model for route and tree geometry generation.</p>
@@ -1355,7 +1334,6 @@ contains any errors.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output-plugins">Output Plugins</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#traversal">Traversal</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#eval">Eval</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#failure-modes">Failure modes</a></li>
