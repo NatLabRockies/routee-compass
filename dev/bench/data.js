@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778608415181,
+  "lastUpdate": 1778613349157,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3629,6 +3629,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2954648,
             "range": "± 100152",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nreinicke@users.noreply.github.com",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dc8fe00f3d6ee844e2ce4e57741b6caa3eabe8e1",
+          "message": "HPC build script (#503)\n\nAdds custom build script to target linux based HPC systems.\nThis is necessary since the ort dependency doesn't ship precompiled binaries for kestrel HPC OS and so we need to built the ONNX runtime from source and then statically link it when compiling the ort rust crate",
+          "timestamp": "2026-05-12T13:11:22-06:00",
+          "tree_id": "f35241e39f35c5656fbf4637db97785971d9a59a",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/dc8fe00f3d6ee844e2ce4e57741b6caa3eabe8e1"
+        },
+        "date": 1778613348137,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2962331,
+            "range": "± 338716",
             "unit": "ns/iter"
           }
         ]
