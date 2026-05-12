@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778250720613,
+  "lastUpdate": 1778605208431,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3569,6 +3569,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2957158,
             "range": "± 167505",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c9768a9545fbf33b0d5063e4f49c439dfe0ec1e5",
+          "message": "Merge pull request #512 from NatLabRockies/dependabot/cargo/rust/ordered_hash_map-0.6.0\n\nUpdate ordered_hash_map requirement from 0.5.0 to 0.6.0 in /rust",
+          "timestamp": "2026-05-12T10:09:53-06:00",
+          "tree_id": "142d9998b1477eccba0740a2070b9795e9842c91",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/c9768a9545fbf33b0d5063e4f49c439dfe0ec1e5"
+        },
+        "date": 1778605207411,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2970143,
+            "range": "± 345068",
             "unit": "ns/iter"
           }
         ]
