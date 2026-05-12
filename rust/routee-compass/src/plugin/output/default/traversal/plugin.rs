@@ -16,6 +16,8 @@ pub struct TraversalPlugin {
     tree_key: String,
 }
 
+const NAME: &str = "traversal";
+
 impl TraversalPlugin {
     pub fn new(
         route: Option<TraversalOutputFormat>,
@@ -103,5 +105,9 @@ impl OutputPlugin for TraversalPlugin {
         }
 
         Ok(())
+    }
+
+    fn name(&self) -> &str {
+        NAME
     }
 }

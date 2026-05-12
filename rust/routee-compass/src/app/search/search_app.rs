@@ -15,7 +15,6 @@ use routee_compass_core::{
     },
 };
 use std::sync::Arc;
-use std::time;
 
 /// a configured and loaded application to execute searches.
 pub struct SearchApp {
@@ -29,6 +28,7 @@ pub struct SearchApp {
     pub termination_model: Arc<TerminationModel>,
     pub label_model_service: Arc<dyn LabelModelService>,
     pub default_edge_list: Option<usize>,
+    pub estimate_ram: bool,
 }
 
 impl SearchApp {
@@ -46,6 +46,7 @@ impl SearchApp {
         termination_model: TerminationModel,
         label_model_service: Arc<dyn LabelModelService>,
         default_edge_list: Option<usize>,
+        estimate_ram: bool,
     ) -> Self {
         SearchApp {
             search_algorithm,
@@ -58,6 +59,7 @@ impl SearchApp {
             termination_model: Arc::new(termination_model),
             label_model_service,
             default_edge_list,
+            estimate_ram,
         }
     }
 
@@ -108,19 +110,17 @@ impl SearchApp {
         }?;
 
         let search_end_time = Local::now();
-        let search_runtime = (search_end_time - search_start_time)
-            .to_std()
-            .unwrap_or(time::Duration::ZERO);
+        let search_runtime = search_end_time - search_start_time;
 
         log::debug!(
-            "Search Completed in {:?} miliseconds",
-            search_runtime.as_millis()
+            "Search Completed in {:?} seconds",
+            search_runtime.as_seconds_f64()
         );
 
         let result = SearchAppResult {
             routes: results.routes,
             trees: results.trees,
-            search_executed_time: search_start_time.to_rfc3339(),
+            search_executed_time: search_start_time,
             search_runtime,
             iterations: results.iterations,
             terminated: results.terminated,

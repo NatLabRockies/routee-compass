@@ -9,8 +9,8 @@ use crate::plugin::{
     },
     output::{
         default::{
-            eval::EvalOutputPluginBuilder, summary::SummaryOutputPluginBuilder,
-            traversal::TraversalPluginBuilder, uuid::UUIDOutputPluginBuilder,
+            eval::EvalOutputPluginBuilder, traversal::TraversalPluginBuilder,
+            uuid::UUIDOutputPluginBuilder,
         },
         OutputPlugin, OutputPluginBuilder,
     },
@@ -50,6 +50,7 @@ use routee_compass_core::{
         },
     },
 };
+#[cfg(feature = "routee-compass-powertrain")]
 use routee_compass_powertrain::model::{
     charging::{
         battery::BatteryFilterBuilder, simple_charging_builder::SimpleChargingBuilder,
@@ -76,27 +77,30 @@ inventory::submit! {
         builder.add_traversal_model("time".to_string(), Rc::new(TimeTraversalBuilder {}));
         builder.add_traversal_model("grade".to_string(), Rc::new(GradeTraversalBuilder {}));
         builder.add_traversal_model("elevation".to_string(), Rc::new(ElevationTraversalBuilder {}));
-        builder.add_traversal_model("energy".to_string(), Rc::new(EnergyModelBuilder {}));
-        builder.add_traversal_model("simple_charging".to_string(), Rc::new(SimpleChargingBuilder::default()));
         builder.add_traversal_model("temperature".to_string(), Rc::new(TemperatureTraversalBuilder {}));
         builder.add_traversal_model("turn_delay".to_string(), Rc::new(TurnDelayTraversalModelBuilder {}));
         builder.add_traversal_model("custom".to_string(), Rc::new(CustomTraversalBuilder {}));
         builder.add_constraint_model("no_restriction".to_string(), Rc::new(NoRestrictionBuilder {}));
         builder.add_constraint_model("road_class".to_string(), Rc::new(RoadClassBuilder {}));
         builder.add_constraint_model("turn_restriction".to_string(), Rc::new(TurnRestrictionBuilder {}));
-        builder.add_constraint_model("battery".to_string(), Rc::new(BatteryFilterBuilder::default()));
         builder.add_constraint_model("vehicle_restriction".to_string(), Rc::new(VehicleRestrictionBuilder {}));
         builder.add_label_model("vertex".to_string(), Rc::new(VertexLabelModelBuilder));
-        builder.add_label_model("soc".to_string(), Rc::new(SOCLabelModelBuilder));
         builder.add_input_plugin("grid_search".to_string(), Rc::new(GridSearchBuilder {}));
         builder.add_input_plugin("load_balancer".to_string(), Rc::new(LoadBalancerBuilder {}));
         builder.add_input_plugin("inject".to_string(), Rc::new(InjectPluginBuilder {}));
         builder.add_input_plugin("debug".to_string(), Rc::new(DebugInputPluginBuilder {}));
         builder.add_output_plugin("traversal".to_string(), Rc::new(TraversalPluginBuilder {}));
-        builder.add_output_plugin("summary".to_string(), Rc::new(SummaryOutputPluginBuilder {}));
         builder.add_output_plugin("uuid".to_string(), Rc::new(UUIDOutputPluginBuilder {}));
         builder.add_output_plugin("eval".to_string(), Rc::new(EvalOutputPluginBuilder {}));
         builder.add_map_matching_model("lcss".to_string(), Rc::new(LcssMapMatchingBuilder {}));
+
+        #[cfg(feature = "routee-compass-powertrain")]
+        {
+            builder.add_label_model("soc".to_string(), Rc::new(SOCLabelModelBuilder));
+            builder.add_traversal_model("energy".to_string(), Rc::new(EnergyModelBuilder {}));
+            builder.add_traversal_model("simple_charging".to_string(), Rc::new(SimpleChargingBuilder::default()));
+            builder.add_constraint_model("battery".to_string(), Rc::new(BatteryFilterBuilder::default()));
+        }
         Ok(())
     })
 }

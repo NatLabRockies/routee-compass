@@ -10,6 +10,8 @@ pub struct LoadBalancerPlugin {
     pub heuristic: WeightHeuristic,
 }
 
+const NAME: &str = "load_balancer";
+
 impl InputPlugin for LoadBalancerPlugin {
     fn process(
         &self,
@@ -20,5 +22,9 @@ impl InputPlugin for LoadBalancerPlugin {
         let _updated = query.clone();
         query.add_query_weight_estimate(w)?;
         Ok(())
+    }
+
+    fn name(&self) -> &str {
+        NAME
     }
 }

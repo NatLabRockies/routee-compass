@@ -173,6 +173,11 @@ def main():
     least_cost_result = results_map["least_cost"]
 
     """
+    Framework-level metrics exist at the "info" key on each route result:
+    """
+    pretty_print(shortest_time_result["info"])
+
+    """
     Summary of route result for distance, time, and energy:
     """
 

@@ -126,6 +126,7 @@ impl CompassApp {
             config.termination.clone(),
             label_model_service,
             config.system.default_edge_list,
+            config.system.estimate_ram.unwrap_or_default(),
         ));
 
         let input_plugins = ops::with_timing("input plugins", || {
@@ -169,7 +170,7 @@ impl CompassApp {
     /// if
     pub fn run(
         &self,
-        queries: &mut Vec<Value>,
+        queries: Vec<Value>,
         config: Option<&Value>,
     ) -> Result<Vec<Value>, CompassAppError> {
         let override_config_opt: Option<CompassAppSystemParameters> = match config {
@@ -398,8 +399,8 @@ mod tests {
             "origin_vertex": 0,
             "destination_vertex": 2
         });
-        let mut queries = vec![query];
-        let result = app.run(&mut queries, None).expect("run failed");
+        let queries = vec![query];
+        let result = app.run(queries, None).expect("run failed");
         assert_eq!(result.len(), 1, "expected one result");
         let route_0 = result[0].get("route").expect("result has no route");
         let path_0 = route_0.get("path").expect("result route has no path");

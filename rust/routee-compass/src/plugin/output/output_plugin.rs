@@ -21,6 +21,9 @@ use routee_compass_core::algorithm::search::SearchInstance;
 /// [traversal]: super::default::traversal::builder::TraversalPluginBuilder
 /// [uuid]: super::default::uuid::builder::UUIDOutputPluginBuilder
 pub trait OutputPlugin: Send + Sync {
+    /// unique name for this plugin, used in logging and metrics.
+    fn name(&self) -> &str;
+
     /// Applies this [`OutputPlugin`] to a search result, passing along a JSON
     /// that will replace the `output` JSON argument.
     ///
