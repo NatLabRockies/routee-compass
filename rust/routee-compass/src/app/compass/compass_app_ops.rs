@@ -316,6 +316,11 @@ pub fn apply_output_processing(
 ) -> serde_json::Value {
     let mut initial = json!({ "request": request_json });
 
+    // append error if exists
+    if let Err(e) = &result {
+        initial["error"] = json!(e.to_string());
+    }
+
     // set up "runtimes" section with existing metrics
     let mut runtimes = Runtimes::new(TimeUnit::Seconds);
     if let Ok((sr, _)) = &result {

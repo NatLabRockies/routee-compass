@@ -53,7 +53,7 @@ impl Info {
             tree_edges: 0,
             route_edges: None,
             ram_mib: None,
-            terminated: "".to_string(),
+            terminated: "false".to_string(),
             runtime,
         }
     }
