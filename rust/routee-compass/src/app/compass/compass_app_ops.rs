@@ -316,7 +316,7 @@ pub fn apply_output_processing(
 ) -> serde_json::Value {
     let mut initial = json!({ "request": request_json });
 
-    // set up "info" section with existing runtime metrics
+    // set up "runtimes" section with existing metrics
     let mut runtimes = Runtimes::new(TimeUnit::Seconds);
     if let Ok((sr, _)) = &result {
         runtimes.add_search_runtime(sr.search_runtime);
@@ -325,6 +325,7 @@ pub fn apply_output_processing(
         runtimes.add_input_plugin_runtimes(ipr);
     }
 
+    // process all output plugins. collect runtimes along the way.
     for output_plugin in output_plugins.iter() {
         let plugin_start_time = chrono::Local::now();
         match output_plugin.process(&mut initial, &result) {
@@ -334,12 +335,14 @@ pub fn apply_output_processing(
         runtimes.add_output_plugin_runtime(output_plugin.name(), plugin_start_time);
     }
 
-    if let Ok((sr, _)) = &result {
-        let info = Info::new(sr, runtimes, search_app.estimate_ram);
-        initial[INFO_KEY] = json!(info);
+    // write the "info" section with the runtimes along with search results, if present
+    let info = if let Ok((sr, _)) = &result {
+        Info::new_from_success(sr, runtimes, search_app.estimate_ram)
     } else {
-        initial[INFO_KEY] = json!({});
-    }
+        Info::new_from_failure(runtimes)
+    };
+    initial[INFO_KEY] = json!(info);
+
     initial
 }
 

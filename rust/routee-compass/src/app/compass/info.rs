@@ -17,7 +17,7 @@ pub struct Info {
 
 impl Info {
     /// creates a new record of the "info" section of a result. written to the output JSON at [INFO_KEY].
-    pub fn new(result: &SearchAppResult, runtime: Runtimes, record_ram: bool) -> Self {
+    pub fn new_from_success(result: &SearchAppResult, runtime: Runtimes, record_ram: bool) -> Self {
         let route_edges = match result.routes.as_slice() {
             [] => None,
             rs => {
@@ -42,6 +42,18 @@ impl Info {
             route_edges,
             terminated,
             ram_mib,
+            runtime,
+        }
+    }
+
+    /// helper constructor for when we are creating an info section on a failed run.
+    pub fn new_from_failure(runtime: Runtimes) -> Self {
+        Self {
+            iterations: 0,
+            tree_edges: 0,
+            route_edges: None,
+            ram_mib: None,
+            terminated: "".to_string(),
             runtime,
         }
     }
