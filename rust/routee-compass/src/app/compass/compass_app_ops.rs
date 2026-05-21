@@ -314,16 +314,13 @@ pub fn apply_output_processing(
     search_app: &SearchApp,
     output_plugins: &[Arc<dyn OutputPlugin>],
 ) -> serde_json::Value {
-    let (sr, _si) = match &result {
-        Ok(pair) => pair,
-        Err(e) => return package_error(request_json, e),
-    };
-
     let mut initial = json!({ "request": request_json });
 
     // set up "info" section with existing runtime metrics
     let mut runtimes = Runtimes::new(TimeUnit::Seconds);
-    runtimes.add_search_runtime(sr.search_runtime);
+    if let Ok((sr, _)) = &result {
+        runtimes.add_search_runtime(sr.search_runtime);
+    }
     if let Some(ipr) = input_plugin_runtimes {
         runtimes.add_input_plugin_runtimes(ipr);
     }
@@ -337,8 +334,12 @@ pub fn apply_output_processing(
         runtimes.add_output_plugin_runtime(output_plugin.name(), plugin_start_time);
     }
 
-    let info = Info::new(sr, runtimes, search_app.estimate_ram);
-    initial[INFO_KEY] = json!(info);
+    if let Ok((sr, _)) = &result {
+        let info = Info::new(sr, runtimes, search_app.estimate_ram);
+        initial[INFO_KEY] = json!(info);
+    } else {
+        initial[INFO_KEY] = json!({});
+    }
     initial
 }
 
