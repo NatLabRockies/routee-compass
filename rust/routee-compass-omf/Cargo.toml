@@ -1,0 +1,56 @@
+[package]
+name = "bambam-omf"
+version = "0.3.1"
+edition = "2021"
+license = "BSD-3-Clause"
+include = [
+  "Cargo.toml",
+  "README.md",
+  "src/**/*.rs",
+  "src/util/bambam-config-omf.toml"
+]
+readme = "README.md"
+repository = "https://github.com/NatLabRockies/bambam"
+documentation = "https://docs.rs/bambam-omf"
+description = "OvertureMaps Foundation support for The Behavior and Advanced Mobility Big Access Model"
+keywords = ["nlr", "access-model", "accessibility", "multimodal", "transit"]
+categories = ["command-line-utilities", "science", "science::geo"]
+
+[dependencies]
+
+arrow = { workspace = true }
+bamcensus = { workspace = true }
+bamcensus-acs = { workspace = true }
+bamcensus-core = { workspace = true }
+bamcensus-lehd = { workspace = true }
+chrono = { workspace = true }
+clap = { workspace = true }
+config = { workspace = true }
+csv = { workspace = true }
+env_logger = { workspace = true }
+flate2 = { workspace = true }
+futures = { workspace = true }
+geo = { workspace = true }
+geozero = { workspace = true }
+hex = { workspace = true }
+indexmap = { workspace = true }
+itertools = { workspace = true }
+kdam = { workspace = true }
+log = { workspace = true }
+object_store = { workspace = true }
+opening-hours-syntax = { workspace = true }
+ordered-float = { workspace = true }
+parquet = { workspace = true }
+rayon = { workspace = true }
+reqwest = { workspace = true }
+routee-compass = { workspace = true }
+routee-compass-core = { workspace = true }
+# routee-compass-powertrain = { workspace = true }
+serde = { workspace = true }
+serde_arrow = { workspace = true }
+serde_bytes = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+toml = { workspace = true }
+uom = { workspace = true }
