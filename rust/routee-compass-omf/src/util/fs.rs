@@ -10,12 +10,12 @@ use serde::Serialize;
 
 use crate::collection::OvertureMapsCollectionError;
 
-/// copies bambam-config-omf.toml to the directory of an OMF import.
+/// copies omf-defaults.toml to the directory of an OMF import.
 pub fn copy_default_config(output_directory: &Path) -> Result<(), OvertureMapsCollectionError> {
     let src = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("src")
         .join("util")
-        .join("bambam-config-omf.toml");
+        .join("omf-defaults.toml");
     let dst = output_directory.join("bambam.toml");
     std::fs::copy(&src, &dst).map_err(|e| OvertureMapsCollectionError::WriteError {
         path: dst,
