@@ -102,7 +102,7 @@ impl<T: Clone> OneOrMany<T> {
         OneOrMany::One(t)
     }
 
-    /// places any number of values into a OneOrMany using it's Many variant to be
+    /// places any number of values into a OneOrMany using its Many variant to be
     /// serialized as an array.
     pub fn many(ts: Vec<T>) -> OneOrMany<T> {
         OneOrMany::Many(ts)
