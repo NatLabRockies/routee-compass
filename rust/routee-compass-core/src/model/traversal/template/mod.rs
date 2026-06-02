@@ -5,6 +5,7 @@ mod model;
 mod params;
 mod service;
 
+#[allow(unused)]
 pub use builder::TemplateBuilder;
 pub use config::TemplateConfig;
 pub use engine::TemplateEngine;
