@@ -3,7 +3,6 @@ use super::TemplateConfig;
 use crate::model::traversal::TraversalModelError;
 
 pub struct TemplateEngine {
-    #[allow(unused)]
     config: TemplateConfig,
 }
 

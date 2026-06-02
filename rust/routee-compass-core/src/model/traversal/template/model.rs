@@ -12,9 +12,7 @@ use crate::{
 };
 
 pub struct TemplateModel {
-    #[allow(unused)]
     pub engine: Arc<TemplateEngine>,
-    #[allow(unused)]
     pub params: TemplateParams,
 }
 
