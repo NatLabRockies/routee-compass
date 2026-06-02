@@ -46,6 +46,15 @@ enum CompassSubcommands {
         name: String,
         /// Parent directory path to where the module should be created (e.g., src)
         path: PathBuf,
+        /// Comma-delimiited list of files to copy over. by default, copy all files.
+        #[arg(
+            long,
+            default_value = "builder.rs,config.rs,engine.rs,mod.rs,model.rs,params.rs,service.rs"
+        )]
+        files: String,
+        /// allow the user to force overwriting existing files
+        #[arg(short, long)]
+        force: bool,
     },
     /// Generate a new InputPlugin module
     InputPlugin {
@@ -84,20 +93,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 force,
             )?;
         }
-        CompassSubcommands::Constraint { name, path } => {
-            routee_compass_codegen::generator::constraint::generate_constraint_module(
-                &name, &path,
+        CompassSubcommands::Constraint {
+            name,
+            path,
+            files,
+            force,
+        } => {
+            let files: Vec<String> = files.split(",").map(String::from).collect();
+            routee_compass_codegen::generator::util::generate_module(
+                routee_compass_codegen::generator::CodegenComponentType::Constraint,
+                &files,
+                &name,
+                &path,
+                force,
             )?;
         }
         CompassSubcommands::InputPlugin { name, path } => {
-            routee_compass_codegen::generator::input_plugin::generate_input_plugin_module(
-                &name, &path,
-            )?;
+            todo!()
         }
         CompassSubcommands::OutputPlugin { name, path } => {
-            routee_compass_codegen::generator::output_plugin::generate_output_plugin_module(
-                &name, &path,
-            )?;
+            todo!()
         }
     }
 

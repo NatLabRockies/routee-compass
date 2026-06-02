@@ -24,7 +24,9 @@ impl CodegenComponentType {
             CodegenComponentType::Traversal => {
                 Ok(src_dir.join("model").join("traversal").join("template"))
             }
-            CodegenComponentType::Constraint => todo!(),
+            CodegenComponentType::Constraint => {
+                Ok(src_dir.join("model").join("constraint").join("template"))
+            }
             CodegenComponentType::InputPlugin => todo!(),
             CodegenComponentType::OutputPlugin => todo!(),
         }
