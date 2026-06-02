@@ -108,10 +108,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 force,
             )?;
         }
-        CompassSubcommands::InputPlugin { name, path } => {
+        CompassSubcommands::InputPlugin { name: _, path: _ } => {
             todo!()
         }
-        CompassSubcommands::OutputPlugin { name, path } => {
+        CompassSubcommands::OutputPlugin { name: _, path: _ } => {
             todo!()
         }
     }
