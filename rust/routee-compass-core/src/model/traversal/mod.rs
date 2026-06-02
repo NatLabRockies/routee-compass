@@ -5,6 +5,7 @@ mod error;
 mod model;
 mod result;
 mod service;
+mod template;
 
 pub use builder::TraversalModelBuilder;
 pub use edge_traversal_context::EdgeFrontierContext;

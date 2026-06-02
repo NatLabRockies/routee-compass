@@ -1,5 +1,4 @@
 use clap::{Parser, Subcommand};
-use routee_compass_codegen::generator::traversal::TraversalExtensions;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -31,9 +30,6 @@ enum CompassSubcommands {
         name: String,
         /// Parent directory path to where the module should be created (e.g., src)
         path: PathBuf,
-        /// optionally include extensions for typed configuration and engine struct
-        #[arg(long)]
-        extensions: Option<TraversalExtensions>,
         /// allow the user to force overwriting existing files
         #[arg(short, long)]
         force: bool,
@@ -70,13 +66,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         CompassSubcommands::Traversal {
             name,
             path,
-            extensions,
+            // extensions,
             force,
         } => {
             routee_compass_codegen::generator::traversal::generate_traversal_module(
-                &name,
-                &path,
-                extensions.as_ref(),
+                &name, &path, // extensions.as_ref(),
                 force,
             )?;
         }
