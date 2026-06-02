@@ -30,6 +30,12 @@ enum CompassSubcommands {
         name: String,
         /// Parent directory path to where the module should be created (e.g., src)
         path: PathBuf,
+        /// Comma-delimiited list of files to copy over. by default, copy all files.
+        #[arg(
+            long,
+            default_value = "builder.rs,config.rs,engine.rs,mod.rs,model.rs,params.rs,service.rs"
+        )]
+        files: String,
         /// allow the user to force overwriting existing files
         #[arg(short, long)]
         force: bool,
@@ -66,11 +72,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         CompassSubcommands::Traversal {
             name,
             path,
-            // extensions,
+            files,
             force,
         } => {
-            routee_compass_codegen::generator::traversal::generate_traversal_module(
-                &name, &path, // extensions.as_ref(),
+            let files: Vec<String> = files.split(",").map(String::from).collect();
+            routee_compass_codegen::generator::util::generate_module(
+                routee_compass_codegen::generator::CodegenComponentType::Traversal,
+                &files,
+                &name,
+                &path,
                 force,
             )?;
         }
