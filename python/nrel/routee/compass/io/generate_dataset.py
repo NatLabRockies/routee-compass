@@ -382,9 +382,10 @@ def generate_compass_dataset(
         if charging_gdf.empty and require_charging_stations:
             msg = (
                 "No charging stations found in the bounding box for the road network. "
-                "please re-run without the CHARGING_STATIONS pipeline phase."
+                "please re-run without the CHARGING_STATIONS pipeline phase, or if "
+                "no chargers is acceptable, call this function with `require_charging_stations=False`."
             )
-            raise Exception(msg)
+            raise RuntimeError(msg)
         elif charging_gdf.empty:
             msg = "No charging stations found in the bounding box for the road network."
             log.warning(msg)
