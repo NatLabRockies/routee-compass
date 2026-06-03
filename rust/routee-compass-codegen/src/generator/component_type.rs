@@ -25,7 +25,7 @@ impl CodegenComponentType {
         let path = dir.join(file);
         std::fs::read_to_string(&path).map_err(|source| CodegenError::TemplateReadError {
             component: self.clone(),
-            path: path,
+            path,
             file: file.to_string(),
             source,
         })
