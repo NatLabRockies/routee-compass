@@ -10,11 +10,11 @@ name = "cargo-compass"
 path = "src/main.rs"
 
 [dependencies]
-routee-compass-core = { path = "../routee-compass-core", version = "0.19.3" }
-routee-compass = { path = "../routee-compass", version = "0.19.3", default-features = false }
 clap = { workspace = true }
 heck = { workspace = true }
 indoc = { workspace = true }
+routee-compass = { path = "../routee-compass", version = "0.19.3", default-features = false }
+routee-compass-core = { path = "../routee-compass-core", version = "0.19.3" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
