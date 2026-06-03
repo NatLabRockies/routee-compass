@@ -30,7 +30,7 @@ enum CompassSubcommands {
         name: String,
         /// Parent directory path to where the module should be created (e.g., src)
         path: PathBuf,
-        /// Comma-delimiited list of files to copy over. by default, copy all files.
+        /// Comma-delimited list of files to copy over. by default, copy all files.
         #[arg(
             long,
             default_value = "builder.rs,config.rs,engine.rs,mod.rs,model.rs,params.rs,service.rs"
@@ -46,7 +46,7 @@ enum CompassSubcommands {
         name: String,
         /// Parent directory path to where the module should be created (e.g., src)
         path: PathBuf,
-        /// Comma-delimiited list of files to copy over. by default, copy all files.
+        /// Comma-delimited list of files to copy over. by default, copy all files.
         #[arg(
             long,
             default_value = "builder.rs,config.rs,engine.rs,mod.rs,model.rs,params.rs,service.rs"
@@ -62,7 +62,7 @@ enum CompassSubcommands {
         name: String,
         /// Parent directory path to where the module should be created (e.g., src)
         path: PathBuf,
-        /// Comma-delimiited list of files to copy over. by default, copy all files.
+        /// Comma-delimited list of files to copy over. by default, copy all files.
         #[arg(long, default_value = "builder.rs,config.rs,mod.rs,plugin.rs")]
         files: String,
         /// allow the user to force overwriting existing files
@@ -75,7 +75,7 @@ enum CompassSubcommands {
         name: String,
         /// Parent directory path to where the module should be created (e.g., src)
         path: PathBuf,
-        /// Comma-delimiited list of files to copy over. by default, copy all files.
+        /// Comma-delimited list of files to copy over. by default, copy all files.
         #[arg(long, default_value = "builder.rs,config.rs,mod.rs,plugin.rs")]
         files: String,
         /// allow the user to force overwriting existing files
