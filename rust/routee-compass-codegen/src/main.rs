@@ -58,17 +58,29 @@ enum CompassSubcommands {
     },
     /// Generate a new InputPlugin module
     InputPlugin {
-        /// Name of the input plugin in PascalCase (e.g., CustomLoader)
+        /// Name of the input plugin in PascalCase (e.g., ModeSelection)
         name: String,
         /// Parent directory path to where the module should be created (e.g., src)
         path: PathBuf,
+        /// Comma-delimiited list of files to copy over. by default, copy all files.
+        #[arg(long, default_value = "builder.rs,config.rs,mod.rs,plugin.rs")]
+        files: String,
+        /// allow the user to force overwriting existing files
+        #[arg(short, long)]
+        force: bool,
     },
     /// Generate a new OutputPlugin module
     OutputPlugin {
-        /// Name of the output plugin in PascalCase (e.g., CustomFormatter)
+        /// Name of the output plugin in PascalCase (e.g., SendEmail)
         name: String,
         /// Parent directory path to where the module should be created (e.g., src)
         path: PathBuf,
+        /// Comma-delimiited list of files to copy over. by default, copy all files.
+        #[arg(long, default_value = "builder.rs,config.rs,mod.rs,plugin.rs")]
+        files: String,
+        /// allow the user to force overwriting existing files
+        #[arg(short, long)]
+        force: bool,
     },
 }
 
@@ -108,11 +120,35 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 force,
             )?;
         }
-        CompassSubcommands::InputPlugin { name: _, path: _ } => {
-            todo!()
+        CompassSubcommands::InputPlugin {
+            name,
+            path,
+            files,
+            force,
+        } => {
+            let files: Vec<String> = files.split(",").map(String::from).collect();
+            routee_compass_codegen::generator::run::generate_module(
+                routee_compass_codegen::generator::CodegenComponentType::InputPlugin,
+                &files,
+                &name,
+                &path,
+                force,
+            )?;
         }
-        CompassSubcommands::OutputPlugin { name: _, path: _ } => {
-            todo!()
+        CompassSubcommands::OutputPlugin {
+            name,
+            path,
+            files,
+            force,
+        } => {
+            let files: Vec<String> = files.split(",").map(String::from).collect();
+            routee_compass_codegen::generator::run::generate_module(
+                routee_compass_codegen::generator::CodegenComponentType::OutputPlugin,
+                &files,
+                &name,
+                &path,
+                force,
+            )?;
         }
     }
 
