@@ -25,7 +25,7 @@ pub fn generate_module(
     for file in files.iter() {
         let temp_base = component_type.retrieve_template(file)?;
         let temp_mod = temp_base.replace("Template", pascal_case_name);
-        super::util::write_file(module_dir.join(file).as_path(), temp_mod, force)?
+        super::run::write_file(module_dir.join(file).as_path(), temp_mod, force)?
     }
 
     println!(

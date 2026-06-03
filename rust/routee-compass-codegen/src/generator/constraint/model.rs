@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use super::{TemplateEngine, TemplateParams};
 
-use crate::model::{
+use routee_compass_core::model::{
     constraint::{ConstraintModel, ConstraintModelError},
     network::Edge,
     state::{StateModel, StateVariable},

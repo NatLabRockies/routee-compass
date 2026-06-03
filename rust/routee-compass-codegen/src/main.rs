@@ -85,7 +85,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             force,
         } => {
             let files: Vec<String> = files.split(",").map(String::from).collect();
-            routee_compass_codegen::generator::util::generate_module(
+            routee_compass_codegen::generator::run::generate_module(
                 routee_compass_codegen::generator::CodegenComponentType::Traversal,
                 &files,
                 &name,
@@ -100,7 +100,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             force,
         } => {
             let files: Vec<String> = files.split(",").map(String::from).collect();
-            routee_compass_codegen::generator::util::generate_module(
+            routee_compass_codegen::generator::run::generate_module(
                 routee_compass_codegen::generator::CodegenComponentType::Constraint,
                 &files,
                 &name,

@@ -1,6 +1,6 @@
 use super::TemplateConfig;
 
-use crate::model::traversal::TraversalModelError;
+use routee_compass_core::model::traversal::TraversalModelError;
 
 pub struct TemplateEngine {
     config: TemplateConfig,

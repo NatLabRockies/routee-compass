@@ -6,11 +6,6 @@ mod model;
 mod result;
 mod service;
 
-/// template module is intentionally left unimplemented as it is used
-/// for code generation.
-#[allow(unused)]
-mod template;
-
 pub use builder::TraversalModelBuilder;
 pub use edge_traversal_context::EdgeFrontierContext;
 pub use error::TraversalModelError;

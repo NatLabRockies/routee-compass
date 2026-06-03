@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use super::{TemplateEngine, TemplateParams};
 
-use crate::{
+use routee_compass_core::{
     algorithm::search::SearchTree,
     model::{
         network::Vertex,

@@ -15,19 +15,28 @@ pub enum CodegenComponentType {
 impl CodegenComponentType {
     pub fn template_directory(&self) -> Result<PathBuf, CodegenError> {
         let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
-        let src_dir = manifest_dir
+        let repo_dir = manifest_dir
             .parent()
-            .ok_or_else(|| CodegenError::RepoLayout(manifest_dir.to_string_lossy().to_string()))?
-            .join("routee-compass-core")
-            .join("src");
+            .ok_or_else(|| CodegenError::RepoLayout(manifest_dir.to_string_lossy().to_string()))?;
         match self {
-            CodegenComponentType::Traversal => {
-                Ok(src_dir.join("model").join("traversal").join("template"))
-            }
-            CodegenComponentType::Constraint => {
-                Ok(src_dir.join("model").join("constraint").join("template"))
-            }
-            CodegenComponentType::InputPlugin => todo!(),
+            CodegenComponentType::Traversal => Ok(repo_dir
+                .join("routee-compass-core")
+                .join("src")
+                .join("model")
+                .join("traversal")
+                .join("template")),
+            CodegenComponentType::Constraint => Ok(repo_dir
+                .join("routee-compass-core")
+                .join("src")
+                .join("model")
+                .join("constraint")
+                .join("template")),
+            CodegenComponentType::InputPlugin => Ok(repo_dir
+                .join("routee-compass")
+                .join("src")
+                .join("plugin")
+                .join("input")
+                .join("template")),
             CodegenComponentType::OutputPlugin => todo!(),
         }
     }

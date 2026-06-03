@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use super::{TemplateEngine, TemplateModel, TemplateParams};
 
-use crate::model::traversal::{TraversalModel, TraversalModelError, TraversalModelService};
+use routee_compass_core::model::{
+    constraint::{ConstraintModel, ConstraintModelError, ConstraintModelService},
+    state::StateModel,
+};
 
 pub struct TemplateService {
     engine: Arc<TemplateEngine>,
@@ -16,14 +19,15 @@ impl TemplateService {
     }
 }
 
-impl TraversalModelService for TemplateService {
+impl ConstraintModelService for TemplateService {
     fn build(
         &self,
         query: &serde_json::Value,
-    ) -> Result<Arc<dyn TraversalModel>, TraversalModelError> {
+        #[allow(unused)] state_model: Arc<StateModel>,
+    ) -> Result<Arc<dyn ConstraintModel>, ConstraintModelError> {
         let params: TemplateParams = serde_json::from_value(query.clone()).map_err(|e| {
             let msg = format!("failure reading params for Template service: {e}");
-            TraversalModelError::BuildError(msg)
+            ConstraintModelError::BuildError(msg)
         })?;
         let model = TemplateModel::new(self.engine.clone(), params);
         Ok(Arc::new(model))
