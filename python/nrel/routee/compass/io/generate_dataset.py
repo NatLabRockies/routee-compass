@@ -153,6 +153,7 @@ def generate_compass_dataset(
         import osmnx as ox
     except ImportError:
         raise ImportError("requires osmnx to be installed. Try 'pip install osmnx'")
+<<<<<<< HEAD
     try:
         import numpy as np
         import pandas as pd
@@ -163,6 +164,14 @@ def generate_compass_dataset(
         raise ImportError(
             f"please install compass with the 'osm' feature enabled. {err}"
         )
+=======
+
+    import numpy as np
+    import pandas as pd
+    import geopandas as gpd
+    from shapely.geometry import box
+    import requests
+>>>>>>> e7b0d632 (ruff fmt)
 
     log.info(f"running pipeline import with phases: [{[p.name for p in phases]}]")
     output_directory = Path(output_directory)
