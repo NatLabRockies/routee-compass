@@ -15,7 +15,7 @@ jobs:
       run:
         shell: bash -el {0}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
 
       - uses: conda-incubator/setup-miniconda@v4
         with:
@@ -42,7 +42,7 @@ jobs:
           jupyter-book build .
 
       - name: Checkout benchmark results
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
         with:
           ref: bench
           path: bench_checkout
