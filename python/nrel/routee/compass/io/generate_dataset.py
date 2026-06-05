@@ -159,8 +159,8 @@ def generate_compass_dataset(
         import geopandas as gpd
         from shapely.geometry import box
         import requests
-    except ImportError as e:
-        raise ImportError(f"please install compass with the 'osm' feature enabled. {e}")
+    except ImportError as err:
+        raise ImportError(f"please install compass with the 'osm' feature enabled. {err}")
 
     log.info(f"running pipeline import with phases: [{[p.name for p in phases]}]")
     output_directory = Path(output_directory)
