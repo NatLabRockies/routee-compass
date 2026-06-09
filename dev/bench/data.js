@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779913508735,
+  "lastUpdate": 1781021380909,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3719,6 +3719,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2990273,
             "range": "± 67439",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b9267470f1e1810b620006e1dc5b85e8fdd9ceb3",
+          "message": "Merge pull request #516 from NatLabRockies/rjf/one-or-many-constructor\n\nadded OneOrMany methods for construction + Vec-like push method",
+          "timestamp": "2026-06-09T10:04:46-06:00",
+          "tree_id": "688b38c961fa04e073b8bb23ceb2e8c8a02a2f4a",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/b9267470f1e1810b620006e1dc5b85e8fdd9ceb3"
+        },
+        "date": 1781021380387,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2956382,
+            "range": "± 99945",
             "unit": "ns/iter"
           }
         ]
