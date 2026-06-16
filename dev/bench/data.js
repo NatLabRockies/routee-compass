@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781021380909,
+  "lastUpdate": 1781633548339,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3749,6 +3749,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2956382,
             "range": "± 99945",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a0a0231311cd4502c3166dda2737e9ee1d4c7787",
+          "message": "Merge pull request #524 from NatLabRockies/rjf/nrel-name-change-charging-import\n\nRjf/nrel name change charging import",
+          "timestamp": "2026-06-16T12:07:58-06:00",
+          "tree_id": "b7b423a9c415d1cc51eac6dbb173d2aee9c49acc",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/a0a0231311cd4502c3166dda2737e9ee1d4c7787"
+        },
+        "date": 1781633547788,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 3020814,
+            "range": "± 92415",
             "unit": "ns/iter"
           }
         ]
