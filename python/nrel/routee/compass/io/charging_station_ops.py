@@ -35,7 +35,7 @@ def download_ev_charging_stations(state: str, api_key: str = "DEMO_KEY") -> "Dat
     except ImportError as _:
         raise ImportError("Required libraries not installed. Please install pandas.")
     # Build query URL
-    query = f"https://developer.nrel.gov/api/alt-fuel-stations/v1.json?api_key={api_key}&status=E&access=public&fuel_type=ELEC&state={state}"
+    query = f"https://developer.nlr.gov/api/alt-fuel-stations/v1.json?api_key={api_key}&status=E&access=public&fuel_type=ELEC&state={state}"
 
     # Download data
     try:
