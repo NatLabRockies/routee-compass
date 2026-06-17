@@ -106,6 +106,7 @@ def generate_compass_dataset(
     default_config: bool = True,
     requests_kwds: Optional[Dict[Any, Any]] = None,
     afdc_api_key: str = "DEMO_KEY",
+    require_charging_stations: bool = True,
     vehicle_models: Optional[List[str]] = None,
     hooks: Optional[List[DatasetHook]] = None,
 ) -> None:
@@ -133,7 +134,8 @@ def generate_compass_dataset(
         raster_resolution_arc_seconds (str, optional): If grade is added, the resolution (in arc-seconds) of the tiles to download (either 1 or 1/3). Defaults to 1.
         default_config (bool, optional): If true, copy default configuration files into the output directory. Defaults to True.
         requests_kwds (Optional[Dict], optional): Keyword arguments to pass to the `requests` Python library for HTTP configuration. Defaults to None.
-        afdc_api_key (str, optional): API key for the AFDC API to download EV charging stations. Defaults to "DEMO_KEY". See https://developer.nrel.gov/docs/transportation/alt-fuel-stations-v1/all/ for more information.
+        afdc_api_key (str, optional): API key for the AFDC API to download EV charging stations. Defaults to "DEMO_KEY". See https://developer.nlr.gov/docs/transportation/alt-fuel-stations-v1/all/ for more information.
+        require_charging_stations: if the CHARGING_STATIONS phase is active, fail when no chargers are found.
         vehicle_models (Optional[List[str]]): If provided, only download and
             configure the listed vehicle models (by name, e.g.
             ``["2017_CHEVROLET_Bolt", "2016_TOYOTA_Camry_4cyl_2WD"]``).
@@ -149,13 +151,18 @@ def generate_compass_dataset(
     """
     try:
         import osmnx as ox
+    except ImportError:
+        raise ImportError("requires osmnx to be installed. Try 'pip install osmnx'")
+    try:
         import numpy as np
         import pandas as pd
         import geopandas as gpd
         from shapely.geometry import box
         import requests
-    except ImportError:
-        raise ImportError("requires osmnx to be installed. Try 'pip install osmnx'")
+    except ImportError as err:
+        raise ImportError(
+            f"please install compass with the 'osm' feature enabled. {err}"
+        )
 
     log.info(f"running pipeline import with phases: [{[p.name for p in phases]}]")
     output_directory = Path(output_directory)
@@ -374,28 +381,32 @@ def generate_compass_dataset(
             vertex_bbox, api_key=afdc_api_key
         )
 
-        if charging_gdf.empty:
-            log.warning(
+        if charging_gdf.empty and require_charging_stations:
+            msg = (
                 "No charging stations found in the bounding box for the road network. "
-                "Skipping charging station processing."
+                "please re-run without the CHARGING_STATIONS pipeline phase, or if "
+                "no chargers is acceptable, call this function with `require_charging_stations=False`."
             )
-            return
-
-        out_df = charging_gdf[
-            [
-                "power_type",
-                "power_kw",
-                "cost_per_kwh",
-                "x",
-                "y",
+            raise RuntimeError(msg)
+        elif charging_gdf.empty:
+            msg = "No charging stations found in the bounding box for the road network."
+            log.warning(msg)
+        else:
+            out_df = charging_gdf[
+                [
+                    "power_type",
+                    "power_kw",
+                    "cost_per_kwh",
+                    "x",
+                    "y",
+                ]
             ]
-        ]
 
-        out_df.to_csv(
-            output_directory / "charging-stations.csv.gz",
-            index=False,
-            compression="gzip",
-        )
+            out_df.to_csv(
+                output_directory / "charging-stations.csv.gz",
+                index=False,
+                compression="gzip",
+            )
 
     # RUN HOOKS
     if hooks is not None:
