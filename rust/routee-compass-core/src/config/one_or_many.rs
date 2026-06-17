@@ -77,7 +77,54 @@ impl<T: Clone + Serialize> Serialize for OneOrMany<T> {
     }
 }
 
+impl<T: Clone> From<Vec<T>> for OneOrMany<T> {
+    fn from(mut value: Vec<T>) -> Self {
+        match value.len() {
+            0 => OneOrMany::empty(),
+            1 => match value.pop() {
+                Some(one) => Self::one(one),
+                None => unreachable!("mutable value with length 1 was popped"),
+            },
+            _ => OneOrMany::many(value),
+        }
+    }
+}
+
 impl<T: Clone> OneOrMany<T> {
+    /// creates an empty instance of a OneOrMany which is implemented as an "empty" Many.
+    pub fn empty() -> OneOrMany<T> {
+        Self::Many(vec![])
+    }
+
+    /// places exactly one value into a OneOrMany, to be serialized without wrapping
+    /// in an array.
+    pub fn one(t: T) -> OneOrMany<T> {
+        OneOrMany::One(t)
+    }
+
+    /// places any number of values into a OneOrMany using its Many variant to be
+    /// serialized as an array.
+    pub fn many(ts: Vec<T>) -> OneOrMany<T> {
+        OneOrMany::Many(ts)
+    }
+
+    /// pushes one more value onto this OneOrMany. takes ownership of the current values so they can
+    /// be moved without cloning.
+    pub fn push(&mut self, t: T) {
+        let current = std::mem::replace(self, OneOrMany::Many(Vec::new()));
+        *self = match current {
+            OneOrMany::One(prev) => OneOrMany::Many(vec![prev, t]),
+            OneOrMany::Many(mut items) => {
+                if items.is_empty() {
+                    OneOrMany::One(t)
+                } else {
+                    items.push(t);
+                    OneOrMany::Many(items)
+                }
+            }
+        };
+    }
+
     /// Convert to a vector, regardless of whether it was originally one item or many
     pub fn into_vec(self) -> Vec<T> {
         match self {
@@ -264,5 +311,37 @@ mod tests {
     fn test_into_vec_many() {
         let many: OneOrMany<Item> = OneOrMany::Many(vec![Item::new("a", 1), Item::new("b", 2)]);
         assert_eq!(many.into_vec(), vec![Item::new("a", 1), Item::new("b", 2)]);
+    }
+
+    #[test]
+    fn test_push_on_one_promotes_to_many() {
+        let mut x = OneOrMany::one(Item::new("a", 1));
+        x.push(Item::new("b", 2));
+        match x {
+            OneOrMany::Many(items) => {
+                assert_eq!(items, vec![Item::new("a", 1), Item::new("b", 2)]);
+            }
+            OneOrMany::One(_) => panic!("expected Many"),
+        }
+    }
+
+    #[test]
+    fn test_push_on_many_appends() {
+        let mut x = OneOrMany::many(vec![Item::new("a", 1), Item::new("b", 2)]);
+        x.push(Item::new("c", 3));
+        assert_eq!(
+            x.into_vec(),
+            vec![Item::new("a", 1), Item::new("b", 2), Item::new("c", 3)]
+        );
+    }
+
+    #[test]
+    fn test_push_on_empty_becomes_one() {
+        let mut x: OneOrMany<Item> = OneOrMany::empty();
+        x.push(Item::new("a", 1));
+        match x {
+            OneOrMany::One(item) => assert_eq!(item, Item::new("a", 1)),
+            OneOrMany::Many(_) => panic!("expected One"),
+        }
     }
 }
