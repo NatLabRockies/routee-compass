@@ -30,3 +30,4 @@ parts:
       - file: developers/build_the_docs
       - file: developers/contributing
       - file: developers/rust_code_style
+      - file: developers/troubleshooting_macos_installation
