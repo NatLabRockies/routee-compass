@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778250720613,
+  "lastUpdate": 1781633548339,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3569,6 +3569,216 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2957158,
             "range": "± 167505",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c9768a9545fbf33b0d5063e4f49c439dfe0ec1e5",
+          "message": "Merge pull request #512 from NatLabRockies/dependabot/cargo/rust/ordered_hash_map-0.6.0\n\nUpdate ordered_hash_map requirement from 0.5.0 to 0.6.0 in /rust",
+          "timestamp": "2026-05-12T10:09:53-06:00",
+          "tree_id": "142d9998b1477eccba0740a2070b9795e9842c91",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/c9768a9545fbf33b0d5063e4f49c439dfe0ec1e5"
+        },
+        "date": 1778605207411,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2970143,
+            "range": "± 345068",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cc065b75c9cf49d926608988ba1f7f5e2c072162",
+          "message": "Merge pull request #513 from NatLabRockies/dependabot/github_actions/benchmark-action/github-action-benchmark-1.22.0\n\nBump benchmark-action/github-action-benchmark from 1 to 1.22.0",
+          "timestamp": "2026-05-12T10:13:12-06:00",
+          "tree_id": "f9991acc4dc2458900eb1d27ed116cde4babb05a",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/cc065b75c9cf49d926608988ba1f7f5e2c072162"
+        },
+        "date": 1778608414606,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2954648,
+            "range": "± 100152",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nreinicke@users.noreply.github.com",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dc8fe00f3d6ee844e2ce4e57741b6caa3eabe8e1",
+          "message": "HPC build script (#503)\n\nAdds custom build script to target linux based HPC systems.\nThis is necessary since the ort dependency doesn't ship precompiled binaries for kestrel HPC OS and so we need to built the ONNX runtime from source and then statically link it when compiling the ort rust crate",
+          "timestamp": "2026-05-12T13:11:22-06:00",
+          "tree_id": "f35241e39f35c5656fbf4637db97785971d9a59a",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/dc8fe00f3d6ee844e2ce4e57741b6caa3eabe8e1"
+        },
+        "date": 1778613348137,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2962331,
+            "range": "± 338716",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f2567067206fe6ea8d283996ebd9cabf4e3b4c88",
+          "message": "Bump benchmark-action/github-action-benchmark from 1.22.0 to 1.22.1 (#514)\n\nBumps [benchmark-action/github-action-benchmark](https://github.com/benchmark-action/github-action-benchmark) from 1.22.0 to 1.22.1.\n- [Release notes](https://github.com/benchmark-action/github-action-benchmark/releases)\n- [Changelog](https://github.com/benchmark-action/github-action-benchmark/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/benchmark-action/github-action-benchmark/compare/v1.22.0...v1.22.1)\n\n---\nupdated-dependencies:\n- dependency-name: benchmark-action/github-action-benchmark\n  dependency-version: 1.22.1\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-05-20T09:24:05-06:00",
+          "tree_id": "08aae5256f82ef564d40326f6712f609eaa32314",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/f2567067206fe6ea8d283996ebd9cabf4e3b4c88"
+        },
+        "date": 1779290996750,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2957084,
+            "range": "± 291605",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3fd546fdc57b4a7bd83194f21382bd3feb56fdad",
+          "message": "Merge pull request #515 from NatLabRockies/rjf/output-processing-bug\n\nno fail fast in output plugin processing",
+          "timestamp": "2026-05-27T14:17:36-06:00",
+          "tree_id": "f15ae4b7ee5f41c9dcee60d00f195e0650f52ed4",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/3fd546fdc57b4a7bd83194f21382bd3feb56fdad"
+        },
+        "date": 1779913507783,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2990273,
+            "range": "± 67439",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b9267470f1e1810b620006e1dc5b85e8fdd9ceb3",
+          "message": "Merge pull request #516 from NatLabRockies/rjf/one-or-many-constructor\n\nadded OneOrMany methods for construction + Vec-like push method",
+          "timestamp": "2026-06-09T10:04:46-06:00",
+          "tree_id": "688b38c961fa04e073b8bb23ceb2e8c8a02a2f4a",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/b9267470f1e1810b620006e1dc5b85e8fdd9ceb3"
+        },
+        "date": 1781021380387,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2956382,
+            "range": "± 99945",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robert.fitzgerald@nrel.gov",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a0a0231311cd4502c3166dda2737e9ee1d4c7787",
+          "message": "Merge pull request #524 from NatLabRockies/rjf/nrel-name-change-charging-import\n\nRjf/nrel name change charging import",
+          "timestamp": "2026-06-16T12:07:58-06:00",
+          "tree_id": "b7b423a9c415d1cc51eac6dbb173d2aee9c49acc",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/a0a0231311cd4502c3166dda2737e9ee1d4c7787"
+        },
+        "date": 1781633547788,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 3020814,
+            "range": "± 92415",
             "unit": "ns/iter"
           }
         ]

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Contributing &#8212; RouteE Compass</title>
+    <title>Troubleshooting MacOS Installation &#8212; RouteE Compass</title>
   
   
   
@@ -60,11 +60,10 @@
     <script async="async" src="../_static/sphinx-thebe.js?v=c100c467"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'developers/contributing';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'developers/troubleshooting_macos_installation';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Rust Code Style" href="rust_code_style.html" />
-    <link rel="prev" title="Build The Docs" href="build_the_docs.html" />
+    <link rel="prev" title="Rust Code Style" href="rust_code_style.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="python"/>
   <meta name="docsearch:version" content="" />
@@ -192,9 +191,9 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Developers</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="build_the_docs.html">Build The Docs</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rust_code_style.html">Rust Code Style</a></li>
-<li class="toctree-l1"><a class="reference internal" href="troubleshooting_macos_installation.html">Troubleshooting MacOS Installation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Troubleshooting MacOS Installation</a></li>
 </ul>
 
     </div>
@@ -271,7 +270,7 @@
       
       
       
-      <li><a href="https://github.com/NREL/routee-compass/issues/new?title=Issue%20on%20page%20%2Fdevelopers/contributing.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/NREL/routee-compass/issues/new?title=Issue%20on%20page%20%2Fdevelopers/troubleshooting_macos_installation.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -301,7 +300,7 @@
       
       
       
-      <li><a href="../_sources/developers/contributing.md" target="_blank"
+      <li><a href="../_sources/developers/troubleshooting_macos_installation.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -377,7 +376,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Contributing</h1>
+    <h1>Troubleshooting MacOS Installation</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -387,11 +386,8 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#identifying-an-issue">Identifying an Issue</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#letting-others-know-youre-working-on-the-issue">Letting Others Know You’re Working on the Issue</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forking-the-repository">Forking the Repository</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-the-development-environment">Installing the development environment</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#opening-a-pull-request">Opening a Pull Request</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#problem">Problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fix">Fix</a></li>
 </ul>
             </nav>
         </div>
@@ -403,54 +399,39 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="contributing">
-<h1>Contributing<a class="headerlink" href="#contributing" title="Link to this heading">#</a></h1>
-<p>This simple guide will walk you through the process of contributing to RouteE Compass.</p>
-<section id="identifying-an-issue">
-<h2>Identifying an Issue<a class="headerlink" href="#identifying-an-issue" title="Link to this heading">#</a></h2>
-<ol class="arabic simple">
-<li><p>Go to the “Issues” tab in the repository.</p></li>
-<li><p>Look for issues with labels such as “good first issue” if you’re new to the project.</p></li>
-<li><p>Read the issue description and any associated comments to make sure you understand the problem and its requirements.</p></li>
-<li><p>Choose an issue that aligns with your skills and interests.</p></li>
-</ol>
+  <section class="tex2jax_ignore mathjax_ignore" id="troubleshooting-macos-installation">
+<h1>Troubleshooting MacOS Installation<a class="headerlink" href="#troubleshooting-macos-installation" title="Link to this heading">#</a></h1>
+<p>If you are having installation problems on MacOS when installing the Rust dependencies for <code class="docutils literal notranslate"><span class="pre">routee-compass</span></code> via <code class="docutils literal notranslate"><span class="pre">cargo</span> <span class="pre">build</span> <span class="pre">--release</span></code>, please read through the following:</p>
+<section id="problem">
+<h2>Problem<a class="headerlink" href="#problem" title="Link to this heading">#</a></h2>
+<p>The MacOS linker can create issues when trying to link Python binaries with Rust's Python wrapper, PyO3. This occurs because PyO3 leaves Python symbols unresolved until runtime, but the macOS linker is incredibly strict and rejects any undefined symbols during compilation.</p>
+<p>E.g., for <code class="docutils literal notranslate"><span class="pre">arm64</span></code>, the build error will look like the following:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ld: symbol(s) not found for architecture arm64
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+error: could not compile `routee-compass-py` (lib) due to 1 previous error
+</pre></div>
+</div>
 </section>
-<section id="letting-others-know-youre-working-on-the-issue">
-<h2>Letting Others Know You’re Working on the Issue<a class="headerlink" href="#letting-others-know-youre-working-on-the-issue" title="Link to this heading">#</a></h2>
-<ol class="arabic simple">
-<li><p>Leave a comment on the issue, stating that you’d like to work on it. This helps prevent duplication of effort and lets us know someone is addressing the problem.</p></li>
-<li><p>Wait for a response from the maintainers or the issue creator. They may provide additional information or guidance, or assign the issue to you.</p></li>
+<section id="fix">
+<h2>Fix<a class="headerlink" href="#fix" title="Link to this heading">#</a></h2>
+<p>You need to tell the macOS linker to allow dynamic lookups for Python symbols at runtime. You can apply this fix globally by creating or editing your user-level Cargo configuration file:</p>
+<ol class="arabic">
+<li><p>Open <code class="docutils literal notranslate"><span class="pre">~/.cargo/config.toml</span></code> in your terminal:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nano<span class="w"> </span>~/.cargo/config.toml
+</pre></div>
+</div>
+</li>
+<li><p>Add the following lines to handle both Apple Silicon (arm64) and Intel (x86_64) Mac architectures:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[target.x86_64-apple-darwin]</span>
+<span class="n">rustflags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;-C&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;link-arg=-undefined&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;-C&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;link-arg=dynamic_lookup&quot;</span><span class="w"> </span><span class="p">]</span>
+
+<span class="k">[target.aarch64-apple-darwin]</span>
+<span class="n">rustflags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;-C&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;link-arg=-undefined&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;-C&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;link-arg=dynamic_lookup&quot;</span><span class="w"> </span><span class="p">]</span>
+</pre></div>
+</div>
+</li>
+<li><p>Save the file and rerun your installation command.</p></li>
 </ol>
-</section>
-<section id="forking-the-repository">
-<h2>Forking the Repository<a class="headerlink" href="#forking-the-repository" title="Link to this heading">#</a></h2>
-<ol class="arabic simple">
-<li><p>Navigate to the main RouteE Compass page on GitHub.</p></li>
-<li><p>Click on the “Fork” button in the upper right corner. This creates a copy of the repository under your GitHub account.</p></li>
-<li><p>Clone your forked repository to your local machine by clicking the “Code” button and copying the URL. Then, open your terminal or command prompt and run git clone [URL], replacing [URL] with the copied URL.</p></li>
-</ol>
-</section>
-<section id="installing-the-development-environment">
-<h2>Installing the development environment<a class="headerlink" href="#installing-the-development-environment" title="Link to this heading">#</a></h2>
-<ol class="arabic simple">
-<li><p>Create and activate a new virtual environment with the tool of your choice (e.g. venv, conda, pipenv, etc.).</p></li>
-<li><p>Install the package and dependencies by running pip install -e &quot;.[dev]&quot;. This will install the package in editable mode, so you can make changes to the code and see them reflected in your environment.</p></li>
-<li><p>Make sure everything is working by running the tests with pytest. <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">python/tests</span></code></p></li>
-</ol>
-</section>
-<section id="opening-a-pull-request">
-<h2>Opening a Pull Request<a class="headerlink" href="#opening-a-pull-request" title="Link to this heading">#</a></h2>
-<ol class="arabic simple">
-<li><p>Create a new branch in your local repository by running git checkout -b [branch-name], replacing [branch-name] with a descriptive name for your changes.</p></li>
-<li><p>Make changes to the code, addressing the issue you’ve chosen to work on.</p></li>
-<li><p>Commit your changes with a meaningful commit message. Use git add [file] to stage changes, and git commit -m “[commit-message]” to commit them.</p></li>
-<li><p>Push your changes to your forked repository using git push origin [branch-name].</p></li>
-<li><p>Go to your forked repository on GitHub and click on the “Pull requests” tab.</p></li>
-<li><p>Click on the “New Pull Request” button, and select your branch in the “compare” dropdown menu.</p></li>
-<li><p>Review your changes and click “Create Pull Request”. Add a descriptive title and a detailed explanation of the changes you made.</p></li>
-<li><p>Submit your pull request. The project maintainers will review your changes and provide feedback or merge your changes into the main repository.</p></li>
-</ol>
-<p>Thanks for taking the time to contribute to RouteE Compass!</p>
 </section>
 </section>
 
@@ -485,22 +466,13 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="build_the_docs.html"
+       href="rust_code_style.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Build The Docs</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="rust_code_style.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
         <p class="prev-next-title">Rust Code Style</p>
       </div>
-      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>
@@ -520,11 +492,8 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#identifying-an-issue">Identifying an Issue</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#letting-others-know-youre-working-on-the-issue">Letting Others Know You’re Working on the Issue</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forking-the-repository">Forking the Repository</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-the-development-environment">Installing the development environment</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#opening-a-pull-request">Opening a Pull Request</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#problem">Problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fix">Fix</a></li>
 </ul>
   </nav></div>
 
