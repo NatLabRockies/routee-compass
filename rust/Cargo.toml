@@ -10,7 +10,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.19.3"
+version = "0.19.4"
 
 [workspace.dependencies]
 allocative = "0.3.4"
