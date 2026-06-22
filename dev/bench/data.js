@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782163330381,
+  "lastUpdate": 1782164391135,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3869,6 +3869,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2956729,
             "range": "± 247361",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5801c4be94b6de4b3285bcf04de0a81386cd3bb4",
+          "message": "Merge pull request #535 from NatLabRockies/dependabot/cargo/rust/parquet-59.0.0\n\nUpdate parquet requirement from 58.0.0 to 59.0.0 in /rust",
+          "timestamp": "2026-06-22T15:35:23-06:00",
+          "tree_id": "c24f286388b832df736d97f19898e2095e00edf1",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/5801c4be94b6de4b3285bcf04de0a81386cd3bb4"
+        },
+        "date": 1782164390773,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2934504,
+            "range": "± 118764",
             "unit": "ns/iter"
           }
         ]
