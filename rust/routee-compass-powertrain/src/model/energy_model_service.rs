@@ -25,14 +25,14 @@ impl TraversalModelService for EnergyModelService {
         &self,
         parameters: &serde_json::Value,
     ) -> Result<Arc<dyn TraversalModel>, TraversalModelError> {
-        let model_identifier_value = parameters.get("model_name").ok_or_else(|| {
-            TraversalModelError::BuildError("query missing 'model_identifier' field".to_string())
+        let model_name: &serde_json::Value = parameters.get("model_name").ok_or_else(|| {
+            TraversalModelError::BuildError("query missing 'model_name' field".to_string())
         })?;
 
-        let model_identifier: ModelIdentifier =
-            serde_json::from_value(model_identifier_value.clone()).map_err(|e| {
+        let model_identifier: ModelIdentifier = serde_json::from_value(model_name.clone())
+            .map_err(|e| {
                 TraversalModelError::BuildError(format!(
-                    "Could not deserialize 'model_identifier' field into ModelIdentifier: {e}"
+                    "Could not deserialize 'model_name' field from query into ModelIdentifier: {e}"
                 ))
             })?;
 
