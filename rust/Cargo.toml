@@ -12,7 +12,7 @@ members = [
 [workspace.dependencies]
 allocative = "0.3.4"
 approx = "0.5.1"
-arrow = "58.0.0"
+arrow = "59.0.0"
 bincode = { version = "2.0.1", features = ["serde"] }
 chrono = "0.4.42"
 clap = { version = "4.5.52", features = ["derive"] }
