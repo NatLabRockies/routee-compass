@@ -1,7 +1,7 @@
 [package]
 name = "routee-compass-macros"
-version = "0.19.3"
 edition = "2021"
+version.workspace = true
 readme = "README.md"
 license = "BSD-3-Clause"
 description = "Macros for the RouteE-Compass energy-aware routing engine"

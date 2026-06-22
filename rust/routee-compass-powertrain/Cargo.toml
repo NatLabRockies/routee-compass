@@ -1,7 +1,7 @@
 [package]
 name = "routee-compass-powertrain"
-version = "0.19.3"
 edition = "2021"
+version.workspace = true
 readme = "README.md"
 license = "BSD-3-Clause"
 description = "Crate providing integration between RouteE Compass and RouteE Powertrain"
