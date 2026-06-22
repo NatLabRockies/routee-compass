@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "nrel_routee_compass"
-version = "0.19.4"
+version = "0.19.3"
 description = "An eco-routing tool build upon RouteE-Powertrain"
 readme = "README.md"
 requires-python = ">=3.10,<3.14"
@@ -23,6 +23,7 @@ dependencies = ["tomlkit>=0.11.0,<1.0"]
 
 [project.optional-dependencies]
 dev = [
+    "bump-my-version",
     "pytest>=8.0,<9.0",
     "maturin>=1.0,<2.0",
     "jupyter-book>=1.0,<2.0",
@@ -149,3 +150,42 @@ rust_sort = { cmd = "cargo sort --workspace", cwd = "rust" }
 check_py = { depends-on = ["fmt_fix", "lint_fix", "typing", "test"] }
 check_rust = { depends-on = ["rust_fmt_fix", "rust_lint", "rust_test"] }
 check_all = { depends-on = ["check_py", "check_rust"] }
+
+[tool.bumpversion]
+current_version = "0.19.3"
+commit = true
+tag = true
+
+# 1. Update the main Python project version
+[[tool.bumpversion.files]]
+paths = ["pyproject.toml"]
+# pyproject.toml format is safe to just look for the project version
+search = "version = \"{current_version}\""
+replace = "version = \"{new_version}\""
+
+# 2. Update the Rust [workspace.package] version explicitly
+[[tool.bumpversion.files]]
+paths = ["rust/Cargo.toml"]
+search = "[workspace.package]\nversion = \"{current_version}\""
+replace = "[workspace.package]\nversion = \"{new_version}\""
+
+# 3. Update the Rust intra-crate dependencies, avoiding external crates
+[[tool.bumpversion.files]]
+paths = ["rust/Cargo.toml"]
+regex = true
+search = '(?P<prefix>routee-compass.*version\s*=\s*"){current_version}(?P<suffix>")'
+replace = '{prefix}{new_version}{suffix}'
+
+# Update Cargo installation snippets in all Rust READMEs
+[[tool.bumpversion.files]]
+paths = [
+    "rust/routee-compass/README.md",
+    "rust/routee-compass-codegen/README.md",
+    "rust/routee-compass-core/README.md",
+    "rust/routee-compass-macros/README.md",
+    "rust/routee-compass-powertrain/README.md",
+    "rust/routee-compass-py/README.md"
+]
+regex = true
+search = '(?P<prefix>routee-compass[a-z-]*\s*=\s*\{\s*version\s*=\s*"){current_version}(?P<suffix>"\s*\})'
+replace = '{prefix}{new_version}{suffix}'
