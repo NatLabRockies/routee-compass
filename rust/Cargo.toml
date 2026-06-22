@@ -9,6 +9,9 @@ members = [
     "routee-compass-py",
 ]
 
+[workspace.package]
+version = "0.19.3"
+
 [workspace.dependencies]
 allocative = "0.3.4"
 approx = "0.5.1"
