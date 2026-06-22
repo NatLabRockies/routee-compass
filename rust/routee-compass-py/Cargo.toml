@@ -22,6 +22,6 @@ ort-static = ["routee-compass/ort-static"]
 config = { workspace = true }
 pyo3 = { version = "0.28.0", features = ["extension-module", "serde"] }
 routee-compass = { path = "../routee-compass", version = "0.19.4", default-features = false }
-routee-compass-core = { path = "../routee-compass-core", version = "0.19.4" }
-routee-compass-macros = { path = "../routee-compass-macros", version = "0.19.4" }
+routee-compass-core = { workspace = true }
+routee-compass-macros = { workspace = true }
 serde_json = { workspace = true }
