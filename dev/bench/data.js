@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782163216198,
+  "lastUpdate": 1782163330381,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3839,6 +3839,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2994553,
             "range": "± 120130",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2180988ce0cd4f622c24a837f982660dbeba89f8",
+          "message": "Merge pull request #521 from NatLabRockies/dependabot/github_actions/peaceiris/actions-gh-pages-4.1.0\n\nBump peaceiris/actions-gh-pages from 4 to 4.1.0",
+          "timestamp": "2026-06-22T15:17:24-06:00",
+          "tree_id": "276a102336200935cbd1121b30bf7d3f760391ff",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/2180988ce0cd4f622c24a837f982660dbeba89f8"
+        },
+        "date": 1782163329423,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2956729,
+            "range": "± 247361",
             "unit": "ns/iter"
           }
         ]
