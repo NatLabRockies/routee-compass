@@ -20,7 +20,7 @@ ort-static = ["routee-compass/ort-static"]
 
 [dependencies]
 config = { workspace = true }
-pyo3 = { version = "0.28.0", features = ["extension-module", "serde"] }
+pyo3 = { version = "0.29.0", features = ["extension-module", "serde"] }
 routee-compass = { workspace = true, default-features = false }
 routee-compass-core = { workspace = true }
 routee-compass-macros = { workspace = true }
