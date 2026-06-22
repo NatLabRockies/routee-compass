@@ -10,7 +10,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.19.4"
+version = "0.19.3"
 
 [workspace.dependencies]
 allocative = "0.3.4"
@@ -50,10 +50,10 @@ quote = "1.0"
 rand = "0.10.0"
 rayon = "1.11.0"
 regex = "1.12.2"
-routee-compass-core = { path = "routee-compass-core", version = "0.19.4" }
-routee-compass-powertrain = { path = "routee-compass-powertrain", version = "0.19.4" }
-routee-compass-macros = { path = "routee-compass-macros", version = "0.19.4" }
-routee-compass = { path = "routee-compass", version = "0.19.4" }
+routee-compass-core = { path = "routee-compass-core", version = "0.19.3" }
+routee-compass-powertrain = { path = "routee-compass-powertrain", version = "0.19.3" }
+routee-compass-macros = { path = "routee-compass-macros", version = "0.19.3" }
+routee-compass = { path = "routee-compass", version = "0.19.3" }
 rstar = "0.12.2"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.145", features = ["preserve_order"] }
