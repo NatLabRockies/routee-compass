@@ -1,0 +1,38 @@
+[tool.bumpversion]
+current_version = "0.19.3"
+commit = true
+tag = true
+
+# 1. Update the main Python project version
+[[tool.bumpversion.files]]
+paths = ["pyproject.toml"]
+# pyproject.toml format is safe to just look for the project version
+search = "version = \"{current_version}\""
+replace = "version = \"{new_version}\""
+
+# 2. Update the Rust [workspace.package] version explicitly
+[[tool.bumpversion.files]]
+paths = ["rust/Cargo.toml"]
+search = "[workspace.package]\nversion = \"{current_version}\""
+replace = "[workspace.package]\nversion = \"{new_version}\""
+
+# 3. Update the Rust intra-crate dependencies, avoiding external crates
+[[tool.bumpversion.files]]
+paths = ["rust/Cargo.toml"]
+regex = true
+search = '(?P<prefix>routee-compass.*version\s*=\s*"){current_version}(?P<suffix>")'
+replace = '{prefix}{new_version}{suffix}'
+
+# Update Cargo installation snippets in all Rust READMEs
+[[tool.bumpversion.files]]
+paths = [
+    "rust/routee-compass/README.md",
+    "rust/routee-compass-codegen/README.md",
+    "rust/routee-compass-core/README.md",
+    "rust/routee-compass-macros/README.md",
+    "rust/routee-compass-powertrain/README.md",
+    "rust/routee-compass-py/README.md"
+]
+regex = true
+search = '(?P<prefix>routee-compass[a-z-]*\s*=\s*\{\s*version\s*=\s*"){current_version}(?P<suffix>"\s*\})'
+replace = '{prefix}{new_version}{suffix}'
