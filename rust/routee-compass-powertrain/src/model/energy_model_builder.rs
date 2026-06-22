@@ -1,4 +1,5 @@
 use crate::model::energy_model_service::EnergyModelService;
+use crate::model::model_identifier::ModelIdentifier;
 use crate::model::BevEnergyModel;
 use crate::model::IceEnergyModel;
 use crate::model::PhevEnergyModel;
@@ -68,16 +69,24 @@ impl TraversalModelBuilder for EnergyModelBuilder {
                 vehicle_json["include_trip_energy"] = serde_json::Value::Bool(include_trip_energy);
             }
 
-            let model_name = vehicle_json
-                .get("name")
-                .and_then(|v| v.as_str())
-                .ok_or_else(|| {
-                    TraversalModelError::BuildError(format!(
-                        "vehicle model missing 'name' field in '{}'",
-                        vehicle_file
-                    ))
-                })?
-                .to_string();
+            // grabs the "name" field from the json and attempts to deserialize it into a ModelIdentifier
+            let model_identifier: ModelIdentifier = serde_json::from_value(
+                vehicle_json
+                    .get("name")
+                    .ok_or_else(|| {
+                        TraversalModelError::BuildError(format!(
+                            "vehicle model missing 'name' field in '{}'",
+                            vehicle_file
+                        ))
+                    })?
+                    .clone(),
+            )
+            .map_err(|e| {
+                TraversalModelError::BuildError(format!(
+                    "Could not build ModelIdentifier from vehicle config file '{}': {}",
+                    vehicle_file, e
+                ))
+            })?;
 
             let (vehicle_json_stripped, vehicle_type) = strip_type_from_config(&vehicle_json)
                 .map_err(|e| TraversalModelError::BuildError(e.to_string()))?;
@@ -94,7 +103,7 @@ impl TraversalModelBuilder for EnergyModelBuilder {
                 }
             };
 
-            vehicle_library.insert(model_name, service);
+            vehicle_library.insert(model_identifier, service);
         }
 
         let service = EnergyModelService::new(vehicle_library)?;

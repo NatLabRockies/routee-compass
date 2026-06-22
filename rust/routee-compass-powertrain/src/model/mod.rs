@@ -5,6 +5,7 @@ pub mod energy_model_ops;
 pub mod energy_model_service;
 pub mod fieldname;
 mod ice_energy_model;
+mod model_identifier;
 mod phev_energy_model;
 pub mod prediction;
 
