@@ -1,7 +1,7 @@
 [package]
 name = "routee-compass-py"
-version = "0.19.3"
 edition = "2021"
+version.workspace = true
 readme = "README.md"
 license = "BSD-3-Clause"
 description = "Python bindings to the RouteE-Compass energy-aware routing engine"
@@ -21,7 +21,7 @@ ort-static = ["routee-compass/ort-static"]
 [dependencies]
 config = { workspace = true }
 pyo3 = { version = "0.28.0", features = ["extension-module", "serde"] }
-routee-compass = { path = "../routee-compass", version = "0.19.3", default-features = false }
-routee-compass-core = { path = "../routee-compass-core", version = "0.19.3" }
-routee-compass-macros = { path = "../routee-compass-macros", version = "0.19.3" }
+routee-compass = { workspace = true, default-features = false }
+routee-compass-core = { workspace = true }
+routee-compass-macros = { workspace = true }
 serde_json = { workspace = true }
