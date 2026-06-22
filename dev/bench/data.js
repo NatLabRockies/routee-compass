@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781633548339,
+  "lastUpdate": 1782163330381,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3779,6 +3779,96 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 3020814,
             "range": "± 92415",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5a60c97e040300200457245587a82aa47e63f288",
+          "message": "Merge pull request #534 from NatLabRockies/release/0.19.4\n\nRelease/0.19.4",
+          "timestamp": "2026-06-22T14:25:04-06:00",
+          "tree_id": "fd2b0dff6988b71beb4d60f135ce2cc606fa9a7b",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/5a60c97e040300200457245587a82aa47e63f288"
+        },
+        "date": 1782160172313,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2904997,
+            "range": "± 93838",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "62322e002ad42ca54514ffdc954c8001aa161ee4",
+          "message": "Merge pull request #536 from NatLabRockies/dependabot/cargo/rust/pyo3-0.29.0\n\nUpdate pyo3 requirement from 0.28.0 to 0.29.0 in /rust",
+          "timestamp": "2026-06-22T15:15:23-06:00",
+          "tree_id": "286fe33eeac6bd593ef127ce773cc6e071f6f403",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/62322e002ad42ca54514ffdc954c8001aa161ee4"
+        },
+        "date": 1782163215810,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2994553,
+            "range": "± 120130",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2180988ce0cd4f622c24a837f982660dbeba89f8",
+          "message": "Merge pull request #521 from NatLabRockies/dependabot/github_actions/peaceiris/actions-gh-pages-4.1.0\n\nBump peaceiris/actions-gh-pages from 4 to 4.1.0",
+          "timestamp": "2026-06-22T15:17:24-06:00",
+          "tree_id": "276a102336200935cbd1121b30bf7d3f760391ff",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/2180988ce0cd4f622c24a837f982660dbeba89f8"
+        },
+        "date": 1782163329423,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2956729,
+            "range": "± 247361",
             "unit": "ns/iter"
           }
         ]
