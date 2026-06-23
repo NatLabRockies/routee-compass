@@ -13,8 +13,8 @@ path = "src/main.rs"
 clap = { workspace = true }
 heck = { workspace = true }
 indoc = { workspace = true }
-routee-compass = { path = "../routee-compass", version = "0.19.3", default-features = false }
-routee-compass-core = { path = "../routee-compass-core", version = "0.19.3" }
+routee-compass = { workspace = true, default-features = false }
+routee-compass-core = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
