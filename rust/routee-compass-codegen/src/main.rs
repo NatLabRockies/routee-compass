@@ -1,5 +1,4 @@
 use clap::{Parser, Subcommand};
-use routee_compass_codegen::generator::traversal::TraversalExtensions;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -31,9 +30,12 @@ enum CompassSubcommands {
         name: String,
         /// Parent directory path to where the module should be created (e.g., src)
         path: PathBuf,
-        /// optionally include extensions for typed configuration and engine struct
-        #[arg(long)]
-        extensions: Option<TraversalExtensions>,
+        /// Comma-delimited list of files to copy over. by default, copy all files.
+        #[arg(
+            long,
+            default_value = "builder.rs,config.rs,engine.rs,mod.rs,model.rs,params.rs,service.rs"
+        )]
+        files: String,
         /// allow the user to force overwriting existing files
         #[arg(short, long)]
         force: bool,
@@ -44,20 +46,41 @@ enum CompassSubcommands {
         name: String,
         /// Parent directory path to where the module should be created (e.g., src)
         path: PathBuf,
+        /// Comma-delimited list of files to copy over. by default, copy all files.
+        #[arg(
+            long,
+            default_value = "builder.rs,config.rs,engine.rs,mod.rs,model.rs,params.rs,service.rs"
+        )]
+        files: String,
+        /// allow the user to force overwriting existing files
+        #[arg(short, long)]
+        force: bool,
     },
     /// Generate a new InputPlugin module
     InputPlugin {
-        /// Name of the input plugin in PascalCase (e.g., CustomLoader)
+        /// Name of the input plugin in PascalCase (e.g., ModeSelection)
         name: String,
         /// Parent directory path to where the module should be created (e.g., src)
         path: PathBuf,
+        /// Comma-delimited list of files to copy over. by default, copy all files.
+        #[arg(long, default_value = "builder.rs,config.rs,mod.rs,plugin.rs")]
+        files: String,
+        /// allow the user to force overwriting existing files
+        #[arg(short, long)]
+        force: bool,
     },
     /// Generate a new OutputPlugin module
     OutputPlugin {
-        /// Name of the output plugin in PascalCase (e.g., CustomFormatter)
+        /// Name of the output plugin in PascalCase (e.g., SendEmail)
         name: String,
         /// Parent directory path to where the module should be created (e.g., src)
         path: PathBuf,
+        /// Comma-delimited list of files to copy over. by default, copy all files.
+        #[arg(long, default_value = "builder.rs,config.rs,mod.rs,plugin.rs")]
+        files: String,
+        /// allow the user to force overwriting existing files
+        #[arg(short, long)]
+        force: bool,
     },
 }
 
@@ -70,29 +93,61 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         CompassSubcommands::Traversal {
             name,
             path,
-            extensions,
+            files,
             force,
         } => {
-            routee_compass_codegen::generator::traversal::generate_traversal_module(
+            let files: Vec<String> = files.split(",").map(String::from).collect();
+            routee_compass_codegen::generator::run::generate_module(
+                routee_compass_codegen::generator::CodegenComponentType::Traversal,
+                &files,
                 &name,
                 &path,
-                extensions.as_ref(),
                 force,
             )?;
         }
-        CompassSubcommands::Constraint { name, path } => {
-            routee_compass_codegen::generator::constraint::generate_constraint_module(
-                &name, &path,
+        CompassSubcommands::Constraint {
+            name,
+            path,
+            files,
+            force,
+        } => {
+            let files: Vec<String> = files.split(",").map(String::from).collect();
+            routee_compass_codegen::generator::run::generate_module(
+                routee_compass_codegen::generator::CodegenComponentType::Constraint,
+                &files,
+                &name,
+                &path,
+                force,
             )?;
         }
-        CompassSubcommands::InputPlugin { name, path } => {
-            routee_compass_codegen::generator::input_plugin::generate_input_plugin_module(
-                &name, &path,
+        CompassSubcommands::InputPlugin {
+            name,
+            path,
+            files,
+            force,
+        } => {
+            let files: Vec<String> = files.split(",").map(String::from).collect();
+            routee_compass_codegen::generator::run::generate_module(
+                routee_compass_codegen::generator::CodegenComponentType::InputPlugin,
+                &files,
+                &name,
+                &path,
+                force,
             )?;
         }
-        CompassSubcommands::OutputPlugin { name, path } => {
-            routee_compass_codegen::generator::output_plugin::generate_output_plugin_module(
-                &name, &path,
+        CompassSubcommands::OutputPlugin {
+            name,
+            path,
+            files,
+            force,
+        } => {
+            let files: Vec<String> = files.split(",").map(String::from).collect();
+            routee_compass_codegen::generator::run::generate_module(
+                routee_compass_codegen::generator::CodegenComponentType::OutputPlugin,
+                &files,
+                &name,
+                &path,
+                force,
             )?;
         }
     }
