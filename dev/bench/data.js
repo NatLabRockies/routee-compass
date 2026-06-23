@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782164391135,
+  "lastUpdate": 1782252740499,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3899,6 +3899,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2934504,
             "range": "± 118764",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "783e3d39f5fbe9a40cba3d672aaf9df8ed35da80",
+          "message": "Merge pull request #518 from NatLabRockies/rjf/update-codegen\n\nRjf/update codegen",
+          "timestamp": "2026-06-23T16:07:49-06:00",
+          "tree_id": "f49cb76d72893fc7af0027154e49b8768b1fb354",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/783e3d39f5fbe9a40cba3d672aaf9df8ed35da80"
+        },
+        "date": 1782252740149,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2977548,
+            "range": "± 313670",
             "unit": "ns/iter"
           }
         ]
