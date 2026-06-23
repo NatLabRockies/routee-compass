@@ -50,7 +50,7 @@ quote = "1.0"
 rand = "0.10.0"
 rayon = "1.11.0"
 regex = "1.12.2"
-routee-compass = { path = "routee-compass", version = "0.19.4" }
+routee-compass = { path = "routee-compass", version = "0.19.4", default-features = false }
 routee-compass-core = { path = "routee-compass-core", version = "0.19.4" }
 routee-compass-macros = { path = "routee-compass-macros", version = "0.19.4" }
 routee-compass-powertrain = { path = "routee-compass-powertrain", version = "0.19.4" }
