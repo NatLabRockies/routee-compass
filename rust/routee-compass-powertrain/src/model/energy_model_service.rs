@@ -38,15 +38,11 @@ impl TraversalModelService for EnergyModelService {
 
         let service = self.vehicle_library.get(&model_identifier).ok_or_else(|| {
             TraversalModelError::BuildError(format!(
-                "unknown vehicle model {:?}, must be one of [{}]",
-                model_identifier,
-                self.vehicle_library
-                    .keys()
-                    .map(|m| format!("{m:?}"))
-                    .collect::<Vec<_>>()
-                    .join(", ")
+                "unknown vehicle model {} from `model_name` field in query",
+                model_identifier
             ))
         })?;
+
         let model = service.build(parameters)?;
         Ok(model)
     }
