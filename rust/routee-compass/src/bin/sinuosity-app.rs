@@ -5,6 +5,10 @@ use routee_compass_core::util::fs::read_utils::read_raw_file;
 use std::io::{Error, ErrorKind};
 use wkt::TryFromWkt;
 
+/// From a set of WKT LineStrings in a .txt or .gz file,
+/// This CLI app will compute the sinuosity of each of
+/// the linestrings.
+
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct SinuosityAppCliArgs {
@@ -33,7 +37,7 @@ fn sinuosity(linestring: &LineString<f32>) -> Result<f32, String> {
     if haversine_distance == 0.0 {
         Ok(f32::INFINITY)
     } else {
-        Ok(haversine_distance / haversine_length)
+        Ok(haversine_length / haversine_distance)
     }
 }
 
@@ -82,11 +86,12 @@ fn main() -> Result<(), std::io::Error> {
 mod tests {
     use super::*;
     use geo::line_string;
+    use geo::{Destination, Haversine, Point};
 
     #[test]
     fn test_infty_on_loop() -> Result<(), String> {
         // Loop centered in Golden, CO.
-        let test_loop = line_string![
+        let linestring = line_string![
             (x: -105.2208663, y: 39.7555000),
             (x: -105.2208976, y: 39.7555898),
             (x: -105.2209832, y: 39.7556556),
@@ -102,7 +107,7 @@ mod tests {
             (x: -105.2208663, y: 39.7555000),
         ];
 
-        assert_eq!(f32::INFINITY, sinuosity(&test_loop)?);
+        assert_eq!(f32::INFINITY, sinuosity(&linestring)?);
         Ok(())
     }
 
@@ -113,30 +118,44 @@ mod tests {
         let lower: f32 = 1.0 - epsilon;
 
         // Straight line down Washington Ave. in Golden, CO.
-        let test_line = line_string![
+        let linestring = line_string![
             (x: 39.749683, y: -105.216019),
             (x: 39.756780, y: -105.222675),
         ];
 
-        let sinuosity = sinuosity(&test_line)?;
-        assert!(sinuosity <= upper && sinuosity >= lower);
+        assert!(sinuosity(&linestring)? <= upper && sinuosity(&linestring)? >= lower);
         Ok(())
     }
 
     #[test]
     fn test_sqrt2_on_isosceles() -> Result<(), String> {
+        // given isosceles triangle with base length 1km, the sinuosity of the
+        // linestring containing the adjacent sides should be ~sqrt(2) m if
+        // the distance from the midpoint of the base to the intersection
+        // of the adjacent sides is 500m.
+
+        // note! f32 + haversine implictly constrains us to a certain level of precision.
+        // this is why we opted for a base of 1000m instead of 1m.
+
         let epsilon: f32 = 0.001;
-        let upper: f32 = 2.0_f32.sqrt() + epsilon;
-        let lower: f32 = 2.0_f32.sqrt() - epsilon;
+        let upper = 2.0f32.sqrt() + epsilon;
+        let lower = 2.0f32.sqrt() - epsilon;
 
-        let triangle = line_string![
-            (x: 0.0, y: 0.0),   // src
-            (x: 0.5, y: 0.5),   // apex (right angle)
-            (x: 1.0, y: 0.0),   // dst
-        ];
+        // base (1 km)
+        let origin = Point::new(-105.222682, 39.756827); // centered in golden
+        let destination = Haversine.destination(origin, 0.0, 1000.0); // distance in meters, due north
 
-        let sinuosity = sinuosity(&triangle)?;
+        // midpoint of base
+        let midpoint = Haversine.destination(origin, 0.0, 500.0);
+
+        // extend a point perpendicular to the midpoint (due east, 500m above base).
+        let apex = Haversine.destination(midpoint, 90.0, 500.0);
+
+        // connect the dots LineString (o-a, a-o)
+        let linestring = LineString::from(vec![origin, apex, destination]);
+        let sinuosity = sinuosity(&linestring)?;
         assert!(sinuosity <= upper && sinuosity >= lower);
+
         Ok(())
     }
 }
