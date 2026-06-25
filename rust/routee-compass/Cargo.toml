@@ -27,7 +27,7 @@ bench = false
 
 [[bin]]
 name = "sinuosity-app"
-path = "src/bin/sinuosity/sinuosity-app.rs"
+path = "src/bin/sinuosity-app.rs"
 bench = false
 
 [features]
