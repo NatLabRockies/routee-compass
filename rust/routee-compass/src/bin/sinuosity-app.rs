@@ -21,23 +21,24 @@ pub struct SinuosityAppCliArgs {
 }
 
 fn sinuosity(linestring: &LineString<f32>) -> Result<f32, String> {
-    let first_coord = linestring
+    let origin = linestring
         .points()
         .next()
         .ok_or("Something happened with the first point in the linestring.".to_string())?;
 
-    let last_coord = linestring
+    let destination = linestring
         .points()
-        .last()
+        .next_back()
         .ok_or("Something happened with the last point in the linestring.".to_string())?;
 
-    let haversine_distance = Haversine.distance(first_coord, last_coord);
-    let haversine_length = Haversine.length(linestring);
+    let distance_origin_to_destination = Haversine.distance(origin, destination);
+    let length_linestring = Haversine.length(linestring);
 
-    if haversine_distance == 0.0 {
-        Ok(f32::INFINITY)
+    if distance_origin_to_destination == 0.0 {
+        Ok(f32::INFINITY) // the path is a loop.
     } else {
-        Ok(haversine_length / haversine_distance)
+        let sinuosity = length_linestring / distance_origin_to_destination;
+        Ok(sinuosity.max(1.0f32)) // sinuosity cannot go below 1
     }
 }
 
@@ -62,22 +63,23 @@ fn main() -> Result<(), std::io::Error> {
         None,
     )?;
 
-    // computes the sinuosity of each linestring
-    let sinuosities: Vec<f32> = linestrings
-        .clone()
+    // Computes the sinuosity of each edge and concatenates the results into a
+    // single string, where each row holds the sinuosity of the corresponding edge.
+    let sinuosities = linestrings
         .iter()
-        .map(sinuosity)
-        .collect::<Result<_, _>>()
+        // double mapcd s: linestring->sinuosity->string (for file writing)
+        .map(|ls| sinuosity(ls).map(|n| n.to_string()))
+        .collect::<Result<Vec<String>, String>>()
         .map_err(|e| {
             Error::new(
                 ErrorKind::InvalidData,
                 format!("error in computing sinuosity {e}"),
             )
-        })?;
+        })?
+        // join with newlines to print an single sinuosity value for each row
+        .join("\n");
 
-    for val in sinuosities {
-        println!("{val}");
-    }
+    std::fs::write(&args.sinuosity_output_file, sinuosities)?;
 
     Ok(())
 }
