@@ -6,9 +6,8 @@ use std::io::{Error, ErrorKind};
 use wkt::TryFromWkt;
 
 /// From a set of WKT LineStrings in a .txt or .gz file,
-/// This CLI app will compute the sinuosity of each of
+/// this CLI app will compute the sinuosity of each of
 /// the linestrings.
-
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct SinuosityAppCliArgs {
