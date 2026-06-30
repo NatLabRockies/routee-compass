@@ -25,6 +25,11 @@ name = "geom-app"
 path = "src/bin/geom-app.rs"
 bench = false
 
+[[bin]]
+name = "sinuosity-app"
+path = "src/bin/sinuosity-app.rs"
+bench = false
+
 [features]
 default = ["routee-compass-powertrain/default"]
 ort-static = ["routee-compass-powertrain/ort-static"]
