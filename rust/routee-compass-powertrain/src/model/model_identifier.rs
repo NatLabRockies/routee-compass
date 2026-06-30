@@ -50,8 +50,8 @@ pub enum ModelIdentifierError {
     MissingFields(String),
     #[error("invalid year '{0}' in fully qualified id")]
     InvalidYear(String),
-    #[error("version and variant must appear together, found only '{0}'")]
-    OneOfVariantOrVersion(String),
+    #[error("version and variant must appear together, found only '{0}' = '{1}'")]
+    OneOfVariantOrVersion(String, String),
 }
 
 impl ModelIdentifier {
@@ -75,10 +75,16 @@ impl ModelIdentifier {
                 let (variant, version) = match (attributes.next(), attributes.next()) {
                     (Some(var), Some(ver)) => (Some(var), Some(ver)),
                     (Some(var), None) => {
-                        return Err(ModelIdentifierError::OneOfVariantOrVersion(var))
+                        return Err(ModelIdentifierError::OneOfVariantOrVersion(
+                            "variant".to_string(),
+                            var.to_string(),
+                        ))
                     }
                     (None, Some(ver)) => {
-                        return Err(ModelIdentifierError::OneOfVariantOrVersion(ver))
+                        return Err(ModelIdentifierError::OneOfVariantOrVersion(
+                            "version".to_string(),
+                            ver.to_string(),
+                        ))
                     }
                     (None, None) => (None, None),
                 };
@@ -109,12 +115,14 @@ impl ModelIdentifier {
                     "{}/{}/{}/{}/{}",
                     make, model, year, var, ver
                 ))),
-                (Some(var), None) => {
-                    Err(ModelIdentifierError::OneOfVariantOrVersion(var.to_string()))
-                }
-                (None, Some(ver)) => {
-                    Err(ModelIdentifierError::OneOfVariantOrVersion(ver.to_string()))
-                }
+                (Some(var), None) => Err(ModelIdentifierError::OneOfVariantOrVersion(
+                    "variant".to_string(),
+                    var.to_string(),
+                )),
+                (None, Some(ver)) => Err(ModelIdentifierError::OneOfVariantOrVersion(
+                    "version".to_string(),
+                    ver.to_string(),
+                )),
                 (None, None) => Ok(FullyQualifiedId(format!("{}/{}/{}", make, model, year))),
             },
             Self::FullyQualifiedId(_) => Ok(self.clone()),
