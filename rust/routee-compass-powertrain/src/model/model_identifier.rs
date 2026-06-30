@@ -1,9 +1,11 @@
 use serde::{Deserialize, Serialize};
-use serde_json;
+use serde_json::{json, Value};
 use std::fmt;
 use std::fmt::Display;
 use std::num::NonZeroU64;
 use std::str::FromStr;
+
+use crate::model::model_identifier::ModelIdentifier::FullyQualifiedId;
 
 /// The `ModelIdentifier` is an `enum` deserialized from a RouteE Powertrain .json file's "name" field,
 /// and details the vehicle energy model.
@@ -41,25 +43,24 @@ pub enum ModelIdentifier {
     },
 }
 
-/// `ModelIdentifierError` (for `TryFrom<&ModelIdentifier> for ModelIdentifier` trait implementation)
+/// `ModelIdentifierError` variants
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum ModelIdentifierError {
     #[error("fully qualified id '{0}' must have at least make/model/year fields")]
     MissingFields(String),
     #[error("invalid year '{0}' in fully qualified id")]
     InvalidYear(String),
+    #[error("version and variant must appear together, found only '{0}'")]
+    OneOfVariantOrVersion(String),
 }
 
-impl TryFrom<&ModelIdentifier> for ModelIdentifier {
-    type Error = ModelIdentifierError;
-
-    /// `TryFrom` implementation for `ModelIdentifier` which will create a copy of
-    /// `ModelIdentifier::FullyQualifiedID` as a `ModelIdentifier::StructuredID`
-    /// or will create a copy of the `ModelIdentifier::StructuredID`.
-    fn try_from(value: &ModelIdentifier) -> Result<Self, Self::Error> {
-        match value {
-            ModelIdentifier::StructuredId { .. } => Ok(value.clone()),
-            ModelIdentifier::FullyQualifiedId(id) => {
+impl ModelIdentifier {
+    /// Creates a copy of the `ModelIdentifier` from it's current variant (either `FullyQualifiedId` or `StructuredId`)
+    /// to `StructuredId`
+    pub fn to_structured(&self) -> Result<Self, ModelIdentifierError> {
+        match self {
+            Self::StructuredId { .. } => Ok(self.clone()),
+            Self::FullyQualifiedId(id) => {
                 let mut attributes = id.split('/').map(|s| s.to_string());
 
                 let (make, model, year) =
@@ -71,29 +72,85 @@ impl TryFrom<&ModelIdentifier> for ModelIdentifier {
                 let year = NonZeroU64::from_str(&year)
                     .map_err(|_| ModelIdentifierError::InvalidYear(year))?;
 
+                let (variant, version) = match (attributes.next(), attributes.next()) {
+                    (Some(var), Some(ver)) => (Some(var), Some(ver)),
+                    (Some(var), None) => {
+                        return Err(ModelIdentifierError::OneOfVariantOrVersion(var))
+                    }
+                    (None, Some(ver)) => {
+                        return Err(ModelIdentifierError::OneOfVariantOrVersion(ver))
+                    }
+                    (None, None) => (None, None),
+                };
+
                 Ok(ModelIdentifier::StructuredId {
                     make,
                     model,
                     year,
-                    variant: attributes.next(),
-                    version: attributes.next(),
+                    variant,
+                    version,
                 })
             }
+        }
+    }
+
+    /// Converts the `ModelIdentifier` from it's current variant (either `FullyQualifiedId` or `StructuredId`)
+    /// to `FullyQualifiedId`
+    pub fn to_fully_qualified(&self) -> Result<Self, ModelIdentifierError> {
+        match self {
+            Self::StructuredId {
+                make,
+                model,
+                year,
+                variant,
+                version,
+            } => match (variant, version) {
+                (Some(var), Some(ver)) => Ok(FullyQualifiedId(format!(
+                    "{}/{}/{}/{}/{}",
+                    make, model, year, var, ver
+                ))),
+                (Some(var), None) => {
+                    Err(ModelIdentifierError::OneOfVariantOrVersion(var.to_string()))
+                }
+                (None, Some(ver)) => {
+                    Err(ModelIdentifierError::OneOfVariantOrVersion(ver.to_string()))
+                }
+                (None, None) => Ok(FullyQualifiedId(format!("{}/{}/{}", make, model, year))),
+            },
+            Self::FullyQualifiedId(_) => Ok(self.clone()),
         }
     }
 }
 
 impl Display for ModelIdentifier {
-    /// `Display` trait `fmt()` implementation for `ModelIdentifier`.
-    /// If self is `FullyQualifiedID`, prints as `StructuredID`.
-    /// If self is `StructuredID`, prints as `StructuredID`.
+    /// Default `Display` implementation of `fmt()` for `ModelIdentifier`
+    /// prints the `ModelIdentifier` as the original variant.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let structured = ModelIdentifier::try_from(self).map_err(|_| fmt::Error)?; // Tries to convert FullyQualifiedID to StructuredID.
-        write!(
-            f,
-            "{}",
-            serde_json::to_string(&structured).map_err(|_| fmt::Error)?
-        )
+        match self {
+            ModelIdentifier::FullyQualifiedId(id) => write!(f, "{id}"),
+            ModelIdentifier::StructuredId {
+                make,
+                model,
+                year,
+                variant,
+                version,
+            } => {
+                // if the variant or version are None type, prints "none"
+                let opt_to_val = |o: &Option<String>| {
+                    Value::String(o.clone().unwrap_or_else(|| "none".to_string()))
+                };
+
+                let obj = json!({
+                    "make": make,
+                    "model": model,
+                    "year": year,
+                    "variant": opt_to_val(variant),
+                    "version": opt_to_val(version),
+                });
+
+                write!(f, "{obj}")
+            }
+        }
     }
 }
 
@@ -254,7 +311,7 @@ mod tests {
             })?;
 
         assert_eq!(
-            r#"{"make":"Ford","model":"Quadricycle","year":1896,"variant":null,"version":null}"#,
+            r#"{"make":"Ford","model":"Quadricycle","year":1896,"variant":"none","version":"none"}"#,
             format!("{}", model_identifier)
         );
 
@@ -299,10 +356,7 @@ mod tests {
                 ))
             })?;
 
-        assert_eq!(
-            r#"{"make":"Ford","model":"Quadricycle","year":1896,"variant":null,"version":null}"#,
-            format!("{}", model_identifier)
-        );
+        assert_eq!(r#"Ford/Quadricycle/1896"#, format!("{}", model_identifier));
 
         Ok(())
     }
