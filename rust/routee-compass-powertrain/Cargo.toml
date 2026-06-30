@@ -29,5 +29,5 @@ routee-compass-core = { path = "../routee-compass-core", version = "0.19.3" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 smartcore = { workspace = true }
+thiserror = { workspace = true }
 uom = { workspace = true }
-thiserror = {workspace = true}
