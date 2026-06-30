@@ -3,18 +3,19 @@ use serde_json;
 use std::fmt;
 use std::fmt::Display;
 use std::num::NonZeroU64;
+use std::str::FromStr;
 
-/// The ModelIdentifier is a type deserialized from a RouteE Powertrain .json file's "name" field,
+/// The `ModelIdentifier` is an `enum` deserialized from a RouteE Powertrain .json file's "name" field,
 /// and details the vehicle energy model.
 ///
-/// The variants are either a fully qualified string ID:
+/// The variants are either a `String` detailing the `FullyQualifiedID`:
 /// ```json
 /// {
-///     "name": "2016_BMW_328d_4cyl_2WD",
+///     "name": "BMW/328d_4cyl_2WD/2016",
 /// }
 /// ```
 ///
-/// or a structured ID:
+/// or a structured json object detailing the `StructuredID`:
 /// ```json
 /// {
 ///     "name": {
@@ -25,9 +26,8 @@ use std::num::NonZeroU64;
 /// }
 /// ```
 ///
-/// Note: variant and version fields are both of type Option<String>, so they
+/// Note: variant and version fields are both of type `Option<String>`, so they
 /// are not required.
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[serde(untagged)] // serde tries each variant
 pub enum ModelIdentifier {
@@ -36,25 +36,64 @@ pub enum ModelIdentifier {
         make: String,
         model: String,
         year: NonZeroU64,
-        #[serde(skip_serializing_if = "Option::is_none")]
         variant: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         version: Option<String>,
     },
 }
 
-// standard display of a ModelIdentifier converts the object to its minified json,
-// but a fully qualified id is represented as a raw string rather than a JSON string.
-impl Display for ModelIdentifier {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ModelIdentifier::FullyQualifiedId(id) => write!(f, "{id}"),
-            ModelIdentifier::StructuredId { .. } => write!(
-                f,
-                "{}",
-                serde_json::to_string(self).map_err(|_| fmt::Error)?
-            ),
+/// `ModelIdentifierError` (for `TryFrom<&ModelIdentifier> for ModelIdentifier` trait implementation)
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum ModelIdentifierError {
+    #[error("fully qualified id '{0}' must have at least make/model/year fields")]
+    MissingFields(String),
+    #[error("invalid year '{0}' in fully qualified id")]
+    InvalidYear(String),
+}
+
+impl TryFrom<&ModelIdentifier> for ModelIdentifier {
+    type Error = ModelIdentifierError;
+
+    /// `TryFrom` implementation for `ModelIdentifier` which will create a copy of
+    /// `ModelIdentifier::FullyQualifiedID` as a `ModelIdentifier::StructuredID`
+    /// or will create a copy of the `ModelIdentifier::StructuredID`.
+    fn try_from(value: &ModelIdentifier) -> Result<Self, Self::Error> {
+        match value {
+            ModelIdentifier::StructuredId { .. } => Ok(value.clone()),
+            ModelIdentifier::FullyQualifiedId(id) => {
+                let mut attributes = id.split('/').map(|s| s.to_string());
+
+                let (make, model, year) =
+                    match (attributes.next(), attributes.next(), attributes.next()) {
+                        (Some(a), Some(b), Some(c)) => (a, b, c),
+                        _ => return Err(ModelIdentifierError::MissingFields(id.clone())),
+                    };
+
+                let year = NonZeroU64::from_str(&year)
+                    .map_err(|_| ModelIdentifierError::InvalidYear(year))?;
+
+                Ok(ModelIdentifier::StructuredId {
+                    make,
+                    model,
+                    year,
+                    variant: attributes.next(),
+                    version: attributes.next(),
+                })
+            }
         }
+    }
+}
+
+impl Display for ModelIdentifier {
+    /// `Display` trait `fmt()` implementation for `ModelIdentifier`.
+    /// If self is `FullyQualifiedID`, prints as `StructuredID`.
+    /// If self is `StructuredID`, prints as `StructuredID`.
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let structured = ModelIdentifier::try_from(self).map_err(|_| fmt::Error)?; // Tries to convert FullyQualifiedID to StructuredID.
+        write!(
+            f,
+            "{}",
+            serde_json::to_string(&structured).map_err(|_| fmt::Error)?
+        )
     }
 }
 
@@ -165,13 +204,14 @@ mod tests {
         Ok(())
     }
 
-    // ensure that if one non-optional field is redacted, we receive an error when attempting to deserialize
+    // Ensure that if one non-optional field is redacted, we receive an error when attempting to deserialize a ModelIdentifier.
     #[test]
     fn test_model_identifier_rejects_invalid() {
         let bad = serde_json::json!({ "make": "Ford" }); // no model, no year
         assert!(ModelIdentifier::deserialize(&bad).is_err());
     }
 
+    // Ensures that structuredID is printed as structuredID.
     #[test]
     fn test_display_structured() -> Result<(), TraversalModelError> {
         let vehicle_json_as_str = r#"{
@@ -214,17 +254,18 @@ mod tests {
             })?;
 
         assert_eq!(
-            r#"{"make":"Ford","model":"Quadricycle","year":1896}"#,
+            r#"{"make":"Ford","model":"Quadricycle","year":1896,"variant":null,"version":null}"#,
             format!("{}", model_identifier)
         );
 
         Ok(())
     }
 
+    // Ensures that FullyQualifiedID converts to StructuredID when printing.
     #[test]
     fn test_display_fully_qualified() -> Result<(), TraversalModelError> {
         let vehicle_json_as_str = r#"{
-            "name": "1896_Ford_Quadricycle",
+            "name": "Ford/Quadricycle/1896",
             "type": "ice",
             "mass_estimate_lbs": 500,
             "model_input_file": "ford_quad_1896.bin",
@@ -258,7 +299,10 @@ mod tests {
                 ))
             })?;
 
-        assert_eq!("1896_Ford_Quadricycle", format!("{}", model_identifier));
+        assert_eq!(
+            r#"{"make":"Ford","model":"Quadricycle","year":1896,"variant":null,"version":null}"#,
+            format!("{}", model_identifier)
+        );
 
         Ok(())
     }
