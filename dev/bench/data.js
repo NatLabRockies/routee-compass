@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782316773352,
+  "lastUpdate": 1782864091305,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -3989,6 +3989,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2992833,
             "range": "± 183400",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "73398481+admrtin@users.noreply.github.com",
+            "name": "Adam Martin",
+            "username": "admrtin"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "80c7866e5364311e729fba7f7d41a089d735720a",
+          "message": "Merge pull request #542 from NatLabRockies/amm/edge-sinuosity-import\n\nThe sinuosity-app CLI tool resolves #530",
+          "timestamp": "2026-06-30T17:55:15-06:00",
+          "tree_id": "50e7a354da8337a519a903546469639e2917ec9e",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/80c7866e5364311e729fba7f7d41a089d735720a"
+        },
+        "date": 1782864090230,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2329404,
+            "range": "± 116631",
             "unit": "ns/iter"
           }
         ]
