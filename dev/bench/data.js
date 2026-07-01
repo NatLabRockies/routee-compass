@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782864091305,
+  "lastUpdate": 1782866186346,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4019,6 +4019,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2329404,
             "range": "± 116631",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "73398481+admrtin@users.noreply.github.com",
+            "name": "Adam Martin",
+            "username": "admrtin"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4ed1facc718f725d2c8a05000659a683713db70a",
+          "message": "Merge pull request #533 from admrtin/amm/issue529-structured-ems\n\nIntroduce `ModelIdentifier` for ID options during energy model handling\n\nThe `ModelIdentifier` enum allows for two different variants of the RouteE Powertrain vehicle model configuration \"name\" field:\n\n`FullyQualifiedId`, a String type\n\nor\n\n`StructuredId`, a json object consisting of make, model, year, variant, and version fields. Variant and version are optional.\n\n`FullyQualifiedId` String variants should be written in the format of \"make/model/year/variant/version\", e.g.:\n\n```json\n\"name\": \"Ford/Quadricycle/1896\",\n```",
+          "timestamp": "2026-06-30T18:32:03-06:00",
+          "tree_id": "8152cb7bf6c5dba99ad2ffe08c5885ce74381c2a",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/4ed1facc718f725d2c8a05000659a683713db70a"
+        },
+        "date": 1782866185441,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 3022567,
+            "range": "± 117569",
             "unit": "ns/iter"
           }
         ]
