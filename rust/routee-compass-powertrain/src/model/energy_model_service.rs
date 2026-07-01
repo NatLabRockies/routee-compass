@@ -1,3 +1,4 @@
+use crate::model::model_identifier::ModelIdentifier;
 use routee_compass_core::model::traversal::{
     TraversalModel, TraversalModelError, TraversalModelService,
 };
@@ -8,12 +9,12 @@ use std::sync::Arc;
 /// based on the model_name field of the incoming query.
 #[derive(Clone)]
 pub struct EnergyModelService {
-    pub vehicle_library: HashMap<String, Arc<dyn TraversalModelService>>,
+    pub vehicle_library: HashMap<ModelIdentifier, Arc<dyn TraversalModelService>>,
 }
 
 impl EnergyModelService {
     pub fn new(
-        vehicle_library: HashMap<String, Arc<dyn TraversalModelService>>,
+        vehicle_library: HashMap<ModelIdentifier, Arc<dyn TraversalModelService>>,
     ) -> Result<Self, TraversalModelError> {
         Ok(EnergyModelService { vehicle_library })
     }
@@ -24,27 +25,24 @@ impl TraversalModelService for EnergyModelService {
         &self,
         parameters: &serde_json::Value,
     ) -> Result<Arc<dyn TraversalModel>, TraversalModelError> {
-        let model_name = parameters
-            .get("model_name")
-            .ok_or_else(|| {
-                TraversalModelError::BuildError("query missing 'model_name' field".to_string())
-            })?
-            .as_str()
-            .ok_or_else(|| {
-                TraversalModelError::BuildError("query 'model_name' is not a string".to_string())
+        let model_name: &serde_json::Value = parameters.get("model_name").ok_or_else(|| {
+            TraversalModelError::BuildError("query missing 'model_name' field".to_string())
+        })?;
+
+        let model_identifier: ModelIdentifier = serde_json::from_value(model_name.clone())
+            .map_err(|e| {
+                TraversalModelError::BuildError(format!(
+                    "Could not deserialize 'model_name' field from query into ModelIdentifier: {e}"
+                ))
             })?;
 
-        let service = self.vehicle_library.get(model_name).ok_or_else(|| {
+        let service = self.vehicle_library.get(&model_identifier).ok_or_else(|| {
             TraversalModelError::BuildError(format!(
-                "unknown vehicle model {}, must be one of [{}]",
-                model_name,
-                self.vehicle_library
-                    .keys()
-                    .cloned()
-                    .collect::<Vec<_>>()
-                    .join(",")
+                "unknown vehicle model {} from `model_name` field in query",
+                model_identifier
             ))
         })?;
+
         let model = service.build(parameters)?;
         Ok(model)
     }
