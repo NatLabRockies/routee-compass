@@ -11,15 +11,46 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+/// Builder for the categorical `ConstraintModelService`.
+///
+/// The builder is configured via a `CategoricalModelBuilderConfig`, which points to an
+/// input file mapping each edge in the network to a category value. The category name
+/// is given by the `key` argument in the config:
+///
+/// ```toml
+/// [[constraint.models]]
+/// type = "categorical"
+/// key = "road_class"
+/// input_file = "edges-routing-class-enumerated.txt.gz"
+///
+/// [[constraint.models]]
+/// type = "categorical"
+/// key = "destination"
+/// input_file = "edges-destinations-enumerated.txt.gz"
+/// ```
+///
+/// At query time, the search can be constrained to a subset of a category's values.
+/// For example, with the `road_class` model configured above:
+///
+/// ```json
+/// {
+///     "road_classes": ["footpath", "sidewalk", "staircase", "service", "residential"]
+/// }
+/// ```
+///
+/// The resulting `CategoricalModel` restricts the search to edges whose road class
+/// appears in that list.
+///
+/// This generalizes to any category of interest, provided a datafile exists that
+/// assigns a category value to each edge in the road network.
 pub struct CategoricalModelBuilder {}
 
 impl ConstraintModelBuilder for CategoricalModelBuilder {
-    /// Builds the CategoricalConstraintService from the configuration.
+    /// Builds the `CategoricalModelService` (trait `ConstraintService`) from the configuration.
     fn build(
         &self,
         parameters: &serde_json::Value,
     ) -> Result<Arc<dyn ConstraintModelService>, ConstraintModelError> {
-        // TODO: should builder grab all of the categories? or just the one?
         let config: CategoricalModelBuilderConfig = serde_json::from_value(parameters.clone())
             .map_err(|e| {
                 ConstraintModelError::BuildError(format!(

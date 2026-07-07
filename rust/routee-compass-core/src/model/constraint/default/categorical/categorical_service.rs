@@ -10,6 +10,11 @@ use std::{
     sync::Arc,
 };
 
+/// Long-lived service that constructs a `CategoricalModel` for each query.
+///
+/// Built once by the `CategoricalModelBuilder` at application startup, the service
+/// persists for the lifetime of the Compass process, so the loaded category data
+/// can be shared across many queries.
 #[derive(Clone)]
 pub struct CategoricalModelService {
     pub key: String,                                // the category name
@@ -18,6 +23,7 @@ pub struct CategoricalModelService {
 }
 
 impl ConstraintModelService for CategoricalModelService {
+    /// Builds the `CategoricalModel`
     fn build(
         &self,
         query: &serde_json::Value,
@@ -54,6 +60,7 @@ impl ConstraintModelService for CategoricalModelService {
     }
 }
 
+/// Grabs all categories from the query.
 fn read_categories_from_query(
     value: &Value,
     category_key: &String,

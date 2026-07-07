@@ -11,7 +11,21 @@ pub struct CategoricalConstraintModel {
     pub query_categories: Option<HashSet<u8>>,
 }
 
+/// Constrains the search at query time to edges belonging to an allowed set of
+/// category values.
+///
+/// Instances of this model are built by the `CategoricalModelService`. For a
+/// configured category such as `road_class`, a query supplies the allowed values:
+///
+/// ```json
+/// {
+///     "road_class": ["footpath", "sidewalk", "staircase", "service", "residential"]
+/// }
+/// ```
+///
+/// Only edges whose `road_class` is in this list are considered during the search.
 impl ConstraintModel for CategoricalConstraintModel {
+    // returns true if the frontier context is valid
     fn valid_frontier(
         &self,
         ctx: &EdgeFrontierContext,
@@ -21,6 +35,7 @@ impl ConstraintModel for CategoricalConstraintModel {
         self.valid_edge(ctx.edge)
     }
 
+    // returns true if the edge is in the set of categories
     fn valid_edge(&self, edge: &Edge) -> Result<bool, ConstraintModelError> {
         match &self.query_categories {
             None => Ok(true),
