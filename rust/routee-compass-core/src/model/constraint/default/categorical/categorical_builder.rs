@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-struct CategoricalModelBuilder {}
+pub struct CategoricalModelBuilder {}
 
 impl ConstraintModelBuilder for CategoricalModelBuilder {
     /// Builds the CategoricalConstraintService from the configuration.
@@ -70,7 +70,7 @@ impl ConstraintModelBuilder for CategoricalModelBuilder {
 
         // build the service
         let m: Arc<dyn ConstraintModelService> = Arc::new(CategoricalModelService {
-            key: Arc::new(key.to_string()),
+            key: key.to_string(),
             category_by_edge: Arc::new(encoded.into_boxed_slice()),
             category_mapping: Arc::new(mapping),
         });
