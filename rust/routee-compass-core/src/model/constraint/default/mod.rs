@@ -1,3 +1,4 @@
+pub mod categorical;
 pub mod combined;
 pub mod no_restriction;
 pub mod no_restriction_builder;
