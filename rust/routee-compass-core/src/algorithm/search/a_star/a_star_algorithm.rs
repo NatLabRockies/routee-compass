@@ -403,7 +403,7 @@ mod tests {
             .tree
             .backtrack(query_destination)
             .expect("failure creating search result");
-        for (route_edge, expected_edge) in route.into_iter().zip(optimal_route.into_iter()) {
+        for (route_edge, expected_edge) in route.into_iter().zip(optimal_route) {
             assert_eq!(route_edge.edge_id, expected_edge);
         }
     }
