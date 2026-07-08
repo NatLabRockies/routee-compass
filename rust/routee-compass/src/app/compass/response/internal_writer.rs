@@ -9,7 +9,7 @@ pub enum InternalWriter {
     /// writes to a file without encryption
     File { file: File },
     /// writes to a gzipped file
-    GzippedFile { encoder: GzEncoder<File> },
+    GzippedFile { encoder: Box<GzEncoder<File>> },
 }
 
 impl InternalWriter {
