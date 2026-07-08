@@ -129,7 +129,7 @@ build_py = "maturin develop --uv"
 build_rust = { cmd = "cargo build --workspace --release", cwd = "rust" }
 
 [tool.pixi.feature.hpc.tasks]
-build_hpc_ort = "bash scripts/hpc/build_ort.sh"
+build_hpc_ort = { cmd = "bash scripts/hpc/build_ort.sh", inputs = ["scripts/hpc/build_ort.sh", "pyproject.toml"], outputs = ["build/onnxruntime/build/Linux/RelWithDebInfo/libonnxruntime_common.a"] }
 build_hpc = { cmd = "maturin develop --uv --release", depends-on = ["build_hpc_ort"] }
 build_hpc_wheel = { cmd = "maturin build --release", depends-on = ["build_hpc_ort"] }
 check_hpc = { cmd = "python -c 'import nrel.routee.compass.routee_compass_py; print(\"ok\")'", depends-on = ["build_hpc"] }
