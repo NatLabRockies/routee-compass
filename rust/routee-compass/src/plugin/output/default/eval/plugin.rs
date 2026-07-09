@@ -1,4 +1,3 @@
-use itertools::Itertools;
 
 use crate::plugin::output::{
     default::eval::{
