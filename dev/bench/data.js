@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782866186346,
+  "lastUpdate": 1783637571220,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4049,6 +4049,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 3022567,
             "range": "± 117569",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "73398481+admrtin@users.noreply.github.com",
+            "name": "Adam Martin",
+            "username": "admrtin"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "aef60802c7f6d22ba5e18f47d7c40d47a98429ed",
+          "message": "Merge pull request #547 from NatLabRockies/amm/generalize-road-class-constraint\n\nRemove the `road_class` constraint type and generalize it to `categorical` constraint model",
+          "timestamp": "2026-07-09T16:45:16-06:00",
+          "tree_id": "ea6d7ba2437a1983910ed9aafb5f1b175f7c6474",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/aef60802c7f6d22ba5e18f47d7c40d47a98429ed"
+        },
+        "date": 1783637570243,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2994200,
+            "range": "± 113458",
             "unit": "ns/iter"
           }
         ]
