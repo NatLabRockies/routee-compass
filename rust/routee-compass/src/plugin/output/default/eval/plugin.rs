@@ -1,5 +1,10 @@
+use itertools::Itertools;
+
 use crate::plugin::output::{
-    default::eval::ops::{self, CompiledExpression, CompiledOnFailure},
+    default::eval::{
+        ops::{self, CompiledExpression, CompiledOnFailure},
+        NotANumberBehavior,
+    },
     OutputPlugin,
 };
 
@@ -8,6 +13,7 @@ use super::config::{EvalOutputPluginConfig, OnFailureBehavior};
 pub struct EvalOutputPlugin {
     expressions: Vec<CompiledExpression>,
     on_failure: CompiledOnFailure,
+    on_nan: NotANumberBehavior,
 }
 
 const NAME: &str = "eval";
@@ -23,19 +29,20 @@ impl EvalOutputPlugin {
         let on_failure = match conf.on_failure {
             OnFailureBehavior::Interrupt => CompiledOnFailure::Interrupt,
             OnFailureBehavior::Ignore => CompiledOnFailure::Ignore,
-            OnFailureBehavior::Record { path, .. } => {
+            OnFailureBehavior::Record { path, limit } => {
                 let segments = ops::parse_path_segments(&path).map_err(|e| {
                     crate::plugin::PluginError::BuildFailed(format!(
                         "invalid on_failure record path '{path}': {e}"
                     ))
                 })?;
-                CompiledOnFailure::Record { segments }
+                CompiledOnFailure::Record { segments, limit }
             }
         };
 
         Ok(Self {
             expressions,
             on_failure,
+            on_nan: conf.on_nan,
         })
     }
 }
@@ -53,13 +60,17 @@ impl OutputPlugin for EvalOutputPlugin {
         >,
     ) -> Result<(), crate::plugin::output::OutputPluginError> {
         for expr in &self.expressions {
-            match ops::eval_and_write(expr, output) {
+            match ops::eval_and_write(expr, output, &self.on_nan) {
                 Ok(()) => {}
                 Err(e) => match &self.on_failure {
                     CompiledOnFailure::Interrupt => return Err(e),
                     CompiledOnFailure::Ignore => {}
-                    CompiledOnFailure::Record { segments } => {
-                        ops::record_error(output, segments, &expr.expr, &e.to_string())?;
+                    CompiledOnFailure::Record { segments, limit } => {
+                        let segments_recorded = match limit {
+                            Some(lim) => segments.iter().take(*lim).cloned().collect::<Vec<_>>(),
+                            None => segments.clone(),
+                        };
+                        ops::record_error(output, &segments_recorded, &expr.expr, &e.to_string())?;
                     }
                 },
             }
@@ -80,10 +91,7 @@ mod tests {
     use crate::{
         app::compass::CompassAppError,
         plugin::output::{
-            default::eval::{
-                config::{EvalOutputPluginConfig, ExpressionConfig, OnFailureBehavior},
-                NotANumberBehavior,
-            },
+            default::eval::config::{EvalOutputPluginConfig, ExpressionConfig, OnFailureBehavior},
             OutputPlugin,
         },
     };

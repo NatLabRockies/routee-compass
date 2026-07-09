@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+use crate::plugin::output::OutputPluginError;
+
 /// Configure the Eval plugin to perform a set of expressions on output rows.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct EvalOutputPluginConfig {
@@ -61,7 +63,7 @@ pub enum OnFailureBehavior {
         /// if not provided, shows the full collection of errors, but if multiple
         /// expressions are inter-dependent, limiting to 1 or few errors is usually
         /// sufficient to identify the source of a chain of errors.
-        limit: Option<u64>,
+        limit: Option<usize>,
     },
     /// ignore the error
     Ignore,
@@ -93,6 +95,23 @@ impl ExpressionConfig {
                 .collect::<HashMap<_, _>>(),
             expr: expression.to_string(),
             output: output.to_string(),
+        }
+    }
+}
+
+impl NotANumberBehavior {
+    pub fn apply(&self, value: f64) -> Result<f64, OutputPluginError> {
+        if f64::is_nan(value) {
+            match self {
+                NotANumberBehavior::Allow => Ok(value),
+                NotANumberBehavior::Zero => Ok(0.0),
+                NotANumberBehavior::Error => {
+                    let msg = "encountered NaN value when NotANumberBehavior is Error".to_string();
+                    Err(OutputPluginError::OutputPluginFailed(msg))
+                }
+            }
+        } else {
+            Ok(value)
         }
     }
 }

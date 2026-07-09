@@ -5,11 +5,12 @@ use itertools::Itertools;
 use serde_json_path::JsonPath;
 
 use crate::plugin::output::{
-    default::eval::{config::ExpressionConfig, Operation},
+    default::eval::{config::ExpressionConfig, NotANumberBehavior, Operation},
     OutputPluginError,
 };
 
 /// A pre-parsed path segment used for writing results back into the JSON tree.
+#[derive(Clone, Debug)]
 pub enum PathSegment {
     Key(String),
     Index(usize),
@@ -35,7 +36,10 @@ pub struct CompiledExpression {
 /// pre-parsed once at plugin construction time.
 pub enum CompiledOnFailure {
     Interrupt,
-    Record { segments: Vec<PathSegment> },
+    Record {
+        segments: Vec<PathSegment>,
+        limit: Option<usize>,
+    },
     Ignore,
 }
 
@@ -336,6 +340,7 @@ fn navigate_mut<'a>(
 pub fn eval_and_write(
     expr: &CompiledExpression,
     output: &mut serde_json::Value,
+    nan_behavior: &NotANumberBehavior,
 ) -> Result<(), OutputPluginError> {
     // 1. Resolve each input binding to an f64 via JSONPath.
     let mut variables: HashMap<String, f64> = HashMap::new();
@@ -397,11 +402,12 @@ pub fn eval_and_write(
         )));
     }
     let result = eval_result?;
+    let result_cleaned = nan_behavior.apply(result)?;
 
     // 3. Write the result back into the output JSON.
-    let number = serde_json::Number::from_f64(result).ok_or_else(|| {
+    let number = serde_json::Number::from_f64(result_cleaned).ok_or_else(|| {
         OutputPluginError::OutputPluginFailed(format!(
-            "expression '{}' produced a non-finite value: {result}",
+            "expression '{}' produced a non-numeric value: {result_cleaned}",
             expr.expr
         ))
     })?;
