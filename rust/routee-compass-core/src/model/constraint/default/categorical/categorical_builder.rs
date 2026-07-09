@@ -64,7 +64,7 @@ impl ConstraintModelBuilder for CategoricalModelBuilder {
         let category_lookup: Box<[String]> = read_utils::read_raw_file(
             &input_file,
             read_decoders::string,
-            Some(Bar::builder().desc(format!("{key}"))),
+            Some(Bar::builder().desc(key.to_string())),
             None,
         )
         .map_err(|e| {
