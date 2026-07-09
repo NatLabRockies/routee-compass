@@ -9,6 +9,10 @@ pub struct EvalOutputPluginConfig {
     pub expressions: Vec<ExpressionConfig>,
     /// behavior when expression fails
     pub on_failure: OnFailureBehavior,
+    /// behavior when a NaN value is produced by an expression. by default,
+    /// NaN values are allowed.
+    #[serde(default)]
+    pub on_nan: NotANumberBehavior,
 }
 
 /// Configuration for a single arithmetic expression to evaluate over the output JSON.
@@ -50,9 +54,29 @@ pub enum OnFailureBehavior {
     /// interrupt the plugin on failure, returning an Err from the plugin.
     Interrupt,
     /// record the error to the output row at some JSONpath
-    Record { path: String },
+    Record {
+        /// JSONPath declaring where to write eval errors from this plugin instance
+        path: String,
+        /// limit to the depth of errors to show, starting from the first.
+        /// if not provided, shows the full collection of errors, but if multiple
+        /// expressions are inter-dependent, limiting to 1 or few errors is usually
+        /// sufficient to identify the source of a chain of errors.
+        limit: Option<u64>,
+    },
     /// ignore the error
     Ignore,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[serde(rename_all = "snake_case", tag = "type")]
+pub enum NotANumberBehavior {
+    /// allow NaNs to get written
+    #[default]
+    Allow,
+    /// zero out NaN values when they are the result of an expression
+    Zero,
+    /// error out if we return a NaN
+    Error,
 }
 
 impl ExpressionConfig {

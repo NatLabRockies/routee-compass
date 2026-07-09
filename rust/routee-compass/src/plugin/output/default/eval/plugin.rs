@@ -23,7 +23,7 @@ impl EvalOutputPlugin {
         let on_failure = match conf.on_failure {
             OnFailureBehavior::Interrupt => CompiledOnFailure::Interrupt,
             OnFailureBehavior::Ignore => CompiledOnFailure::Ignore,
-            OnFailureBehavior::Record { path } => {
+            OnFailureBehavior::Record { path, .. } => {
                 let segments = ops::parse_path_segments(&path).map_err(|e| {
                     crate::plugin::PluginError::BuildFailed(format!(
                         "invalid on_failure record path '{path}': {e}"
@@ -80,7 +80,10 @@ mod tests {
     use crate::{
         app::compass::CompassAppError,
         plugin::output::{
-            default::eval::config::{EvalOutputPluginConfig, ExpressionConfig, OnFailureBehavior},
+            default::eval::{
+                config::{EvalOutputPluginConfig, ExpressionConfig, OnFailureBehavior},
+                NotANumberBehavior,
+            },
             OutputPlugin,
         },
     };
@@ -108,6 +111,7 @@ mod tests {
         EvalOutputPlugin::new(EvalOutputPluginConfig {
             expressions,
             on_failure,
+            on_nan: Default::default(),
         })
         .expect("plugin should build")
     }
@@ -278,6 +282,7 @@ mod tests {
             )],
             OnFailureBehavior::Record {
                 path: "$.eval_errors".to_string(),
+                limit: None,
             },
         );
         let mut output = json!({});
@@ -300,6 +305,7 @@ mod tests {
             ],
             OnFailureBehavior::Record {
                 path: "$.eval_errors".to_string(),
+                limit: None,
             },
         );
         let mut output = json!({ "y": 5.0 });
@@ -322,6 +328,7 @@ mod tests {
             ],
             OnFailureBehavior::Record {
                 path: "$.eval_errors".to_string(),
+                limit: None,
             },
         );
         let mut output = json!({});
@@ -345,6 +352,7 @@ mod tests {
             )],
             OnFailureBehavior::Record {
                 path: "$.diagnostics.errors".to_string(),
+                limit: None,
             },
         );
         let mut output = json!({});
@@ -847,6 +855,7 @@ mod tests {
                 "$.result",
             )],
             on_failure: OnFailureBehavior::Interrupt,
+            on_nan: Default::default(),
         });
         assert!(result.is_err());
     }
@@ -857,6 +866,7 @@ mod tests {
         let result = EvalOutputPlugin::new(EvalOutputPluginConfig {
             expressions: vec![ExpressionConfig::new(&[], "1 + 1", "$")],
             on_failure: OnFailureBehavior::Interrupt,
+            on_nan: Default::default(),
         });
         assert!(result.is_err());
     }
@@ -868,7 +878,9 @@ mod tests {
             expressions: vec![],
             on_failure: OnFailureBehavior::Record {
                 path: "$".to_string(),
+                limit: None,
             },
+            on_nan: Default::default(),
         });
         assert!(result.is_err());
     }
@@ -959,7 +971,9 @@ mod tests {
             ],
             on_failure: OnFailureBehavior::Record {
                 path: "$.diagnostics.errors".to_string(),
+                limit: None,
             },
+            on_nan: Default::default(),
         })
         .unwrap();
         let mut output = json!({
