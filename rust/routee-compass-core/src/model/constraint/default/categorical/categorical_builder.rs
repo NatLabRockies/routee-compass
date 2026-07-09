@@ -87,7 +87,7 @@ impl ConstraintModelBuilder for CategoricalModelBuilder {
                     let id_usize = next_id;
                     if id_usize > u8::MAX as usize {
                         return Err(ConstraintModelError::BuildError(
-                            format!("too many unique {key}, max is 256"),
+                            format!("too many unique {key} categories, max is 256"),
                         ));
                     }
                     next_id += 1; // next new string in the mapping will be mapped to id + 1

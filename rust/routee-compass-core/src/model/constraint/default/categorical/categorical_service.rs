@@ -40,8 +40,9 @@ impl ConstraintModelService for CategoricalModelService {
                     .map(|c| {
                         self.category_mapping.get(c).copied().ok_or_else(|| {
                             ConstraintModelError::BuildError(format!(
-                                "road class '{}' not found in road class mapping",
-                                c
+                                "{} category '{}' not found in mapping",
+                                &self.key,
+                                c,
                             ))
                         })
                     })
