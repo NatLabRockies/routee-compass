@@ -34,7 +34,7 @@ use std::sync::Arc;
 ///
 /// ```json
 /// {
-///     "road_classes": ["footpath", "sidewalk", "staircase", "service", "residential"]
+///     "road_class": ["footpath", "sidewalk", "staircase", "service", "residential"]
 /// }
 /// ```
 ///
@@ -87,7 +87,7 @@ impl ConstraintModelBuilder for CategoricalModelBuilder {
                     let id_usize = next_id;
                     if id_usize > u8::MAX as usize {
                         return Err(ConstraintModelError::BuildError(
-                            "too many unique road classes, max is 256".to_string(),
+                            format!("too many unique {key}, max is 256"),
                         ));
                     }
                     next_id += 1; // next new string in the mapping will be mapped to id + 1
