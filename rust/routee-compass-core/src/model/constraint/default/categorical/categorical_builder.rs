@@ -59,7 +59,7 @@ impl ConstraintModelBuilder for CategoricalModelBuilder {
             })?;
 
         let key = &config.key;
-        let input_file = PathBuf::from(&config.input_file);
+        let input_file = PathBuf::from(&config.categorical_input_file);
 
         let category_lookup: Box<[String]> = read_utils::read_raw_file(
             &input_file,
