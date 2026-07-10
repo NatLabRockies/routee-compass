@@ -75,7 +75,7 @@ impl TryFrom<&ExpressionConfig> for CompiledExpression {
 
         Ok(CompiledExpression {
             inputs,
-            expr: conf.expr,
+            expr: conf.expr.clone(),
             output_segments,
             slab,
             compiled,
