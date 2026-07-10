@@ -1,4 +1,3 @@
-
 use crate::plugin::output::{
     default::eval::{
         ops::{self, CompiledExpression, CompiledOnFailure},
@@ -65,11 +64,13 @@ impl OutputPlugin for EvalOutputPlugin {
                     CompiledOnFailure::Interrupt => return Err(e),
                     CompiledOnFailure::Ignore => {}
                     CompiledOnFailure::Record { segments, limit } => {
-                        let segments_recorded = match limit {
-                            Some(lim) => segments.iter().take(*lim).cloned().collect::<Vec<_>>(),
-                            None => segments.clone(),
-                        };
-                        ops::record_error(output, &segments_recorded, &expr.expr, &e.to_string())?;
+                        ops::record_error(
+                            output,
+                            segments,
+                            limit.clone(),
+                            &expr.expr,
+                            &e.to_string(),
+                        )?;
                     }
                 },
             }

@@ -2,6 +2,7 @@ use std::{collections::HashMap, str::FromStr};
 
 use fasteval::{Compiler, Evaler};
 use itertools::Itertools;
+use serde_json::Value;
 use serde_json_path::JsonPath;
 
 use crate::plugin::output::{
@@ -236,6 +237,7 @@ pub fn set_path(
 pub fn record_error(
     root: &mut serde_json::Value,
     segments: &[PathSegment],
+    limit: Option<usize>,
     expr_str: &str,
     message: &str,
 ) -> Result<(), OutputPluginError> {
@@ -266,7 +268,7 @@ pub fn record_error(
                 .entry(k.clone())
                 .or_insert_with(|| serde_json::Value::Array(vec![]));
             if let Some(arr) = slot.as_array_mut() {
-                arr.push(entry);
+                insert_within_limit(arr, entry, limit);
             } else {
                 *slot = serde_json::Value::Array(vec![entry]);
             }
@@ -279,7 +281,7 @@ pub fn record_error(
             })?;
             if *i < arr.len() {
                 if let Some(slot_arr) = arr[*i].as_array_mut() {
-                    slot_arr.push(entry);
+                    insert_within_limit(slot_arr, entry, limit);
                 } else {
                     arr[*i] = serde_json::Value::Array(vec![entry]);
                 }
@@ -292,6 +294,15 @@ pub fn record_error(
     }
 
     Ok(())
+}
+
+/// helper function to insert a value into a vector of values if it is within an
+/// optional size limit argument.
+fn insert_within_limit(arr: &mut Vec<Value>, entry: Value, limit: Option<usize>) {
+    match limit {
+        Some(lim) if arr.len() >= lim => {}
+        _ => arr.push(entry),
+    }
 }
 
 /// Walk `root` along `segments`, creating intermediate objects where missing,
