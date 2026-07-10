@@ -17,7 +17,7 @@ impl EvalOutputPlugin {
     pub fn new(conf: EvalOutputPluginConfig) -> Result<Self, crate::plugin::PluginError> {
         let expressions = conf
             .expressions
-            .into_iter()
+            .iter()
             .map(CompiledExpression::try_from)
             .collect::<Result<Vec<_>, _>>()?;
 

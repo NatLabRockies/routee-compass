@@ -83,10 +83,10 @@ impl TryFrom<&ExpressionConfig> for CompiledExpression {
     }
 }
 
-impl TryFrom<OnFailureBehavior> for CompiledOnFailure {
+impl TryFrom<&OnFailureBehavior> for CompiledOnFailure {
     type Error = PluginError;
 
-    fn try_from(value: OnFailureBehavior) -> Result<Self, Self::Error> {
+    fn try_from(value: &OnFailureBehavior) -> Result<Self, Self::Error> {
         match value {
             OnFailureBehavior::Interrupt => Ok(CompiledOnFailure::Interrupt),
             OnFailureBehavior::Ignore => Ok(CompiledOnFailure::Ignore),
@@ -96,7 +96,10 @@ impl TryFrom<OnFailureBehavior> for CompiledOnFailure {
                         "invalid on_failure record path '{path}': {e}"
                     ))
                 })?;
-                Ok(CompiledOnFailure::Record { segments, limit })
+                Ok(CompiledOnFailure::Record {
+                    segments,
+                    limit: limit.clone(),
+                })
             }
         }
     }
