@@ -32,6 +32,7 @@ pub enum CompiledOnFailure {
     Record {
         segments: Vec<PathSegment>,
         limit: Option<usize>,
+        as_string: bool,
     },
     Ignore,
 }
@@ -90,7 +91,11 @@ impl TryFrom<&OnFailureBehavior> for CompiledOnFailure {
         match value {
             OnFailureBehavior::Interrupt => Ok(CompiledOnFailure::Interrupt),
             OnFailureBehavior::Ignore => Ok(CompiledOnFailure::Ignore),
-            OnFailureBehavior::Record { path, limit } => {
+            OnFailureBehavior::Record {
+                path,
+                limit,
+                as_string,
+            } => {
                 let segments = ops::parse_path_segments(path).map_err(|e| {
                     crate::plugin::PluginError::BuildFailed(format!(
                         "invalid on_failure record path '{path}': {e}"
@@ -99,6 +104,7 @@ impl TryFrom<&OnFailureBehavior> for CompiledOnFailure {
                 Ok(CompiledOnFailure::Record {
                     segments,
                     limit: *limit,
+                    as_string: *as_string,
                 })
             }
         }

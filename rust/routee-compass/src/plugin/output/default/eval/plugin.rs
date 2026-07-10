@@ -43,23 +43,62 @@ impl OutputPlugin for EvalOutputPlugin {
             crate::app::compass::CompassAppError,
         >,
     ) -> Result<(), crate::plugin::output::OutputPluginError> {
+        let mut recorded_errors = false;
+
         for expr in &self.expressions {
             match ops::eval_and_write(expr, output, &self.on_nan) {
                 Ok(()) => {}
                 Err(e) => match &self.on_failure {
-                    CompiledOnFailure::Interrupt => return Err(e),
                     CompiledOnFailure::Ignore => {}
-                    CompiledOnFailure::Record { segments, limit } => {
+                    CompiledOnFailure::Interrupt => return Err(e),
+                    CompiledOnFailure::Record {
+                        segments, limit, ..
+                    } => {
                         ops::record_error(output, segments, *limit, &expr.expr, &e.to_string())?;
+                        recorded_errors = true;
                     }
                 },
             }
         }
+
+        if recorded_errors {
+            process_error_record_stringify(&self.on_failure, output);
+        }
+
         Ok(())
     }
 
     fn name(&self) -> &str {
         NAME
+    }
+}
+
+/// helper to stringify the array of errors when the user has requested
+/// [CompiledOnFailure::Record] with as_string: true.
+fn process_error_record_stringify(on_failure: &CompiledOnFailure, output: &mut serde_json::Value) {
+    // when as_string is true, we need to convert recorded errors to a JSON String.
+    if let CompiledOnFailure::Record {
+        segments,
+        as_string: true,
+        ..
+    } = on_failure
+    {
+        let mut current_opt = Some(output);
+        for seg in segments {
+            current_opt = match current_opt {
+                Some(val) => match seg {
+                    ops::PathSegment::Key(k) => val.get_mut(k.as_str()),
+                    ops::PathSegment::Index(i) => val.get_mut(*i),
+                },
+                None => None,
+            };
+        }
+
+        if let Some(arr_val) = current_opt {
+            if let Ok(stringified) = serde_json::to_string(arr_val) {
+                *arr_val = serde_json::Value::String(stringified);
+            }
+        }
     }
 }
 
@@ -284,6 +323,7 @@ mod tests {
             OnFailureBehavior::Record {
                 path: "$.eval_errors".to_string(),
                 limit: None,
+                as_string: false,
             },
             Default::default(),
         );
@@ -308,6 +348,7 @@ mod tests {
             OnFailureBehavior::Record {
                 path: "$.eval_errors".to_string(),
                 limit: None,
+                as_string: false,
             },
             Default::default(),
         );
@@ -332,6 +373,7 @@ mod tests {
             OnFailureBehavior::Record {
                 path: "$.eval_errors".to_string(),
                 limit: None,
+                as_string: false,
             },
             Default::default(),
         );
@@ -347,6 +389,35 @@ mod tests {
     }
 
     #[test]
+    fn test_record_as_string() {
+        let plugin = build_plugin(
+            vec![
+                ExpressionConfig::new(&[("x", "$.missing_x")], "x * 2", "$.r1"),
+                ExpressionConfig::new(&[("y", "$.missing_y")], "y + 1", "$.r2"),
+            ],
+            OnFailureBehavior::Record {
+                path: "$.eval_errors".to_string(),
+                limit: None,
+                as_string: true,
+            },
+            Default::default(),
+        );
+        let mut output = json!({});
+        plugin.process(&mut output, &dummy_result()).unwrap();
+
+        let errors_str = output["eval_errors"]
+            .as_str()
+            .expect("should be stringified");
+
+        let parsed_back: serde_json::Value = serde_json::from_str(errors_str).unwrap();
+        let arr = parsed_back
+            .as_array()
+            .expect("string should hold a JSON array");
+        assert_eq!(arr.len(), 2);
+        assert_eq!(arr[0]["expr"], json!("x * 2"));
+    }
+
+    #[test]
     fn test_record_nested_error_path() {
         let plugin = build_plugin(
             vec![ExpressionConfig::new(
@@ -357,6 +428,7 @@ mod tests {
             OnFailureBehavior::Record {
                 path: "$.diagnostics.errors".to_string(),
                 limit: None,
+                as_string: false,
             },
             Default::default(),
         );
@@ -379,6 +451,7 @@ mod tests {
             OnFailureBehavior::Record {
                 path: "$.eval_errors".to_string(),
                 limit: Some(2),
+                as_string: false,
             },
             Default::default(),
         );
@@ -400,6 +473,7 @@ mod tests {
             OnFailureBehavior::Record {
                 path: "$.eval_errors".to_string(),
                 limit: Some(2),
+                as_string: false,
             },
             Default::default(),
         );
@@ -1012,6 +1086,7 @@ mod tests {
             on_failure: OnFailureBehavior::Record {
                 path: "$".to_string(),
                 limit: None,
+                as_string: false,
             },
             on_nan: Default::default(),
         });
@@ -1105,6 +1180,7 @@ mod tests {
             on_failure: OnFailureBehavior::Record {
                 path: "$.diagnostics.errors".to_string(),
                 limit: None,
+                as_string: false,
             },
             on_nan: Default::default(),
         })

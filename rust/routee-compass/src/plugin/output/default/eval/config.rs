@@ -64,6 +64,10 @@ pub enum OnFailureBehavior {
         /// expressions are inter-dependent, limiting to 1 or few errors is usually
         /// sufficient to identify the source of a chain of errors.
         limit: Option<usize>,
+        /// write the list of errors to the output row as a serde_json::Value::String
+        /// instead of as an array. used when writing eval errors to CSV rows.
+        #[serde(default)]
+        as_string: bool,
     },
     /// ignore the error
     Ignore,
