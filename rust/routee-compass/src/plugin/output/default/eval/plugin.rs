@@ -1,7 +1,7 @@
 use crate::plugin::output::{
     default::eval::{
-        ops::{self, CompiledExpression, CompiledOnFailure},
-        NotANumberBehavior,
+        ops::{self, CompiledOnFailure},
+        CompiledExpression, NotANumberBehavior,
     },
     OutputPlugin,
 };
@@ -21,7 +21,7 @@ impl EvalOutputPlugin {
         let expressions = conf
             .expressions
             .into_iter()
-            .map(ops::compile_expression)
+            .map(CompiledExpression::try_from)
             .collect::<Result<Vec<_>, _>>()?;
 
         let on_failure = match conf.on_failure {
