@@ -1,12 +1,9 @@
 use crate::plugin::output::{
-    default::eval::{
-        ops::{self, CompiledOnFailure},
-        CompiledExpression, NotANumberBehavior,
-    },
+    default::eval::{ops, CompiledExpression, CompiledOnFailure, NotANumberBehavior},
     OutputPlugin,
 };
 
-use super::config::{EvalOutputPluginConfig, OnFailureBehavior};
+use super::config::EvalOutputPluginConfig;
 
 pub struct EvalOutputPlugin {
     expressions: Vec<CompiledExpression>,
@@ -24,18 +21,7 @@ impl EvalOutputPlugin {
             .map(CompiledExpression::try_from)
             .collect::<Result<Vec<_>, _>>()?;
 
-        let on_failure = match conf.on_failure {
-            OnFailureBehavior::Interrupt => CompiledOnFailure::Interrupt,
-            OnFailureBehavior::Ignore => CompiledOnFailure::Ignore,
-            OnFailureBehavior::Record { path, limit } => {
-                let segments = ops::parse_path_segments(&path).map_err(|e| {
-                    crate::plugin::PluginError::BuildFailed(format!(
-                        "invalid on_failure record path '{path}': {e}"
-                    ))
-                })?;
-                CompiledOnFailure::Record { segments, limit }
-            }
-        };
+        let on_failure = CompiledOnFailure::try_from(&conf.on_failure)?;
 
         Ok(Self {
             expressions,

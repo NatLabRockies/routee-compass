@@ -3,8 +3,8 @@ use serde_json_path::JsonPath;
 
 use crate::plugin::{
     output::default::eval::{
-        ops::{parse_path_segments, PathSegment},
-        ExpressionConfig,
+        ops::{self, parse_path_segments, PathSegment},
+        ExpressionConfig, OnFailureBehavior,
     },
     PluginError,
 };
@@ -25,10 +25,21 @@ pub struct CompiledExpression {
     pub compiled: fasteval::Instruction,
 }
 
-impl TryFrom<ExpressionConfig> for CompiledExpression {
+/// Compiled form of [`OnFailureBehavior`] — the `Record` variant's path is
+/// pre-parsed once at plugin construction time.
+pub enum CompiledOnFailure {
+    Interrupt,
+    Record {
+        segments: Vec<PathSegment>,
+        limit: Option<usize>,
+    },
+    Ignore,
+}
+
+impl TryFrom<&ExpressionConfig> for CompiledExpression {
     type Error = PluginError;
 
-    fn try_from(conf: ExpressionConfig) -> Result<CompiledExpression, PluginError> {
+    fn try_from(conf: &ExpressionConfig) -> Result<CompiledExpression, PluginError> {
         let inputs = conf
             .inputs
             .into_iter()
@@ -69,5 +80,24 @@ impl TryFrom<ExpressionConfig> for CompiledExpression {
             slab,
             compiled,
         })
+    }
+}
+
+impl TryFrom<OnFailureBehavior> for CompiledOnFailure {
+    type Error = PluginError;
+
+    fn try_from(value: OnFailureBehavior) -> Result<Self, Self::Error> {
+        match value {
+            OnFailureBehavior::Interrupt => Ok(CompiledOnFailure::Interrupt),
+            OnFailureBehavior::Ignore => Ok(CompiledOnFailure::Ignore),
+            OnFailureBehavior::Record { path, limit } => {
+                let segments = ops::parse_path_segments(&path).map_err(|e| {
+                    crate::plugin::PluginError::BuildFailed(format!(
+                        "invalid on_failure record path '{path}': {e}"
+                    ))
+                })?;
+                Ok(CompiledOnFailure::Record { segments, limit })
+            }
+        }
     }
 }

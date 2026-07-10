@@ -1,15 +1,11 @@
 use std::{collections::HashMap, str::FromStr};
 
-use fasteval::{Compiler, Evaler};
+use fasteval::Evaler;
 use itertools::Itertools;
 use serde_json::Value;
-use serde_json_path::JsonPath;
 
 use crate::plugin::output::{
-    default::eval::{
-        compiled_expression::CompiledExpression, config::ExpressionConfig, NotANumberBehavior,
-        Operation,
-    },
+    default::eval::{compiled_config::CompiledExpression, NotANumberBehavior, Operation},
     OutputPluginError,
 };
 
@@ -20,152 +16,15 @@ pub enum PathSegment {
     Index(usize),
 }
 
-// /// One expression with its inputs pre-parsed into [`JsonPath`]s and its output
-// /// path pre-parsed into [`PathSegment`]s so the per-query hot path is as cheap
-// /// as possible.
-// pub struct CompiledExpression {
-//     /// `(variable_name, compiled JSONPath)` pairs for each input binding.
-//     pub inputs: Vec<(String, JsonPath)>,
-//     /// Raw expression string retained for error messages.
-//     pub expr: String,
-//     /// Pre-parsed output path segments.
-//     pub output_segments: Vec<PathSegment>,
-//     /// Memory arena that backs the pre-compiled bytecode.
-//     pub slab: fasteval::Slab,
-//     /// Pre-compiled bytecode produced by `fasteval`'s compiler.
-//     pub compiled: fasteval::Instruction,
-// }
-
-/// Compiled form of [`OnFailureBehavior`] — the `Record` variant's path is
-/// pre-parsed once at plugin construction time.
-pub enum CompiledOnFailure {
-    Interrupt,
-    Record {
-        segments: Vec<PathSegment>,
-        limit: Option<usize>,
-    },
-    Ignore,
-}
-
-// ---------------------------------------------------------------------------
-// Config → CompiledExpression
-// ---------------------------------------------------------------------------
-
-// pub fn compile_expression(
-//     conf: ExpressionConfig,
-// ) -> Result<CompiledExpression, crate::plugin::PluginError> {
-//     let inputs = conf
-//         .inputs
-//         .into_iter()
-//         .map(|(name, path_str)| {
-//             let path = JsonPath::parse(&path_str).map_err(|e| {
-//                 crate::plugin::PluginError::BuildFailed(format!(
-//                     "invalid JSONPath '{path_str}' for input '{name}': {e}"
-//                 ))
-//             })?;
-//             Ok((name, path))
-//         })
-//         .collect::<Result<Vec<_>, crate::plugin::PluginError>>()?;
-
-//     let output_segments = parse_path_segments(&conf.output).map_err(|e| {
-//         crate::plugin::PluginError::BuildFailed(format!(
-//             "invalid output path '{}': {e}",
-//             conf.output
-//         ))
-//     })?;
-
-//     // Parse and compile the fasteval expression once so that eval_and_write can
-//     // skip the parse step on every row.
-//     let mut slab = fasteval::Slab::new();
-//     let parsed = fasteval::Parser::new()
-//         .parse(&conf.expr, &mut slab.ps)
-//         .map_err(|e| {
-//             crate::plugin::PluginError::BuildFailed(format!(
-//                 "failed to parse expression '{}': {e}",
-//                 conf.expr
-//             ))
-//         })?;
-//     let compiled = parsed.from(&slab.ps).compile(&slab.ps, &mut slab.cs);
-
-//     Ok(CompiledExpression {
-//         inputs,
-//         expr: conf.expr,
-//         output_segments,
-//         slab,
-//         compiled,
-//     })
-// }
-
-// ---------------------------------------------------------------------------
-// Path helpers
-// ---------------------------------------------------------------------------
-
-// /// Parse a JSONPath-style string into segments for writing.
-// ///
-// /// Supports dot notation (`$.a.b`) and bracket array indices (`$.a[0].b`).
-// /// The leading `$.` or `$` prefix is stripped before parsing.
-// pub fn parse_path_segments(path: &str) -> Result<Vec<PathSegment>, OutputPluginError> {
-//     let stripped = path
-//         .strip_prefix("$.")
-//         .or_else(|| path.strip_prefix('$'))
-//         .unwrap_or(path);
-
-//     if stripped.is_empty() {
-//         return Err(OutputPluginError::OutputPluginFailed(
-//             "output path must not be empty after '$'".to_string(),
-//         ));
-//     }
-
-//     let mut segments = Vec::new();
-//     let mut current_key = String::new();
-//     let mut chars = stripped.chars().peekable();
-
-//     while let Some(c) = chars.next() {
-//         match c {
-//             '.' => {
-//                 if !current_key.is_empty() {
-//                     segments.push(PathSegment::Key(std::mem::take(&mut current_key)));
-//                 }
-//             }
-//             '[' => {
-//                 if !current_key.is_empty() {
-//                     segments.push(PathSegment::Key(std::mem::take(&mut current_key)));
-//                 }
-//                 let mut bracket_content = String::new();
-//                 for ic in chars.by_ref() {
-//                     if ic == ']' {
-//                         break;
-//                     }
-//                     bracket_content.push(ic);
-//                 }
-//                 // Quoted string key: ['foo'] or ["foo"]
-//                 let segment = if (bracket_content.starts_with('\'')
-//                     && bracket_content.ends_with('\''))
-//                     || (bracket_content.starts_with('"') && bracket_content.ends_with('"'))
-//                 {
-//                     let key = bracket_content[1..bracket_content.len() - 1].to_string();
-//                     PathSegment::Key(key)
-//                 } else {
-//                     // Numeric array index: [0]
-//                     let idx: usize = bracket_content.parse().map_err(|_| {
-//                         OutputPluginError::OutputPluginFailed(format!(
-//                             "invalid bracket segment '[{bracket_content}]' in path '{path}': \
-//                             expected an integer index or a quoted string key"
-//                         ))
-//                     })?;
-//                     PathSegment::Index(idx)
-//                 };
-//                 segments.push(segment);
-//             }
-//             other => current_key.push(other),
-//         }
-//     }
-
-//     if !current_key.is_empty() {
-//         segments.push(PathSegment::Key(current_key));
-//     }
-
-//     Ok(segments)
+// /// Compiled form of [`OnFailureBehavior`] — the `Record` variant's path is
+// /// pre-parsed once at plugin construction time.
+// pub enum CompiledOnFailure {
+//     Interrupt,
+//     Record {
+//         segments: Vec<PathSegment>,
+//         limit: Option<usize>,
+//     },
+//     Ignore,
 // }
 
 /// Append an error entry `{ "expr": ..., "error": ... }` to the array located
