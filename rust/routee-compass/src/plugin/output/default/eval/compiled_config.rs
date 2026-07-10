@@ -44,7 +44,7 @@ impl TryFrom<&ExpressionConfig> for CompiledExpression {
             .inputs
             .iter()
             .map(|(name, path_str)| {
-                let path = JsonPath::parse(&path_str).map_err(|e| {
+                let path = JsonPath::parse(path_str).map_err(|e| {
                     crate::plugin::PluginError::BuildFailed(format!(
                         "invalid JSONPath '{path_str}' for input '{name}': {e}"
                     ))
@@ -91,14 +91,14 @@ impl TryFrom<&OnFailureBehavior> for CompiledOnFailure {
             OnFailureBehavior::Interrupt => Ok(CompiledOnFailure::Interrupt),
             OnFailureBehavior::Ignore => Ok(CompiledOnFailure::Ignore),
             OnFailureBehavior::Record { path, limit } => {
-                let segments = ops::parse_path_segments(&path).map_err(|e| {
+                let segments = ops::parse_path_segments(path).map_err(|e| {
                     crate::plugin::PluginError::BuildFailed(format!(
                         "invalid on_failure record path '{path}': {e}"
                     ))
                 })?;
                 Ok(CompiledOnFailure::Record {
                     segments,
-                    limit: limit.clone(),
+                    limit: *limit,
                 })
             }
         }
