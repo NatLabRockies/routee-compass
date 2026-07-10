@@ -523,4 +523,37 @@ mod tests {
         set_path(&mut root, &segs, json!(99.0)).unwrap();
         assert_eq!(root["arr"][1], json!(99.0));
     }
+
+    // -----------------------------------------------------------------------
+    // record_error
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_record_error_with_limit() {
+        let mut root = json!({});
+        let segs = parse_path_segments("$.errors").unwrap();
+
+        // Record up to 2 errors
+        record_error(&mut root, &segs, Some(2), "expr1", "err1").unwrap();
+        record_error(&mut root, &segs, Some(2), "expr2", "err2").unwrap();
+        record_error(&mut root, &segs, Some(2), "expr3", "err3").unwrap(); // Should be dropped
+
+        let errors = root["errors"].as_array().unwrap();
+        assert_eq!(errors.len(), 2);
+        assert_eq!(errors[0]["expr"], json!("expr1"));
+        assert_eq!(errors[1]["expr"], json!("expr2"));
+    }
+
+    #[test]
+    fn test_record_error_no_limit() {
+        let mut root = json!({});
+        let segs = parse_path_segments("$.errors").unwrap();
+
+        record_error(&mut root, &segs, None, "expr1", "err1").unwrap();
+        record_error(&mut root, &segs, None, "expr2", "err2").unwrap();
+        record_error(&mut root, &segs, None, "expr3", "err3").unwrap();
+
+        let errors = root["errors"].as_array().unwrap();
+        assert_eq!(errors.len(), 3);
+    }
 }
