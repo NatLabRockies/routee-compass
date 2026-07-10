@@ -42,14 +42,14 @@ impl TryFrom<&ExpressionConfig> for CompiledExpression {
     fn try_from(conf: &ExpressionConfig) -> Result<CompiledExpression, PluginError> {
         let inputs = conf
             .inputs
-            .into_iter()
+            .iter()
             .map(|(name, path_str)| {
                 let path = JsonPath::parse(&path_str).map_err(|e| {
                     crate::plugin::PluginError::BuildFailed(format!(
                         "invalid JSONPath '{path_str}' for input '{name}': {e}"
                     ))
                 })?;
-                Ok((name, path))
+                Ok((name.clone(), path))
             })
             .collect::<Result<Vec<_>, crate::plugin::PluginError>>()?;
 
