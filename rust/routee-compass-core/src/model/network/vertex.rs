@@ -79,7 +79,7 @@ impl<'de> de::Deserialize<'de> for Vertex {
                                 let id: usize = value.parse().map_err(|e| {
                                     de::Error::custom(format!(
                                         "unable to parse vertex_id '{}': {}",
-                                        &value, e
+                                        value, e
                                     ))
                                 })?;
                                 vertex_id_result = Some(id);
@@ -88,7 +88,7 @@ impl<'de> de::Deserialize<'de> for Vertex {
                                 let x_coord: f32 = value.parse().map_err(|e| {
                                     de::Error::custom(format!(
                                         "unable to parse x '{}': {}",
-                                        &value, e
+                                        value, e
                                     ))
                                 })?;
                                 x_result = Some(x_coord);
@@ -97,7 +97,7 @@ impl<'de> de::Deserialize<'de> for Vertex {
                                 let y_coord: f32 = value.parse().map_err(|e| {
                                     de::Error::custom(format!(
                                         "unable to parse y '{}': {}",
-                                        &value, e
+                                        value, e
                                     ))
                                 })?;
                                 y_result = Some(y_coord);
