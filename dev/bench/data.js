@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783637571220,
+  "lastUpdate": 1783973931486,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4079,6 +4079,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2994200,
             "range": "± 113458",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4e428611de817b3c31fb3dae1bc9f0f6a54c1d76",
+          "message": "Merge pull request #545 from NatLabRockies/dependabot/cargo/rust/itertools-0.15.0\n\nUpdate itertools requirement from 0.14.0 to 0.15.0 in /rust",
+          "timestamp": "2026-07-13T13:55:09-06:00",
+          "tree_id": "b28ce7f8edd3c222489575595f24f2b7ca241da1",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/4e428611de817b3c31fb3dae1bc9f0f6a54c1d76"
+        },
+        "date": 1783973931059,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 3029205,
+            "range": "± 108253",
             "unit": "ns/iter"
           }
         ]
