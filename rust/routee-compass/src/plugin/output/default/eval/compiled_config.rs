@@ -101,6 +101,14 @@ impl TryFrom<&OnFailureBehavior> for CompiledOnFailure {
                         "invalid on_failure record path '{path}': {e}"
                     ))
                 })?;
+                // record with limit 0 is the same as ignore
+                if let Some(lim) = limit {
+                    if *lim == 0 {
+                        let msg = "user chose `record` on failure behavior with invalid limit of 0 errors"
+                            .to_string();
+                        return Err(crate::plugin::PluginError::BuildFailed(msg));
+                    }
+                }
                 Ok(CompiledOnFailure::Record {
                     segments,
                     limit: *limit,
