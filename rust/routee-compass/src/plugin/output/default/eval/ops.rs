@@ -19,13 +19,15 @@ pub enum PathSegment {
 /// Append an error entry `{ "expr": ..., "error": ... }` to the array located
 /// at `segments` within `root`. If the target location does not yet hold an
 /// array it is replaced with a single-element array.
+///
+/// If the error we wish to record exceeds the limit, it is returned.
 pub fn record_error(
     root: &mut serde_json::Value,
     segments: &[PathSegment],
     limit: Option<usize>,
     expr_str: &str,
     message: &str,
-) -> Result<(), OutputPluginError> {
+) -> Result<bool, OutputPluginError> {
     let entry = serde_json::json!({ "expr": expr_str, "error": message });
 
     // Navigate to the parent, then handle the final segment manually so we can
@@ -53,7 +55,7 @@ pub fn record_error(
                 .entry(k.clone())
                 .or_insert_with(|| serde_json::Value::Array(vec![]));
             if let Some(arr) = slot.as_array_mut() {
-                insert_within_limit(arr, entry, limit);
+                return Ok(insert_within_limit(arr, entry, limit));
             } else {
                 *slot = serde_json::Value::Array(vec![entry]);
             }
@@ -66,7 +68,7 @@ pub fn record_error(
             })?;
             if *i < arr.len() {
                 if let Some(slot_arr) = arr[*i].as_array_mut() {
-                    insert_within_limit(slot_arr, entry, limit);
+                    return Ok(insert_within_limit(slot_arr, entry, limit));
                 } else {
                     arr[*i] = serde_json::Value::Array(vec![entry]);
                 }
@@ -78,15 +80,18 @@ pub fn record_error(
         }
     }
 
-    Ok(())
+    Ok(true)
 }
 
 /// helper function to insert a value into a vector of values if it is within an
 /// optional size limit argument.
-fn insert_within_limit(arr: &mut Vec<Value>, entry: Value, limit: Option<usize>) {
+fn insert_within_limit(arr: &mut Vec<Value>, entry: Value, limit: Option<usize>) -> bool {
     match limit {
-        Some(lim) if arr.len() >= lim => {}
-        _ => arr.push(entry),
+        Some(lim) if arr.len() >= lim => return false,
+        _ => {
+            arr.push(entry);
+            true
+        }
     }
 }
 

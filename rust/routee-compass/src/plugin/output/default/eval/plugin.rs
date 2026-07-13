@@ -44,6 +44,7 @@ impl OutputPlugin for EvalOutputPlugin {
         >,
     ) -> Result<(), crate::plugin::output::OutputPluginError> {
         let mut recorded_errors = false;
+        let mut limited_errors = 0;
 
         for expr in &self.expressions {
             match ops::eval_and_write(expr, output, &self.on_nan) {
@@ -54,10 +55,27 @@ impl OutputPlugin for EvalOutputPlugin {
                     CompiledOnFailure::Record {
                         segments, limit, ..
                     } => {
-                        ops::record_error(output, segments, *limit, &expr.expr, &e.to_string())?;
+                        let not_limited = ops::record_error(
+                            output,
+                            segments,
+                            *limit,
+                            &expr.expr,
+                            &e.to_string(),
+                        )?;
                         recorded_errors = true;
+                        if !not_limited {
+                            limited_errors += 1;
+                        }
                     }
                 },
+            }
+        }
+
+        // append ellipses and count if we are limiting error output
+        if limited_errors > 0 {
+            if let CompiledOnFailure::Record { segments, .. } = &self.on_failure {
+                let trunc_msg = format!("... and {limited_errors} more");
+                ops::record_error(output, segments, None, "limited", &trunc_msg)?;
             }
         }
 
