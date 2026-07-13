@@ -16,17 +16,6 @@ pub enum PathSegment {
     Index(usize),
 }
 
-// /// Compiled form of [`OnFailureBehavior`] — the `Record` variant's path is
-// /// pre-parsed once at plugin construction time.
-// pub enum CompiledOnFailure {
-//     Interrupt,
-//     Record {
-//         segments: Vec<PathSegment>,
-//         limit: Option<usize>,
-//     },
-//     Ignore,
-// }
-
 /// Append an error entry `{ "expr": ..., "error": ... }` to the array located
 /// at `segments` within `root`. If the target location does not yet hold an
 /// array it is replaced with a single-element array.
