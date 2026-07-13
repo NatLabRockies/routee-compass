@@ -482,6 +482,7 @@ mod tests {
 
     #[test]
     fn test_record_limit_exceeded() {
+        let limit = 2;
         let plugin = build_plugin(
             vec![
                 ExpressionConfig::new(&[("x", "$.missing_x")], "x", "$.r1"),
@@ -490,7 +491,7 @@ mod tests {
             ],
             OnFailureBehavior::Record {
                 path: "$.eval_errors".to_string(),
-                limit: Some(2),
+                limit: Some(limit),
                 as_string: false,
             },
             Default::default(),
@@ -499,7 +500,9 @@ mod tests {
         plugin.process(&mut output, &dummy_result()).unwrap();
 
         let errors = output["eval_errors"].as_array().expect("array");
-        assert_eq!(errors.len(), 2);
+        let count_ellipses = 1;
+        let expected_count = limit + count_ellipses;
+        assert_eq!(errors.len(), expected_count);
         assert_eq!(errors[0]["expr"], json!("x"));
         assert_eq!(errors[1]["expr"], json!("y"));
     }
