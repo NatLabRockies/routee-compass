@@ -87,7 +87,7 @@ pub fn record_error(
 /// optional size limit argument.
 fn insert_within_limit(arr: &mut Vec<Value>, entry: Value, limit: Option<usize>) -> bool {
     match limit {
-        Some(lim) if arr.len() >= lim => return false,
+        Some(lim) if arr.len() >= lim => false,
         _ => {
             arr.push(entry);
             true
