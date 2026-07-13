@@ -27,9 +27,9 @@ use routee_compass_core::{
     model::{
         constraint::{
             default::{
+                categorical::categorical_builder::CategoricalModelBuilder,
                 combined::combined_builder::CombinedConstraintModelBuilder,
                 no_restriction_builder::NoRestrictionBuilder,
-                road_class::road_class_builder::RoadClassBuilder,
                 turn_restrictions::turn_restriction_builder::TurnRestrictionBuilder,
                 vehicle_restrictions::VehicleRestrictionBuilder,
             },
@@ -81,7 +81,7 @@ inventory::submit! {
         builder.add_traversal_model("turn_delay".to_string(), Rc::new(TurnDelayTraversalModelBuilder {}));
         builder.add_traversal_model("custom".to_string(), Rc::new(CustomTraversalBuilder {}));
         builder.add_constraint_model("no_restriction".to_string(), Rc::new(NoRestrictionBuilder {}));
-        builder.add_constraint_model("road_class".to_string(), Rc::new(RoadClassBuilder {}));
+        builder.add_constraint_model("categorical".to_string(), Rc::new(CategoricalModelBuilder {}));
         builder.add_constraint_model("turn_restriction".to_string(), Rc::new(TurnRestrictionBuilder {}));
         builder.add_constraint_model("vehicle_restriction".to_string(), Rc::new(VehicleRestrictionBuilder {}));
         builder.add_label_model("vertex".to_string(), Rc::new(VertexLabelModelBuilder));
