@@ -7,4 +7,5 @@ pub mod grade;
 pub mod speed;
 pub mod temperature;
 pub mod time;
+pub mod trip_history;
 pub mod turn_delays;
