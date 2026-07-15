@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783973931486,
+  "lastUpdate": 1784145482644,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4109,6 +4109,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 3029205,
             "range": "± 108253",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nreinicke@users.noreply.github.com",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "70702fd171d7f28c57bc09115d3db8338a1fe0a8",
+          "message": "Update hpc build (#548)\n\n* Simplify HPC build\n\n* Fix clippy warnings, update CLI to match pixi checks\n\n* pin rust between CI and pixi; clippy fixes for newer rust\n\n* update the build_ort.sh script; cache build outputs\n\n---------\n\nCo-authored-by: Nick Reinicke <Nicholas.Reinicke@nrel.gov>",
+          "timestamp": "2026-07-15T13:06:37-06:00",
+          "tree_id": "748848ed05cfb54d17e4da0fa20635dc93fed667",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/70702fd171d7f28c57bc09115d3db8338a1fe0a8"
+        },
+        "date": 1784145481645,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2992309,
+            "range": "± 195378",
             "unit": "ns/iter"
           }
         ]
