@@ -10,10 +10,6 @@ repository = "https://github.com/NREL/routee-compass"
 documentation = "https://docs.rs/routee-compass"
 exclude = ["test", "**/.DS_Store", "target/"]
 
-[features]
-default = ["ort/download-binaries", "ort/tls-native"]
-ort-static = []
-
 [dependencies]
 bincode = { workspace = true }
 config = { workspace = true }

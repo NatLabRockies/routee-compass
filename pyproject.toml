@@ -81,7 +81,7 @@ channels = ["conda-forge"]
 platforms = ["osx-arm64", "linux-64"]
 
 [tool.pixi.dependencies]
-rust = ">=1.90.0,<1.91"
+rust = ">=1.96.1,<1.97"
 
 [tool.pixi.feature.py310]
 dependencies = { python = "3.10.*" }
@@ -101,6 +101,8 @@ rasterio = ">=1.3.0,<2.0"
 [tool.pixi.feature.hpc.dependencies]
 git = "*"
 cmake = ">=3.28,<4"
+uv = "*"
+patchelf = "*"
 
 [tool.pixi.feature.hpc.activation.env]
 ONNXRUNTIME_DIR = "$PIXI_PROJECT_ROOT/build/onnxruntime"
@@ -108,29 +110,29 @@ ONNXRUNTIME_TAG = "v1.20.1"
 ORT_BUILD_CONFIG = "RelWithDebInfo"
 ORT_LIB_PATH = "$PIXI_PROJECT_ROOT/build/onnxruntime/build/Linux/RelWithDebInfo"
 
-[tool.pixi.pypi-dependencies]
+[tool.pixi.feature.package.pypi-dependencies]
 nrel-routee-compass = { path = ".", editable = true }
 
 [tool.pixi.environments]
-default    = { features = ["dev", "osm"], solve-group = "default" }
-minimal    = { features = [], solve-group = "default" }
-dev        = { features = ["dev"], solve-group = "default" }
-osm        = { features = ["osm"], solve-group = "default" }
-hpc        = { features = ["dev", "hpc"], solve-group = "default" }
-test-py310 = { features = ["py310", "dev", "osm"], solve-group = "py310" }
-test-py311 = { features = ["py311", "dev", "osm"], solve-group = "py311" }
-test-py312 = { features = ["py312", "dev", "osm"], solve-group = "py312" }
-test-py313 = { features = ["py313", "dev", "osm"], solve-group = "py313" }
+default    = { features = ["dev", "osm", "package"], solve-group = "default" }
+minimal    = { features = ["package"], solve-group = "default" }
+dev        = { features = ["dev", "package"], solve-group = "default" }
+osm        = { features = ["osm", "package"], solve-group = "default" }
+hpc        = { features = ["dev", "osm", "hpc"], solve-group = "default" }
+test-py310 = { features = ["py310", "dev", "osm", "package"], solve-group = "py310" }
+test-py311 = { features = ["py311", "dev", "osm", "package"], solve-group = "py311" }
+test-py312 = { features = ["py312", "dev", "osm", "package"], solve-group = "py312" }
+test-py313 = { features = ["py313", "dev", "osm", "package"], solve-group = "py313" }
 
 [tool.pixi.tasks]
 build_py = "maturin develop --uv"
 build_rust = { cmd = "cargo build --workspace --release", cwd = "rust" }
 
 [tool.pixi.feature.hpc.tasks]
-build_hpc_ort = "bash scripts/hpc/build_ort.sh"
-build_hpc_rust = { cmd = "bash scripts/hpc/build_rust.sh", depends-on = ["build_hpc_ort"] }
-build_hpc_wheel = { cmd = "bash scripts/hpc/build_wheel.sh", depends-on = ["build_hpc_ort"] }
-build_hpc = { depends-on = ["build_hpc_rust", "build_hpc_wheel"] }
+build_hpc_ort = { cmd = "bash scripts/hpc/build_ort.sh", inputs = ["scripts/hpc/build_ort.sh", "pyproject.toml"], outputs = ["build/onnxruntime/build/Linux/RelWithDebInfo/libonnxruntime_common.a"] }
+build_hpc = { cmd = "maturin develop --uv --release", depends-on = ["build_hpc_ort"] }
+build_hpc_wheel = { cmd = "maturin build --release", depends-on = ["build_hpc_ort"] }
+check_hpc = { cmd = "python -c 'import nrel.routee.compass.routee_compass_py; print(\"ok\")'", depends-on = ["build_hpc"] }
 
 [tool.pixi.feature.dev.tasks]
 fmt_fix = "ruff format"

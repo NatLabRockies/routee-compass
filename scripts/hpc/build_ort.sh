@@ -45,6 +45,33 @@ if [[ -n "${SKIP_ORT_BUILD:-}" ]]; then
   exit 0
 fi
 
+# ORT pins eigen in cmake/deps.txt as a gitlab.com archive download verified by
+# a SHA1 of the archive bytes. GitLab regenerates those archives over time (same
+# tree, different bytes), so the pinned hash rots and fresh builds fail the
+# download. Instead of chasing hashes, fetch the pinned eigen commit over git --
+# commits are content-addressed and can't drift -- and hand the checkout to
+# cmake via FETCHCONTENT_SOURCE_DIR_EIGEN, which makes FetchContent use the
+# local source dir and skip the archive download (and its hash check) entirely.
+EIGEN_COMMIT="$(sed -n 's|^eigen;https://gitlab\.com/libeigen/eigen/-/archive/\([0-9a-f]\{40\}\)/.*|\1|p' \
+  "${ONNXRUNTIME_DIR}/cmake/deps.txt")"
+if [[ -z "${EIGEN_COMMIT}" ]]; then
+  echo "error: could not parse the eigen commit from ${ONNXRUNTIME_DIR}/cmake/deps.txt" >&2
+  echo "hint: the eigen line's format changed (ORT tag bump?); update the eigen" >&2
+  echo "      pre-clone logic in scripts/hpc/build_ort.sh to match." >&2
+  exit 1
+fi
+EIGEN_SRC_DIR="$(dirname "${ONNXRUNTIME_DIR}")/eigen-${EIGEN_COMMIT}"
+if [[ "$(git -C "${EIGEN_SRC_DIR}" rev-parse HEAD 2>/dev/null)" == "${EIGEN_COMMIT}" ]]; then
+  echo "==> reusing eigen checkout at ${EIGEN_SRC_DIR}"
+else
+  echo "==> fetching eigen ${EIGEN_COMMIT} into ${EIGEN_SRC_DIR}"
+  rm -rf "${EIGEN_SRC_DIR}"
+  git init -q "${EIGEN_SRC_DIR}"
+  git -C "${EIGEN_SRC_DIR}" remote add origin https://gitlab.com/libeigen/eigen.git
+  git -C "${EIGEN_SRC_DIR}" fetch -q --depth 1 origin "${EIGEN_COMMIT}"
+  git -C "${EIGEN_SRC_DIR}" checkout -q --detach FETCH_HEAD
+fi
+
 echo "==> building onnxruntime (${ORT_BUILD_CONFIG})"
 ( cd "${ONNXRUNTIME_DIR}" && \
   ./build.sh \
@@ -52,6 +79,7 @@ echo "==> building onnxruntime (${ORT_BUILD_CONFIG})"
     --parallel \
     --compile_no_warning_as_error \
     --skip_submodule_sync \
-    --skip_tests )
+    --skip_tests \
+    --cmake_extra_defines "FETCHCONTENT_SOURCE_DIR_EIGEN=${EIGEN_SRC_DIR}" )
 
 echo "==> ORT static libs at ${ORT_LIB_DIR}"
