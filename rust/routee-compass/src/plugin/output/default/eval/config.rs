@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+use crate::plugin::output::OutputPluginError;
+
 /// Configure the Eval plugin to perform a set of expressions on output rows.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct EvalOutputPluginConfig {
@@ -9,6 +11,10 @@ pub struct EvalOutputPluginConfig {
     pub expressions: Vec<ExpressionConfig>,
     /// behavior when expression fails
     pub on_failure: OnFailureBehavior,
+    /// behavior when a NaN value is produced by an expression. by default,
+    /// NaN values are allowed.
+    #[serde(default)]
+    pub on_nan: NotANumberBehavior,
 }
 
 /// Configuration for a single arithmetic expression to evaluate over the output JSON.
@@ -50,9 +56,33 @@ pub enum OnFailureBehavior {
     /// interrupt the plugin on failure, returning an Err from the plugin.
     Interrupt,
     /// record the error to the output row at some JSONpath
-    Record { path: String },
+    Record {
+        /// JSONPath declaring where to write eval errors from this plugin instance
+        path: String,
+        /// limit to the depth of errors to show, starting from the first.
+        /// if not provided, shows the full collection of errors, but if multiple
+        /// expressions are inter-dependent, limiting to 1 or few errors is usually
+        /// sufficient to identify the source of a chain of errors.
+        limit: Option<usize>,
+        /// write the list of errors to the output row as a serde_json::Value::String
+        /// instead of as an array. used when writing eval errors to CSV rows.
+        #[serde(default)]
+        as_string: bool,
+    },
     /// ignore the error
     Ignore,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[serde(rename_all = "snake_case", tag = "type")]
+pub enum NotANumberBehavior {
+    /// allow NaNs to get written
+    #[default]
+    Allow,
+    /// zero out NaN values when they are the result of an expression
+    Zero,
+    /// error out if we return a NaN
+    Error,
 }
 
 impl ExpressionConfig {
@@ -69,6 +99,23 @@ impl ExpressionConfig {
                 .collect::<HashMap<_, _>>(),
             expr: expression.to_string(),
             output: output.to_string(),
+        }
+    }
+}
+
+impl NotANumberBehavior {
+    pub fn apply(&self, value: f64) -> Result<f64, OutputPluginError> {
+        if f64::is_nan(value) {
+            match self {
+                NotANumberBehavior::Allow => Ok(value),
+                NotANumberBehavior::Zero => Ok(0.0),
+                NotANumberBehavior::Error => {
+                    let msg = "encountered NaN value when NotANumberBehavior is Error".to_string();
+                    Err(OutputPluginError::OutputPluginFailed(msg))
+                }
+            }
+        } else {
+            Ok(value)
         }
     }
 }

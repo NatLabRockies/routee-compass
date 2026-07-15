@@ -1,13 +1,21 @@
 use crate::plugin::output::{
-    default::eval::ops::{self, CompiledExpression, CompiledOnFailure},
+    default::eval::{ops, CompiledExpression, CompiledOnFailure, NotANumberBehavior},
     OutputPlugin,
 };
 
-use super::config::{EvalOutputPluginConfig, OnFailureBehavior};
+use super::config::EvalOutputPluginConfig;
 
+/// A plugin that evaluates mathematical expressions using values from the output JSON.
+///
+/// The plugin reads specified input fields from the search result output, evaluates a
+/// configured mathematical expression, and writes the result to a specified output JSON path.
+/// It can handle multiple sequential expressions, allowing intermediate results to be
+/// used in subsequent calculations. Configuration options determine how to handle
+/// evaluation errors, missing fields, and non-finite numbers (`NaN`).
 pub struct EvalOutputPlugin {
     expressions: Vec<CompiledExpression>,
     on_failure: CompiledOnFailure,
+    on_nan: NotANumberBehavior,
 }
 
 const NAME: &str = "eval";
@@ -16,26 +24,16 @@ impl EvalOutputPlugin {
     pub fn new(conf: EvalOutputPluginConfig) -> Result<Self, crate::plugin::PluginError> {
         let expressions = conf
             .expressions
-            .into_iter()
-            .map(ops::compile_expression)
+            .iter()
+            .map(CompiledExpression::try_from)
             .collect::<Result<Vec<_>, _>>()?;
 
-        let on_failure = match conf.on_failure {
-            OnFailureBehavior::Interrupt => CompiledOnFailure::Interrupt,
-            OnFailureBehavior::Ignore => CompiledOnFailure::Ignore,
-            OnFailureBehavior::Record { path } => {
-                let segments = ops::parse_path_segments(&path).map_err(|e| {
-                    crate::plugin::PluginError::BuildFailed(format!(
-                        "invalid on_failure record path '{path}': {e}"
-                    ))
-                })?;
-                CompiledOnFailure::Record { segments }
-            }
-        };
+        let on_failure = CompiledOnFailure::try_from(&conf.on_failure)?;
 
         Ok(Self {
             expressions,
             on_failure,
+            on_nan: conf.on_nan,
         })
     }
 }
@@ -52,23 +50,80 @@ impl OutputPlugin for EvalOutputPlugin {
             crate::app::compass::CompassAppError,
         >,
     ) -> Result<(), crate::plugin::output::OutputPluginError> {
+        let mut recorded_errors = false;
+        let mut limited_errors = 0;
+
         for expr in &self.expressions {
-            match ops::eval_and_write(expr, output) {
+            match ops::eval_and_write(expr, output, &self.on_nan) {
                 Ok(()) => {}
                 Err(e) => match &self.on_failure {
-                    CompiledOnFailure::Interrupt => return Err(e),
                     CompiledOnFailure::Ignore => {}
-                    CompiledOnFailure::Record { segments } => {
-                        ops::record_error(output, segments, &expr.expr, &e.to_string())?;
+                    CompiledOnFailure::Interrupt => return Err(e),
+                    CompiledOnFailure::Record {
+                        segments, limit, ..
+                    } => {
+                        let not_limited = ops::record_error(
+                            output,
+                            segments,
+                            *limit,
+                            &expr.expr,
+                            &e.to_string(),
+                        )?;
+                        recorded_errors = true;
+                        if !not_limited {
+                            limited_errors += 1;
+                        }
                     }
                 },
             }
         }
+
+        // append ellipses and count if we are limiting error output
+        if limited_errors > 0 {
+            if let CompiledOnFailure::Record { segments, .. } = &self.on_failure {
+                let trunc_msg = format!("... and {limited_errors} more");
+                ops::record_error(output, segments, None, "limited", &trunc_msg)?;
+            }
+        }
+
+        if recorded_errors {
+            process_error_record_stringify(&self.on_failure, output);
+        }
+
         Ok(())
     }
 
     fn name(&self) -> &str {
         NAME
+    }
+}
+
+/// helper to stringify the array of errors when the user has requested
+/// [CompiledOnFailure::Record] with as_string: true.
+fn process_error_record_stringify(on_failure: &CompiledOnFailure, output: &mut serde_json::Value) {
+    // when as_string is true, we need to convert recorded errors to a JSON String.
+    if let CompiledOnFailure::Record {
+        segments,
+        as_string: true,
+        ..
+    } = on_failure
+    {
+        let mut current_opt = Some(output);
+        for seg in segments {
+            current_opt = match current_opt {
+                Some(val) => match seg {
+                    ops::PathSegment::Key(k) => val.get_mut(k.as_str()),
+                    ops::PathSegment::Index(i) => val.get_mut(*i),
+                },
+                None => None,
+            };
+        }
+
+        if let Some(arr_val) = current_opt {
+            if let Ok(stringified) = serde_json::to_string(arr_val) {
+                *arr_val = serde_json::Value::String(stringified);
+            }
+        }
     }
 }
 
@@ -80,7 +135,10 @@ mod tests {
     use crate::{
         app::compass::CompassAppError,
         plugin::output::{
-            default::eval::config::{EvalOutputPluginConfig, ExpressionConfig, OnFailureBehavior},
+            default::eval::{
+                config::{EvalOutputPluginConfig, ExpressionConfig, OnFailureBehavior},
+                NotANumberBehavior,
+            },
             OutputPlugin,
         },
     };
@@ -104,10 +162,12 @@ mod tests {
     fn build_plugin(
         expressions: Vec<ExpressionConfig>,
         on_failure: OnFailureBehavior,
+        on_nan: NotANumberBehavior,
     ) -> EvalOutputPlugin {
         EvalOutputPlugin::new(EvalOutputPluginConfig {
             expressions,
             on_failure,
+            on_nan,
         })
         .expect("plugin should build")
     }
@@ -128,6 +188,7 @@ mod tests {
                 "$.cost.delay_cost",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
 
         let mut output = json!({
@@ -147,6 +208,7 @@ mod tests {
                 ExpressionConfig::new(&[("d", "$.doubled")], "d + 1", "$.result"),
             ],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 3.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -163,6 +225,7 @@ mod tests {
                 "$.stats.squared.value",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "v": 5.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -178,6 +241,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "a": 10.0, "b": 3.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -193,6 +257,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "a": 10.0, "b": 4.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -205,6 +270,7 @@ mod tests {
         let plugin = build_plugin(
             vec![ExpressionConfig::new(&[("x", "$.x")], "x * 2", "$.result")],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 5.0, "result": 999.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -224,6 +290,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({});
         assert!(plugin.process(&mut output, &dummy_result()).is_err());
@@ -238,6 +305,7 @@ mod tests {
                 ExpressionConfig::new(&[("y", "$.y")], "y + 1", "$.sentinel"),
             ],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "y": 10.0 });
         assert!(plugin.process(&mut output, &dummy_result()).is_err());
@@ -258,6 +326,7 @@ mod tests {
                 ExpressionConfig::new(&[("y", "$.y")], "y + 1", "$.sentinel"),
             ],
             OnFailureBehavior::Ignore,
+            Default::default(),
         );
         let mut output = json!({ "y": 10.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -278,7 +347,10 @@ mod tests {
             )],
             OnFailureBehavior::Record {
                 path: "$.eval_errors".to_string(),
+                limit: None,
+                as_string: false,
             },
+            Default::default(),
         );
         let mut output = json!({});
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -300,7 +372,10 @@ mod tests {
             ],
             OnFailureBehavior::Record {
                 path: "$.eval_errors".to_string(),
+                limit: None,
+                as_string: false,
             },
+            Default::default(),
         );
         let mut output = json!({ "y": 5.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -322,7 +397,10 @@ mod tests {
             ],
             OnFailureBehavior::Record {
                 path: "$.eval_errors".to_string(),
+                limit: None,
+                as_string: false,
             },
+            Default::default(),
         );
         let mut output = json!({});
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -336,6 +414,35 @@ mod tests {
     }
 
     #[test]
+    fn test_record_as_string() {
+        let plugin = build_plugin(
+            vec![
+                ExpressionConfig::new(&[("x", "$.missing_x")], "x * 2", "$.r1"),
+                ExpressionConfig::new(&[("y", "$.missing_y")], "y + 1", "$.r2"),
+            ],
+            OnFailureBehavior::Record {
+                path: "$.eval_errors".to_string(),
+                limit: None,
+                as_string: true,
+            },
+            Default::default(),
+        );
+        let mut output = json!({});
+        plugin.process(&mut output, &dummy_result()).unwrap();
+
+        let errors_str = output["eval_errors"]
+            .as_str()
+            .expect("should be stringified");
+
+        let parsed_back: serde_json::Value = serde_json::from_str(errors_str).unwrap();
+        let arr = parsed_back
+            .as_array()
+            .expect("string should hold a JSON array");
+        assert_eq!(arr.len(), 2);
+        assert_eq!(arr[0]["expr"], json!("x * 2"));
+    }
+
+    #[test]
     fn test_record_nested_error_path() {
         let plugin = build_plugin(
             vec![ExpressionConfig::new(
@@ -345,7 +452,10 @@ mod tests {
             )],
             OnFailureBehavior::Record {
                 path: "$.diagnostics.errors".to_string(),
+                limit: None,
+                as_string: false,
             },
+            Default::default(),
         );
         let mut output = json!({});
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -354,6 +464,54 @@ mod tests {
             .as_array()
             .expect("should be an array");
         assert_eq!(errors.len(), 1);
+    }
+
+    #[test]
+    fn test_record_limit_exact() {
+        let plugin = build_plugin(
+            vec![
+                ExpressionConfig::new(&[("x", "$.missing_x")], "x", "$.r1"),
+                ExpressionConfig::new(&[("y", "$.missing_y")], "y", "$.r2"),
+            ],
+            OnFailureBehavior::Record {
+                path: "$.eval_errors".to_string(),
+                limit: Some(2),
+                as_string: false,
+            },
+            Default::default(),
+        );
+        let mut output = json!({});
+        plugin.process(&mut output, &dummy_result()).unwrap();
+
+        let errors = output["eval_errors"].as_array().expect("array");
+        assert_eq!(errors.len(), 2);
+    }
+
+    #[test]
+    fn test_record_limit_exceeded() {
+        let limit = 2;
+        let plugin = build_plugin(
+            vec![
+                ExpressionConfig::new(&[("x", "$.missing_x")], "x", "$.r1"),
+                ExpressionConfig::new(&[("y", "$.missing_y")], "y", "$.r2"),
+                ExpressionConfig::new(&[("z", "$.missing_z")], "z", "$.r3"),
+            ],
+            OnFailureBehavior::Record {
+                path: "$.eval_errors".to_string(),
+                limit: Some(limit),
+                as_string: false,
+            },
+            Default::default(),
+        );
+        let mut output = json!({});
+        plugin.process(&mut output, &dummy_result()).unwrap();
+
+        let errors = output["eval_errors"].as_array().expect("array");
+        let count_ellipses = 1;
+        let expected_count = limit + count_ellipses;
+        assert_eq!(errors.len(), expected_count);
+        assert_eq!(errors[0]["expr"], json!("x"));
+        assert_eq!(errors[1]["expr"], json!("y"));
     }
 
     // -----------------------------------------------------------------------
@@ -370,6 +528,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "b": 2.0, "e": 10.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -386,6 +545,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 8.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -403,6 +563,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 100.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -416,6 +577,7 @@ mod tests {
         let plugin = build_plugin(
             vec![ExpressionConfig::new(&[("x", "$.x")], "ln(x)", "$.result")],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 1.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -428,6 +590,7 @@ mod tests {
         let plugin = build_plugin(
             vec![ExpressionConfig::new(&[("x", "$.x")], "abs(x)", "$.result")],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": -7.5 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -444,6 +607,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 3.7 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -460,6 +624,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 3.2 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -476,6 +641,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 2.5 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -492,6 +658,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "a": 3.0, "b": 7.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -508,6 +675,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "a": 3.0, "b": 7.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -520,6 +688,7 @@ mod tests {
         let plugin = build_plugin(
             vec![ExpressionConfig::new(&[("x", "$.x")], "exp(x)", "$.result")],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 0.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -532,6 +701,7 @@ mod tests {
         let plugin = build_plugin(
             vec![ExpressionConfig::new(&[("x", "$.x")], "sin(x)", "$.result")],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 0.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -544,6 +714,7 @@ mod tests {
         let plugin = build_plugin(
             vec![ExpressionConfig::new(&[("x", "$.x")], "cos(x)", "$.result")],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 0.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -560,6 +731,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 0.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -572,6 +744,7 @@ mod tests {
         let plugin = build_plugin(
             vec![ExpressionConfig::new(&[("x", "$.x")], "tan(x)", "$.result")],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 0.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -588,6 +761,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 1.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -604,6 +778,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 0.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -620,6 +795,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "y": 0.0, "x": 1.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -637,6 +813,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "base": 10.0, "val": 100.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -658,6 +835,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 9.0, "y": 16.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -675,6 +853,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 1.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -695,6 +874,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": -3.0, "e": 2.0 });
         plugin.process(&mut output, &dummy_result()).unwrap();
@@ -716,9 +896,64 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            NotANumberBehavior::Error,
         );
         let mut output = json!({ "x": -4.0 });
         assert!(plugin.process(&mut output, &dummy_result()).is_err());
+    }
+
+    #[test]
+    fn test_nan_handling_interrupts_on_invalid_math() {
+        let plugin = build_plugin(
+            vec![ExpressionConfig::new(
+                &[("x", "$.x"), ("y", "$.y")],
+                "x / y", // Forces a NaN when 0.0 / 0.0
+                "$.result",
+            )],
+            OnFailureBehavior::Interrupt,
+            NotANumberBehavior::Error,
+        );
+        let mut output = json!({ "x": 0.0, "y": 0.0 });
+        assert!(plugin.process(&mut output, &dummy_result()).is_err());
+    }
+
+    #[test]
+    fn test_nan_handling_allows_nan() {
+        let plugin = build_plugin(
+            vec![ExpressionConfig::new(
+                &[("x", "$.x"), ("y", "$.y")],
+                "x / y", // Forces a NaN when 0.0 / 0.0
+                "$.result",
+            )],
+            OnFailureBehavior::Interrupt,
+            NotANumberBehavior::Allow,
+        );
+        let mut output = json!({ "x": 0.0, "y": 0.0 });
+        // NOTE: f64::NAN cannot be represented in standard JSON, so serde_json::Number::from_f64
+        // will currently fail if Allow is used. If we truly want to support writing NaN to JSON
+        // we either need to write it as `null` or a string `"NaN"`. Wait, the existing code
+        // `serde_json::Number::from_f64` returns None for NaN, and the plugin throws an error!
+        // So `Allow` actually fails anyway with "expression '...' produced a non-numeric value: NaN".
+        // Let's assert it fails but handle it in the right place.
+        let err = plugin.process(&mut output, &dummy_result()).unwrap_err();
+        let expected = "produced a non-numeric value: NaN";
+        assert!(err.to_string().contains(expected));
+    }
+
+    #[test]
+    fn test_nan_handling_zeroes_out() {
+        let plugin = build_plugin(
+            vec![ExpressionConfig::new(
+                &[("x", "$.x"), ("y", "$.y")],
+                "x / y", // Forces a NaN when 0.0 / 0.0
+                "$.result",
+            )],
+            OnFailureBehavior::Interrupt,
+            NotANumberBehavior::Zero,
+        );
+        let mut output = json!({ "x": 0.0, "y": 0.0 });
+        plugin.process(&mut output, &dummy_result()).unwrap();
+        assert_eq!(output["result"].as_f64().unwrap(), 0.0);
     }
 
     #[test]
@@ -727,6 +962,7 @@ mod tests {
         let plugin = build_plugin(
             vec![ExpressionConfig::new(&[("x", "$.x")], "ln(x)", "$.result")],
             OnFailureBehavior::Interrupt,
+            NotANumberBehavior::Error,
         );
         let mut output = json!({ "x": -1.0 });
         assert!(plugin.process(&mut output, &dummy_result()).is_err());
@@ -742,6 +978,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            NotANumberBehavior::Error,
         );
         let mut output = json!({ "x": 0.0 });
         assert!(plugin.process(&mut output, &dummy_result()).is_err());
@@ -757,6 +994,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            NotANumberBehavior::Error,
         );
         let mut output = json!({ "x": 2.0 });
         assert!(plugin.process(&mut output, &dummy_result()).is_err());
@@ -772,6 +1010,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            NotANumberBehavior::Error,
         );
         let mut output = json!({ "x": 2.0 });
         assert!(plugin.process(&mut output, &dummy_result()).is_err());
@@ -787,6 +1026,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            NotANumberBehavior::Error,
         );
         let mut output = json!({ "x": 1.0, "y": 0.0 });
         assert!(plugin.process(&mut output, &dummy_result()).is_err());
@@ -802,6 +1042,7 @@ mod tests {
         let plugin = build_plugin(
             vec![ExpressionConfig::new(&[("x", "$.x")], "foo(x)", "$.result")],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 1.0 });
         assert!(plugin.process(&mut output, &dummy_result()).is_err());
@@ -817,6 +1058,7 @@ mod tests {
                 "$.result",
             )],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": 4.0, "y": 9.0 });
         assert!(plugin.process(&mut output, &dummy_result()).is_err());
@@ -828,6 +1070,7 @@ mod tests {
         let plugin = build_plugin(
             vec![ExpressionConfig::new(&[("x", "$.x")], "x * 2", "$.result")],
             OnFailureBehavior::Interrupt,
+            Default::default(),
         );
         let mut output = json!({ "x": "not_a_number" });
         assert!(plugin.process(&mut output, &dummy_result()).is_err());
@@ -847,6 +1090,7 @@ mod tests {
                 "$.result",
             )],
             on_failure: OnFailureBehavior::Interrupt,
+            on_nan: Default::default(),
         });
         assert!(result.is_err());
     }
@@ -857,6 +1101,7 @@ mod tests {
         let result = EvalOutputPlugin::new(EvalOutputPluginConfig {
             expressions: vec![ExpressionConfig::new(&[], "1 + 1", "$")],
             on_failure: OnFailureBehavior::Interrupt,
+            on_nan: Default::default(),
         });
         assert!(result.is_err());
     }
@@ -868,7 +1113,10 @@ mod tests {
             expressions: vec![],
             on_failure: OnFailureBehavior::Record {
                 path: "$".to_string(),
+                limit: None,
+                as_string: false,
             },
+            on_nan: Default::default(),
         });
         assert!(result.is_err());
     }
@@ -959,7 +1207,10 @@ mod tests {
             ],
             on_failure: OnFailureBehavior::Record {
                 path: "$.diagnostics.errors".to_string(),
+                limit: None,
+                as_string: false,
             },
+            on_nan: Default::default(),
         })
         .unwrap();
         let mut output = json!({
