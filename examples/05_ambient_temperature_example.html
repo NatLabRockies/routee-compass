@@ -194,6 +194,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../developers/build_the_docs.html">Build The Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developers/contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developers/rust_code_style.html">Rust Code Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developers/hpc_build.html">Building on HPC systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developers/troubleshooting_macos_installation.html">Troubleshooting MacOS Installation</a></li>
 </ul>
 
@@ -430,11 +431,11 @@ that includes a traversal model that injects ambient temperature.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>graph edge list 0: /home/runner/work/routee-compass/routee-compass/docs/examples/denver_co/edges-compass.csv.gz: 48864it [00:00, 1735423.00it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>graph edge list 0: /home/runner/work/routee-compass/routee-compass/docs/examples/denver_co/edges-compass.csv.gz: 48865it [00:00, 1686849.12it/s]
 
 
-building adjacencies: 100%|██████████| 48864/48864 [00:00&lt;00:00, 4129723.25it/s]
-building adjacencies: 100%|██████████| 48864/48864 [00:00&lt;00:00, 4124265.00it/s]
+building adjacencies: 100%|██████████| 48865/48865 [00:00&lt;00:00, 3573501.25it/s]
+building adjacencies: 100%|██████████| 48865/48865 [00:00&lt;00:00, 3568658.00it/s]
 </pre></div>
 </div>
 </div>
@@ -474,13 +475,13 @@ mild ambient temperature considerations and search for the shortest time route.<
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 2880.99it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 2748.32it/s]
 
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 785546.00it/s]
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1146789.00it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.56it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.48it/s]
 </pre></div>
 </div>
 </div>
@@ -526,49 +527,67 @@ with different temperature settings.</p>
 </div>
 <div class="cell_output docutils container">
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 265463.25it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 265604.25it/s]
 
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1297016.88it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.27it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 375234.53it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1512859.25it/s]
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1278772.38it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.90it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.64it/s]
 
 
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 447627.56it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 240615.97it/s]
 
 applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1692047.38it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.59it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.94it/s]
 
 
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 470809.78it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 324149.12it/s]
 
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1636661.12it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.45it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 362844.72it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1536098.38it/s]
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1610305.88it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.67it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.65it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 233263.34it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1848428.75it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.92it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 286123.03it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1385041.62it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.94it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 283687.94it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1312335.88it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.94it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 257334.03it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2079002.25it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 30.13it/s]
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Ambient Temperature: 0 F, Trip Energy: 2.901 kWh
@@ -576,33 +595,11 @@ Ambient Temperature: 15 F, Trip Energy: 2.889 kWh
 Ambient Temperature: 32 F, Trip Energy: 2.601 kWh
 Ambient Temperature: 50 F, Trip Energy: 2.188 kWh
 Ambient Temperature: 72 F, Trip Energy: 2.05 kWh
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 259942.83it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1097694.88it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.45it/s]
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Ambient Temperature: 90 F, Trip Energy: 2.051 kWh
+Ambient Temperature: 90 F, Trip Energy: 2.051 kWh
 Ambient Temperature: 110 F, Trip Energy: 2.088 kWh
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 285144.00it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 831946.75it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.64it/s]
-</pre></div>
-</div>
-<img alt="../_images/53faff8a13c7fdb0cc77064eedcbca9c75fa050e5a0090fc14adc686d224d522.png" src="../_images/53faff8a13c7fdb0cc77064eedcbca9c75fa050e5a0090fc14adc686d224d522.png" />
+<img alt="../_images/76a2592c02994e9b3e578e51a806da9d7d76351b6d8420ea75785f3addcae4bd.png" src="../_images/76a2592c02994e9b3e578e51a806da9d7d76351b6d8420ea75785f3addcae4bd.png" />
 </div>
 </div>
 <p>Next, let's take a look at the 2022 Tesla Model 3 and the 2020 Chevy Bolt and compare their energy consumption across the same range of ambient temperatures.</p>
@@ -657,158 +654,155 @@ search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.64it/s]
 </div>
 <div class="cell_output docutils container">
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 131509.73it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 109841.83it/s]
 
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1189060.62it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.35it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 226346.75it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1173708.88it/s]
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1883239.12it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.77it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.70it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 213356.09it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1814882.00it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.65it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 334001.34it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1636661.12it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 30.08it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 244738.12it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 2036660.00it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 30.32it/s]
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 0 F, Trip Energy: 2.873 kWh
 Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 15 F, Trip Energy: 2.547 kWh
+Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 32 F, Trip Energy: 2.088 kWh
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 451671.19it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1314060.38it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.69it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 254000.50it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 744601.62it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.59it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 445632.81it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1584786.12it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 30.19it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 414250.22it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1074113.88it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 30.01it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 443655.72it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1039501.12it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 30.00it/s]
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 32 F, Trip Energy: 2.088 kWh
-Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 50 F, Trip Energy: 1.921 kWh
-Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 72 F, Trip Energy: 1.904 kWh
-Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 90 F, Trip Energy: 1.905 kWh
-Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 110 F, Trip Energy: 1.973 kWh
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 437636.78it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1096491.25it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.69it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 289268.16it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1584786.12it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 30.45it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 455788.53it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1663893.50it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 30.25it/s]
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 0 F, Trip Energy: 2.966 kWh
-Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 15 F, Trip Energy: 2.94 kWh
-Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 32 F, Trip Energy: 2.562 kWh
-Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 50 F, Trip Energy: 2.039 kWh
-Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 72 F, Trip Energy: 1.828 kWh
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 90 F, Trip Energy: 1.828 kWh
-Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 110 F, Trip Energy: 1.879 kWh
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 434027.78it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1560062.50it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 30.40it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 464252.56it/s]
-
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1610305.88it/s]
-
-
-
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.79it/s]
-
-
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 453720.50it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 285225.34it/s]
 
 applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1536098.38it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.95it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 30.14it/s]
 
 
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 364298.72it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 290275.78it/s]
 
-applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1748251.88it/s]
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1782531.25it/s]
 
 
 
-search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.49it/s]
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 30.14it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 275785.97it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1814882.00it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.80it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 313971.75it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1490313.00it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.68it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 220409.95it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1814882.00it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 28.90it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 302571.84it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1536098.38it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.82it/s]
 </pre></div>
 </div>
-<img alt="../_images/748b593102facaa94bf290171777af8524c0de52ab95064047db6747c8c005d4.png" src="../_images/748b593102facaa94bf290171777af8524c0de52ab95064047db6747c8c005d4.png" />
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 50 F, Trip Energy: 1.921 kWh
+Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 72 F, Trip Energy: 1.904 kWh
+Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 90 F, Trip Energy: 1.904 kWh
+Model: 2022_Tesla_Model_3_RWD_Steady_Thermal, Ambient Temperature: 110 F, Trip Energy: 1.973 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 0 F, Trip Energy: 2.966 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 15 F, Trip Energy: 2.94 kWh
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 284495.03it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1848428.75it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 30.05it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 223914.02it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1782531.25it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.92it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 325309.03it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1512859.25it/s]
+
+
+
+search: 100%|██████████| 1/1 [00:00&lt;00:00, 29.97it/s]
+
+
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 238322.20it/s]
+
+applying input plugin 2: 100%|██████████| 1/1 [00:00&lt;00:00, 1751313.50it/s]
+
+
+
+search: 100%|█████��████| 1/1 [00:00&lt;00:00, 29.89it/s]
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 32 F, Trip Energy: 2.562 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 50 F, Trip Energy: 2.039 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 72 F, Trip Energy: 1.828 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 90 F, Trip Energy: 1.828 kWh
+Model: 2020_Chevrolet_Bolt_EV_Steady_Thermal, Ambient Temperature: 110 F, Trip Energy: 1.879 kWh
+</pre></div>
+</div>
+<img alt="../_images/932d95f0766d5f966d1b76497205f10f1e0ecb7cf5db77d9e114ce66c710a0d2.png" src="../_images/932d95f0766d5f966d1b76497205f10f1e0ecb7cf5db77d9e114ce66c710a0d2.png" />
 </div>
 </div>
 </section>

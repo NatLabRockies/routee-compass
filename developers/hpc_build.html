@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Build The Docs &#8212; RouteE Compass</title>
+    <title>Building on HPC systems &#8212; RouteE Compass</title>
   
   
   
@@ -60,11 +60,11 @@
     <script async="async" src="../_static/sphinx-thebe.js?v=c100c467"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'developers/build_the_docs';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'developers/hpc_build';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Contributing" href="contributing.html" />
-    <link rel="prev" title="Rust API Docs" href="../rust_api_docs.html" />
+    <link rel="next" title="Troubleshooting MacOS Installation" href="troubleshooting_macos_installation.html" />
+    <link rel="prev" title="Rust Code Style" href="rust_code_style.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="python"/>
   <meta name="docsearch:version" content="" />
@@ -191,10 +191,10 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Developers</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Build The Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_the_docs.html">Build The Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rust_code_style.html">Rust Code Style</a></li>
-<li class="toctree-l1"><a class="reference internal" href="hpc_build.html">Building on HPC systems</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Building on HPC systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting_macos_installation.html">Troubleshooting MacOS Installation</a></li>
 </ul>
 
@@ -272,7 +272,7 @@
       
       
       
-      <li><a href="https://github.com/NREL/routee-compass/issues/new?title=Issue%20on%20page%20%2Fdevelopers/build_the_docs.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/NREL/routee-compass/issues/new?title=Issue%20on%20page%20%2Fdevelopers/hpc_build.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -302,7 +302,7 @@
       
       
       
-      <li><a href="../_sources/developers/build_the_docs.md" target="_blank"
+      <li><a href="../_sources/developers/hpc_build.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -378,7 +378,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Build The Docs</h1>
+    <h1>Building on HPC systems</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -388,7 +388,10 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rust-api-docs">Rust API Docs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-time-setup">One-time setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How it works</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#day-to-day-usage-on-hpc">Day-to-day usage on HPC</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#knobs">Knobs</a></li>
 </ul>
             </nav>
         </div>
@@ -400,25 +403,79 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="build-the-docs">
-<h1>Build The Docs<a class="headerlink" href="#build-the-docs" title="Link to this heading">#</a></h1>
-<p>The main documentation is built using jupyter-book which you can install with dev dependencies:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
+  <section class="tex2jax_ignore mathjax_ignore" id="building-on-hpc-systems">
+<h1>Building on HPC systems<a class="headerlink" href="#building-on-hpc-systems" title="Link to this heading">#</a></h1>
+<p>Some HPC systems run operating systems with a glibc that is too old for the
+prebuilt ONNX Runtime binaries that the Rust <code class="docutils literal notranslate"><span class="pre">ort</span></code> crate downloads by default
+(they require glibc &gt;= 2.32; e.g. RHEL 8 ships glibc 2.28). On those systems,
+importing the compiled extension fails with an error like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ne">ImportError</span><span class="p">:</span> <span class="o">.../</span><span class="n">routee_compass_py</span><span class="o">.</span><span class="n">cpython</span><span class="o">-</span><span class="mi">313</span><span class="o">-</span><span class="n">x86_64</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">gnu</span><span class="o">.</span><span class="n">so</span><span class="p">:</span> <span class="n">undefined</span> <span class="n">symbol</span><span class="p">:</span> <span class="n">__libc_single_threaded</span>
 </pre></div>
 </div>
-<p>Then, to build the docs, run the following commands from the root of the repository:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>docs/examples/_convert_examples_to_notebooks.py
-jupyter-book<span class="w"> </span>build<span class="w"> </span>docs/
+<p>The fix is to build ONNX Runtime from source on the HPC machine and link
+against it. The pixi <code class="docutils literal notranslate"><span class="pre">hpc</span></code> environment automates this.</p>
+<section id="one-time-setup">
+<h2>One-time setup<a class="headerlink" href="#one-time-setup" title="Link to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>run<span class="w"> </span>-e<span class="w"> </span>hpc<span class="w"> </span>build_hpc
 </pre></div>
 </div>
-<p>This, build build the docs as html and place them in <code class="docutils literal notranslate"><span class="pre">docs/_build/html/</span></code>. You can then view the docs by opening <code class="docutils literal notranslate"><span class="pre">docs/_build/html/index.html</span></code> in your browser.</p>
-<section id="rust-api-docs">
-<h2>Rust API Docs<a class="headerlink" href="#rust-api-docs" title="Link to this heading">#</a></h2>
-<p>To build the rust api docs you can do:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>rust/
-cargo<span class="w"> </span>doc<span class="w"> </span>--no-deps<span class="w"> </span>--open
+<p>This does two things:</p>
+<ol class="arabic simple">
+<li><p>Clones and builds ONNX Runtime from source into <code class="docutils literal notranslate"><span class="pre">build/onnxruntime/</span></code>
+(<code class="docutils literal notranslate"><span class="pre">scripts/hpc/build_ort.sh</span></code>; this takes 30+ minutes the first time).</p></li>
+<li><p>Builds and installs the python package into the <code class="docutils literal notranslate"><span class="pre">hpc</span></code> environment with
+<code class="docutils literal notranslate"><span class="pre">maturin</span> <span class="pre">develop</span> <span class="pre">--uv</span> <span class="pre">--release</span></code>.</p></li>
+</ol>
+<p>To verify the build imports correctly:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>run<span class="w"> </span>-e<span class="w"> </span>hpc<span class="w"> </span>check_hpc
 </pre></div>
 </div>
+</section>
+<section id="how-it-works">
+<h2>How it works<a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">hpc</span></code> pixi feature's activation sets <code class="docutils literal notranslate"><span class="pre">ORT_LIB_PATH</span></code> to the local ONNX
+Runtime build. The <code class="docutils literal notranslate"><span class="pre">ort</span></code> crate's build script prefers <code class="docutils literal notranslate"><span class="pre">ORT_LIB_PATH</span></code> over its
+downloaded binaries, so <em>any</em> build run inside the <code class="docutils literal notranslate"><span class="pre">hpc</span></code> environment —
+<code class="docutils literal notranslate"><span class="pre">build_py</span></code>, <code class="docutils literal notranslate"><span class="pre">build_rust</span></code>, <code class="docutils literal notranslate"><span class="pre">test</span></code>, <code class="docutils literal notranslate"><span class="pre">build_hpc_wheel</span></code> — automatically links the
+locally-built ONNX Runtime. No special cargo features or flags are needed.</p>
+</section>
+<section id="day-to-day-usage-on-hpc">
+<h2>Day-to-day usage on HPC<a class="headerlink" href="#day-to-day-usage-on-hpc" title="Link to this heading">#</a></h2>
+<p>Always use the <code class="docutils literal notranslate"><span class="pre">hpc</span></code> environment. The easiest way is to activate it once per
+shell session, after which plain commands work as usual:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>shell<span class="w"> </span>-e<span class="w"> </span>hpc
+python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import nrel.routee.compass&quot;</span><span class="w">   </span><span class="c1"># works</span>
+pytest<span class="w"> </span>python/tests/
+</pre></div>
+</div>
+<p>Or prefix individual commands with <code class="docutils literal notranslate"><span class="pre">-e</span> <span class="pre">hpc</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>run<span class="w"> </span>-e<span class="w"> </span>hpc<span class="w"> </span>python<span class="w">          </span><span class="c1"># run python with the package importable</span>
+pixi<span class="w"> </span>run<span class="w"> </span>-e<span class="w"> </span>hpc<span class="w"> </span><span class="nb">test</span><span class="w">            </span><span class="c1"># run the python test suite</span>
+pixi<span class="w"> </span>run<span class="w"> </span>-e<span class="w"> </span>hpc<span class="w"> </span>build_rust<span class="w">      </span><span class="c1"># build the rust CLI binaries</span>
+pixi<span class="w"> </span>run<span class="w"> </span>-e<span class="w"> </span>hpc<span class="w"> </span>build_hpc_wheel<span class="w"> </span><span class="c1"># build a distributable wheel (target/wheels/)</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Do <strong>not</strong> run default-environment pixi commands (e.g. plain <code class="docutils literal notranslate"><span class="pre">pixi</span> <span class="pre">run</span> <span class="pre">python</span></code>
+or <code class="docutils literal notranslate"><span class="pre">pixi</span> <span class="pre">install</span></code>) on an HPC machine with an old glibc. The default
+environment installs this package as an editable install, and pixi/uv will
+silently rebuild the extension against the downloaded ONNX Runtime binaries —
+clobbering the working build and reintroducing the <code class="docutils literal notranslate"><span class="pre">__libc_single_threaded</span></code>
+import error.</p>
+</div>
+</section>
+<section id="knobs">
+<h2>Knobs<a class="headerlink" href="#knobs" title="Link to this heading">#</a></h2>
+<p>Environment variables read by the build (defaults set by the <code class="docutils literal notranslate"><span class="pre">hpc</span></code> feature in
+<code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SKIP_ORT_BUILD=1</span></code> — reuse an existing ONNX Runtime build instead of
+rebuilding it (e.g. <code class="docutils literal notranslate"><span class="pre">SKIP_ORT_BUILD=1</span> <span class="pre">pixi</span> <span class="pre">run</span> <span class="pre">-e</span> <span class="pre">hpc</span> <span class="pre">build_hpc</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ONNXRUNTIME_TAG</span></code> — ONNX Runtime git tag to build (default <code class="docutils literal notranslate"><span class="pre">v1.20.1</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ORT_BUILD_CONFIG</span></code> — CMake build config (default <code class="docutils literal notranslate"><span class="pre">RelWithDebInfo</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ONNXRUNTIME_DIR</span></code> — where ONNX Runtime is cloned and built.</p></li>
+</ul>
 </section>
 </section>
 
@@ -453,20 +510,20 @@ cargo<span class="w"> </span>doc<span class="w"> </span>--no-deps<span class="w"
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../rust_api_docs.html"
+       href="rust_code_style.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Rust API Docs</p>
+        <p class="prev-next-title">Rust Code Style</p>
       </div>
     </a>
     <a class="right-next"
-       href="contributing.html"
+       href="troubleshooting_macos_installation.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Contributing</p>
+        <p class="prev-next-title">Troubleshooting MacOS Installation</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -488,7 +545,10 @@ cargo<span class="w"> </span>doc<span class="w"> </span>--no-deps<span class="w"
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rust-api-docs">Rust API Docs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-time-setup">One-time setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How it works</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#day-to-day-usage-on-hpc">Day-to-day usage on HPC</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#knobs">Knobs</a></li>
 </ul>
   </nav></div>
 
