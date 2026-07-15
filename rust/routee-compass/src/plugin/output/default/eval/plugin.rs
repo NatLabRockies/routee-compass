@@ -5,6 +5,13 @@ use crate::plugin::output::{
 
 use super::config::EvalOutputPluginConfig;
 
+/// A plugin that evaluates mathematical expressions using values from the output JSON.
+///
+/// The plugin reads specified input fields from the search result output, evaluates a
+/// configured mathematical expression, and writes the result to a specified output JSON path.
+/// It can handle multiple sequential expressions, allowing intermediate results to be
+/// used in subsequent calculations. Configuration options determine how to handle
+/// evaluation errors, missing fields, and non-finite numbers (`NaN`).
 pub struct EvalOutputPlugin {
     expressions: Vec<CompiledExpression>,
     on_failure: CompiledOnFailure,
