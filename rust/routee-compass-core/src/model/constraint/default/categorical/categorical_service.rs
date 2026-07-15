@@ -41,7 +41,7 @@ impl ConstraintModelService for CategoricalModelService {
                         self.category_mapping.get(c).copied().ok_or_else(|| {
                             ConstraintModelError::BuildError(format!(
                                 "{} category '{}' not found in mapping",
-                                &self.key, c,
+                                self.key, c,
                             ))
                         })
                     })
