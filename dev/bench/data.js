@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784145482644,
+  "lastUpdate": 1784162024590,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4139,6 +4139,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2992309,
             "range": "± 195378",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8cf7a1d8c92cd532c8346d79b96bda7468e3dc86",
+          "message": "Merge pull request #553 from NatLabRockies/rjf/eval-nan-behavior on\n\neval plugin improvements",
+          "timestamp": "2026-07-15T16:31:35-06:00",
+          "tree_id": "08f9af553bb201b120760552c6d598d21b42931f",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/8cf7a1d8c92cd532c8346d79b96bda7468e3dc86"
+        },
+        "date": 1784162023617,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2980338,
+            "range": "± 193545",
             "unit": "ns/iter"
           }
         ]
