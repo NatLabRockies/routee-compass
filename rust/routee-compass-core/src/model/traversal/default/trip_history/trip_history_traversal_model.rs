@@ -33,7 +33,7 @@ impl TraversalModel for TripHistoryModel {
         self.engine
             .input_features
             .iter()
-            .map(|state_cfg| InputFeature::from(state_cfg))
+            .map(InputFeature::from)
             .collect()
     }
 
