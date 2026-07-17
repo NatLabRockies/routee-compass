@@ -3,7 +3,7 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 
 use crate::model::{
-    state::{StateModelError, StateVariableConfig},
+    state::StateVariableConfig,
     unit::{DistanceUnit, EnergyUnit, RatioUnit, SpeedUnit, TemperatureUnit, TimeUnit},
 };
 

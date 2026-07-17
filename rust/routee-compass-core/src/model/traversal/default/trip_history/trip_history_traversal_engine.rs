@@ -1,7 +1,5 @@
-use std::num::{NonZero, NonZeroUsize};
-
 use super::TripHistoryConfig;
-use crate::model::state::{InputFeature, StateModel, StateVariable, StateVariableConfig};
+use crate::model::state::{StateVariable, StateVariableConfig};
 use crate::model::traversal::{EdgeFrontierContext, TraversalModelError};
 
 pub struct TripHistoryEngine {
@@ -25,27 +23,39 @@ impl TripHistoryEngine {
         &self,
         ctx: &EdgeFrontierContext,
         state: &mut [StateVariable],
-        state_model: &StateModel,
-    ) {
-        self.shift(ctx, state, state_model);
-        self.insert_first(ctx);
+    ) -> Result<(), TraversalModelError> {
+        self.shift(state);
+        self.insert_first(ctx, state)?;
+        Ok(())
     }
     /// Takes all values from depth 1..(depth) and shifts the value from
     /// `format!({feature_name}_{depth_value}` to `format!("{feature_name}_{depth_value+1}")`
     /// in the state vector, shifting values one link into "the past".
-    pub fn shift(
-        &self,
-        ctx: &EdgeFrontierContext,
-        state: &mut [StateVariable],
-        state_model: &StateModel,
-    ) {
-        todo!();
+    pub fn shift(&self, state: &mut [StateVariable]) {
+        state.rotate_right(self.input_features.len()); // deepest features are placed at the front to be overwritten in insert_first()
     }
     /// Traverse one step into the history via `ctx.tree.backtrack_with_depth(state_variable, depth)`
     /// and record the value at `format!({feature_name}_1")`. This must be run after `shift` to avoid
     /// overwriting the first history value before shifting. if the backtrack result is empty,
     /// do nothing.
-    fn insert_first(&self, ctx: &EdgeFrontierContext) {
-        todo!();
+    fn insert_first(
+        &self,
+        ctx: &EdgeFrontierContext,
+        state: &mut [StateVariable],
+    ) -> Result<(), TraversalModelError> {
+        let prev_edge = ctx.tree.backtrack_with_depth(ctx.src.vertex_id, 1)?;
+        let prev_state = prev_edge
+            .first()
+            .ok_or_else(|| {
+                TraversalModelError::TraversalModelFailure(
+                    "when traversing the trip history, could not find the previous edge traversal"
+                        .to_string(),
+                )
+            })?
+            .result_state
+            .clone();
+        let num_features = self.input_features.len();
+        state[0..num_features].copy_from_slice(&prev_state[0..num_features]);
+        Ok(())
     }
 }
