@@ -60,7 +60,7 @@ impl TraversalModel for TripHistoryModel {
         _state: &mut Vec<StateVariable>,
         _state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
-        self.engine.update_history(_ctx, _state, _state_model);
+        self.engine.update_history(_ctx, _state)?;
         Ok(())
     }
 
