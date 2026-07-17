@@ -2,12 +2,10 @@ mod trip_history_traversal_builder;
 mod trip_history_traversal_config;
 mod trip_history_traversal_engine;
 mod trip_history_traversal_model;
-mod trip_history_traversal_params;
 mod trip_history_traversal_service;
 
 pub use trip_history_traversal_builder::TripHistoryBuilder;
 pub use trip_history_traversal_config::TripHistoryConfig;
 pub use trip_history_traversal_engine::TripHistoryEngine;
 pub use trip_history_traversal_model::TripHistoryModel;
-pub use trip_history_traversal_params::TripHistoryParams;
 pub use trip_history_traversal_service::TripHistoryService;

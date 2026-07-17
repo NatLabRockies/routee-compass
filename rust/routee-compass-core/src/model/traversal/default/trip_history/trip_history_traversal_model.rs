@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use super::{TripHistoryEngine, TripHistoryParams};
+use super::TripHistoryEngine;
 
 use crate::{
     algorithm::search::SearchTree,
@@ -13,14 +13,13 @@ use crate::{
 
 pub struct TripHistoryModel {
     pub engine: Arc<TripHistoryEngine>,
-    pub params: TripHistoryParams,
 }
 
 impl TripHistoryModel {
-    pub fn new(engine: Arc<TripHistoryEngine>, params: TripHistoryParams) -> Self {
+    pub fn new(engine: Arc<TripHistoryEngine>) -> Self {
         // modify this and the struct definition if additional pre-processing
         // is required during model instantiation from query parameters.
-        Self { engine, params }
+        Self { engine }
     }
 }
 
@@ -30,11 +29,29 @@ impl TraversalModel for TripHistoryModel {
     }
 
     fn input_features(&self) -> Vec<InputFeature> {
-        todo!()
+        //
+        self.engine
+            .input_features
+            .iter()
+            .map(|state_cfg| InputFeature::from(state_cfg))
+            .collect()
     }
 
     fn output_features(&self) -> Vec<(String, StateVariableConfig)> {
-        todo!()
+        // output is: ["f1_d1", "f2_d1", ... "fm_d1", "f1_d2", "f2_d2", ..., "f1_dn",..."fm_dn"]
+        (1..=self.engine.depth.get()) // depth_n
+            .flat_map(|depth| {
+                self.engine
+                    .input_features
+                    .iter() // feature_m
+                    .map(move |state_cfg| {
+                        (
+                            format!("{}_{depth}", state_cfg.get_feature_type()),
+                            state_cfg.clone(),
+                        )
+                    })
+            })
+            .collect()
     }
 
     fn traverse_edge(
@@ -43,7 +60,8 @@ impl TraversalModel for TripHistoryModel {
         _state: &mut Vec<StateVariable>,
         _state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
-        todo!()
+        self.engine.update_history(_ctx, _state, _state_model);
+        Ok(())
     }
 
     fn estimate_traversal(
@@ -53,6 +71,6 @@ impl TraversalModel for TripHistoryModel {
         _tree: &SearchTree,
         _state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
-        todo!()
+        Ok(())
     }
 }

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use super::{TripHistoryEngine, TripHistoryModel, TripHistoryParams};
+use super::{TripHistoryEngine, TripHistoryModel};
 
 use crate::model::traversal::{TraversalModel, TraversalModelError, TraversalModelService};
 
@@ -19,13 +19,9 @@ impl TripHistoryService {
 impl TraversalModelService for TripHistoryService {
     fn build(
         &self,
-        query: &serde_json::Value,
+        _query: &serde_json::Value, // no query needed for trip history.
     ) -> Result<Arc<dyn TraversalModel>, TraversalModelError> {
-        let params: TripHistoryParams = serde_json::from_value(query.clone()).map_err(|e| {
-            let msg = format!("failure reading params for TripHistory service: {e}");
-            TraversalModelError::BuildError(msg)
-        })?;
-        let model = TripHistoryModel::new(self.engine.clone(), params);
+        let model = TripHistoryModel::new(self.engine.clone());
         Ok(Arc::new(model))
     }
 }
