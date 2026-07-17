@@ -98,7 +98,7 @@ pub fn command_line_runner(
 
     // read user file containing JSON query/queries (supports gzip compression and plain JSON)
     let query_file_path = Path::new(&args.query_file);
-    info!("reading queries from {}", &args.query_file);
+    info!("reading queries from {}", args.query_file);
     if !query_file_path.exists() {
         return Err(CompassAppError::BuildFailure(format!(
             "Could not find query file {}",

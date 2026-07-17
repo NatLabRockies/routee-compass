@@ -106,7 +106,7 @@ fn get_or_create_file_writer(
     let output_file_path = PathBuf::from(filename);
     if filename.ends_with(".gz") {
         let file = write_mode.open_file(&output_file_path)?;
-        let encoder = GzEncoder::new(file, Compression::default());
+        let encoder = Box::new(GzEncoder::new(file, Compression::default()));
         Ok(InternalWriter::GzippedFile { encoder })
     } else {
         let file = write_mode.open_file(&output_file_path)?;

@@ -84,6 +84,9 @@ fn main() -> Result<(), std::io::Error> {
 }
 
 #[cfg(test)]
+// Geographic coordinates are written at full precision for readability even
+// though the app operates on f32; the extra digits are intentional.
+#[allow(clippy::excessive_precision)]
 mod tests {
     use super::*;
     use geo::line_string;

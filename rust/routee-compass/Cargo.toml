@@ -31,8 +31,7 @@ path = "src/bin/sinuosity-app.rs"
 bench = false
 
 [features]
-default = ["routee-compass-powertrain/default"]
-ort-static = ["routee-compass-powertrain/ort-static"]
+default = ["routee-compass-powertrain"]
 
 [dependencies]
 allocative = { workspace = true }
@@ -56,7 +55,7 @@ ordered_hash_map = { workspace = true }
 parquet = { workspace = true }
 rayon = { workspace = true }
 routee-compass-core = { workspace = true }
-routee-compass-powertrain = { workspace = true, default-features = false, optional = true }
+routee-compass-powertrain = { workspace = true, optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_json_path = { workspace = true }

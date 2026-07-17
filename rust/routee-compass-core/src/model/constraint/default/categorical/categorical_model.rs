@@ -47,7 +47,7 @@ impl ConstraintModel for CategoricalConstraintModel {
                     ConstraintModelError::ConstraintModelError(format!(
                         "edge id {} missing from categorical constraint model file for category key {}",
                         edge.edge_id,
-                        &self.service.key,
+                        self.service.key,
                     ))
                 })
                 .map(|id| encoding.contains(id)),

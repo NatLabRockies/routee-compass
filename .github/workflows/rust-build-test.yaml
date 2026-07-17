@@ -19,18 +19,17 @@ jobs:
   build:
     name: RouteE-Compass Rust Build
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        toolchain:
-          - stable
 
     steps:
       - uses: actions/checkout@v6
 
       - name: Setup Rust
+        # Toolchain version and components come from rust-toolchain.toml so that
+        # CI stays in lockstep with the pixi environment instead of floating to
+        # whatever the latest stable happens to be.
         run: |
-          rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }} 
-          rustup component add rustfmt
+          rustup show active-toolchain || rustup toolchain install
+          rustup component add rustfmt clippy
           cargo install cargo-sort
 
       - name: Build
@@ -40,19 +39,15 @@ jobs:
 
       - name: Run tests
         working-directory: ./rust
-        run: cargo test --workspace --verbose
+        run: cargo test --workspace
 
       - name: Run formatting
         working-directory: ./rust
-        run: cargo fmt --all -- --check
+        run: cargo fmt -- --check
 
       - name: Run lint checker
         working-directory: ./rust
-        env:
-          RUSTFLAGS: "-W warnings"
-        # # if we want to be strict about warnings as well
-        # run: cargo clippy --workspace --verbose --all-targets -- -D warnings
-        run: cargo clippy --workspace --verbose
+        run: cargo clippy --all --all-targets --all-features -- -D warnings
 
       - name: Run cargo sort --check
         working-directory: ./rust

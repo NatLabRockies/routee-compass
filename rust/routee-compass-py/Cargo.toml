@@ -14,14 +14,10 @@ exclude = ["test", "**/.DS_Store", "target/"]
 name = "routee_compass_py"
 crate-type = ["cdylib"]
 
-[features]
-default = ["routee-compass/default"]
-ort-static = ["routee-compass/ort-static"]
-
 [dependencies]
 config = { workspace = true }
 pyo3 = { version = "0.29.0", features = ["extension-module", "serde"] }
-routee-compass = { workspace = true, default-features = false }
+routee-compass = { workspace = true, default-features = true }
 routee-compass-core = { workspace = true }
 routee-compass-macros = { workspace = true }
 serde_json = { workspace = true }
