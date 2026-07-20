@@ -22,7 +22,7 @@ use routee_compass_core::{
     config::{CompassConfigurationError, ConfigJsonExtensions},
     model::traversal::default::{
         distance::DistanceTraversalBuilder, speed::SpeedTraversalBuilder,
-        trip_history::TripHistoryBuilder,
+        trip_history::TripHistoryTraversalBuilder,
     },
 };
 use routee_compass_core::{
@@ -82,7 +82,7 @@ inventory::submit! {
         builder.add_traversal_model("elevation".to_string(), Rc::new(ElevationTraversalBuilder {}));
         builder.add_traversal_model("temperature".to_string(), Rc::new(TemperatureTraversalBuilder {}));
         builder.add_traversal_model("turn_delay".to_string(), Rc::new(TurnDelayTraversalModelBuilder {}));
-        builder.add_traversal_model("trip_history".to_string(), Rc::new(TripHistoryBuilder {}));
+        builder.add_traversal_model("trip_history".to_string(), Rc::new(TripHistoryTraversalBuilder {}));
         builder.add_traversal_model("custom".to_string(), Rc::new(CustomTraversalBuilder {}));
         builder.add_constraint_model("no_restriction".to_string(), Rc::new(NoRestrictionBuilder {}));
         builder.add_constraint_model("categorical".to_string(), Rc::new(CategoricalModelBuilder {}));

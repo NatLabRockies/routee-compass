@@ -4,8 +4,8 @@ mod trip_history_traversal_engine;
 mod trip_history_traversal_model;
 mod trip_history_traversal_service;
 
-pub use trip_history_traversal_builder::TripHistoryBuilder;
-pub use trip_history_traversal_config::TripHistoryConfig;
-pub use trip_history_traversal_engine::TripHistoryEngine;
-pub use trip_history_traversal_model::TripHistoryModel;
-pub use trip_history_traversal_service::TripHistoryService;
+pub use trip_history_traversal_builder::TripHistoryTraversalBuilder;
+pub use trip_history_traversal_config::TripHistoryTraversalConfig;
+pub use trip_history_traversal_engine::TripHistoryTraversalEngine;
+pub use trip_history_traversal_model::TripHistoryTraversalModel;
+pub use trip_history_traversal_service::TripHistoryTraversalService;
