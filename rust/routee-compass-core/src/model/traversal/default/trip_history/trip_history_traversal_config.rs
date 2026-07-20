@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 /// The configuration required to build the `TripHistoryTraversalService`
 #[derive(Deserialize, Serialize, Clone, Debug)]
-pub struct TripHistoryConfig {
+pub struct TripHistoryTraversalConfig {
     /// the features on the present link that will be collected in the history.  the values
     /// collected by other traversal models, stored into the state vector, that will be `shifted` into
     /// slots representing past links as the links are traversed

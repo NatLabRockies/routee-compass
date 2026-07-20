@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use super::TripHistoryEngine;
+use super::TripHistoryTraversalEngine;
 
 use crate::{
     algorithm::search::SearchTree,
@@ -11,25 +11,25 @@ use crate::{
     },
 };
 
-pub struct TripHistoryModel {
-    pub engine: Arc<TripHistoryEngine>,
+pub struct TripHistoryTraversalModel {
+    pub engine: Arc<TripHistoryTraversalEngine>,
 }
 
-impl TripHistoryModel {
-    pub fn new(engine: Arc<TripHistoryEngine>) -> Self {
+impl TripHistoryTraversalModel {
+    pub fn new(engine: Arc<TripHistoryTraversalEngine>) -> Self {
         // modify this and the struct definition if additional pre-processing
         // is required during model instantiation from query parameters.
         Self { engine }
     }
 }
 
-impl TraversalModel for TripHistoryModel {
+impl TraversalModel for TripHistoryTraversalModel {
     fn name(&self) -> String {
         "TripHistoryModel".to_string()
     }
 
     fn input_features(&self) -> Vec<InputFeature> {
-        //
+        // the set of input features from the trip history configuration
         self.engine
             .input_features
             .iter()
@@ -38,6 +38,7 @@ impl TraversalModel for TripHistoryModel {
     }
 
     fn output_features(&self) -> Vec<(String, StateVariableConfig)> {
+        // below, f is "feature", d is "depth", m is number of features, n is max depth
         // output is: ["f1_d1", "f2_d1", ... "fm_d1", "f1_d2", "f2_d2", ..., "f1_dn",..."fm_dn"]
         (1..=self.engine.depth.get()) // depth_n
             .flat_map(|depth| {
