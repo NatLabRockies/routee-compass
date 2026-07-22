@@ -43,14 +43,9 @@ impl TraversalModel for TripHistoryTraversalModel {
         (1..=self.engine.depth.get()) // depth_n
             .flat_map(|depth| {
                 self.engine
-                    .input_features
+                    .input_state_variable_cfgs
                     .iter() // feature_m
-                    .map(move |state_cfg| {
-                        (
-                            format!("{}_{depth}", state_cfg.get_feature_type()),
-                            state_cfg.clone(),
-                        )
-                    })
+                    .map(move |cfg| (format!("{}_{depth}", cfg.get_feature_type()), cfg.clone()))
             })
             .collect()
     }
@@ -61,7 +56,7 @@ impl TraversalModel for TripHistoryTraversalModel {
         _state: &mut Vec<StateVariable>,
         _state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
-        self.engine.update_history(_ctx, _state)?;
+        self.engine.update_history(_ctx, _state, _state_model)?;
         Ok(())
     }
 
