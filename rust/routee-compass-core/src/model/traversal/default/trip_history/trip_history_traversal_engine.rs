@@ -1,19 +1,34 @@
 use super::TripHistoryTraversalConfig;
-use crate::model::state::{StateVariable, StateVariableConfig};
+use crate::model::state::CustomVariableConfig;
+use crate::model::state::{StateModel, StateModelError, StateVariable, StateVariableConfig};
 use crate::model::traversal::{EdgeFrontierContext, TraversalModelError};
+use uom::si::f64::{Energy, Length, Ratio, ThermodynamicTemperature, Time, Velocity};
 
 pub struct TripHistoryTraversalEngine {
-    pub input_features: Vec<StateVariableConfig>,
+    pub input_state_variable_cfgs: Vec<StateVariableConfig>,
     pub depth: std::num::NonZeroUsize,
+    pub output_features: Vec<(String, StateVariableConfig)>, // A tuple containing (feature_name, state_variable_cfg)
 }
 
 impl TryFrom<TripHistoryTraversalConfig> for TripHistoryTraversalEngine {
     type Error = TraversalModelError;
 
     fn try_from(config: TripHistoryTraversalConfig) -> Result<Self, Self::Error> {
+        // below, f is "feature", d is "depth", m is number of features, n is max depth
+        // output feature names are of the form: ["f1_d1", "f2_d1", ... "fm_d1", "f1_d2", "f2_d2", ..., "f1_dn",..."fm_dn"]
+        let output_features = (1..=config.depth.get()) // 1 to depth_n
+            .flat_map(|depth| {
+                config
+                    .input_state_variable_cfgs
+                    .iter() // feature_1 to feature_m
+                    .map(move |cfg| (format!("{}_{depth}", cfg.get_feature_type()), cfg.clone()))
+            })
+            .collect();
+
         Ok(Self {
-            input_features: config.input_features,
+            input_state_variable_cfgs: config.input_state_variable_cfgs,
             depth: config.depth,
+            output_features,
         })
     }
 }
@@ -23,16 +38,113 @@ impl TripHistoryTraversalEngine {
         &self,
         ctx: &EdgeFrontierContext,
         state: &mut [StateVariable],
+        state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
-        self.shift(state);
+        self.shift(state, state_model)?;
         self.insert_first(ctx, state)?;
         Ok(())
     }
     /// Takes all values in the state vector from depth 1..(depth) and shifts them from
     /// `format!({feature_name}_{depth_value}` to `format!("{feature_name}_{depth_value+1}")`
     /// shifting values one link into "the past".
-    pub fn shift(&self, state: &mut [StateVariable]) {
-        state.rotate_right(self.input_features.len()); // deepest features are placed at the front to be overwritten in insert_first()
+    pub fn shift(
+        &self,
+        state: &mut [StateVariable],
+        state_model: &StateModel,
+    ) -> Result<(), StateModelError> {
+        // probably need to set a depth limit (i.e. if current_depth = depth)
+        for feature in &self.output_features {
+            let current_depth: u32 = feature
+                        .0 // feature name
+                        .chars()
+                        .last()
+                        .ok_or(StateModelError::RuntimeError(format!(
+                            "Failed to shift trip history input feature {} because the final character of the feature name was None."
+                        , feature.0)))?
+                        .to_digit(10) // base 10
+                        .ok_or(StateModelError::RuntimeError(format!(
+                            "Failed to shift trip history input feature {} because the final character of the feature name was not numeric." , feature.0
+                        )))?;
+
+            // we don't want to accidentally work with something outside of the specified depth
+            // TODO: double check that this is actually what we want.
+            if current_depth >= self.depth.get() as u32 {
+                continue;
+            }
+            // compute the "next depth" in the history from the current depth
+            let next_depth = current_depth + 1;
+
+            // create the feature name for the next depth (which should be a u32 indicating the feature's depth in the history)
+            let mut feature_name_next_depth = feature.0[0..feature.0.len() - 1].to_string();
+            feature_name_next_depth.push(char::from_u32(next_depth).ok_or(
+                StateModelError::RuntimeError(format!(
+                    "Failed to shift trip history input feature {} because the next depth (Option<u32>) was None and couldn't convert to a char.", feature.0
+                )),
+            )?);
+
+            // use StateVariableConfig variants for choosing the getter.
+            // The variants are simply performing the following operation:
+            // <feature_i>_<depth_j> = <feature_i>_<depth_j+1>;
+            match feature.1 {
+                StateVariableConfig::Distance { .. } => {
+                    let distance_next_depth: Length =
+                        state_model.get_distance(state, &feature_name_next_depth)?;
+
+                    state_model.set_distance(state, &feature.0, &distance_next_depth);
+                }
+                StateVariableConfig::Time { .. } => {
+                    let time_next_depth: Time =
+                        state_model.get_time(state, &feature_name_next_depth)?;
+
+                    state_model.set_time(state, &feature.0, &time_next_depth);
+                }
+                StateVariableConfig::Speed { .. } => {
+                    let speed_next_depth: Velocity =
+                        state_model.get_speed(state, &feature_name_next_depth)?;
+
+                    state_model.set_speed(state, &feature.0, &speed_next_depth);
+                }
+                StateVariableConfig::Energy { .. } => {
+                    let energy_next_depth: Energy =
+                        state_model.get_energy(state, &feature_name_next_depth)?;
+
+                    state_model.set_energy(state, &feature.0, &energy_next_depth);
+                }
+                StateVariableConfig::Ratio { .. } => {
+                    let ratio_next_depth: Ratio =
+                        state_model.get_ratio(state, &feature_name_next_depth)?;
+                    state_model.set_ratio(state, &feature.0, &ratio_next_depth);
+                }
+                StateVariableConfig::Temperature { .. } => {
+                    let temperature_next_depth: ThermodynamicTemperature =
+                        state_model.get_temperature(state, &feature_name_next_depth)?;
+                    state_model.set_temperature(state, &feature.0, &temperature_next_depth);
+                }
+                StateVariableConfig::Custom { value, .. } => match value {
+                    CustomVariableConfig::FloatingPoint { .. } => {
+                        let custom_next_depth: f64 =
+                            state_model.get_custom_f64(state, &feature_name_next_depth)?;
+                        state_model.set_custom_f64(state, &feature.0, &custom_next_depth);
+                    }
+                    CustomVariableConfig::SignedInteger { .. } => {
+                        let custom_next_depth: i64 =
+                            state_model.get_custom_i64(state, &feature_name_next_depth)?;
+                        state_model.set_custom_i64(state, &feature.0, &custom_next_depth);
+                    }
+                    CustomVariableConfig::UnsignedInteger { .. } => {
+                        let custom_next_depth: u64 =
+                            state_model.get_custom_u64(state, &feature_name_next_depth)?;
+                        state_model.set_custom_u64(state, &feature.0, &custom_next_depth);
+                    }
+                    CustomVariableConfig::Boolean { .. } => {
+                        let custom_next_depth: bool =
+                            state_model.get_custom_bool(state, &feature_name_next_depth)?;
+                        state_model.set_custom_bool(state, &feature.0, &custom_next_depth);
+                    }
+                },
+            }
+        }
+        Ok(())
     }
     /// Traverse one step into the history via `ctx.tree.backtrack_with_depth(state_variable, depth)`
     /// and record the value at `format!({feature_name}_1")`. This must be run after `shift` to avoid
@@ -43,85 +155,21 @@ impl TripHistoryTraversalEngine {
         ctx: &EdgeFrontierContext,
         state: &mut [StateVariable],
     ) -> Result<(), TraversalModelError> {
-        let prev_edge = ctx.tree.backtrack_with_depth(ctx.src.vertex_id, 1)?;
-        let prev_state = prev_edge
-            .first()
-            .ok_or_else(|| {
-                TraversalModelError::TraversalModelFailure(
-                    "when traversing the trip history, could not find the previous edge traversal"
-                        .to_string(),
-                )
-            })?
-            .result_state
-            .clone();
-        let num_features = self.input_features.len();
-        state[0..num_features].copy_from_slice(&prev_state[0..num_features]);
-        Ok(())
+        // TODO: need to insert the new history values into the state vector by name, not by index!
+        let previous_edge = ctx.tree.backtrack_with_depth(ctx.src.vertex_id, 1)?;
+        todo!();
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    /*
-    use crate::model::state::{StateModel, StateVariableConfig};
-    use crate::model::traversal::default::{
-        distance::DistanceTraversalModel,
-        time::{TimeTraversalConfig, TimeTraversalModel},
-    };
-    */
-    use crate::model::unit::{DistanceUnit, TimeUnit};
-    use std::num::NonZeroUsize;
-    use uom::si::{f64::Length, f64::Time, length::meter, time::second};
     #[test]
     fn test_shift() {
-        // Mock StateVariableConfig for distance and time.
-        let dist_cfg = StateVariableConfig::Distance {
-            initial: Length::new::<meter>(0.0),
-            accumulator: false,
-            output_unit: Some(DistanceUnit::Meters),
-        };
-        let time_cfg = StateVariableConfig::Time {
-            initial: Time::new::<second>(0.0),
-            accumulator: false,
-            output_unit: Some(TimeUnit::Seconds),
-        };
-        // Mock trip history engine for shift()
-        let trip_history_engine =
-            TripHistoryTraversalEngine::try_from(TripHistoryTraversalConfig {
-                input_features: vec![time_cfg, dist_cfg],
-                depth: NonZeroUsize::new(5).unwrap(),
-            })
-            .unwrap();
-
-        // The input state vector for shift
-        let state = &mut [
-            StateVariable(0.0),      // t, depth = 1
-            StateVariable(0.0),      // d, depth = 1
-            StateVariable(f64::NAN), // t, depth = 2
-            StateVariable(f64::NAN), // d, depth = 2
-            StateVariable(f64::NAN), // t, depth = 3
-            StateVariable(f64::NAN), // d, depth = 3
-            StateVariable(f64::NAN), // t, depth = 4
-            StateVariable(f64::NAN), // d, depth = 4
-            StateVariable(f64::NAN), // t, depth = 5
-            StateVariable(f64::NAN), // d, depth = 5
-        ];
-        trip_history_engine.shift(state);
-
-        // expected post-shift
-        assert!(state[0].0.is_nan());
-        assert!(state[1].0.is_nan());
-        assert_eq!(state[2].0, 0.0);
-        assert_eq!(state[3].0, 0.0);
-        assert!(state[4].0.is_nan());
-        assert!(state[5].0.is_nan());
-        assert!(state[6].0.is_nan());
-        assert!(state[7].0.is_nan());
-        assert!(state[8].0.is_nan());
-        assert!(state[9].0.is_nan());
+        todo!();
     }
 
     #[test]
-    fn test_insert_first() {}
+    fn test_insert_first() {
+        todo!();
+    }
 }
