@@ -31,7 +31,7 @@ impl TraversalModel for TripHistoryTraversalModel {
     fn input_features(&self) -> Vec<InputFeature> {
         // the set of input features from the trip history configuration
         self.engine
-            .input_features
+            .input_state_variable_cfgs
             .iter()
             .map(InputFeature::from)
             .collect()
