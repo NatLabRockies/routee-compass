@@ -11,38 +11,52 @@ use uom::si::f64::*;
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum StateVariableConfig {
     Distance {
+        #[serde(default)]
         initial: Length,
+        #[serde(default)]
         accumulator: bool,
         output_unit: Option<DistanceUnit>,
     },
     Time {
+        #[serde(default)]
         initial: Time,
+        #[serde(default)]
         accumulator: bool,
         output_unit: Option<TimeUnit>,
     },
     Speed {
+        #[serde(default)]
         initial: Velocity,
+        #[serde(default)]
         accumulator: bool,
         output_unit: Option<SpeedUnit>,
     },
     Energy {
+        #[serde(default)]
         initial: Energy,
+        #[serde(default)]
         accumulator: bool,
         output_unit: Option<EnergyUnit>,
     },
     Ratio {
+        #[serde(default)]
         initial: Ratio,
+        #[serde(default)]
         accumulator: bool,
         output_unit: Option<RatioUnit>,
     },
     Temperature {
+        #[serde(default)]
         initial: ThermodynamicTemperature,
+        #[serde(default)]
         accumulator: bool,
         output_unit: Option<TemperatureUnit>,
     },
     Custom {
         custom_type: String,
+        #[serde(default)]
         value: CustomVariableConfig,
+        #[serde(default)]
         accumulator: bool,
     },
 }

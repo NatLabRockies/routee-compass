@@ -31,9 +31,38 @@ impl TraversalModel for TripHistoryTraversalModel {
     fn input_features(&self) -> Vec<InputFeature> {
         // the set of input features from the trip history configuration
         self.engine
-            .input_state_variable_configs
+            .history_features
             .iter()
-            .map(InputFeature::from)
+            .map(|feature| match &feature.state_variable_config {
+                StateVariableConfig::Distance { output_unit, .. } => InputFeature::Distance {
+                    name: feature.name.clone(),
+                    unit: output_unit.clone(),
+                },
+                StateVariableConfig::Time { output_unit, .. } => InputFeature::Time {
+                    name: feature.name.clone(),
+                    unit: output_unit.clone(),
+                },
+                StateVariableConfig::Speed { output_unit, .. } => InputFeature::Speed {
+                    name: feature.name.clone(),
+                    unit: output_unit.clone(),
+                },
+                StateVariableConfig::Energy { output_unit, .. } => InputFeature::Energy {
+                    name: feature.name.clone(),
+                    unit: output_unit.clone(),
+                },
+                StateVariableConfig::Ratio { output_unit, .. } => InputFeature::Ratio {
+                    name: feature.name.clone(),
+                    unit: output_unit.clone(),
+                },
+                StateVariableConfig::Temperature { output_unit, .. } => InputFeature::Temperature {
+                    name: feature.name.clone(),
+                    unit: output_unit.clone(),
+                },
+                StateVariableConfig::Custom { custom_type, .. } => InputFeature::Custom {
+                    name: feature.name.clone(),
+                    unit: custom_type.clone(),
+                },
+            })
             .collect()
     }
 
@@ -43,9 +72,14 @@ impl TraversalModel for TripHistoryTraversalModel {
         (1..=self.engine.depth.get()) // depth_n
             .flat_map(|depth| {
                 self.engine
-                    .input_state_variable_configs
+                    .history_features
                     .iter() // feature_m
-                    .map(move |cfg| (format!("{}_{depth}", cfg.get_feature_type()), cfg.clone()))
+                    .map(move |feature| {
+                        (
+                            format!("{}_{depth}", feature.name),
+                            feature.state_variable_config.clone(),
+                        )
+                    })
             })
             .collect()
     }

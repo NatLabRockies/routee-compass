@@ -1,0 +1,4 @@
+edge_id,src_vertex_id,dst_vertex_id,road_class,distance,grade
+0,0,1,3,175381,0
+1,0,2,1,772320,0
+2,1,2,1,707960,0
