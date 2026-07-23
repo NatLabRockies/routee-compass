@@ -1,6 +1,7 @@
 use super::TripHistoryTraversalConfig;
 use crate::model::state::CustomVariableConfig;
 use crate::model::state::{StateModel, StateModelError, StateVariable, StateVariableConfig};
+use crate::model::traversal::default::trip_history::trip_history_traversal_config::HistoryFeature;
 use crate::model::traversal::{EdgeFrontierContext, TraversalModelError};
 
 /// Alias for feature name strings inside of `ShiftFeatureNameMappings`.
@@ -21,17 +22,17 @@ type ShiftFeatureNameMappings = Vec<(FeatureName, FeatureName, StateVariableConf
 /// builds the vector mapping from feature name `"<variable_i>_<depth_j>"` to `"<variable_i>_<depth_(j+1)"`
 /// and includes the feature's `StateVariableConfig`.
 fn build_shift_feature_name_mappings(
-    state_variable_configs: Vec<StateVariableConfig>,
+    history_features: Vec<HistoryFeature>,
     depth: usize,
 ) -> Result<ShiftFeatureNameMappings, String> {
     let depths = (depth - 1)..1;
     let mapping = depths
         .flat_map(|d| {
-            state_variable_configs.iter().map(move |cfg| {
+            history_features.iter().map(move |feature| {
                 (
-                    format!("{}_{}", cfg.get_feature_type(), d),
-                    format!("{}_{}", cfg.get_feature_type(), d + 1),
-                    cfg.clone(),
+                    format!("{}_{}", feature.name, d),
+                    format!("{}_{}", feature.name, d + 1),
+                    feature.state_variable_config.clone(),
                 )
             })
         })
@@ -39,7 +40,7 @@ fn build_shift_feature_name_mappings(
     Ok(mapping)
 }
 pub struct TripHistoryTraversalEngine {
-    pub input_state_variable_configs: Vec<StateVariableConfig>,
+    pub history_features: Vec<HistoryFeature>,
     pub depth: std::num::NonZeroUsize,
     pub shift_feature_name_mappings: ShiftFeatureNameMappings,
 }
@@ -49,10 +50,10 @@ impl TryFrom<TripHistoryTraversalConfig> for TripHistoryTraversalEngine {
 
     fn try_from(config: TripHistoryTraversalConfig) -> Result<Self, Self::Error> {
         Ok(Self {
-            input_state_variable_configs: config.input_state_variable_configs.clone(),
+            history_features: config.history_features.clone(),
             depth: config.depth,
             shift_feature_name_mappings: build_shift_feature_name_mappings(
-                config.input_state_variable_configs,
+                config.history_features,
                 config.depth.get(),
             )
             .map_err(|e| {
@@ -74,8 +75,8 @@ impl TripHistoryTraversalEngine {
         for (src, dst, conf) in self.shift_feature_name_mappings.iter() {
             self.shift(state, state_model, src, dst, conf)?;
         }
-        for conf in self.input_state_variable_configs.iter() {
-            self.insert_first(ctx, state, state_model, conf)?;
+        for feature in self.history_features.iter() {
+            self.insert_first(ctx, state, state_model, &feature.state_variable_config)?;
         }
         Ok(())
     }
@@ -180,9 +181,72 @@ fn copy_state_variable(
 
 #[cfg(test)]
 mod tests {
+    use crate::{
+        config::CompassConfigurationError,
+        model::traversal::{
+            default::{
+                combined::CombinedTraversalBuilder,
+                distance::{self, DistanceTraversalBuilder},
+                speed::SpeedTraversalBuilder,
+                time::{TimeTraversalBuilder, TimeTraversalModel},
+                trip_history::TripHistoryTraversalBuilder,
+            },
+            TraversalModelBuilder,
+        },
+    };
+    use std::{collections::HashMap, error::Error, path::PathBuf, rc::Rc};
     #[test]
-    fn test_shift() {
-        todo!();
+    fn test_shift() -> Result<(), String> {
+        // The current plan for shift is to take mock up distance, speed, time traversals
+        // and run TripHistoryTraversal model for a depth of 2.
+        let combined_builder_parameters = r#"{"models": [
+            {
+            "type": "distance",
+            "distance_unit": "miles"
+            },
+            {
+            "type": "speed",
+            "speed_table_input_file": "src/model/traversal/default/trip_history/test/test_edge_speeds.csv",
+            "speed_unit": "kph"
+            },
+            {
+            "type": "time",
+            "time_unit": "minutes"
+            },
+            {
+            "type": "trip_history",
+            "depth": 2,
+            "history_features": [
+                { "name": "edge_distance", "state_variable_config": { "type": "distance", "output_unit": "miles" }},
+                { "name": "edge_speed", "state_variable_config": { "type": "speed", "output_unit": "kph" }},
+                { "name": "edge_time", "state_variable_config": { "type": "time", "output_unit": "minutes" }}
+            ]
+            }]
+            }"#;
+
+        let mut builder_hashmap: HashMap<String, Rc<dyn TraversalModelBuilder>> = HashMap::new();
+        builder_hashmap.insert("distance".to_string(), Rc::new(DistanceTraversalBuilder {}));
+        builder_hashmap.insert("time".to_string(), Rc::new(TimeTraversalBuilder {}));
+        builder_hashmap.insert("speed".to_string(), Rc::new(SpeedTraversalBuilder {}));
+        builder_hashmap.insert(
+            "trip_history".to_string(),
+            Rc::new(TripHistoryTraversalBuilder {}),
+        );
+
+        let combined_builder = CombinedTraversalBuilder::new(builder_hashmap);
+        let combined_service = combined_builder
+            .build(&serde_json::from_str(combined_builder_parameters).map_err(|e| e.to_string())?)
+            .map_err(|e| e.to_string())?;
+
+        let query = serde_json::json!({
+            "origin_vertex": 0,
+            "destination_vertex": 2
+        });
+
+        let combined_model = combined_service.build(&query).map_err(|e| e.to_string())?;
+
+        // combined_model.traverse_edge(ctx, state, state_model)
+        Ok(())
     }
 
     #[test]
