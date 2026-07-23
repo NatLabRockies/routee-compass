@@ -7,7 +7,7 @@ pub struct TripHistoryTraversalConfig {
     /// the features on the present link that will be collected in the history.  the values
     /// collected by other traversal models, stored into the state vector, that will be `shifted` into
     /// slots representing past links as the links are traversed
-    pub input_state_variable_cfgs: Vec<StateVariableConfig>,
+    pub input_state_variable_configs: Vec<StateVariableConfig>,
     /// how deep into the past link attributes will be collected.
     pub depth: std::num::NonZeroUsize,
 }
