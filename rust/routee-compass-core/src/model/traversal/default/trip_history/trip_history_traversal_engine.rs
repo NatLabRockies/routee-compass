@@ -6,7 +6,7 @@ use crate::model::traversal::{EdgeFrontierContext, TraversalModelError};
 
 /// Alias for feature name strings inside of `ShiftFeatureNameMappings`.
 ///
-/// A feature name in the context of `TripHistoryTraversalEngine` is `<feature_i>_<depth_j>`
+/// A feature name derived from the `TripHistoryTraversalModel` is `<feature_i>_<depth_j>`
 /// Where `<feature_i>` is an alphabetic string representing the physcial feature name (e.g. "distance" or "time")
 /// and `<depth_j>` is a numeric string that represents the depth backwards that the historical feature was pulled from in the tree.
 type FeatureName = String;
@@ -39,6 +39,8 @@ fn build_shift_feature_name_mappings(
         .collect::<Vec<(FeatureName, FeatureName, StateVariableConfig)>>();
     Ok(mapping)
 }
+/// The `TripHistoryTraversalEngine` is responsible for managing and updating historical trip features
+/// within the state, using the set of input history features (e.g., "edge_distance", "edge_time", etc.) and the desired depth backwards in the history of the tree.
 pub struct TripHistoryTraversalEngine {
     pub history_features: Vec<HistoryFeature>,
     pub depth: std::num::NonZeroUsize,
@@ -66,6 +68,7 @@ impl TryFrom<TripHistoryTraversalConfig> for TripHistoryTraversalEngine {
 }
 
 impl TripHistoryTraversalEngine {
+    /// Updates the history features in the given state by shifting existing values and inserting the latest value from the context.
     pub fn update_history(
         &self,
         ctx: &EdgeFrontierContext,
@@ -344,6 +347,7 @@ mod tests {
         EdgeFrontierContext::new(parent_label, src_vertex, mock_edge, dst_vertex, tree)
     }
 
+    /// **Tests the `shift` method of the `TripHistoryTraversalEngine`, ensuring that historical trip features are correctly updated in the state.**
     #[test]
     fn test_shift() {
         let trip_history_engine = mock_engine();
@@ -381,6 +385,8 @@ mod tests {
             Length::new::<uom::si::length::mile>(2.0)
         )
     }
+
+    /// **Tests the `insert_first` method of the `TripHistoryTraversalEngine`, ensuring that the first historical trip feature is correctly inserted into the state.**
     #[test]
     fn test_insert_first() {
         let trip_history_engine = mock_engine();
@@ -427,6 +433,17 @@ mod tests {
         );
     }
 
+    /// **Tests that sentinel values in the historical trip features are correctly shifted and maintained in the state.**
+    ///
+    /// This situation occurs when a search has not traversed far enough through the tree to be able to grab history features at a specific depth.
+    ///
+    /// For instance, consider the case where the desired history depth is 3, but we have only traversed 2 edges. In this case, using a value
+    /// from depth 3 does not make sense, because there are no features at depth 3 in the history. The edge at a depth 3 backwards does not
+    /// exist yet.
+    ///
+    /// Thus, the convention is to assign these features a sentinel value, and shift them appropriately as the search progresses.
+    ///
+    /// If the search is long enough, the sentinel values will be replaced by actual historical values.
     #[test]
     fn test_sentinel_shifting() {
         let trip_history_engine = mock_engine();
