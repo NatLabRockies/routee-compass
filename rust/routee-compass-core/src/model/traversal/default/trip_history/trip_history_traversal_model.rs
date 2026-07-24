@@ -1,12 +1,16 @@
 use std::sync::Arc;
 
-use super::TripHistoryTraversalEngine;
+use uom::si::f64::{Energy, Length, Ratio, ThermodynamicTemperature, Time, Velocity};
+
+use super::trip_history_traversal_engine::*;
 
 use crate::{
     algorithm::search::SearchTree,
     model::{
         network::Vertex,
-        state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
+        state::{
+            CustomVariableConfig, InputFeature, StateModel, StateVariable, StateVariableConfig,
+        },
         traversal::{EdgeFrontierContext, TraversalModel, TraversalModelError},
     },
 };
@@ -36,27 +40,27 @@ impl TraversalModel for TripHistoryTraversalModel {
             .map(|feature| match &feature.state_variable_config {
                 StateVariableConfig::Distance { output_unit, .. } => InputFeature::Distance {
                     name: feature.name.clone(),
-                    unit: output_unit.clone(),
+                    unit: *output_unit,
                 },
                 StateVariableConfig::Time { output_unit, .. } => InputFeature::Time {
                     name: feature.name.clone(),
-                    unit: output_unit.clone(),
+                    unit: *output_unit,
                 },
                 StateVariableConfig::Speed { output_unit, .. } => InputFeature::Speed {
                     name: feature.name.clone(),
-                    unit: output_unit.clone(),
+                    unit: *output_unit,
                 },
                 StateVariableConfig::Energy { output_unit, .. } => InputFeature::Energy {
                     name: feature.name.clone(),
-                    unit: output_unit.clone(),
+                    unit: *output_unit,
                 },
                 StateVariableConfig::Ratio { output_unit, .. } => InputFeature::Ratio {
                     name: feature.name.clone(),
-                    unit: output_unit.clone(),
-                },
+                    unit: *output_unit,
+                },``
                 StateVariableConfig::Temperature { output_unit, .. } => InputFeature::Temperature {
                     name: feature.name.clone(),
-                    unit: output_unit.clone(),
+                    unit: *output_unit,
                 },
                 StateVariableConfig::Custom { custom_type, .. } => InputFeature::Custom {
                     name: feature.name.clone(),
@@ -77,7 +81,8 @@ impl TraversalModel for TripHistoryTraversalModel {
                     .map(move |feature| {
                         (
                             format!("{}_{depth}", feature.name),
-                            feature.state_variable_config.clone(),
+                            // OVERWRITE the initial property with the required sentinel
+                            set_initial_as_sentinel(feature.state_variable_config.clone()),
                         )
                     })
             })
@@ -103,4 +108,38 @@ impl TraversalModel for TripHistoryTraversalModel {
     ) -> Result<(), TraversalModelError> {
         Ok(())
     }
+}
+
+fn set_initial_as_sentinel(mut conf: StateVariableConfig) -> StateVariableConfig {
+    match &mut conf {
+        StateVariableConfig::Distance { initial, .. } => {
+            *initial = Length::new::<uom::si::length::meter>(f64::NAN);
+        }
+        StateVariableConfig::Time { initial, .. } => {
+            *initial = Time::new::<uom::si::time::second>(f64::NAN);
+        }
+        StateVariableConfig::Speed { initial, .. } => {
+            *initial = Velocity::new::<uom::si::velocity::meter_per_second>(f64::NAN);
+        }
+        StateVariableConfig::Energy { initial, .. } => {
+            *initial = Energy::new::<uom::si::energy::joule>(f64::NAN);
+        }
+        StateVariableConfig::Ratio { initial, .. } => {
+            *initial = Ratio::new::<uom::si::ratio::ratio>(f64::NAN);
+        }
+        StateVariableConfig::Temperature { initial, .. } => {
+            *initial = ThermodynamicTemperature::new::<
+                uom::si::thermodynamic_temperature::degree_celsius,
+            >(f64::NAN);
+        }
+        StateVariableConfig::Custom { value, .. } => match value {
+            CustomVariableConfig::FloatingPoint { initial } => {
+                *initial = ordered_float::OrderedFloat(f64::NAN)
+            }
+            CustomVariableConfig::SignedInteger { initial } => *initial = -1,
+            CustomVariableConfig::UnsignedInteger { initial } => *initial = u64::MAX,
+            CustomVariableConfig::Boolean { initial } => *initial = false,
+        },
+    }
+    conf
 }
