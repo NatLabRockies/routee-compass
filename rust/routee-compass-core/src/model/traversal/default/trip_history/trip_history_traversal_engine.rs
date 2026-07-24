@@ -215,7 +215,7 @@ mod tests {
 
     // Mock the trip history traversal engine
     fn mock_engine() -> Arc<TripHistoryTraversalEngine> {
-        let trip_history_engine = Arc::new(
+        Arc::new(
             TripHistoryTraversalEngine::try_from(TripHistoryTraversalConfig {
                 history_features: vec![HistoryFeature {
                     name: "edge_distance".to_string(),
@@ -228,8 +228,7 @@ mod tests {
                 depth: NonZeroUsize::new(3).unwrap(),
             })
             .unwrap(),
-        );
-        trip_history_engine
+        )
     }
 
     // Mock the state test suite
@@ -362,11 +361,11 @@ mod tests {
             .unwrap();
 
         assert_eq!(
-            state_model.get_distance(&mut state, src).unwrap(),
+            state_model.get_distance(&state, src).unwrap(),
             Length::new::<uom::si::length::mile>(3.0)
         );
         assert_eq!(
-            state_model.get_distance(&mut state, dst).unwrap(),
+            state_model.get_distance(&state, dst).unwrap(),
             Length::new::<uom::si::length::mile>(3.0)
         );
 
@@ -377,11 +376,11 @@ mod tests {
             .unwrap();
 
         assert_eq!(
-            state_model.get_distance(&mut state, src).unwrap(),
+            state_model.get_distance(&state, src).unwrap(),
             Length::new::<uom::si::length::mile>(2.0)
         );
         assert_eq!(
-            state_model.get_distance(&mut state, dst).unwrap(),
+            state_model.get_distance(&state, dst).unwrap(),
             Length::new::<uom::si::length::mile>(2.0)
         )
     }
