@@ -57,7 +57,7 @@ impl TraversalModel for TripHistoryTraversalModel {
                 StateVariableConfig::Ratio { output_unit, .. } => InputFeature::Ratio {
                     name: feature.name.clone(),
                     unit: *output_unit,
-                },``
+                },
                 StateVariableConfig::Temperature { output_unit, .. } => InputFeature::Temperature {
                     name: feature.name.clone(),
                     unit: *output_unit,
