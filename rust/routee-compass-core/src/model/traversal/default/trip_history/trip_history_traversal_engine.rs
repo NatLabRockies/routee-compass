@@ -25,7 +25,7 @@ fn build_shift_feature_name_mappings(
     history_features: Vec<HistoryFeature>,
     depth: usize,
 ) -> Result<ShiftFeatureNameMappings, String> {
-    let depths = (depth - 1)..1;
+    let depths = (1..=depth - 1).rev();
     let mapping = depths
         .flat_map(|d| {
             history_features.iter().map(move |feature| {
@@ -76,7 +76,13 @@ impl TripHistoryTraversalEngine {
             self.shift(state, state_model, src, dst, conf)?;
         }
         for feature in self.history_features.iter() {
-            self.insert_first(ctx, state, state_model, &feature.state_variable_config)?;
+            self.insert_first(
+                ctx,
+                state,
+                state_model,
+                &feature.name,
+                &feature.state_variable_config,
+            )?;
         }
         Ok(())
     }
@@ -91,7 +97,7 @@ impl TripHistoryTraversalEngine {
         conf: &StateVariableConfig,
     ) -> Result<(), StateModelError> {
         // <feature_i>_<depth_j> = <feature_i>_<depth_j+1>;
-        copy_state_variable(conf, state_model, state, None, src, dst)?;
+        copy_state_variable(conf, state_model, state, None, dst, src)?;
         Ok(())
     }
 
@@ -104,18 +110,18 @@ impl TripHistoryTraversalEngine {
         ctx: &EdgeFrontierContext,
         state: &mut [StateVariable],
         state_model: &StateModel,
+        feature_name: &str,
         conf: &StateVariableConfig,
     ) -> Result<(), TraversalModelError> {
         let previous_edge = ctx.tree.backtrack_with_depth(ctx.src.vertex_id, 1)?;
         let previous_state: &[StateVariable] = &previous_edge[0].result_state;
-        let feature_name = conf.get_feature_type();
         copy_state_variable(
             conf,
             state_model,
             state,
             Some(previous_state),
-            &(feature_name.clone() + "_1"),
-            &feature_name,
+            &format!("{feature_name}_1"),
+            feature_name,
         )?;
         Ok(())
     }
@@ -181,76 +187,332 @@ fn copy_state_variable(
 
 #[cfg(test)]
 mod tests {
+    use geo::Coord;
+    use uom::si::f64::Length;
+
     use crate::{
-        config::CompassConfigurationError,
-        model::traversal::{
-            default::{
-                combined::CombinedTraversalBuilder,
-                distance::{self, DistanceTraversalBuilder},
-                speed::SpeedTraversalBuilder,
-                time::{TimeTraversalBuilder, TimeTraversalModel},
-                trip_history::TripHistoryTraversalBuilder,
+        algorithm::search::{Direction, EdgeTraversal, SearchTree},
+        model::{
+            cost::TraversalCost,
+            label::Label,
+            network::{Edge, EdgeId, EdgeListId, Vertex, VertexId},
+            state::{StateModel, StateVariable, StateVariableConfig},
+            traversal::{
+                default::trip_history::{
+                    trip_history_traversal_config::HistoryFeature, TripHistoryTraversalConfig,
+                    TripHistoryTraversalEngine,
+                },
+                EdgeFrontierContext,
             },
-            TraversalModelBuilder,
+            unit::DistanceUnit,
         },
+        util::geo::InternalCoord,
     };
-    use std::{collections::HashMap, error::Error, path::PathBuf, rc::Rc};
-    #[test]
-    fn test_shift() -> Result<(), String> {
-        // The current plan for shift is to take mock up distance, speed, time traversals
-        // and run TripHistoryTraversal model for a depth of 2.
-        let combined_builder_parameters = r#"{"models": [
-            {
-            "type": "distance",
-            "distance_unit": "miles"
-            },
-            {
-            "type": "speed",
-            "speed_table_input_file": "src/model/traversal/default/trip_history/test/test_edge_speeds.csv",
-            "speed_unit": "kph"
-            },
-            {
-            "type": "time",
-            "time_unit": "minutes"
-            },
-            {
-            "type": "trip_history",
-            "depth": 2,
-            "history_features": [
-                { "name": "edge_distance", "state_variable_config": { "type": "distance", "output_unit": "miles" }},
-                { "name": "edge_speed", "state_variable_config": { "type": "speed", "output_unit": "kph" }},
-                { "name": "edge_time", "state_variable_config": { "type": "time", "output_unit": "minutes" }}
-            ]
-            }]
-            }"#;
+    use std::{num::NonZeroUsize, sync::Arc};
 
-        let mut builder_hashmap: HashMap<String, Rc<dyn TraversalModelBuilder>> = HashMap::new();
-        builder_hashmap.insert("distance".to_string(), Rc::new(DistanceTraversalBuilder {}));
-        builder_hashmap.insert("time".to_string(), Rc::new(TimeTraversalBuilder {}));
-        builder_hashmap.insert("speed".to_string(), Rc::new(SpeedTraversalBuilder {}));
-        builder_hashmap.insert(
-            "trip_history".to_string(),
-            Rc::new(TripHistoryTraversalBuilder {}),
+    // Mock the trip history traversal engine
+    fn mock_engine() -> Arc<TripHistoryTraversalEngine> {
+        let trip_history_engine = Arc::new(
+            TripHistoryTraversalEngine::try_from(TripHistoryTraversalConfig {
+                history_features: vec![HistoryFeature {
+                    name: "edge_distance".to_string(),
+                    state_variable_config: StateVariableConfig::Distance {
+                        output_unit: Some(DistanceUnit::Miles),
+                        initial: Length::default(),
+                        accumulator: bool::default(),
+                    },
+                }],
+                depth: NonZeroUsize::new(3).unwrap(),
+            })
+            .unwrap(),
         );
+        trip_history_engine
+    }
 
-        let combined_builder = CombinedTraversalBuilder::new(builder_hashmap);
-        let combined_service = combined_builder
-            .build(&serde_json::from_str(combined_builder_parameters).map_err(|e| e.to_string())?)
-            .map_err(|e| e.to_string())?;
+    // Mock the state test suite
+    fn mock_state() -> (StateVariableConfig, StateModel, Vec<StateVariable>) {
+        let conf = StateVariableConfig::Distance {
+            initial: Length::default(),
+            accumulator: bool::default(),
+            output_unit: Some(DistanceUnit::Miles),
+        };
 
-        let query = serde_json::json!({
-            "origin_vertex": 0,
-            "destination_vertex": 2
-        });
+        let features = vec![
+            ("edge_distance".to_string(), conf.clone()),
+            ("edge_distance_1".to_string(), conf.clone()),
+            ("edge_distance_2".to_string(), conf.clone()),
+            ("edge_distance_3".to_string(), conf.clone()),
+        ];
+        let state_model = StateModel::new(features);
 
-        let combined_model = combined_service.build(&query).map_err(|e| e.to_string())?;
+        // initialize states to 0
+        let mut state = vec![StateVariable(0.0); 4];
 
-        // combined_model.traverse_edge(ctx, state, state_model)
-        Ok(())
+        // create the state model components
+        state_model
+            .set_distance(
+                &mut state,
+                "edge_distance",
+                &Length::new::<uom::si::length::mile>(1.0),
+            )
+            .unwrap();
+        state_model
+            .set_distance(
+                &mut state,
+                "edge_distance_1",
+                &Length::new::<uom::si::length::mile>(2.0),
+            )
+            .unwrap();
+        state_model
+            .set_distance(
+                &mut state,
+                "edge_distance_2",
+                &Length::new::<uom::si::length::mile>(3.0),
+            )
+            .unwrap();
+        state_model
+            .set_distance(
+                &mut state,
+                "edge_distance_3",
+                &Length::new::<uom::si::length::mile>(4.0),
+            )
+            .unwrap();
+        (conf, state_model, state)
+    }
+
+    // Mock the edge frontier context for insert_first op
+    // used in both test_insert_first and test_invalid_depth_is_sentinel
+    fn mock_edge_frontier_context<'a>(
+        state_model: &StateModel,
+        distance_val: f64,
+        tree: &'a mut SearchTree,
+        src_vertex: &'a Vertex,
+        dst_vertex: &'a Vertex,
+        mock_edge: &'a Edge,
+        parent_label: &'a Label,
+    ) -> EdgeFrontierContext<'a> {
+        let label_0 = Label::Vertex(VertexId(0));
+        let label_1 = Label::Vertex(VertexId(1));
+        let label_2 = Label::Vertex(VertexId(2));
+
+        // Define the traversal physics for each edge
+        // 0 to 1
+        let traversal_1 = EdgeTraversal {
+            edge_list_id: EdgeListId(0),
+            edge_id: EdgeId(1),
+            cost: TraversalCost::empty(),
+            result_state: vec![StateVariable(0.0); 4],
+        };
+
+        // 1 to 2
+        let traversal_2 = EdgeTraversal {
+            edge_list_id: EdgeListId(0),
+            edge_id: EdgeId(2),
+            cost: TraversalCost::empty(),
+            result_state: vec![StateVariable(0.0); 4],
+        };
+
+        // relative to the context, traversal 3 will contains the "previous state."
+        let mut previous_state = vec![StateVariable(0.0); 4];
+        state_model
+            .set_distance(
+                &mut previous_state,
+                "edge_distance",
+                &Length::new::<uom::si::length::mile>(distance_val),
+            )
+            .unwrap();
+
+        // 2 to 3
+        let traversal_3 = EdgeTraversal {
+            edge_list_id: EdgeListId(0),
+            edge_id: EdgeId(3),
+            cost: TraversalCost::empty(),
+            result_state: previous_state,
+        };
+
+        // Create the topology in the search tree
+        // 0 to 1
+        tree.insert_trajectory(label_0, traversal_1, label_1.clone())
+            .unwrap();
+        // 1 to 2
+        tree.insert_trajectory(label_1, traversal_2, label_2.clone())
+            .unwrap();
+        // 2 to 3
+        tree.insert_trajectory(label_2, traversal_3, parent_label.clone())
+            .unwrap();
+
+        EdgeFrontierContext::new(parent_label, src_vertex, mock_edge, dst_vertex, tree)
     }
 
     #[test]
+    fn test_shift() {
+        let trip_history_engine = mock_engine();
+
+        let (conf, state_model, mut state) = mock_state();
+
+        let src = &"edge_distance_2".to_string();
+        let dst = &"edge_distance_3".to_string();
+
+        trip_history_engine
+            .shift(&mut state, &state_model, src, dst, &conf)
+            .unwrap();
+
+        assert_eq!(
+            state_model.get_distance(&mut state, src).unwrap(),
+            Length::new::<uom::si::length::mile>(3.0)
+        );
+        assert_eq!(
+            state_model.get_distance(&mut state, dst).unwrap(),
+            Length::new::<uom::si::length::mile>(3.0)
+        );
+
+        let src = &"edge_distance_1".to_string();
+        let dst = &"edge_distance_2".to_string();
+        trip_history_engine
+            .shift(&mut state, &state_model, src, dst, &conf)
+            .unwrap();
+
+        assert_eq!(
+            state_model.get_distance(&mut state, src).unwrap(),
+            Length::new::<uom::si::length::mile>(2.0)
+        );
+        assert_eq!(
+            state_model.get_distance(&mut state, dst).unwrap(),
+            Length::new::<uom::si::length::mile>(2.0)
+        )
+    }
+    #[test]
     fn test_insert_first() {
-        todo!();
+        let trip_history_engine = mock_engine();
+        let (conf, state_model, mut state) = mock_state();
+
+        // The vertices and edge we are traversing. these are essentially dummy placeholders.
+        let src_vertex = Vertex {
+            vertex_id: VertexId(3), // this connects us to the previous edge.
+            coordinate: InternalCoord(Coord { x: 0.0, y: 0.0 }),
+        };
+        let dst_vertex = Vertex {
+            vertex_id: VertexId(4),
+            coordinate: InternalCoord(Coord { x: 0.0, y: 0.0 }),
+        };
+        let mock_edge = Edge {
+            edge_id: EdgeId(4),
+            src_vertex_id: VertexId(3),
+            dst_vertex_id: VertexId(4),
+            distance: uom::si::f64::Length::default(),
+            edge_list_id: EdgeListId(0),
+        };
+        let parent_label = Label::Vertex(VertexId(3));
+        let mut tree = SearchTree::new_stateful(Direction::Forward);
+
+        let ctx = mock_edge_frontier_context(
+            &state_model,
+            2.0, // Expected mock distance history
+            &mut tree,
+            &src_vertex,
+            &dst_vertex,
+            &mock_edge,
+            &parent_label,
+        );
+
+        trip_history_engine
+            .insert_first(&ctx, &mut state, &state_model, "edge_distance", &conf)
+            .unwrap();
+
+        // Verify that the current state's "edge_distance_1" now holds the "edge_distance" from the previous traversal
+        let final_distance = state_model.get_distance(&state, "edge_distance_1").unwrap();
+        assert_eq!(
+            final_distance,
+            uom::si::f64::Length::new::<uom::si::length::mile>(2.0)
+        );
+    }
+
+    #[test]
+    fn test_sentinel_shifting() {
+        let trip_history_engine = mock_engine();
+
+        let conf = StateVariableConfig::Distance {
+            initial: Length::default(),
+            accumulator: bool::default(),
+            output_unit: Some(DistanceUnit::Miles),
+        };
+        let features = vec![
+            ("edge_distance".to_string(), conf.clone()),
+            ("edge_distance_1".to_string(), conf.clone()),
+            ("edge_distance_2".to_string(), conf.clone()),
+            ("edge_distance_3".to_string(), conf.clone()),
+        ];
+        let state_model = StateModel::new(features);
+
+        let mut state = vec![StateVariable(0.0); 4];
+
+        // At the start of search: history is initialized to sentinel values by the model
+        // edge_distance is a f64, so it is NAN initially
+        state_model
+            .set_distance(
+                &mut state,
+                "edge_distance_1",
+                &Length::new::<uom::si::length::mile>(f64::NAN),
+            )
+            .unwrap();
+        state_model
+            .set_distance(
+                &mut state,
+                "edge_distance_2",
+                &Length::new::<uom::si::length::mile>(f64::NAN),
+            )
+            .unwrap();
+        state_model
+            .set_distance(
+                &mut state,
+                "edge_distance_3",
+                &Length::new::<uom::si::length::mile>(f64::NAN),
+            )
+            .unwrap();
+
+        // The vertices and edge we are traversing. these are essentially dummy placeholders.
+        let src_vertex = Vertex {
+            vertex_id: VertexId(3), // connects us to the previous edge.
+            coordinate: InternalCoord(Coord { x: 0.0, y: 0.0 }),
+        };
+        let dst_vertex = Vertex {
+            vertex_id: VertexId(4),
+            coordinate: InternalCoord(Coord { x: 0.0, y: 0.0 }),
+        };
+        let mock_edge = Edge {
+            edge_id: EdgeId(4),
+            src_vertex_id: VertexId(3),
+            dst_vertex_id: VertexId(4),
+            distance: uom::si::f64::Length::default(),
+            edge_list_id: EdgeListId(0),
+        };
+        let parent_label = Label::Vertex(VertexId(3));
+        let mut tree = SearchTree::new_stateful(Direction::Forward);
+
+        let ctx = mock_edge_frontier_context(
+            &state_model,
+            2.0, // Expected mock distance history
+            &mut tree,
+            &src_vertex,
+            &dst_vertex,
+            &mock_edge,
+            &parent_label,
+        );
+
+        // update the trip history: shift -> insert_first
+        trip_history_engine
+            .update_history(&ctx, &mut state, &state_model)
+            .unwrap();
+
+        // Slot 1 should be populated with the valid history data (2.0)
+        let d1 = state_model.get_distance(&state, "edge_distance_1").unwrap();
+        assert_eq!(d1, Length::new::<uom::si::length::mile>(2.0));
+
+        // Slots 2 and 3 should still be NAN because they shifted out of uninitialized NAN slots
+        let d2 = state_model.get_distance(&state, "edge_distance_2").unwrap();
+        assert!(d2.value.is_nan());
+
+        let d3 = state_model.get_distance(&state, "edge_distance_3").unwrap();
+        assert!(d3.value.is_nan());
     }
 }
