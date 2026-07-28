@@ -37,35 +37,11 @@ impl TraversalModel for TripHistoryTraversalModel {
         self.engine
             .history_features
             .iter()
-            .map(|feature| match &feature.state_variable_config {
-                StateVariableConfig::Distance { output_unit, .. } => InputFeature::Distance {
-                    name: feature.name.clone(),
-                    unit: *output_unit,
-                },
-                StateVariableConfig::Time { output_unit, .. } => InputFeature::Time {
-                    name: feature.name.clone(),
-                    unit: *output_unit,
-                },
-                StateVariableConfig::Speed { output_unit, .. } => InputFeature::Speed {
-                    name: feature.name.clone(),
-                    unit: *output_unit,
-                },
-                StateVariableConfig::Energy { output_unit, .. } => InputFeature::Energy {
-                    name: feature.name.clone(),
-                    unit: *output_unit,
-                },
-                StateVariableConfig::Ratio { output_unit, .. } => InputFeature::Ratio {
-                    name: feature.name.clone(),
-                    unit: *output_unit,
-                },
-                StateVariableConfig::Temperature { output_unit, .. } => InputFeature::Temperature {
-                    name: feature.name.clone(),
-                    unit: *output_unit,
-                },
-                StateVariableConfig::Custom { custom_type, .. } => InputFeature::Custom {
-                    name: feature.name.clone(),
-                    unit: custom_type.clone(),
-                },
+            .map(|feature| {
+                InputFeature::from_state_variable_config(
+                    &feature.name,
+                    &feature.state_variable_config,
+                )
             })
             .collect()
     }
