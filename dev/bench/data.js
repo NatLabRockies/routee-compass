@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784162024590,
+  "lastUpdate": 1785282682327,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4169,6 +4169,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2980338,
             "range": "± 193545",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "73398481+admrtin@users.noreply.github.com",
+            "name": "Adam Martin",
+            "username": "admrtin"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c45459ed74aeb22635b85a9ecd9725f1277d5161",
+          "message": "Merge pull request #555 from NatLabRockies/amm/trip-history-traversal-model\n\nNew trip history traversal model",
+          "timestamp": "2026-07-28T17:46:57-06:00",
+          "tree_id": "e65e956984c1b2da2ecc41e6dcaed514456c99eb",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/c45459ed74aeb22635b85a9ecd9725f1277d5161"
+        },
+        "date": 1785282681807,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2989682,
+            "range": "± 157764",
             "unit": "ns/iter"
           }
         ]
