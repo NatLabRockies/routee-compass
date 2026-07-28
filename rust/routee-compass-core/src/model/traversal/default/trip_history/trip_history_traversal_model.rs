@@ -86,6 +86,13 @@ impl TraversalModel for TripHistoryTraversalModel {
     }
 }
 
+/// Sets the unset (aka initial) value of a state variable to a sentinel value.
+///
+/// Sentinels for each underlying type:
+/// * `f64`: `NAN`
+/// * `i64`: `-1`
+/// * `u64`: `u64::MAX`
+/// * `boolean`: `false`
 fn set_initial_as_sentinel(mut conf: StateVariableConfig) -> StateVariableConfig {
     match &mut conf {
         StateVariableConfig::Distance { initial, .. } => {
