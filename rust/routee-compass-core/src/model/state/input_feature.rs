@@ -55,50 +55,50 @@ impl InputFeature {
             InputFeature::Custom { name, .. } => name.to_owned(),
         }
     }
-}
-
-impl From<&StateVariableConfig> for InputFeature {
-    fn from(value: &StateVariableConfig) -> Self {
-        match value {
+    pub fn from_state_variable_config(
+        fieldname: &str,
+        config: &StateVariableConfig,
+    ) -> InputFeature {
+        match config {
             StateVariableConfig::Distance { .. } => InputFeature::Distance {
-                name: value.get_feature_type(),
-                unit: value
+                name: fieldname.to_string(),
+                unit: config
                     .get_unit_name()
                     .and_then(|name| DistanceUnit::from_str(&name).ok()),
             },
             StateVariableConfig::Time { .. } => InputFeature::Time {
-                name: value.get_feature_type(),
-                unit: value
+                name: fieldname.to_string(),
+                unit: config
                     .get_unit_name()
                     .and_then(|name| TimeUnit::from_str(&name).ok()),
             },
             StateVariableConfig::Energy { .. } => InputFeature::Energy {
-                name: value.get_feature_type(),
-                unit: value
+                name: fieldname.to_string(),
+                unit: config
                     .get_unit_name()
                     .and_then(|name| EnergyUnit::from_str(&name).ok()),
             },
             StateVariableConfig::Speed { .. } => InputFeature::Speed {
-                name: value.get_feature_type(),
-                unit: value
+                name: fieldname.to_string(),
+                unit: config
                     .get_unit_name()
                     .and_then(|name| SpeedUnit::from_str(&name).ok()),
             },
             StateVariableConfig::Ratio { .. } => InputFeature::Ratio {
-                name: value.get_feature_type(),
-                unit: value
+                name: fieldname.to_string(),
+                unit: config
                     .get_unit_name()
                     .and_then(|name| RatioUnit::from_str(&name).ok()),
             },
             StateVariableConfig::Temperature { .. } => InputFeature::Temperature {
-                name: value.get_feature_type(),
-                unit: value
+                name: fieldname.to_string(),
+                unit: config
                     .get_unit_name()
                     .and_then(|name| TemperatureUnit::from_str(&name).ok()),
             },
             StateVariableConfig::Custom { .. } => InputFeature::Custom {
-                name: value.get_feature_type(),
-                unit: value.get_unit_name().unwrap_or_default(),
+                name: fieldname.to_string(),
+                unit: config.get_unit_name().unwrap_or_default(),
             },
         }
     }
