@@ -27,8 +27,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
@@ -39,10 +39,10 @@
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- So that users can add custom icons -->
-  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <script defer src="../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
     <script src="../_static/documentation_options.js?v=30a733bc"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
@@ -63,6 +63,7 @@
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'examples/02_different_powertrains_example';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Time Energy Tradeoff Example" href="03_time_energy_tradeoff_example.html" />
@@ -70,20 +71,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="python"/>
   <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
   </head>
-  
-  
-  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
-
+  <body data-default-mode="">
   
   
   <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
   
   <div id="pst-scroll-pixel-helper"></div>
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
-
+  
+  
+  
   
   <dialog id="pst-search-dialog">
     
@@ -109,7 +116,51 @@
 </div>
 
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
     </header>
   
 
@@ -389,7 +440,7 @@
                 <h2> Contents </h2>
             </div>
             <nav aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running">Running</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#load-application">Load Application</a></li>
 </ul>
@@ -413,7 +464,6 @@
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
-
 <span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompassApp</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass.io.convert_results</span><span class="w"> </span><span class="kn">import</span> <span class="n">results_to_geopandas</span>
 </pre></div>
@@ -432,11 +482,11 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>graph edge list 0: /home/runner/work/routee-compass/routee-compass/docs/examples/denver_co/edges-compass.csv.gz: 48865it [00:00, 1689812.38it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>graph edge list 0: /home/runner/work/routee-compass/routee-compass/docs/examples/denver_co/edges-compass.csv.gz: 48865it [00:00, 1721585.75it/s]
 
 
-building adjacencies: 100%|██████████| 48865/48865 [00:00&lt;00:00, 3864843.00it/s]
-building adjacencies: 100%|██████████| 48865/48865 [00:00&lt;00:00, 3860043.00it/s]
+building adjacencies: 100%|██████████| 48865/48865 [00:00&lt;00:00, 4019783.50it/s]
+building adjacencies: 100%|██████████| 48865/48865 [00:00&lt;00:00, 4012418.75it/s]
 </pre></div>
 </div>
 </div>
@@ -584,13 +634,13 @@ By default, the PHEV will run using battery energy exclusively (starting at <cod
 </div>
 <div class="cell_output docutils container">
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 2374.36it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 2490.64it/s]
 
-applying input plugin 2: 100%|██████████| 6/6 [00:00&lt;00:00, 63818.25it/s]
+applying input plugin 2: 100%|██████████| 6/6 [00:00&lt;00:00, 68916.41it/s]
 
 
 
-search: 100%|██████████| 6/6 [00:00&lt;00:00, 63.93it/s]
+search: 100%|██████████| 6/6 [00:00&lt;00:00, 63.59it/s]
 </pre></div>
 </div>
 </div>
@@ -603,84 +653,84 @@ search: 100%|██████████| 6/6 [00:00&lt;00:00, 63.93it/s]
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;trip_elevation_loss&#39;: {&#39;type&#39;: &#39;distance&#39;,
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;trip_elevation_gain&#39;: {&#39;type&#39;: &#39;distance&#39;,
   &#39;initial&#39;: 0.0,
   &#39;accumulator&#39;: True,
   &#39;output_unit&#39;: &#39;miles&#39;,
   &#39;index&#39;: 0,
-  &#39;name&#39;: &#39;trip_elevation_loss&#39;},
- &#39;trip_distance&#39;: {&#39;type&#39;: &#39;distance&#39;,
-  &#39;initial&#39;: 0.0,
-  &#39;accumulator&#39;: True,
-  &#39;output_unit&#39;: &#39;miles&#39;,
-  &#39;index&#39;: 1,
-  &#39;name&#39;: &#39;trip_distance&#39;},
- &#39;trip_time&#39;: {&#39;type&#39;: &#39;time&#39;,
-  &#39;initial&#39;: 0.0,
-  &#39;accumulator&#39;: True,
-  &#39;output_unit&#39;: None,
-  &#39;index&#39;: 2,
-  &#39;name&#39;: &#39;trip_time&#39;},
- &#39;edge_distance&#39;: {&#39;type&#39;: &#39;distance&#39;,
-  &#39;initial&#39;: 0.0,
-  &#39;accumulator&#39;: False,
-  &#39;output_unit&#39;: &#39;miles&#39;,
-  &#39;index&#39;: 3,
-  &#39;name&#39;: &#39;edge_distance&#39;},
- &#39;edge_grade&#39;: {&#39;type&#39;: &#39;ratio&#39;,
-  &#39;initial&#39;: 0.0,
-  &#39;accumulator&#39;: False,
-  &#39;output_unit&#39;: &#39;decimal&#39;,
-  &#39;index&#39;: 4,
-  &#39;name&#39;: &#39;edge_grade&#39;},
- &#39;edge_turn_delay&#39;: {&#39;type&#39;: &#39;time&#39;,
-  &#39;initial&#39;: 0.0,
-  &#39;accumulator&#39;: False,
-  &#39;output_unit&#39;: &#39;seconds&#39;,
-  &#39;index&#39;: 5,
-  &#39;name&#39;: &#39;edge_turn_delay&#39;},
- &#39;edge_energy_electric&#39;: {&#39;type&#39;: &#39;energy&#39;,
-  &#39;initial&#39;: 0.0,
-  &#39;accumulator&#39;: False,
-  &#39;output_unit&#39;: &#39;kilowatt_hours&#39;,
-  &#39;index&#39;: 6,
-  &#39;name&#39;: &#39;edge_energy_electric&#39;},
- &#39;trip_soc&#39;: {&#39;type&#39;: &#39;ratio&#39;,
-  &#39;initial&#39;: 1.0,
-  &#39;accumulator&#39;: True,
-  &#39;output_unit&#39;: &#39;decimal&#39;,
-  &#39;index&#39;: 7,
-  &#39;name&#39;: &#39;trip_soc&#39;},
+  &#39;name&#39;: &#39;trip_elevation_gain&#39;},
  &#39;battery_capacity&#39;: {&#39;type&#39;: &#39;energy&#39;,
   &#39;initial&#39;: 216000000.0,
   &#39;accumulator&#39;: False,
   &#39;output_unit&#39;: &#39;kilowatt_hours&#39;,
-  &#39;index&#39;: 8,
+  &#39;index&#39;: 1,
   &#39;name&#39;: &#39;battery_capacity&#39;},
  &#39;trip_energy_electric&#39;: {&#39;type&#39;: &#39;energy&#39;,
   &#39;initial&#39;: 0.0,
   &#39;accumulator&#39;: True,
   &#39;output_unit&#39;: &#39;kilowatt_hours&#39;,
-  &#39;index&#39;: 9,
+  &#39;index&#39;: 2,
   &#39;name&#39;: &#39;trip_energy_electric&#39;},
  &#39;edge_speed&#39;: {&#39;type&#39;: &#39;speed&#39;,
   &#39;initial&#39;: 0.0,
   &#39;accumulator&#39;: False,
   &#39;output_unit&#39;: &#39;miles/hour&#39;,
-  &#39;index&#39;: 10,
+  &#39;index&#39;: 3,
   &#39;name&#39;: &#39;edge_speed&#39;},
- &#39;trip_elevation_gain&#39;: {&#39;type&#39;: &#39;distance&#39;,
+ &#39;trip_elevation_loss&#39;: {&#39;type&#39;: &#39;distance&#39;,
   &#39;initial&#39;: 0.0,
   &#39;accumulator&#39;: True,
   &#39;output_unit&#39;: &#39;miles&#39;,
-  &#39;index&#39;: 11,
-  &#39;name&#39;: &#39;trip_elevation_gain&#39;},
+  &#39;index&#39;: 4,
+  &#39;name&#39;: &#39;trip_elevation_loss&#39;},
+ &#39;trip_distance&#39;: {&#39;type&#39;: &#39;distance&#39;,
+  &#39;initial&#39;: 0.0,
+  &#39;accumulator&#39;: True,
+  &#39;output_unit&#39;: &#39;miles&#39;,
+  &#39;index&#39;: 5,
+  &#39;name&#39;: &#39;trip_distance&#39;},
+ &#39;edge_turn_delay&#39;: {&#39;type&#39;: &#39;time&#39;,
+  &#39;initial&#39;: 0.0,
+  &#39;accumulator&#39;: False,
+  &#39;output_unit&#39;: &#39;seconds&#39;,
+  &#39;index&#39;: 6,
+  &#39;name&#39;: &#39;edge_turn_delay&#39;},
+ &#39;edge_distance&#39;: {&#39;type&#39;: &#39;distance&#39;,
+  &#39;initial&#39;: 0.0,
+  &#39;accumulator&#39;: False,
+  &#39;output_unit&#39;: &#39;miles&#39;,
+  &#39;index&#39;: 7,
+  &#39;name&#39;: &#39;edge_distance&#39;},
+ &#39;trip_soc&#39;: {&#39;type&#39;: &#39;ratio&#39;,
+  &#39;initial&#39;: 1.0,
+  &#39;accumulator&#39;: True,
+  &#39;output_unit&#39;: &#39;decimal&#39;,
+  &#39;index&#39;: 8,
+  &#39;name&#39;: &#39;trip_soc&#39;},
  &#39;edge_time&#39;: {&#39;type&#39;: &#39;time&#39;,
   &#39;initial&#39;: 0.0,
   &#39;accumulator&#39;: False,
   &#39;output_unit&#39;: None,
+  &#39;index&#39;: 9,
+  &#39;name&#39;: &#39;edge_time&#39;},
+ &#39;trip_time&#39;: {&#39;type&#39;: &#39;time&#39;,
+  &#39;initial&#39;: 0.0,
+  &#39;accumulator&#39;: True,
+  &#39;output_unit&#39;: None,
+  &#39;index&#39;: 10,
+  &#39;name&#39;: &#39;trip_time&#39;},
+ &#39;edge_grade&#39;: {&#39;type&#39;: &#39;ratio&#39;,
+  &#39;initial&#39;: 0.0,
+  &#39;accumulator&#39;: False,
+  &#39;output_unit&#39;: &#39;decimal&#39;,
+  &#39;index&#39;: 11,
+  &#39;name&#39;: &#39;edge_grade&#39;},
+ &#39;edge_energy_electric&#39;: {&#39;type&#39;: &#39;energy&#39;,
+  &#39;initial&#39;: 0.0,
+  &#39;accumulator&#39;: False,
+  &#39;output_unit&#39;: &#39;kilowatt_hours&#39;,
   &#39;index&#39;: 12,
-  &#39;name&#39;: &#39;edge_time&#39;}}
+  &#39;name&#39;: &#39;edge_energy_electric&#39;}}
 </pre></div>
 </div>
 </div>
@@ -749,7 +799,7 @@ We'll use gge as our unit and convert the electrical energy using a factor of 33
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Axes: xlabel=&#39;route.traversal_summary.trip_time.value&#39;, ylabel=&#39;gge&#39;&gt;
 </pre></div>
 </div>
-<img alt="../_images/7b3d1e1b0e151fd0442294853d2519a70c8041bbceae17cf87e179ce2bd9b038.png" src="../_images/7b3d1e1b0e151fd0442294853d2519a70c8041bbceae17cf87e179ce2bd9b038.png" />
+<img alt="../_images/c0b98409938af9a55f6c0fb27b3a33ee6bf7b46718232597eb44906b3f8f63b2.png" src="../_images/c0b98409938af9a55f6c0fb27b3a33ee6bf7b46718232597eb44906b3f8f63b2.png" />
 </div>
 </div>
 <p>Here, we see that the BEV and the PHEV use much less energy than the ICE alternative but all powertrains have a route that uses less energy and more time.</p>
@@ -776,7 +826,7 @@ We'll use gge as our unit and convert the electrical energy using a factor of 33
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Axes: xlabel=&#39;route.traversal_summary.trip_time.value&#39;, ylabel=&#39;route.cost.total_cost&#39;&gt;
 </pre></div>
 </div>
-<img alt="../_images/99ef6160470e4f2c335e14fd18e5e4b9e78e51a0866afaca82e4b13c15b5a7e4.png" src="../_images/99ef6160470e4f2c335e14fd18e5e4b9e78e51a0866afaca82e4b13c15b5a7e4.png" />
+<img alt="../_images/174d267a7ce7c8321c8f47fff691c78644cff2bb945b6735654606a7337de8d4.png" src="../_images/174d267a7ce7c8321c8f47fff691c78644cff2bb945b6735654606a7337de8d4.png" />
 </div>
 </div>
 <p>Here, we notice that the ICE vehicle has the lowest costs and all powertrains save money on the optimal energy route.
@@ -792,7 +842,7 @@ This would likely change based on our cost assumptions (for example if we assume
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Axes: &gt;
 </pre></div>
 </div>
-<img alt="../_images/14274f82fe2776c99451a48f8256e22d0c17172334651136b6cdf278db64fe99.png" src="../_images/14274f82fe2776c99451a48f8256e22d0c17172334651136b6cdf278db64fe99.png" />
+<img alt="../_images/bc1ceafda940114a9bde8f51f76517b029ae249fbea98ef2d20ba865a691cef7.png" src="../_images/bc1ceafda940114a9bde8f51f76517b029ae249fbea98ef2d20ba865a691cef7.png" />
 </div>
 </div>
 </section>
@@ -863,7 +913,7 @@ This would likely change based on our cost assumptions (for example if we assume
     <i class="fa-solid fa-list"></i> Contents
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
-    <ul class="visible nav section-nav flex-column">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running">Running</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#load-application">Load Application</a></li>
 </ul>
@@ -917,8 +967,8 @@ By National Laboratory of the Rockies
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
 
   <footer class="bd-footer">
   </footer>

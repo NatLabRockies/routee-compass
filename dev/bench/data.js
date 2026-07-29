@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784145482644,
+  "lastUpdate": 1785344724789,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4139,6 +4139,96 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2992309,
             "range": "± 195378",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8cf7a1d8c92cd532c8346d79b96bda7468e3dc86",
+          "message": "Merge pull request #553 from NatLabRockies/rjf/eval-nan-behavior on\n\neval plugin improvements",
+          "timestamp": "2026-07-15T16:31:35-06:00",
+          "tree_id": "08f9af553bb201b120760552c6d598d21b42931f",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/8cf7a1d8c92cd532c8346d79b96bda7468e3dc86"
+        },
+        "date": 1784162023617,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2980338,
+            "range": "± 193545",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "73398481+admrtin@users.noreply.github.com",
+            "name": "Adam Martin",
+            "username": "admrtin"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c45459ed74aeb22635b85a9ecd9725f1277d5161",
+          "message": "Merge pull request #555 from NatLabRockies/amm/trip-history-traversal-model\n\nNew trip history traversal model",
+          "timestamp": "2026-07-28T17:46:57-06:00",
+          "tree_id": "e65e956984c1b2da2ecc41e6dcaed514456c99eb",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/c45459ed74aeb22635b85a9ecd9725f1277d5161"
+        },
+        "date": 1785282681807,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2989682,
+            "range": "± 157764",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "73398481+admrtin@users.noreply.github.com",
+            "name": "Adam Martin",
+            "username": "admrtin"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e083494fb314df0f29a66102533d0c49499274e6",
+          "message": "Merge pull request #562 from NatLabRockies/amm/ruff-fix\n\nBumps ruff requirement to >= 0.16.0 to match CI tests and fixes all ruff check errors",
+          "timestamp": "2026-07-29T11:01:48-06:00",
+          "tree_id": "f249fce1cef5f360444fa0aa37ecaa210d437005",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/e083494fb314df0f29a66102533d0c49499274e6"
+        },
+        "date": 1785344723721,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2328179,
+            "range": "± 150789",
             "unit": "ns/iter"
           }
         ]
