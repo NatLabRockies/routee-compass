@@ -1,6 +1,7 @@
 import json
-from unittest import TestCase
 from typing import Any
+from unittest import TestCase
+
 from nrel.routee.compass import package_root
 from nrel.routee.compass.compass_app import CompassApp
 
@@ -97,7 +98,7 @@ class TestDowntownDenverExample(TestCase):
 
             error = result.get("error")
             if error is not None:
-                raise Exception(
+                raise RuntimeError(
                     f"Error running query with p={p}: {error}\nresponse: {json.dumps(result, indent=2)}"
                 )
             weight_results.append(
@@ -270,7 +271,7 @@ class TestDowntownDenverExample(TestCase):
 
             error = result.get("error")
             if error is not None:
-                raise Exception(
+                raise RuntimeError(
                     f"Error running query with p={p}: {error}\nresponse: {json.dumps(result, indent=2)}"
                 )
             weight_results.append(

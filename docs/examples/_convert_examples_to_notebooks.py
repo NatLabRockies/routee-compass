@@ -40,7 +40,7 @@ def script_to_notebook(script_path: Path, notebook_path: Path) -> None:
             continue
         # dedent lines inside def main()
         if in_main and not line.strip().startswith('"""'):
-            line = line[4:] if line.startswith("    ") else line
+            line = line.removeprefix("    ")
         if line.strip().startswith('"""'):
             # handle triple-quote toggle; dedent the """ line itself if inside main
             if in_main and line.startswith("    "):

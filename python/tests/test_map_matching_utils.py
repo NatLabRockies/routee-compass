@@ -1,11 +1,12 @@
-from unittest import TestCase
-from typing import Any
-import tempfile
 import pathlib
+import tempfile
+from typing import Any
+from unittest import TestCase
+
 from nrel.routee.compass.map_matching.utils import (
+    load_trace,
     load_trace_csv,
     load_trace_gpx,
-    load_trace,
     match_result_to_geopandas,
 )
 

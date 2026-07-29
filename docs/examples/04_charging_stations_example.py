@@ -12,11 +12,11 @@ so be sure to check that one out first.
 
 def main():
     import folium
+    import matplotlib.pyplot as plt
+    import pandas as pd
+    from IPython.display import display
     from nrel.routee.compass import CompassApp
     from nrel.routee.compass.plot import plot_route_folium
-
-    import pandas as pd
-    import matplotlib.pyplot as plt
 
     """
     First, we'll load the application from the pre-built configuration file 
@@ -97,7 +97,7 @@ def main():
     """
 
     m = plot_route_folium(low_soc_result)
-    m
+    display(m)
 
     """
     ## Visualizing Charging Infrastructure
@@ -128,7 +128,7 @@ def main():
             )
         )
 
-    m
+    display(m)
 
     """
     ## Analyzing State of Charge Over the Route

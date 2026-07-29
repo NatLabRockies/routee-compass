@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import pathlib
-from typing import Any, Dict, Optional, Union, TYPE_CHECKING
 import xml.etree.ElementTree as ET
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from geopandas import GeoDataFrame
@@ -11,12 +11,12 @@ from nrel.routee.compass.utils.type_alias import CompassQuery, Result, Results
 
 
 def load_trace(
-    file: Union[str, pathlib.Path],
+    file: str | pathlib.Path,
     x_col: str = "longitude",
     y_col: str = "latitude",
-    search_parameters: Optional[Dict[str, Any]] = None,
-    output_format: Optional[str] = None,
-    summary_ops: Optional[Dict[str, Any]] = None,
+    search_parameters: dict[str, Any] | None = None,
+    output_format: str | None = None,
+    summary_ops: dict[str, Any] | None = None,
 ) -> CompassQuery:
     """
     Load a trace from a file and convert it into a map matching query.
@@ -56,12 +56,12 @@ def load_trace(
 
 
 def load_trace_csv(
-    file: Union[str, pathlib.Path],
+    file: str | pathlib.Path,
     x_col: str = "longitude",
     y_col: str = "latitude",
-    search_parameters: Optional[Dict[str, Any]] = None,
-    output_format: Optional[str] = None,
-    summary_ops: Optional[Dict[str, Any]] = None,
+    search_parameters: dict[str, Any] | None = None,
+    output_format: str | None = None,
+    summary_ops: dict[str, Any] | None = None,
 ) -> CompassQuery:
     """
     Load a trace from a CSV file and convert it into a map matching query.
@@ -87,7 +87,7 @@ def load_trace_csv(
     df = pd.read_csv(file)
     trace = []
     for _, row in df.iterrows():
-        point: Dict[str, Any] = {"x": float(row[x_col]), "y": float(row[y_col])}
+        point: dict[str, Any] = {"x": float(row[x_col]), "y": float(row[y_col])}
         trace.append(point)
 
     query: CompassQuery = {"trace": trace}
@@ -102,10 +102,10 @@ def load_trace_csv(
 
 
 def load_trace_gpx(
-    file: Union[str, pathlib.Path],
-    search_parameters: Optional[Dict[str, Any]] = None,
-    output_format: Optional[str] = None,
-    summary_ops: Optional[Dict[str, Any]] = None,
+    file: str | pathlib.Path,
+    search_parameters: dict[str, Any] | None = None,
+    output_format: str | None = None,
+    summary_ops: dict[str, Any] | None = None,
 ) -> CompassQuery:
     """
     Load a trace from a GPX file and convert it into a map matching query.
@@ -130,7 +130,7 @@ def load_trace_gpx(
     for trkpt in root.findall(".//gpx:trkpt", namespace):
         lat = float(trkpt.attrib["lat"])
         lon = float(trkpt.attrib["lon"])
-        point: Dict[str, Any] = {"x": lon, "y": lat}
+        point: dict[str, Any] = {"x": lon, "y": lat}
         trace.append(point)
 
     if not trace:
@@ -153,8 +153,8 @@ def load_trace_gpx(
 
 
 def match_result_to_geopandas(
-    results: Union[Result, Results],
-) -> "GeoDataFrame":
+    results: Result | Results,
+) -> GeoDataFrame:
     """
     Convert map matching results into a GeoPandas GeoDataFrame.
     Uses the 'matched_path' field of the result.

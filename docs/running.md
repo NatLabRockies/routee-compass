@@ -18,7 +18,7 @@ query = {
     "origin_x": -105.1710052,
     "origin_y": 39.7402804,
     "destination_x": -104.9009913,
-    "destination_y": 39.6757025
+    "destination_y": 39.6757025,
 }
 
 result = app.run(query)

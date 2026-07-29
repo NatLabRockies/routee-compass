@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
 from nrel.routee.compass.utils.geometry import geometry_from_route
 from nrel.routee.compass.utils.type_alias import Result, Results
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 def tree_result_to_geopandas(
     result: Result,
 ) -> Optional["GeoDataFrame"]:
-    """ """
+    """convert the tree result to geopandas"""
     try:
         import geopandas as gpd
     except ImportError:
@@ -34,7 +34,7 @@ def tree_result_to_geopandas(
 def route_result_to_geopandas(
     result: Result,
 ) -> Optional["GeoDataFrame"]:
-    """ """
+    """convert the route result to geopandas"""
     try:
         import geopandas as gpd
         import pandas as pd
@@ -70,9 +70,9 @@ def route_result_to_geopandas(
 
 
 def results_to_geopandas(
-    results: Union[Result, Results],
-) -> Union["GeoDataFrame", Tuple["GeoDataFrame", "GeoDataFrame"]]:
-    """ """
+    results: Result | Results,
+) -> Union["GeoDataFrame", tuple["GeoDataFrame", "GeoDataFrame"]]:
+    """convert the results to a geo dataframe"""
     try:
         import pandas as pd
     except ImportError:

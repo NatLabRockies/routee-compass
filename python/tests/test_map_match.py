@@ -1,4 +1,5 @@
 from unittest import TestCase
+
 from nrel.routee.compass import package_root
 from nrel.routee.compass.compass_app import CompassApp
 

@@ -14,10 +14,10 @@ conda create -n routee-compass -c conda-forge python=3.11 nrel.routee.compass
 
 
 def main():
-    import osmnx as ox
-
     import json
 
+    import osmnx as ox
+    from IPython.display import display
     from nrel.routee.compass import CompassApp
     from nrel.routee.compass.io import generate_compass_dataset, results_to_geopandas
     from nrel.routee.compass.io.generate_dataset import GeneratePipelinePhase
@@ -293,7 +293,7 @@ def main():
         line_kwargs={"color": "blue", "tooltip": "Least Cost"},
         folium_map=m,
     )
-    m
+    display(m)
 
     """
     We can also use the plot_routes_folium function and pass in multiple results. The function will color the routes based on the `value_fn` which takes a single result as an argument. For example, we can tell it to color the routes based on the total energy usage.
@@ -306,7 +306,7 @@ def main():
         ],
         color_map="plasma",
     )
-    folium_map
+    display(folium_map)
 
     """
     And the `plot_routes_folium` can also accept an existing `folium_map` parameter. Let's query our application with different origin and destination places:
@@ -329,7 +329,7 @@ def main():
         color_map="plasma",
         folium_map=folium_map,
     )
-    folium_map
+    display(folium_map)
 
 
 if __name__ == "__main__":
