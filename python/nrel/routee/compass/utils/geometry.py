@@ -1,6 +1,5 @@
-from typing import TYPE_CHECKING
-
 import json
+from typing import TYPE_CHECKING
 
 from nrel.routee.compass.utils.type_alias import Route
 

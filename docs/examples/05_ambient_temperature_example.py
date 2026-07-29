@@ -11,10 +11,9 @@ so be sure to check that one out first.
 
 
 def main():
-    from nrel.routee.compass import CompassApp
-
-    import pandas as pd
     import matplotlib.pyplot as plt
+    import pandas as pd
+    from nrel.routee.compass import CompassApp
 
     """
     First, we'll load the application from the pre-built configuration file 

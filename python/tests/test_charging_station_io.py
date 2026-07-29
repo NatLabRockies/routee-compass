@@ -1,4 +1,5 @@
 from unittest import TestCase
+
 from nrel.routee.compass.io.charging_station_ops import _parse_cost_per_kwh
 
 

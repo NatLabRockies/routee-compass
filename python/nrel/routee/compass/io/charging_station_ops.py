@@ -1,13 +1,13 @@
 import importlib.resources
-import requests
-import re
-from typing import List, Union, TYPE_CHECKING
-
 import logging
+import re
+from typing import TYPE_CHECKING, Union
+
+import requests
 
 if TYPE_CHECKING:
-    from pandas import DataFrame
     from geopandas import GeoDataFrame
+    from pandas import DataFrame
     from shapely.geometry import Polygon
 
 log = logging.getLogger(__name__)
@@ -43,10 +43,10 @@ def download_ev_charging_stations(state: str, api_key: str = "DEMO_KEY") -> "Dat
         response.raise_for_status()
         result = response.json()
     except requests.RequestException as e:
-        raise Exception(f"Failed to download charging station data: {e}")
+        raise RuntimeError(f"Failed to download charging station data: {e}")
 
     if "fuel_stations" not in result:
-        raise Exception("Invalid response format from NREL API")
+        raise RuntimeError("Invalid response format from NREL API")
 
     # Create dataframe
     df = pd.DataFrame(result["fuel_stations"])
@@ -199,7 +199,7 @@ def _parse_cost_per_kwh(pricing_str: str) -> float:
 
 
 def states_intersecting_with_polygon(
-    polygon: Union["Polygon", List["Polygon"]], states_gdf: "GeoDataFrame"
+    polygon: Union["Polygon", list["Polygon"]], states_gdf: "GeoDataFrame"
 ) -> "GeoDataFrame":
     """
     Find states that intersect with a given polygon.
@@ -277,8 +277,8 @@ def load_us_state_boundaries() -> "GeoDataFrame":
         GeoDataFrame containing state boundaries with STUSPS (state code) column
     """
     try:
-        import pandas as pd
         import geopandas as gpd
+        import pandas as pd
     except ImportError as _:
         raise ImportError(
             "Required libraries not installed. Please install pandas and geopandas."
@@ -317,8 +317,8 @@ def download_ev_charging_stations_for_polygon(
         Combined DataFrame with charging stations from all intersecting states
     """
     try:
-        import pandas as pd
         import geopandas as gpd
+        import pandas as pd
     except ImportError as _:
         raise ImportError(
             "Required libraries not installed. Please install pandas and geopandas."
@@ -340,7 +340,7 @@ def download_ev_charging_stations_for_polygon(
                 # Add state column for reference
                 state_stations["state"] = state
                 all_stations.append(state_stations)
-        except Exception as e:
+        except RuntimeError as e:
             log.warning(f"Warning: Failed to download stations for state {state}: {e}")
             continue
 
