@@ -182,9 +182,7 @@ def add_grade_to_graph(
                 "If this road network is outside of the US, consider re-running without `grade` in your ."
             )
         elif len(files) == 1:
-            filepath: Path | list[Path] = files[
-                0
-            ]  # if only one file, pass it directly
+            filepath: Path | list[Path] = files[0]  # if only one file, pass it directly
         else:
             filepath = files
 

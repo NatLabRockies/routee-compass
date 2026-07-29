@@ -186,9 +186,9 @@ class CompassApp:
         Returns:
             CompassApp: a CompassApp object
         """
-        if phases is None: 
+        if phases is None:
             phases = GeneratePipelinePhase.default()
-            
+
         if cache_dir is None:
             temp_dir = TemporaryDirectory()
             cache_dir = Path(temp_dir.name)
@@ -388,9 +388,7 @@ class CompassApp:
             queries = query
             single_query = False
         else:
-            raise TypeError(
-                f"Query must be a dict or list of dicts, not {type(query)}"
-            )
+            raise TypeError(f"Query must be a dict or list of dicts, not {type(query)}")
 
         queries_str = list(map(json.dumps, queries))
         config_str = json.dumps(config) if config is not None else None
@@ -496,9 +494,7 @@ class CompassApp:
             queries = query
             single_query = False
         else:
-            raise TypeError(
-                f"Query must be a dict or list of dicts, not {type(query)}"
-            )
+            raise TypeError(f"Query must be a dict or list of dicts, not {type(query)}")
 
         queries_str = list(map(json.dumps, queries))
         results_json: list[str] = self._app._map_match(queries_str)
@@ -538,9 +534,7 @@ class CompassApp:
             queries = query
             single_query = False
         else:
-            raise TypeError(
-                f"Query must be a dict or list of dicts, not {type(query)}"
-            )
+            raise TypeError(f"Query must be a dict or list of dicts, not {type(query)}")
 
         queries_str = list(map(json.dumps, queries))
         config_str = json.dumps(config) if config is not None else None

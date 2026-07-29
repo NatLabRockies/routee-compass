@@ -293,9 +293,12 @@ def generate_compass_dataset(
         if GeneratePipelinePhase.CHARGING_STATIONS in phases:
             base_config_files.append("osm_default_charging.toml")
         for filename in base_config_files:
-            with importlib.resources.path(
-                "nrel.routee.compass.resources", filename
-            ) as init_toml_path, init_toml_path.open() as f:
+            with (
+                importlib.resources.path(
+                    "nrel.routee.compass.resources", filename
+                ) as init_toml_path,
+                init_toml_path.open() as f,
+            ):
                 init_toml: dict[str, Any] = tomlkit.load(f)
 
             # When a vehicle subset is requested, rewrite the
