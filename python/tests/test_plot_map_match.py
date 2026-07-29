@@ -1,8 +1,9 @@
+import unittest
+from typing import Any
+
 from nrel.routee.compass import package_root
 from nrel.routee.compass.compass_app import CompassApp
 from nrel.routee.compass.plot.plot_folium import plot_matched_path_folium
-import unittest
-from typing import Any
 
 
 class TestMapMatchPlot(unittest.TestCase):

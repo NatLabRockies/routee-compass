@@ -1,26 +1,26 @@
 from __future__ import annotations
-import enum
-from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Union, TYPE_CHECKING
-from pathlib import Path
 
+import enum
 import importlib.resources
 import json
 import logging
 import shutil
+from collections.abc import Callable
+from dataclasses import dataclass
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
 import tomlkit
-
-
 from nrel.routee.compass.io import utils
-from nrel.routee.compass.io.utils import CACHE_DIR, add_grade_to_graph
 from nrel.routee.compass.io.charging_station_ops import (
     download_ev_charging_stations_for_polygon,
 )
+from nrel.routee.compass.io.utils import CACHE_DIR, add_grade_to_graph
 
 if TYPE_CHECKING:
+    import geopandas
     import networkx
     import pandas as pd
-    import geopandas
 
 log = logging.getLogger(__name__)
 
@@ -68,11 +68,11 @@ class GeneratePipelinePhase(enum.Enum):
     CHARGING_STATIONS = 4
 
     @classmethod
-    def default(cls) -> List[GeneratePipelinePhase]:
+    def default(cls) -> list[GeneratePipelinePhase]:
         return [cls.GRAPH, cls.CONFIG, cls.POWERTRAIN]
 
 
-def list_available_vehicle_models() -> List[str]:
+def list_available_vehicle_models() -> list[str]:
     """
     Return the list of all available vehicle model names that can be used
     with the ``vehicle_models`` parameter of :func:`generate_compass_dataset`
@@ -97,18 +97,18 @@ def list_available_vehicle_models() -> List[str]:
 
 def generate_compass_dataset(
     g: networkx.MultiDiGraph,
-    output_directory: Union[str, Path],
-    hwy_speeds: Optional[HIGHWAY_SPEED_MAP] = None,
-    fallback: Optional[float] = None,
-    agg: Optional[AggFunc] = None,
-    phases: List[GeneratePipelinePhase] = GeneratePipelinePhase.default(),
-    raster_resolution_arc_seconds: Union[str, int] = 1,
+    output_directory: str | Path,
+    hwy_speeds: HIGHWAY_SPEED_MAP | None = None,
+    fallback: float | None = None,
+    agg: AggFunc | None = None,
+    phases: list[GeneratePipelinePhase] | None = None,
+    raster_resolution_arc_seconds: str | int = 1,
     default_config: bool = True,
-    requests_kwds: Optional[Dict[Any, Any]] = None,
+    requests_kwds: dict[Any, Any] | None = None,
     afdc_api_key: str = "DEMO_KEY",
     require_charging_stations: bool = True,
-    vehicle_models: Optional[List[str]] = None,
-    hooks: Optional[List[DatasetHook]] = None,
+    vehicle_models: list[str] | None = None,
+    hooks: list[DatasetHook] | None = None,
 ) -> None:
     """
     Processes a graph downloaded via OSMNx, generating the set of input
@@ -154,15 +154,18 @@ def generate_compass_dataset(
     except ImportError:
         raise ImportError("requires osmnx to be installed. Try 'pip install osmnx'")
     try:
+        import geopandas as gpd
         import numpy as np
         import pandas as pd
-        import geopandas as gpd
-        from shapely.geometry import box
         import requests
+        from shapely.geometry import box
     except ImportError as err:
         raise ImportError(
             f"please install compass with the 'osm' feature enabled. {err}"
         )
+
+    if phases is None:
+        phases = GeneratePipelinePhase.default()
 
     log.info(f"running pipeline import with phases: [{[p.name for p in phases]}]")
     output_directory = Path(output_directory)
@@ -290,11 +293,13 @@ def generate_compass_dataset(
         if GeneratePipelinePhase.CHARGING_STATIONS in phases:
             base_config_files.append("osm_default_charging.toml")
         for filename in base_config_files:
-            with importlib.resources.path(
-                "nrel.routee.compass.resources", filename
-            ) as init_toml_path:
-                with init_toml_path.open() as f:
-                    init_toml: dict[str, Any] = tomlkit.load(f)
+            with (
+                importlib.resources.path(
+                    "nrel.routee.compass.resources", filename
+                ) as init_toml_path,
+                init_toml_path.open() as f,
+            ):
+                init_toml: dict[str, Any] = tomlkit.load(f)
 
             # When a vehicle subset is requested, rewrite the
             # vehicle_input_files list in the energy traversal model
@@ -335,7 +340,7 @@ def generate_compass_dataset(
 
                 cached_model_destination = CACHE_DIR / f"{model_name}.bin"
                 if not cached_model_destination.exists():
-                    kwds: Dict[Any, Any] = (
+                    kwds: dict[Any, Any] = (
                         requests_kwds if requests_kwds is not None else {}
                     )
                     download_response = requests.get(model_link, **kwds)
@@ -421,7 +426,7 @@ def generate_compass_dataset(
             hook(params)
 
 
-def _resolve_required_model_bins(vehicle_models: List[str]) -> set[str]:
+def _resolve_required_model_bins(vehicle_models: list[str]) -> set[str]:
     """
     Given a list of vehicle model names (JSON file stems), determine the set
     of ``.bin`` model names that need to be downloaded.
@@ -462,7 +467,7 @@ def _resolve_required_model_bins(vehicle_models: List[str]) -> set[str]:
 
 
 def _filter_vehicle_input_files(
-    toml_config: dict[str, Any], vehicle_models: List[str]
+    toml_config: dict[str, Any], vehicle_models: list[str]
 ) -> None:
     """
     Walk through a parsed TOML config and rewrite any

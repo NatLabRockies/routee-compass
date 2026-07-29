@@ -1,9 +1,8 @@
+from collections.abc import Callable, Sequence
+from typing import Any
+
 import folium
-
-
-from typing import Any, Callable, Optional, Sequence, Tuple, Union
 from nrel.routee.compass.plot.plot_utils import ColormapCircularIterator, rgba_to_hex
-
 from nrel.routee.compass.utils.geometry import ROUTE_KEY, geometry_from_route
 
 MATCHED_PATH_KEY = "matched_path"
@@ -18,7 +17,7 @@ DEFAULT_LINE_KWARGS = {
 
 def result_dict_to_coords(
     result_dict: dict[str, Any],
-) -> Sequence[Tuple[float, float]]:
+) -> Sequence[tuple[float, float]]:
     """
     Converts the CompassApp results to coords to be sent to the folium map.
 
@@ -45,7 +44,7 @@ def result_dict_to_coords(
         )
 
     if not isinstance(result_dict, dict):
-        raise ValueError(f"Expected to get a dictionary but got a {type(result_dict)}")
+        raise TypeError(f"Expected to get a dictionary but got a {type(result_dict)}")
 
     route = result_dict.get(ROUTE_KEY)
     if route is None:
@@ -66,7 +65,7 @@ def result_dict_to_coords(
 
 
 def _calculate_folium_args(
-    fit_coords: Sequence[Tuple[float, float]],
+    fit_coords: Sequence[tuple[float, float]],
 ) -> dict[str, Any]:
     """
     Calculates where the center of the map and the bounds that the map
@@ -100,7 +99,7 @@ def _calculate_folium_args(
 
 
 def _create_empty_folium_map(
-    fit_coords: Sequence[Tuple[float, float]],
+    fit_coords: Sequence[tuple[float, float]],
 ) -> folium.Map:
     """
     Creates an empty folium.Map calculating the center and the fit_bounds
@@ -136,8 +135,8 @@ def _create_empty_folium_map(
 
 def plot_route_folium(
     result_dict: dict[str, Any],
-    line_kwargs: Optional[dict[str, Any]] = None,
-    folium_map: Optional[folium.Map] = None,
+    line_kwargs: dict[str, Any] | None = None,
+    folium_map: folium.Map | None = None,
 ) -> folium.Map:
     """
     Plots a single route from a compass query on a folium map.
@@ -165,9 +164,9 @@ def plot_route_folium(
 
 
 def plot_coords_folium(
-    coords: Sequence[Tuple[float, float]],
-    line_kwargs: Optional[dict[str, Any]] = None,
-    folium_map: Optional[folium.Map] = None,
+    coords: Sequence[tuple[float, float]],
+    line_kwargs: dict[str, Any] | None = None,
+    folium_map: folium.Map | None = None,
 ) -> folium.Map:
     """
     Plots a sequence of pairs of latitude and longitude on a folium map as a route.
@@ -225,10 +224,10 @@ def plot_coords_folium(
 
 
 def plot_routes_folium(
-    results: Union[dict[str, Any], list[dict[str, Any]]],
+    results: dict[str, Any] | list[dict[str, Any]],
     value_fn: Callable[[dict[str, Any]], Any] = lambda r: r["request"].get("name"),
     color_map: str = "viridis",
-    folium_map: Optional[folium.Map] = None,
+    folium_map: folium.Map | None = None,
 ) -> folium.Map:
     """
     Plot multiple routes from a CompassApp query on a folium map
@@ -255,8 +254,8 @@ def plot_routes_folium(
 
     """
     try:
-        import matplotlib.pyplot as plt
         import matplotlib.colors as mcolors
+        import matplotlib.pyplot as plt
     except ImportError:
         raise ImportError(
             "You need to install the matplotlib package to use this function"
@@ -272,7 +271,7 @@ def plot_routes_folium(
     values = [value_fn(result) for result in results]
 
     cmap = plt.get_cmap(color_map)
-    if all(isinstance(v, float) or isinstance(v, int) for v in values):
+    if all(isinstance(v, (float, int)) for v in values):
         norm = mcolors.Normalize(vmin=min(values), vmax=max(values))
         colors = [rgba_to_hex(cmap(norm(v))) for v in values]
     else:
@@ -294,7 +293,7 @@ def plot_routes_folium(
 
 def matched_path_to_coords(
     matched_path: dict[str, Any],
-) -> Sequence[Tuple[float, float]]:
+) -> Sequence[tuple[float, float]]:
     """
     Converts the matched path from a map matching query to coords to be sent to the folium map.
 
@@ -324,8 +323,8 @@ def matched_path_to_coords(
 
 def plot_matched_path_folium(
     result_dict: dict[str, Any],
-    line_kwargs: Optional[dict[str, Any]] = None,
-    folium_map: Optional[folium.Map] = None,
+    line_kwargs: dict[str, Any] | None = None,
+    folium_map: folium.Map | None = None,
 ) -> folium.Map:
     """
     Plots the matched path from a map matching query on a folium map.

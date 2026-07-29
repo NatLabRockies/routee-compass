@@ -1,33 +1,34 @@
 from __future__ import annotations
 
 import logging
-from tempfile import TemporaryDirectory
-
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, List, Optional, Union, Callable, TYPE_CHECKING, cast
+from tempfile import TemporaryDirectory
+from typing import TYPE_CHECKING, Any, cast
+
+from nrel.routee.compass.io.generate_dataset import (
+    DatasetHook,
+    GeneratePipelinePhase,
+    generate_compass_dataset,
+)
 from nrel.routee.compass.routee_compass_py import (
     CompassAppWrapper,
 )
-from nrel.routee.compass.io.generate_dataset import (
-    GeneratePipelinePhase,
-    generate_compass_dataset,
-    DatasetHook,
-)
 
 if TYPE_CHECKING:
-    from shapely.geometry import Polygon, MultiPolygon
+    import networkx as nx
     from nrel.routee.compass.utils.type_alias import (
+        CompassQuery,
         Config,
         OSMNXQuery,
-        CompassQuery,
         Result,
         Results,
     )
-    import networkx as nx
+    from shapely.geometry import MultiPolygon, Polygon
 
-import tomlkit
 import json
 
+import tomlkit
 
 log = logging.getLogger(__name__)
 
@@ -56,8 +57,8 @@ class CompassApp:
     @classmethod
     def from_config_file(
         cls,
-        config_file: Union[str, Path],
-        parallelism: Optional[int] = None,
+        config_file: str | Path,
+        parallelism: int | None = None,
     ) -> CompassApp:
         """
         Build a CompassApp from a config file
@@ -76,14 +77,14 @@ class CompassApp:
         """
         config_path = Path(config_file)
         if not config_path.is_file():
-            raise ValueError(f"Config file {str(config_path)} does not exist")
+            raise ValueError(f"Config file {config_path!s} does not exist")
         with open(config_path) as f:
             toml_config = tomlkit.load(f)
 
         return cls.from_dict(toml_config, config_path, parallelism=parallelism)
 
     @classmethod
-    def _get_default_config_file(cls, phases: List[GeneratePipelinePhase]) -> str:
+    def _get_default_config_file(cls, phases: list[GeneratePipelinePhase]) -> str:
         """
         Internal helper to get the default config file name based on the phases.
         """
@@ -96,8 +97,8 @@ class CompassApp:
     def from_dict(
         cls,
         config: tomlkit.TOMLDocument,
-        working_dir: Optional[Path] = None,
-        parallelism: Optional[int] = None,
+        working_dir: Path | None = None,
+        parallelism: int | None = None,
     ) -> CompassApp:
         """
         Build a CompassApp from a configuration object
@@ -127,17 +128,17 @@ class CompassApp:
     def from_graph(
         cls,
         graph: nx.MultiDiGraph,
-        config_file: Optional[str] = None,
-        cache_dir: Optional[Union[str, Path]] = None,
-        hwy_speeds: Optional[dict[str, Any]] = None,
-        fallback: Optional[float] = None,
-        agg: Optional[Callable[[Any], Any]] = None,
-        phases: List[GeneratePipelinePhase] = GeneratePipelinePhase.default(),
-        raster_resolution_arc_seconds: Union[str, int] = 1,
-        vehicle_models: Optional[List[str]] = None,
-        parallelism: Optional[int] = None,
+        config_file: str | None = None,
+        cache_dir: str | Path | None = None,
+        hwy_speeds: dict[str, Any] | None = None,
+        fallback: float | None = None,
+        agg: Callable[[Any], Any] | None = None,
+        phases: list[GeneratePipelinePhase] | None = None,
+        raster_resolution_arc_seconds: str | int = 1,
+        vehicle_models: list[str] | None = None,
+        parallelism: int | None = None,
         overwrite: bool = False,
-        hooks: Optional[List[DatasetHook]] = None,
+        hooks: list[DatasetHook] | None = None,
     ) -> CompassApp:
         """
         Build a CompassApp from a networkx graph.
@@ -185,6 +186,9 @@ class CompassApp:
         Returns:
             CompassApp: a CompassApp object
         """
+        if phases is None:
+            phases = GeneratePipelinePhase.default()
+
         if cache_dir is None:
             temp_dir = TemporaryDirectory()
             cache_dir = Path(temp_dir.name)
@@ -225,8 +229,8 @@ class CompassApp:
         cls,
         query: OSMNXQuery,
         network_type: str = "drive",
-        parallelism: Optional[int] = None,
-        cache_dir: Optional[Union[str, Path]] = None,
+        parallelism: int | None = None,
+        cache_dir: str | Path | None = None,
         overwrite: bool = False,
         **kwargs: Any,
     ) -> CompassApp:
@@ -283,10 +287,10 @@ class CompassApp:
     @classmethod
     def from_polygon(
         cls,
-        polygon: Union["Polygon" | "MultiPolygon"],
+        polygon: Polygon | MultiPolygon,
         network_type: str = "drive",
-        parallelism: Optional[int] = None,
-        cache_dir: Optional[Union[str, Path]] = None,
+        parallelism: int | None = None,
+        cache_dir: str | Path | None = None,
         overwrite: bool = False,
         **kwargs: Any,
     ) -> CompassApp:
@@ -349,9 +353,9 @@ class CompassApp:
 
     def run(
         self,
-        query: Union[CompassQuery, List[CompassQuery]],
-        config: Optional[Config] = None,
-    ) -> Union[Result, Results]:
+        query: CompassQuery | list[CompassQuery],
+        config: Config | None = None,
+    ) -> Result | Results:
         """
         Run a query (or multiple queries) against the CompassApp
 
@@ -384,14 +388,12 @@ class CompassApp:
             queries = query
             single_query = False
         else:
-            raise ValueError(
-                f"Query must be a dict or list of dicts, not {type(query)}"
-            )
+            raise TypeError(f"Query must be a dict or list of dicts, not {type(query)}")
 
         queries_str = list(map(json.dumps, queries))
         config_str = json.dumps(config) if config is not None else None
 
-        results_json: List[str] = self._app._run_queries(queries_str, config_str)
+        results_json: list[str] = self._app._run_queries(queries_str, config_str)
 
         results: Results = list(map(json.loads, results_json))
         if single_query and len(results) == 1:
@@ -423,7 +425,7 @@ class CompassApp:
         return cast(int, self._app.graph_edge_destination(edge_id))
 
     def graph_edge_distance(
-        self, edge_id: int, distance_unit: Optional[str] = None
+        self, edge_id: int, distance_unit: str | None = None
     ) -> float:
         """
         get the distance for some edge
@@ -437,7 +439,7 @@ class CompassApp:
         """
         return cast(float, self._app.graph_edge_distance(edge_id, distance_unit))
 
-    def graph_get_out_edge_ids(self, vertex_id: int) -> List[int]:
+    def graph_get_out_edge_ids(self, vertex_id: int) -> list[int]:
         """
         get the list of edge ids that depart from some vertex
 
@@ -447,9 +449,9 @@ class CompassApp:
         Returns:
             edges: the edge ids of edges departing from this vertex
         """
-        return cast(List[int], self._app.graph_get_out_edge_ids(vertex_id))
+        return cast(list[int], self._app.graph_get_out_edge_ids(vertex_id))
 
-    def graph_get_in_edge_ids(self, vertex_id: int) -> List[int]:
+    def graph_get_in_edge_ids(self, vertex_id: int) -> list[int]:
         """
         get the list of edge ids that arrive from some vertex
 
@@ -459,12 +461,12 @@ class CompassApp:
         Returns:
             edges: the edge ids of edges arriving at this vertex
         """
-        return cast(List[int], self._app.graph_get_in_edge_ids(vertex_id))
+        return cast(list[int], self._app.graph_get_in_edge_ids(vertex_id))
 
     def map_match(
         self,
-        query: Union[CompassQuery, List[CompassQuery]],
-    ) -> Union[Result, Results]:
+        query: CompassQuery | list[CompassQuery],
+    ) -> Result | Results:
         """
         Run a map matching query (or multiple queries) against the CompassApp
 
@@ -492,12 +494,10 @@ class CompassApp:
             queries = query
             single_query = False
         else:
-            raise ValueError(
-                f"Query must be a dict or list of dicts, not {type(query)}"
-            )
+            raise TypeError(f"Query must be a dict or list of dicts, not {type(query)}")
 
         queries_str = list(map(json.dumps, queries))
-        results_json: List[str] = self._app._map_match(queries_str)
+        results_json: list[str] = self._app._map_match(queries_str)
 
         results: Results = list(map(json.loads, results_json))
         if single_query and len(results) == 1:
@@ -506,9 +506,9 @@ class CompassApp:
 
     def run_calculate_path(
         self,
-        query: Union[CompassQuery, List[CompassQuery]],
-        config: Optional[Config] = None,
-    ) -> Union[Result, Results]:
+        query: CompassQuery | list[CompassQuery],
+        config: Config | None = None,
+    ) -> Result | Results:
         """
         Run a path evaluation query (or multiple queries) against the CompassApp
 
@@ -534,14 +534,12 @@ class CompassApp:
             queries = query
             single_query = False
         else:
-            raise ValueError(
-                f"Query must be a dict or list of dicts, not {type(query)}"
-            )
+            raise TypeError(f"Query must be a dict or list of dicts, not {type(query)}")
 
         queries_str = list(map(json.dumps, queries))
         config_str = json.dumps(config) if config is not None else None
 
-        results_json: List[str] = self._app._run_calculate_path(queries_str, config_str)
+        results_json: list[str] = self._app._run_calculate_path(queries_str, config_str)
 
         results: Results = list(map(json.loads, results_json))
         if single_query and len(results) == 1:

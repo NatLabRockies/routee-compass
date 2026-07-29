@@ -1,11 +1,10 @@
 from __future__ import annotations
 
+import logging
+import math
 from enum import Enum
 from pathlib import Path
-
-import logging
-from typing import Union, Optional, TYPE_CHECKING
-import math
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import networkx
@@ -90,7 +89,7 @@ def _download_tile(
     filename = url.split("/")[-1]
     destination = output_dir / filename
     if destination.is_file():
-        log.info(f"{str(destination)} already exists, skipping")
+        log.info(f"{destination!s} already exists, skipping")
         return destination
 
     with requests.get(url, stream=True) as r:
@@ -117,8 +116,8 @@ def _download_tile(
 def add_grade_to_graph(
     g: networkx.MultiDiGraph,
     output_dir: Path = Path("cache"),
-    resolution_arc_seconds: Union[str, int] = 1,
-    api_key: Optional[str] = None,
+    resolution_arc_seconds: str | int = 1,
+    api_key: str | None = None,
 ) -> networkx.MultiDiGraph:
     """
     Adds grade information to the edges of a graph.
@@ -183,9 +182,7 @@ def add_grade_to_graph(
                 "If this road network is outside of the US, consider re-running without `grade` in your ."
             )
         elif len(files) == 1:
-            filepath: Union[Path, list[Path]] = files[
-                0
-            ]  # if only one file, pass it directly
+            filepath: Path | list[Path] = files[0]  # if only one file, pass it directly
         else:
             filepath = files
 

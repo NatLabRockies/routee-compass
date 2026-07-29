@@ -8,10 +8,9 @@ This builds off the [Open Street Maps Example](01_open_street_maps_example) and 
 
 
 def main():
-    import seaborn as sns
-    import numpy as np
     import matplotlib.pyplot as plt
-
+    import numpy as np
+    import seaborn as sns
     from nrel.routee.compass import CompassApp
     from nrel.routee.compass.io.convert_results import results_to_geopandas
 

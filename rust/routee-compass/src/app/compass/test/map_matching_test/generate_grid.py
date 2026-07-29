@@ -102,7 +102,6 @@ with open(edges_file, "w", newline="") as f:
 
 # Write Geometries
 with open(geoms_file, "w") as f:
-    for g in geoms:
-        f.write(g + "\n")
+    f.writelines(g + "\n" for g in geoms)
 
 print(f"Generated {len(nodes)} nodes and {len(edges)} edges.")
