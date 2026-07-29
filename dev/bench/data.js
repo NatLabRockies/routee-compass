@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785282682327,
+  "lastUpdate": 1785344724789,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4199,6 +4199,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2989682,
             "range": "± 157764",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "73398481+admrtin@users.noreply.github.com",
+            "name": "Adam Martin",
+            "username": "admrtin"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e083494fb314df0f29a66102533d0c49499274e6",
+          "message": "Merge pull request #562 from NatLabRockies/amm/ruff-fix\n\nBumps ruff requirement to >= 0.16.0 to match CI tests and fixes all ruff check errors",
+          "timestamp": "2026-07-29T11:01:48-06:00",
+          "tree_id": "f249fce1cef5f360444fa0aa37ecaa210d437005",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/e083494fb314df0f29a66102533d0c49499274e6"
+        },
+        "date": 1785344723721,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2328179,
+            "range": "± 150789",
             "unit": "ns/iter"
           }
         ]
