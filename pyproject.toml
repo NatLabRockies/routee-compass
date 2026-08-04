@@ -103,6 +103,8 @@ git = "*"
 cmake = ">=3.28,<4"
 uv = "*"
 patchelf = "*"
+c-compiler = "*"
+cxx-compiler = "*"
 
 [tool.pixi.feature.hpc.activation.env]
 ONNXRUNTIME_DIR = "$PIXI_PROJECT_ROOT/build/onnxruntime"

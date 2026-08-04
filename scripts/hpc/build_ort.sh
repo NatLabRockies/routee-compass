@@ -72,6 +72,21 @@ else
   git -C "${EIGEN_SRC_DIR}" checkout -q --detach FETCH_HEAD
 fi
 
+# cmake bakes the C/C++ compiler into CMakeCache.txt on first configure and will
+# not switch compilers on a subsequent run of an existing build tree. If the
+# active compiler (e.g. after a host OS/toolchain upgrade, or switching to the
+# conda-forge toolchain) differs from the cached one, wipe the build tree so it
+# reconfigures cleanly instead of reusing the stale compiler.
+CMAKE_CACHE="${ORT_LIB_DIR}/CMakeCache.txt"
+if [[ -f "${CMAKE_CACHE}" && -n "${CXX:-}" ]]; then
+  CACHED_CXX="$(sed -n 's|^CMAKE_CXX_COMPILER:[^=]*=||p' "${CMAKE_CACHE}")"
+  ACTIVE_CXX="$(command -v "${CXX}" || echo "${CXX}")"
+  if [[ -n "${CACHED_CXX}" && "${CACHED_CXX}" != "${ACTIVE_CXX}" ]]; then
+    echo "==> compiler changed (${CACHED_CXX} -> ${ACTIVE_CXX}); wiping stale ORT build tree"
+    rm -rf "${ORT_LIB_DIR}"
+  fi
+fi
+
 echo "==> building onnxruntime (${ORT_BUILD_CONFIG})"
 ( cd "${ONNXRUNTIME_DIR}" && \
   ./build.sh \
