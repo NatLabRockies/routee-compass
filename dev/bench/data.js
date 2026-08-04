@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785344724789,
+  "lastUpdate": 1785883641218,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4229,6 +4229,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2328179,
             "range": "± 150789",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nreinicke@users.noreply.github.com",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "58bd70372b433962c0356b9f47d17b43e081a8bb",
+          "message": "Merge pull request #563 from NatLabRockies/ndr/pin-hpc-c-compilers\n\nPin c/c++ compilers for reproducible hpc build",
+          "timestamp": "2026-08-04T16:36:04-06:00",
+          "tree_id": "c5c188b9d1a64f7e89639c90a60cee102d248bd9",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/58bd70372b433962c0356b9f47d17b43e081a8bb"
+        },
+        "date": 1785883640868,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2999764,
+            "range": "± 170673",
             "unit": "ns/iter"
           }
         ]
