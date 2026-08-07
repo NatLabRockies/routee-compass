@@ -75,13 +75,19 @@ impl TripHistoryTraversalEngine {
         state: &mut [StateVariable],
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
+        // history persists in the tree, not the state vector which is reset each traversal
+        let Some(previous_edge) = ctx.previous_edge_traversal()? else {
+            return Ok(()); // first traversal: no history yet
+        };
+        let prev_state = &previous_edge.result_state;
+
         for (src, dst, conf) in self.shift_feature_name_mappings.iter() {
-            self.shift(state, state_model, src, dst, conf)?;
+            self.shift(state, prev_state, state_model, src, dst, conf)?;
         }
         for feature in self.history_features.iter() {
             self.insert_first(
-                ctx,
                 state,
+                prev_state,
                 state_model,
                 &feature.name,
                 &feature.state_variable_config,
@@ -89,42 +95,37 @@ impl TripHistoryTraversalEngine {
         }
         Ok(())
     }
-    /// Takes feature with name `{feature_i}_{depth_j}` and shifts its value to the value of feature with name `{feature_i}_{depth_(j+1)}`
+
+    /// Writes `{feature_i}_{depth_(j+1)}` in `state` from `{feature_i}_{depth_j}` in `prev_state`,
     /// shifting values one link into "the past".
     pub fn shift(
         &self,
         state: &mut [StateVariable],
+        prev_state: &[StateVariable],
         state_model: &StateModel,
         src: &FeatureName,
         dst: &FeatureName,
         conf: &StateVariableConfig,
     ) -> Result<(), StateModelError> {
-        // <feature_i>_<depth_j> = <feature_i>_<depth_j+1>;
-        copy_state_variable(conf, state_model, state, None, dst, src)?;
+        // state[dst] = prev_state[src]
+        copy_state_variable(conf, state_model, state, Some(prev_state), dst, src)?;
         Ok(())
     }
 
-    /// Traverse one step into the history via `ctx.tree.backtrack_with_depth(state_variable, depth)`
-    /// and record the value at `format!({feature_name}_1")`. This must be run after `shift` to avoid
-    /// overwriting the first history value before shifting. if the backtrack result is empty,
-    /// do nothing.
+    /// Records the previous edge's `{feature_name}` value into `{feature_name}_1` in `state`.
     fn insert_first(
         &self,
-        ctx: &EdgeFrontierContext,
         state: &mut [StateVariable],
+        prev_state: &[StateVariable],
         state_model: &StateModel,
         feature_name: &str,
         conf: &StateVariableConfig,
-    ) -> Result<(), TraversalModelError> {
-        let Some(previous_edge) = ctx.previous_edge_traversal()? else {
-            return Ok(());
-        };
-        let previous_state: &[StateVariable] = &previous_edge.result_state;
+    ) -> Result<(), StateModelError> {
         copy_state_variable(
             conf,
             state_model,
             state,
-            Some(previous_state),
+            Some(prev_state),
             &format!("{feature_name}_1"),
             feature_name,
         )?;
@@ -316,7 +317,7 @@ mod tests {
             result_state: vec![StateVariable(0.0); 4],
         };
 
-        // relative to the context, traversal 3 will contains the "previous state."
+        // relative to the context, traversal 3 contains the "previous state."
         let mut previous_state = vec![StateVariable(0.0); 4];
         state_model
             .set_distance(
@@ -325,6 +326,16 @@ mod tests {
                 &Length::new::<uom::si::length::mile>(distance_val),
             )
             .unwrap();
+        // history slots start as sentinels in a real search
+        for name in ["edge_distance_1", "edge_distance_2", "edge_distance_3"] {
+            state_model
+                .set_distance(
+                    &mut previous_state,
+                    name,
+                    &Length::new::<uom::si::length::mile>(f64::NAN),
+                )
+                .unwrap();
+        }
 
         // 2 to 3
         let traversal_3 = EdgeTraversal {
@@ -354,12 +365,13 @@ mod tests {
         let trip_history_engine = mock_engine();
 
         let (conf, state_model, mut state) = mock_state();
+        let prev_state = state.clone();
 
         let src = &"edge_distance_2".to_string();
         let dst = &"edge_distance_3".to_string();
 
         trip_history_engine
-            .shift(&mut state, &state_model, src, dst, &conf)
+            .shift(&mut state, &prev_state, &state_model, src, dst, &conf)
             .unwrap();
 
         assert_eq!(
@@ -374,7 +386,7 @@ mod tests {
         let src = &"edge_distance_1".to_string();
         let dst = &"edge_distance_2".to_string();
         trip_history_engine
-            .shift(&mut state, &state_model, src, dst, &conf)
+            .shift(&mut state, &prev_state, &state_model, src, dst, &conf)
             .unwrap();
 
         assert_eq!(
@@ -393,45 +405,28 @@ mod tests {
         let trip_history_engine = mock_engine();
         let (conf, state_model, mut state) = mock_state();
 
-        // The vertices and edge we are traversing. these are essentially dummy placeholders.
-        let src_vertex = Vertex {
-            vertex_id: VertexId(3), // this connects us to the previous edge.
-            coordinate: InternalCoord(Coord { x: 0.0, y: 0.0 }),
-        };
-        let dst_vertex = Vertex {
-            vertex_id: VertexId(4),
-            coordinate: InternalCoord(Coord { x: 0.0, y: 0.0 }),
-        };
-        let mock_edge = Edge {
-            edge_id: EdgeId(4),
-            src_vertex_id: VertexId(3),
-            dst_vertex_id: VertexId(4),
-            distance: uom::si::f64::Length::default(),
-            edge_list_id: EdgeListId(0),
-        };
-        let parent_label = Label::Vertex(VertexId(3));
-        let mut tree = SearchTree::new_stateful(Direction::Forward);
-
-        let ctx = mock_edge_frontier_context(
-            &state_model,
-            2.0, // Expected mock distance history
-            &mut tree,
-            &src_vertex,
-            &dst_vertex,
-            &mock_edge,
-            &parent_label,
-        );
-
-        trip_history_engine
-            .insert_first(&ctx, &mut state, &state_model, "edge_distance", &conf)
+        // previous edge's result_state carrying the historical edge_distance
+        let mut prev_state = vec![StateVariable(0.0); 4];
+        state_model
+            .set_distance(
+                &mut prev_state,
+                "edge_distance",
+                &Length::new::<uom::si::length::mile>(2.0),
+            )
             .unwrap();
 
-        // Verify that the current state's "edge_distance_1" now holds the "edge_distance" from the previous traversal
+        trip_history_engine
+            .insert_first(
+                &mut state,
+                &prev_state,
+                &state_model,
+                "edge_distance",
+                &conf,
+            )
+            .unwrap();
+
         let final_distance = state_model.get_distance(&state, "edge_distance_1").unwrap();
-        assert_eq!(
-            final_distance,
-            uom::si::f64::Length::new::<uom::si::length::mile>(2.0)
-        );
+        assert_eq!(final_distance, Length::new::<uom::si::length::mile>(2.0));
     }
 
     /// **Tests that sentinel values in the historical trip features are correctly shifted and maintained in the state.**
