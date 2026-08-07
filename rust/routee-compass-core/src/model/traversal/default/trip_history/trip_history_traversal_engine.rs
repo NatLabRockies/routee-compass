@@ -116,8 +116,10 @@ impl TripHistoryTraversalEngine {
         feature_name: &str,
         conf: &StateVariableConfig,
     ) -> Result<(), TraversalModelError> {
-        let previous_edge = ctx.tree.backtrack_with_depth(ctx.src.vertex_id, 1)?;
-        let previous_state: &[StateVariable] = &previous_edge[0].result_state;
+        let Some(previous_edge) = ctx.previous_edge_traversal()? else {
+            return Ok(());
+        };
+        let previous_state: &[StateVariable] = &previous_edge.result_state;
         copy_state_variable(
             conf,
             state_model,
