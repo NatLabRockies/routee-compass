@@ -75,7 +75,6 @@ impl TripHistoryTraversalEngine {
         state: &mut [StateVariable],
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
-        // history persists in the tree, not the state vector which is reset each traversal
         let Some(previous_edge) = ctx.previous_edge_traversal()? else {
             return Ok(()); // first traversal: no history yet
         };
@@ -527,5 +526,70 @@ mod tests {
 
         let d3 = state_model.get_distance(&state, "edge_distance_3").unwrap();
         assert!(d3.value.is_nan());
+    }
+
+    /// **Tests the first-traversal case: with no previous edge, `update_history`
+    /// returns early, leaving the history slots at their sentinel values.**
+    #[test]
+    fn test_first_traversal_no_previous_edge() {
+        let trip_history_engine = mock_engine();
+
+        let conf = StateVariableConfig::Distance {
+            initial: Length::default(),
+            accumulator: bool::default(),
+            output_unit: Some(DistanceUnit::Miles),
+        };
+        let features = vec![
+            ("edge_distance".to_string(), conf.clone()),
+            ("edge_distance_1".to_string(), conf.clone()),
+            ("edge_distance_2".to_string(), conf.clone()),
+            ("edge_distance_3".to_string(), conf.clone()),
+        ];
+        let state_model = StateModel::new(features);
+
+        // history initialized to sentinel (NAN) values
+        let mut state = vec![StateVariable(0.0); 4];
+        for name in ["edge_distance_1", "edge_distance_2", "edge_distance_3"] {
+            state_model
+                .set_distance(
+                    &mut state,
+                    name,
+                    &Length::new::<uom::si::length::mile>(f64::NAN),
+                )
+                .unwrap();
+        }
+
+        // dummy vertices/edge for the first traversal out of the origin
+        let src_vertex = Vertex {
+            vertex_id: VertexId(0),
+            coordinate: InternalCoord(Coord { x: 0.0, y: 0.0 }),
+        };
+        let dst_vertex = Vertex {
+            vertex_id: VertexId(1),
+            coordinate: InternalCoord(Coord { x: 0.0, y: 0.0 }),
+        };
+        let mock_edge = Edge {
+            edge_id: EdgeId(0),
+            src_vertex_id: VertexId(0),
+            dst_vertex_id: VertexId(1),
+            distance: uom::si::f64::Length::default(),
+            edge_list_id: EdgeListId(0),
+        };
+
+        // tree containing only the origin as root: the parent has no predecessor edge
+        let root_label = Label::Vertex(VertexId(0));
+        let tree = SearchTree::with_root(root_label.clone(), Direction::Forward).unwrap();
+        let ctx =
+            EdgeFrontierContext::new(&root_label, &src_vertex, &mock_edge, &dst_vertex, &tree);
+
+        trip_history_engine
+            .update_history(&ctx, &mut state, &state_model)
+            .unwrap();
+
+        // no previous edge: every history slot remains the sentinel (NAN)
+        for name in ["edge_distance_1", "edge_distance_2", "edge_distance_3"] {
+            let d = state_model.get_distance(&state, name).unwrap();
+            assert!(d.value.is_nan(), "{name} should remain NAN");
+        }
     }
 }
