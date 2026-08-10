@@ -41,7 +41,7 @@ ndarray = "=0.17.2" # forces correct transitive dependency on ndarray by ninterp
 ninterp = "0.8.0"
 ordered-float = { version = "5.1.0", features = ["serde"] }
 ordered_hash_map = { version = "0.6.0", features = ["serde"] }
-ort = { version = "=2.0.0-rc.12", default-features = false, features = ["std", "ndarray", "copy-dylibs", "download-binaries", "tls-native"] }
+ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "ndarray", "copy-dylibs", "download-binaries", "tls-native"] }
 parquet = "59.0.0"
 priority-queue = "2.7.0"
 proc-macro-error = "1.0"
