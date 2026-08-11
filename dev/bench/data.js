@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786488897223,
+  "lastUpdate": 1786489041943,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4289,6 +4289,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2974609,
             "range": "± 234038",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3eda7f96c5f3b4d7b6767c54214a7eb31c4c9635",
+          "message": "Merge pull request #567 from NatLabRockies/dependabot/cargo/rust/ninterp-0.9.1\n\nUpdate ninterp requirement from 0.8.0 to 0.9.1 in /rust",
+          "timestamp": "2026-08-11T16:46:44-06:00",
+          "tree_id": "c2560273e97143d5f0e1ced5a65158f90c96e5de",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/3eda7f96c5f3b4d7b6767c54214a7eb31c4c9635"
+        },
+        "date": 1786489041408,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2954949,
+            "range": "± 325870",
             "unit": "ns/iter"
           }
         ]
