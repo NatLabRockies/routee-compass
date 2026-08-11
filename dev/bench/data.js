@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785883641218,
+  "lastUpdate": 1786488897223,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4259,6 +4259,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2999764,
             "range": "± 170673",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3ceb43f317b1899e48a951ebdd29d87d35946454",
+          "message": "Merge pull request #566 from NatLabRockies/dependabot/cargo/rust/ort-eq-2.0.0-rc.13\n\nUpdate ort requirement from =2.0.0-rc.12 to =2.0.0-rc.13 in /rust",
+          "timestamp": "2026-08-11T16:46:15-06:00",
+          "tree_id": "8416699f0877c7f325e9e058ecfe9eee152829d4",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/3ceb43f317b1899e48a951ebdd29d87d35946454"
+        },
+        "date": 1786488896656,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2974609,
+            "range": "± 234038",
             "unit": "ns/iter"
           }
         ]
