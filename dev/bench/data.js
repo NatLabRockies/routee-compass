@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786489041943,
+  "lastUpdate": 1786543026893,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4319,6 +4319,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2954949,
             "range": "± 325870",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "73398481+admrtin@users.noreply.github.com",
+            "name": "Adam Martin",
+            "username": "admrtin"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "021badb0b0b0332379572a85a8d370e890faed5e",
+          "message": "Merge pull request #565 from NatLabRockies/amm/trip_history_fix\n\nTwo hotfixes for TripHistoryTraversalEngine",
+          "timestamp": "2026-08-12T07:52:20-06:00",
+          "tree_id": "f4e1fe7692a19b714875d970188687d5c183aa1f",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/021badb0b0b0332379572a85a8d370e890faed5e"
+        },
+        "date": 1786543026109,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2917900,
+            "range": "± 72035",
             "unit": "ns/iter"
           }
         ]
