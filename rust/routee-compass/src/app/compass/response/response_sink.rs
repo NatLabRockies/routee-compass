@@ -31,7 +31,7 @@ impl ResponseSink {
                 filename,
                 file,
                 format,
-                delimiter: _,
+                delimiter,
                 iterations_per_flush,
                 iterations,
             } => {
@@ -49,9 +49,29 @@ impl ResponseSink {
                 })?;
 
                 let output_row = format.format_response(response)?;
-                writeln!(file_attained, "{output_row}").map_err(|e| {
-                    CompassAppError::InternalError(format!("failure writing to {filename}: {e}"))
-                })?;
+                match delimiter {
+                    Some(delimiter) => {
+                        if *it_attained > 0 {
+                            write!(file_attained, "{delimiter}").map_err(|e| {
+                                CompassAppError::InternalError(format!(
+                                    "failure writing delimiter to {filename}: {e}"
+                                ))
+                            })?;
+                        }
+                        write!(file_attained, "{output_row}").map_err(|e| {
+                            CompassAppError::InternalError(format!(
+                                "failure writing to {filename}: {e}"
+                            ))
+                        })?;
+                    }
+                    None => {
+                        writeln!(file_attained, "{output_row}").map_err(|e| {
+                            CompassAppError::InternalError(format!(
+                                "failure writing to {filename}: {e}"
+                            ))
+                        })?;
+                    }
+                }
                 *it_attained += 1;
                 if *it_attained % iterations_per_flush == 0 {
                     file_attained.flush().map_err(|e| {
@@ -145,5 +165,37 @@ impl ResponseSink {
                 Ok(out_strs.join(","))
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app::compass::response::{
+        response_output_policy::ResponseOutputPolicy, write_mode::WriteMode,
+    };
+    use serde_json::json;
+
+    #[test]
+    fn json_array_responses_are_comma_delimited() -> Result<(), Box<dyn std::error::Error>> {
+        let output_file = tempfile::NamedTempFile::new()?;
+        let policy = ResponseOutputPolicy::File {
+            filename: output_file.path().to_string_lossy().into_owned(),
+            format: ResponseOutputFormat::Json {
+                newline_delimited: false,
+            },
+            file_flush_rate: None,
+            write_mode: Some(WriteMode::Overwrite),
+        };
+        let sink = policy.build()?;
+
+        sink.write_response(&mut json!({"id": 1}))?;
+        sink.write_response(&mut json!({"id": 2}))?;
+        sink.close()?;
+
+        let contents = std::fs::read_to_string(output_file.path())?;
+        let responses: Vec<serde_json::Value> = serde_json::from_str(&contents)?;
+        assert_eq!(responses, vec![json!({"id": 1}), json!({"id": 2})]);
+        Ok(())
     }
 }
