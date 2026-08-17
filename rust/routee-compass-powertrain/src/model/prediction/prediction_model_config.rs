@@ -21,19 +21,33 @@ use serde::{Deserialize, Serialize};
 ///   If not provided, defaults to the minimum energy rate determined from the model.
 /// * `real_world_energy_adjustment` - Optional multiplier to adjust model predictions to match real-world conditions
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct PredictionModelConfig {
-    pub name: String,
-    pub model_input_file: String,
-    pub model_type: ModelType,
-    pub input_features: Vec<InputFeature>,
-    pub energy_rate_unit: EnergyRateUnit,
-    pub mass_estimate_lbs: f64,
-    pub a_star_heuristic_energy_rate: Option<f64>,
-    pub real_world_energy_adjustment: Option<f64>,
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum PredictionModelConfig {
+    PowertrainV1 {
+        name: String,
+        model_input_file: String,
+        model_type: ModelType,
+        input_features: Vec<InputFeature>,
+        energy_rate_unit: EnergyRateUnit,
+        mass_estimate_lbs: f64,
+        a_star_heuristic_energy_rate: Option<f64>,
+        real_world_energy_adjustment: Option<f64>,
+    },
+    PowertrainV2 {
+        name: String,
+        model_input_file: String,
+        model_type: ModelType,
+        input_features: Vec<InputFeature>,
+        distance: InputFeature,
+        targets: Vec<Target>,
+        predict_method: PredictMethod,
+        real_world_adjustment_factor: f64,
+        a_star_heuristic_energy_rate: Option<f64>,
+        mass_lbs: Option<f64>,
+    },
 }
-
 impl PredictionModelConfig {
+    // only generates a v1 model (for tests)
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         name: String,
@@ -45,7 +59,7 @@ impl PredictionModelConfig {
         a_star_heuristic_energy_rate: Option<f64>,
         real_world_energy_adjustment: Option<f64>,
     ) -> Self {
-        Self {
+        Self::PowertrainV1 {
             name,
             model_input_file,
             model_type,
@@ -56,4 +70,16 @@ impl PredictionModelConfig {
             real_world_energy_adjustment,
         }
     }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Target {
+    pub name: String,
+    pub energy_rate_unit: EnergyRateUnit,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum PredictMethod {
+    Rate,
+    Raw,
 }
