@@ -1,7 +1,7 @@
+use super::routee_powertrain_v2_metadata::*;
 use super::ModelType;
 use routee_compass_core::model::{state::InputFeature, unit::EnergyRateUnit};
 use serde::{Deserialize, Serialize};
-
 /// Configuration for a prediction model that estimates energy consumption.
 ///
 /// This struct encapsulates all the necessary information to load and use a machine learning
@@ -21,9 +21,9 @@ use serde::{Deserialize, Serialize};
 ///   If not provided, defaults to the minimum energy rate determined from the model.
 /// * `real_world_energy_adjustment` - Optional multiplier to adjust model predictions to match real-world conditions
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[serde(untagged)]
 pub enum PredictionModelConfig {
-    PowertrainV1 {
+    PowertrainV1Schema {
         name: String,
         model_input_file: String,
         model_type: ModelType,
@@ -33,21 +33,16 @@ pub enum PredictionModelConfig {
         a_star_heuristic_energy_rate: Option<f64>,
         real_world_energy_adjustment: Option<f64>,
     },
-    PowertrainV2 {
-        name: String,
-        model_input_file: String,
-        model_type: ModelType,
-        input_features: Vec<InputFeature>,
-        distance: InputFeature,
-        targets: Vec<Target>,
-        predict_method: PredictMethod,
-        real_world_adjustment_factor: f64,
-        a_star_heuristic_energy_rate: Option<f64>,
-        mass_lbs: Option<f64>,
+    PowertrainV2Schema {
+        model_key: String,
+        vehicle: routee_powertrain_v2_metadata::Vehicle,
+        contract: routee_powertrain_v2_metadata::Contract,
+        estimator: routee_powertrain_v2_metadata::Estimator,
     },
 }
+
 impl PredictionModelConfig {
-    // only generates a v1 model (for tests)
+    // only generates a v1 model for now
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         name: String,
@@ -59,7 +54,7 @@ impl PredictionModelConfig {
         a_star_heuristic_energy_rate: Option<f64>,
         real_world_energy_adjustment: Option<f64>,
     ) -> Self {
-        Self::PowertrainV1 {
+        Self::PowertrainV1Schema {
             name,
             model_input_file,
             model_type,
@@ -70,16 +65,4 @@ impl PredictionModelConfig {
             real_world_energy_adjustment,
         }
     }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Target {
-    pub name: String,
-    pub energy_rate_unit: EnergyRateUnit,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum PredictMethod {
-    Rate,
-    Raw,
 }
