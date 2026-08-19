@@ -86,31 +86,25 @@ impl InterpolationModel {
             1 => {
                 let grid_0 = grid[0].clone();
                 let values = Self::build_values_1d(model.as_ref(), &grid_0)?;
-                let interp =
-                    Interp1D::new(grid_0, values, strategy::Linear.into(), Extrapolate::Clamp)
-                        .map_err(|e| {
-                            TraversalModelError::TraversalModelFailure(format!(
-                                "Failed to validate 1D interpolation model: {e}"
-                            ))
-                        })?;
+                let interp = Interp1D::new(grid_0, values, strategy::Linear, Extrapolate::Clamp)
+                    .map_err(|e| {
+                        TraversalModelError::TraversalModelFailure(format!(
+                            "Failed to validate 1D interpolation model: {e}"
+                        ))
+                    })?;
                 interp.into()
             }
             2 => {
                 let grid_0 = grid[0].clone();
                 let grid_1 = grid[1].clone();
                 let values = Self::build_values_2d(model.as_ref(), &grid_0, &grid_1)?;
-                let interp = Interp2D::new(
-                    grid_0,
-                    grid_1,
-                    values,
-                    strategy::Linear.into(),
-                    Extrapolate::Clamp,
-                )
-                .map_err(|e| {
-                    TraversalModelError::TraversalModelFailure(format!(
-                        "Failed to validate 2D interpolation model: {e}"
-                    ))
-                })?;
+                let interp =
+                    Interp2D::new(grid_0, grid_1, values, strategy::Linear, Extrapolate::Clamp)
+                        .map_err(|e| {
+                            TraversalModelError::TraversalModelFailure(format!(
+                                "Failed to validate 2D interpolation model: {e}"
+                            ))
+                        })?;
                 interp.into()
             }
             3 => {
@@ -123,7 +117,7 @@ impl InterpolationModel {
                     grid_1,
                     grid_2,
                     values,
-                    strategy::Linear.into(),
+                    strategy::Linear,
                     Extrapolate::Clamp,
                 )
                 .map_err(|e| {
@@ -135,13 +129,12 @@ impl InterpolationModel {
             }
             _ => {
                 let values = Self::build_values_nd(model.as_ref(), &grid)?;
-                let interp =
-                    InterpND::new(grid, values, strategy::Linear.into(), Extrapolate::Clamp)
-                        .map_err(|e| {
-                            TraversalModelError::TraversalModelFailure(format!(
-                                "Failed to validate N-D interpolation model: {e}"
-                            ))
-                        })?;
+                let interp = InterpND::new(grid, values, strategy::Linear, Extrapolate::Clamp)
+                    .map_err(|e| {
+                        TraversalModelError::TraversalModelFailure(format!(
+                            "Failed to validate N-D interpolation model: {e}"
+                        ))
+                    })?;
                 interp.into()
             }
         };
