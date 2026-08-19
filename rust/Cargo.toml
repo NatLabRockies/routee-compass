@@ -38,7 +38,7 @@ itertools = { version = "0.15.0" }
 kdam = "0.6.3"
 log = "0.4.28"
 ndarray = "=0.17.2" # forces correct transitive dependency on ndarray by ninterp 0.8.0
-ninterp = "0.10.0"
+ninterp = "0.11.0"
 ordered-float = { version = "5.1.0", features = ["serde"] }
 ordered_hash_map = { version = "0.6.0", features = ["serde"] }
 ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "ndarray", "copy-dylibs", "download-binaries", "tls-native"] }
