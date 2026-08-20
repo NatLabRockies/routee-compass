@@ -16,55 +16,6 @@ use std::str::FromStr;
 use std::sync::Arc;
 use uom::si::f64::{Energy, Mass};
 
-/// converts a routee-powertrain v2 metadata `Feature` into an [`InputFeature`],
-/// mapping the feature's `dtype`/`units` onto the appropriate variant and unit.
-impl TryFrom<Feature> for InputFeature {
-    type Error = TraversalModelError;
-
-    fn try_from(feature: Feature) -> Result<Self, Self::Error> {
-        let name = feature.name.clone();
-        let units = feature.units.trim();
-        let input_feature = match feature.dtype.trim().to_lowercase().as_str() {
-            "distance" => InputFeature::Distance {
-                name,
-                unit: Some(DistanceUnit::from_str(units).map_err(|e| unit_err(&feature, e))?),
-            },
-            "speed" => InputFeature::Speed {
-                name,
-                unit: Some(SpeedUnit::from_str(units).map_err(|e| unit_err(&feature, e))?),
-            },
-            "time" => InputFeature::Time {
-                name,
-                unit: Some(TimeUnit::from_str(units).map_err(|e| unit_err(&feature, e))?),
-            },
-            "energy" => InputFeature::Energy {
-                name,
-                unit: Some(EnergyUnit::from_str(units).map_err(|e| unit_err(&feature, e))?),
-            },
-            "ratio" | "grade" => InputFeature::Ratio {
-                name,
-                unit: Some(RatioUnit::from_str(units).map_err(|e| unit_err(&feature, e))?),
-            },
-            "temperature" => InputFeature::Temperature {
-                name,
-                unit: Some(TemperatureUnit::from_str(units).map_err(|e| unit_err(&feature, e))?),
-            },
-            _ => InputFeature::Custom {
-                name,
-                unit: feature.units.clone(),
-            },
-        };
-        Ok(input_feature)
-    }
-}
-
-fn unit_err<E: std::fmt::Display>(feature: &Feature, e: E) -> TraversalModelError {
-    TraversalModelError::BuildError(format!(
-        "unable to parse units '{}' for feature '{}' with dtype '{}': {}",
-        feature.units, feature.name, feature.dtype, e
-    ))
-}
-
 /// A struct to hold the prediction model and associated metadata
 pub struct PredictionModelRecord {
     pub name: String,
@@ -155,45 +106,7 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
                 contract,
                 estimator,
             } => {
-                // TODO: only ONNX for now (don't change PredictionModelRecord) and inject
-                // a_star_heuristic_energy_rate. also write Unit test deserealizing a metadata.json from
-                // powertrainV2
-                if contract.feature_set.is_empty() {
-                    return Err(TraversalModelError::BuildError(format!(
-                        "You must supply at least one input feature for vehicle model {}",
-                        model_key
-                    )));
-                }
-
-                let prediction_model: Arc<dyn PredictionModel> = Arc::new(OnnxModel::new(
-                    &estimator.model_file,
-                    EnergyRateUnit::KWHPM,
-                )?);
-
-                let mass_estimate = Mass::new::<uom::si::mass::pound>(vehicle.mass_lbs.clone());
-
-                let input_features: Vec<InputFeature> = contract
-                    .feature_set
-                    .iter()
-                    .map(|feature| InputFeature::try_from(feature.clone()))
-                    .collect::<Result<Vec<InputFeature>, TraversalModelError>>()?;
-
-                let a_star_heuristic_energy_rate = prediction_model_ops::find_min_energy_rate(
-                    &prediction_model,
-                    &input_features,
-                    &EnergyRateUnit::KWHPM,
-                )?;
-
-                Ok(PredictionModelRecord {
-                    name: model_key.clone(),
-                    prediction_model: prediction_model,
-                    model_type: ModelType::Onnx,
-                    input_features,
-                    energy_rate_unit: EnergyRateUnit::KWHPM,
-                    mass_estimate,
-                    a_star_heuristic_energy_rate,
-                    real_world_energy_adjustment: contract.real_world_adjustment_factor,
-                })
+                todo!();
             }
         }
     }
@@ -283,29 +196,5 @@ impl PredictionModelRecord {
         };
 
         Ok(energy)
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::model::prediction::PredictionModelRecord;
-
-    use super::PredictionModelConfig;
-    use serde_json::Value;
-    use std::fs::File;
-    use std::io::BufReader;
-    #[test]
-    fn test_powertrain_v2_prediction_model_config() {
-        // load the example file
-        let file = File::open("src/model/prediction/test/v2_metadata_example.json").unwrap();
-        let buf = BufReader::new(file);
-        // load the data into a serde_json::Value
-        let data: Value = serde_json::from_reader(buf).unwrap();
-        // try deserializing the JSON data into a PredictionModelConfig
-        let prediction_model_config: PredictionModelConfig = serde_json::from_value(data).unwrap();
-
-        // try creating a PredictionModelRecord from the config.
-        let prediction_model_record = PredictionModelRecord::try_from(&prediction_model_config);
-        assert!(prediction_model_record.is_ok());
     }
 }
