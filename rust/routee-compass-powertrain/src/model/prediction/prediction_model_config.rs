@@ -66,3 +66,28 @@ impl PredictionModelConfig {
         }
     }
 }
+#[cfg(test)]
+mod test {
+    use crate::model::prediction::{prediction_model, PredictionModelRecord};
+
+    use super::PredictionModelConfig;
+    use serde_json::Value;
+    use std::fs::File;
+    use std::io::BufReader;
+    #[test]
+    fn test_load_v2_prediction_model_config() {
+        // load the example file
+        let file = File::open("src/model/prediction/test/v2_metadata_example.json").unwrap();
+        let buf = BufReader::new(file);
+
+        // load the data into a serde_json::Value
+        let data: Value = serde_json::from_reader(buf).unwrap();
+
+        // try deserializing the JSON data into a PredictionModelConfig
+        let prediction_model_config: PredictionModelConfig = serde_json::from_value(data).unwrap();
+        assert!(matches!(
+            prediction_model_config,
+            PredictionModelConfig::PowertrainV2Schema { .. }
+        ));
+    }
+}
