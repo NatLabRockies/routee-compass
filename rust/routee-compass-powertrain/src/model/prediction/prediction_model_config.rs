@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 ///   If not provided, defaults to the minimum energy rate determined from the model.
 /// * `real_world_energy_adjustment` - Optional multiplier to adjust model predictions to match real-world conditions
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(untagged, deny_unknown_fields)]
+#[serde(untagged)]
 pub enum PredictionModelConfig {
     PowertrainV1Schema {
         name: String,
