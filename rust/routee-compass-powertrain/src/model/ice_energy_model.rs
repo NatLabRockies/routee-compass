@@ -17,7 +17,6 @@ use std::sync::Arc;
 use uom::{si::f64::Energy, ConstZero};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
 pub struct IceEnergyModelConfig {
     #[serde(flatten)]
     pub prediction_model: PredictionModelConfig,

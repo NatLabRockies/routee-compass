@@ -1,18 +1,13 @@
-use crate::model::fieldname;
-
-use super::routee_powertrain_v2_metadata::routee_powertrain_v2_metadata::Feature;
 use super::{
     interpolation::InterpolationModel, model_type::ModelType, onnx::onnx_model::OnnxModel,
     prediction_model_ops, smartcore::SmartcoreModel, PredictionModel, PredictionModelConfig,
 };
+use crate::model::fieldname;
 use routee_compass_core::model::{
     state::{InputFeature, StateModel, StateVariable},
     traversal::TraversalModelError,
-    unit::{
-        DistanceUnit, EnergyRateUnit, EnergyUnit, RatioUnit, SpeedUnit, TemperatureUnit, TimeUnit,
-    },
+    unit::{EnergyRateUnit, EnergyUnit},
 };
-use std::str::FromStr;
 use std::sync::Arc;
 use uom::si::f64::{Energy, Mass};
 
@@ -53,12 +48,11 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
                 // build the prediction model from the config
                 let prediction_model: Arc<dyn PredictionModel> = match model_type {
                     ModelType::Smartcore => {
-                        let model =
-                            SmartcoreModel::new(model_input_file, energy_rate_unit.clone())?;
+                        let model = SmartcoreModel::new(model_input_file, *energy_rate_unit)?;
                         Arc::new(model)
                     }
                     ModelType::Onnx => {
-                        let model = OnnxModel::new(model_input_file, energy_rate_unit.clone())?;
+                        let model = OnnxModel::new(model_input_file, *energy_rate_unit)?;
                         Arc::new(model)
                     }
                     ModelType::Interpolate {
@@ -70,7 +64,7 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
                             *underlying_model.clone(),
                             input_features.clone(),
                             feature_bounds.clone(),
-                            energy_rate_unit.clone(),
+                            *energy_rate_unit,
                         )?;
                         Arc::new(model)
                     }
@@ -87,25 +81,20 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
 
                 let real_world_energy_adjustment = real_world_energy_adjustment.unwrap_or(1.0);
 
-                let mass_estimate = Mass::new::<uom::si::mass::pound>(mass_estimate_lbs.clone());
+                let mass_estimate = Mass::new::<uom::si::mass::pound>(*mass_estimate_lbs);
 
                 Ok(PredictionModelRecord {
                     name: name.clone(),
                     prediction_model,
                     model_type: model_type.clone(),
                     input_features: input_features.clone(),
-                    energy_rate_unit: energy_rate_unit.clone(),
+                    energy_rate_unit: *energy_rate_unit,
                     mass_estimate,
                     a_star_heuristic_energy_rate,
                     real_world_energy_adjustment,
                 })
             }
-            PredictionModelConfig::PowertrainV2Schema {
-                model_key,
-                vehicle,
-                contract,
-                estimator,
-            } => {
+            PredictionModelConfig::PowertrainV2Schema { .. } => {
                 todo!();
             }
         }

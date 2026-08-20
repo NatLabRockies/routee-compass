@@ -1,4 +1,4 @@
-use super::routee_powertrain_v2_metadata::*;
+use super::routee_powertrain_v2_metadata::{Contract, Estimator, Vehicle};
 use super::ModelType;
 use routee_compass_core::model::{state::InputFeature, unit::EnergyRateUnit};
 use serde::{Deserialize, Serialize};
@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 ///   If not provided, defaults to the minimum energy rate determined from the model.
 /// * `real_world_energy_adjustment` - Optional multiplier to adjust model predictions to match real-world conditions
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(untagged)]
+#[serde(untagged, deny_unknown_fields)]
 pub enum PredictionModelConfig {
     PowertrainV1Schema {
         name: String,
@@ -35,9 +35,9 @@ pub enum PredictionModelConfig {
     },
     PowertrainV2Schema {
         model_key: String,
-        vehicle: routee_powertrain_v2_metadata::Vehicle,
-        contract: routee_powertrain_v2_metadata::Contract,
-        estimator: routee_powertrain_v2_metadata::Estimator,
+        vehicle: Vehicle,
+        contract: Contract,
+        estimator: Estimator,
     },
 }
 
@@ -68,8 +68,6 @@ impl PredictionModelConfig {
 }
 #[cfg(test)]
 mod test {
-    use crate::model::prediction::{prediction_model, PredictionModelRecord};
-
     use super::PredictionModelConfig;
     use serde_json::Value;
     use std::fs::File;
