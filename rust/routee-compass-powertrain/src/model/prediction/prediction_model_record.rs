@@ -95,7 +95,9 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
                 })
             }
             PredictionModelConfig::PowertrainV2Schema { .. } => {
-                todo!();
+                Err(TraversalModelError::BuildError(
+                    "PowertrainV2Schema is not yet supported".to_string(),
+                ))
             }
         }
     }
