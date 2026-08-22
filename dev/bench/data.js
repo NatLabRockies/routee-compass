@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786543026893,
+  "lastUpdate": 1787427067016,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4349,6 +4349,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2917900,
             "range": "± 72035",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35633311+Gaurav890@users.noreply.github.com",
+            "name": "Gaurav Chaulagain",
+            "username": "Gaurav890"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f6326301405c4237b29c71e9249bfe546b29043c",
+          "message": "Fix JSON array response delimiters (#568)",
+          "timestamp": "2026-08-22T13:26:22-06:00",
+          "tree_id": "894b42270f1524cadbdd13f0e900a40a31e37212",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/f6326301405c4237b29c71e9249bfe546b29043c"
+        },
+        "date": 1787427065968,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 3013884,
+            "range": "± 196609",
             "unit": "ns/iter"
           }
         ]
