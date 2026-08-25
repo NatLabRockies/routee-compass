@@ -4,34 +4,15 @@ use crate::model::prediction::{
     smartcore::SmartcoreModel,
 };
 use itertools::Itertools;
-use ndarray::{Array1, Array2, Array3, ArrayD, IxDyn};
+use ninterp::ndarray::{Array1, Array2, Array3, ArrayD, IxDyn};
 use ninterp::prelude::*;
 use routee_compass_core::model::{
     state::InputFeature, traversal::TraversalModelError, unit::EnergyRateUnit,
 };
 use std::{collections::HashMap, path::Path};
 
-/// Enum to hold different interpolator types based on dimensionality
-enum InterpolatorVariant {
-    One(Interp1DOwned<f64, strategy::Linear>),
-    Two(Interp2DOwned<f64, strategy::Linear>),
-    Three(Interp3DOwned<f64, strategy::Linear>),
-    N(InterpNDOwned<f64, strategy::Linear>),
-}
-
-impl InterpolatorVariant {
-    fn interpolate(&self, point: &[f64]) -> Result<f64, ninterp::error::InterpolateError> {
-        match self {
-            InterpolatorVariant::One(interp) => interp.interpolate(point),
-            InterpolatorVariant::Two(interp) => interp.interpolate(point),
-            InterpolatorVariant::Three(interp) => interp.interpolate(point),
-            InterpolatorVariant::N(interp) => interp.interpolate(point),
-        }
-    }
-}
-
 pub struct InterpolationModel {
-    interpolator: InterpolatorVariant,
+    interpolator: InterpolatorEnum<f64>,
     energy_rate_unit: EnergyRateUnit,
 }
 
@@ -82,7 +63,7 @@ impl InterpolationModel {
         };
 
         // Build the grid for all features
-        let mut grid: Vec<ndarray::Array1<f64>> = Vec::new();
+        let mut grid: Vec<Array1<f64>> = Vec::new();
 
         for input_feature in input_features.iter() {
             let feature_name = input_feature.name();
@@ -92,7 +73,7 @@ impl InterpolationModel {
                 ))
             })?;
 
-            let feature_grid = ndarray::Array1::from_vec(linspace(
+            let feature_grid = Array1::from_vec(linspace(
                 feature_bounds.lower_bound,
                 feature_bounds.upper_bound,
                 feature_bounds.num_bins,
@@ -111,7 +92,7 @@ impl InterpolationModel {
                             "Failed to validate 1D interpolation model: {e}"
                         ))
                     })?;
-                InterpolatorVariant::One(interp)
+                interp.into()
             }
             2 => {
                 let grid_0 = grid[0].clone();
@@ -124,7 +105,7 @@ impl InterpolationModel {
                                 "Failed to validate 2D interpolation model: {e}"
                             ))
                         })?;
-                InterpolatorVariant::Two(interp)
+                interp.into()
             }
             3 => {
                 let grid_0 = grid[0].clone();
@@ -144,7 +125,7 @@ impl InterpolationModel {
                         "Failed to validate 3D interpolation model: {e}"
                     ))
                 })?;
-                InterpolatorVariant::Three(interp)
+                interp.into()
             }
             _ => {
                 let values = Self::build_values_nd(model.as_ref(), &grid)?;
@@ -154,7 +135,7 @@ impl InterpolationModel {
                             "Failed to validate N-D interpolation model: {e}"
                         ))
                     })?;
-                InterpolatorVariant::N(interp)
+                interp.into()
             }
         };
 
