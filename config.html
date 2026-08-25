@@ -245,8 +245,7 @@
 <li class="toctree-l1"><a class="reference internal" href="developers/build_the_docs.html">Build The Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developers/contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developers/rust_code_style.html">Rust Code Style</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developers/hpc_build.html">Building on HPC systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developers/troubleshooting_macos_installation.html">Troubleshooting MacOS Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers/troubleshooting.html">Troubleshooting</a></li>
 </ul>
 
     </div>
@@ -501,86 +500,86 @@ We added some annotations to describe the different sections:</p>
 <span class="k">[algorithm]</span>
 <span class="c1"># classic best-first search algorithm, will use cost estimates to guide the search</span>
 <span class="c1"># toward a path destination.</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;a*&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"a*"</span>
 
 <span class="c1"># the parameters for the underlying road network graph</span>
 <span class="k">[graph]</span>
 <span class="c1"># a file containing all the graph edges and their adjacencies.</span>
-<span class="n">edge_list</span><span class="p">.</span><span class="n">input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;edges-compass.csv.gz&quot;</span>
+<span class="n">edge_list</span><span class="p">.</span><span class="n">input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"edges-compass.csv.gz"</span>
 <span class="c1"># # more than one edge list can be provided:</span>
 <span class="c1"># edge_list = [</span>
-<span class="c1">#   { input_file = &quot;edges-compass.csv.gz&quot; },</span>
-<span class="c1">#   { input_file = &quot;edges-transit.csv.gz&quot; }</span>
+<span class="c1">#   { input_file = "edges-compass.csv.gz" },</span>
+<span class="c1">#   { input_file = "edges-transit.csv.gz" }</span>
 <span class="c1"># ]</span>
 <span class="c1"># a file containing all the graph verticies</span>
-<span class="n">vertex_list_input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;vertices-compass.csv.gz&quot;</span>
-<span class="c1"># if verbose is true, you&#39;ll see more information when loading the graph</span>
+<span class="n">vertex_list_input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"vertices-compass.csv.gz"</span>
+<span class="c1"># if verbose is true, you'll see more information when loading the graph</span>
 <span class="n">verbose</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 
 <span class="k">[mapping]</span>
 <span class="c1"># vertex or edge-oriented mapping</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;edge&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"edge"</span>
 <span class="c1"># geometries used to build linestrings. should be as many entries as there are graph.edge_list entries.</span>
-<span class="n">geometry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">input_file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;edges-geometries-enumerated.txt.gz&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="n">geometry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">input_file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"edges-geometries-enumerated.txt.gz"</span><span class="w"> </span><span class="p">}</span>
 <span class="c1"># mapping threshold</span>
 <span class="n">tolerance</span><span class="p">.</span><span class="n">distance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">15.0</span>
 <span class="c1"># mapping threshold distance unit</span>
-<span class="n">tolerance</span><span class="p">.</span><span class="n">unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;meters&quot;</span>
+<span class="n">tolerance</span><span class="p">.</span><span class="n">unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"meters"</span>
 <span class="c1"># allow queries without destinations, for shortest path tree results</span>
 <span class="n">queries_without_destinations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<span class="c1"># whether we match queries via &quot;point&quot;, &quot;vertex_id&quot;, or &quot;edge_id&quot; (or arrays of combinations)</span>
-<span class="n">matching_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;point&quot;</span>
+<span class="c1"># whether we match queries via "point", "vertex_id", or "edge_id" (or arrays of combinations)</span>
+<span class="n">matching_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"point"</span>
 
 <span class="k">[search.traversal]</span>
-<span class="c1"># the traversal section can either be a single model configuration, or, if &quot;combined&quot;</span>
+<span class="c1"># the traversal section can either be a single model configuration, or, if "combined"</span>
 <span class="c1"># is specified, it can be a collection of models listed at [[search.traversal.models]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;combined&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"combined"</span>
 <span class="k">[[search.traversal.models]]</span>
 <span class="c1"># model distances in miles</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;distance&quot;</span>
-<span class="n">distance_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;miles&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"distance"</span>
+<span class="n">distance_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"miles"</span>
 
 <span class="k">[[search.traversal.models]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;speed&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"speed"</span>
 <span class="c1"># the file that has speeds for each edge in the graph</span>
-<span class="n">speed_table_input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;edges-posted-speed-enumerated.txt.gz&quot;</span>
+<span class="n">speed_table_input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"edges-posted-speed-enumerated.txt.gz"</span>
 <span class="c1"># the units of the values in the speed table</span>
-<span class="n">speed_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;kph&quot;</span>
+<span class="n">speed_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"kph"</span>
 
 <span class="k">[[search.traversal.models]]</span>
 <span class="c1"># model time in minutes using the above distances and speeds</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;time&quot;</span>
-<span class="n">time_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;minutes&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"time"</span>
+<span class="n">time_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"minutes"</span>
 
 <span class="k">[[search.traversal.models]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;grade&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"grade"</span>
 <span class="c1"># the file that has grades for each edge in the graph</span>
-<span class="n">grade_table_input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;edges-grade-enumerated.txt.gz&quot;</span>
+<span class="n">grade_table_input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"edges-grade-enumerated.txt.gz"</span>
 <span class="c1"># the units of the grade table</span>
-<span class="n">grade_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;decimal&quot;</span>
+<span class="n">grade_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"decimal"</span>
 
 <span class="k">[[search.traversal.models]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;energy&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"energy"</span>
 
 <span class="c1"># here, we specify which vehicles to make available at query time</span>
 <span class="c1"># if you wanted to add more models, you would make a new [[search.traversal.models.vehicles]] section.</span>
 <span class="k">[[search.traversal.models.vehicles]]</span>
-<span class="c1"># the name of the model that can be passed in from a query as &quot;model_name&quot;</span>
-<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;2012_Ford_Focus&quot;</span>
+<span class="c1"># the name of the model that can be passed in from a query as "model_name"</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2012_Ford_Focus"</span>
 <span class="c1"># the type of the vehicle, currently either:</span>
-<span class="c1"># - &quot;ice&quot; i.e. Internal Combustion Engine (ICE)</span>
-<span class="c1"># - &quot;bev&quot; i.e. Battery Electric Vehicle (BEV)</span>
-<span class="c1"># - &quot;phev&quot; i.e. Plug-in Hybrid Electric Vehicle (PHEV)</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ice&quot;</span>
+<span class="c1"># - "ice" i.e. Internal Combustion Engine (ICE)</span>
+<span class="c1"># - "bev" i.e. Battery Electric Vehicle (BEV)</span>
+<span class="c1"># - "phev" i.e. Plug-in Hybrid Electric Vehicle (PHEV)</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"ice"</span>
 <span class="c1"># the file for the routee-powertrain model</span>
-<span class="n">model_input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;models/2012_Ford_Focus.bin&quot;</span>
+<span class="n">model_input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"models/2012_Ford_Focus.bin"</span>
 <span class="c1"># the units of what the routee-powertrain model expects speed to be in</span>
-<span class="n">speed_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;mph&quot;</span>
+<span class="n">speed_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mph"</span>
 <span class="c1"># the units of what the routee-powertrain model expects grade to be in</span>
-<span class="n">grade_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;decimal&quot;</span>
+<span class="n">grade_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"decimal"</span>
 <span class="c1"># the units of what the routee-powertrain model outputs for energy</span>
-<span class="n">energy_rate_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;gallons gasoline/mile&quot;</span>
-<span class="c1"># the &quot;best case&quot; energy rate for this particular vehicle (something like highway mpg) that&#39;s used in the a-star algorithm</span>
+<span class="n">energy_rate_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"gallons gasoline/mile"</span>
+<span class="c1"># the "best case" energy rate for this particular vehicle (something like highway mpg) that's used in the a-star algorithm</span>
 <span class="n">ideal_energy_rate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.02857143</span>
 <span class="c1"># A real world adjustment factor for things like temperature and auxillary loads</span>
 <span class="n">real_world_energy_adjustment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.166</span>
@@ -588,7 +587,7 @@ We added some annotations to describe the different sections:</p>
 <span class="c1"># what underlying machine learn framework to use [smartcore | interpolate ]</span>
 <span class="c1"># in this case we use a model that interpolates the underlying model type over a regular grid</span>
 <span class="k">[search.traversal.models.vehicles.model_type.interpolate]</span>
-<span class="n">underlying_model_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;smartcore&quot;</span>
+<span class="n">underlying_model_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"smartcore"</span>
 <span class="n">speed_lower_bound</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
 <span class="n">speed_upper_bound</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span>
 <span class="n">speed_bins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">101</span>
@@ -602,22 +601,22 @@ We added some annotations to describe the different sections:</p>
 
 <span class="c1"># based on 65.5 cents per mile 2023 IRS mileage rate, $/mile</span>
 <span class="k">[cost.vehicle_rates.trip_distance]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;factor&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"factor"</span>
 <span class="n">factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.655</span>
 
 <span class="c1"># based on $20/hr approximation of 2023 median hourly wages, $/second</span>
 <span class="k">[cost.vehicle_rates.trip_time]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;factor&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"factor"</span>
 <span class="n">factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.333336</span>
 
 <span class="c1"># based on AAA regular unleaded gas prices sampled 12/21/2023</span>
 <span class="k">[cost.vehicle_rates.trip_energy_liquid]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;factor&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"factor"</span>
 <span class="n">factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">3.120</span>
 
-<span class="c1"># based on $0.50/kWh approximation of DCFC charge rates, $/kWhtype = &quot;factor&quot;</span>
+<span class="c1"># based on $0.50/kWh approximation of DCFC charge rates, $/kWhtype = "factor"</span>
 <span class="k">[cost.vehicle_rates.trip_energy_electric]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;factor&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"factor"</span>
 <span class="n">factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.50</span>
 
 <span class="c1"># Each cost component get multiplied by the corresponding vehicle weight.</span>
@@ -630,11 +629,11 @@ We added some annotations to describe the different sections:</p>
 
 <span class="c1"># A turn delay model that assigns a time cost to each type of turn</span>
 <span class="k">[[search.traversal.models]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;turn_delay&quot;</span>
-<span class="n">edge_heading_input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;edges-headings-enumerated.csv.gz&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"turn_delay"</span>
+<span class="n">edge_heading_input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"edges-headings-enumerated.csv.gz"</span>
 <span class="k">[search.traversal.models.turn_delay_model]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tabular_discrete&quot;</span>
-<span class="n">time_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;seconds&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"tabular_discrete"</span>
+<span class="n">time_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"seconds"</span>
 <span class="k">[search.traversal.models.turn_delay_model.table]</span>
 <span class="n">no_turn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
 <span class="n">slight_right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span>
@@ -648,16 +647,16 @@ We added some annotations to describe the different sections:</p>
 <span class="c1"># which plugins should be activated?</span>
 <span class="k">[plugin]</span>
 <span class="n">input_plugins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="c1"># The grid search allows you to specify a &quot;grid_search&quot; key in the query and it will generate multiple queries from those parameters.</span>
-<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;grid_search&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="c1"># The grid search allows you to specify a "grid_search" key in the query and it will generate multiple queries from those parameters.</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"grid_search"</span><span class="w"> </span><span class="p">},</span>
 <span class="w">    </span><span class="c1"># The load balancer estimates the runtime for each query and is used by CompassApp to best leverage parallelism.</span>
-<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;load_balancer&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">weight_heuristic</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;haversine&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"load_balancer"</span><span class="p">,</span><span class="w"> </span><span class="n">weight_heuristic</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"haversine"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
 <span class="p">]</span>
 <span class="n">output_plugins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="c1"># The traversal plugin appends various items to the result.</span>
-<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;traversal&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">route</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;geo_json&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"traversal"</span><span class="p">,</span><span class="w"> </span><span class="n">route</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"geo_json"</span><span class="p">,</span><span class="w"> </span><span class="p">},</span>
 <span class="w">    </span><span class="c1"># The uuid plugin adds a map specific id (like Open Street Maps Nodes) onto the compass verticies</span>
-<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;uuid&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">uuid_input_file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;vertices-uuid-enumerated.txt.gz&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"uuid"</span><span class="p">,</span><span class="w"> </span><span class="n">uuid_input_file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"vertices-uuid-enumerated.txt.gz"</span><span class="w"> </span><span class="p">},</span>
 <span class="p">]</span>
 </pre></div>
 </div>
@@ -674,17 +673,17 @@ exist as meta-algorithms, namely Yen's and Single-Via Paths.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[algorithm]</span>
 <span class="c1"># classic best-first search algorithm, will use cost estimates to guide the search</span>
 <span class="c1"># toward a path destination.</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;a*&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"a*"</span>
 
-<span class="c1"># # default behavior on search termination is &quot;allow_tree_termination&quot; which supports</span>
+<span class="c1"># # default behavior on search termination is "allow_tree_termination" which supports</span>
 <span class="c1"># # reachability searches. if you do not want to allow partial search results, you</span>
-<span class="c1"># # can choose &quot;all_terminations_fail&quot;.</span>
-<span class="c1"># termination_behavior = &quot;all_terminations_fail&quot;</span>
+<span class="c1"># # can choose "all_terminations_fail".</span>
+<span class="c1"># termination_behavior = "all_terminations_fail"</span>
 </pre></div>
 </div>
 <p>To skip cost estimates and use a simple breadth-first search, choose &quot;Dijkstra's&quot;:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[algorithm]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;dijkstras&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"dijkstras"</span>
 </pre></div>
 </div>
 </section>
@@ -697,13 +696,13 @@ exist as meta-algorithms, namely Yen's and Single-Via Paths.</p>
 <p>To configure either ksp algorithm, you must set some additional parameters as well as
 choose the underlying search algorithm (a* or Dijkstra's):</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1"># # classic k-shortest paths algorithm</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;yens&quot;</span>
-<span class="c1"># type = &quot;svp&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"yens"</span>
+<span class="c1"># type = "svp"</span>
 <span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
-<span class="n">similarity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;distance_weighted_cosine_similarity&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">threshold</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.1</span><span class="w"> </span><span class="p">}</span>
-<span class="n">termination</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;max_iteration&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">max</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">}</span>
+<span class="n">similarity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"distance_weighted_cosine_similarity"</span><span class="p">,</span><span class="w"> </span><span class="n">threshold</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.1</span><span class="w"> </span><span class="p">}</span>
+<span class="n">termination</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"max_iteration"</span><span class="p">,</span><span class="w"> </span><span class="n">max</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">}</span>
 <span class="k">[algorithm.underlying]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;a*&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"a*"</span>
 </pre></div>
 </div>
 <section id="ksp-parameters">
@@ -714,9 +713,9 @@ less than <em>k</em> to be returned, and this depends on the network and other K
 to the working solution set. In this example, both similarity functions will dismiss
 paths that are greater than 10% similar.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1"># cheaper computation</span>
-<span class="n">similarity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;edge_id_cosine_similarity&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">threshold</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.1</span><span class="w"> </span><span class="p">}</span>
+<span class="n">similarity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"edge_id_cosine_similarity"</span><span class="p">,</span><span class="w"> </span><span class="n">threshold</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.1</span><span class="w"> </span><span class="p">}</span>
 <span class="c1"># slightly more expensive but more correct</span>
-<span class="n">similarity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;distance_weighted_cosine_similarity&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">threshold</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.1</span><span class="w"> </span><span class="p">}</span>
+<span class="n">similarity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"distance_weighted_cosine_similarity"</span><span class="p">,</span><span class="w"> </span><span class="n">threshold</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.1</span><span class="w"> </span><span class="p">}</span>
 
 <span class="n">KSP</span><span class="w"> </span><span class="n">termination</span><span class="w"> </span><span class="n">criteria</span><span class="w"> </span><span class="n">determines</span><span class="w"> </span><span class="n">how</span><span class="w"> </span><span class="n">long</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">run</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">meta-search</span><span class="p">.</span><span class="w"> </span><span class="n">Given</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">a</span><span class="w"> </span>
 <span class="n">similarity</span><span class="w"> </span><span class="n">function</span><span class="w"> </span><span class="n">might</span><span class="w"> </span><span class="n">dismiss</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">candidate</span><span class="w"> </span><span class="n">path</span><span class="err">,</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">may</span><span class="w"> </span><span class="n">require</span><span class="w"> </span><span class="n">running</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">KSP</span>
@@ -724,11 +723,11 @@ paths that are greater than 10% similar.</p>
 
 <span class="err">```</span><span class="n">toml</span>
 <span class="c1"># run it for k steps (default)</span>
-<span class="n">termination</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;exact&quot;</span>
+<span class="n">termination</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"exact"</span>
 <span class="c1"># run it for up to max steps until k is reached. max should be &gt;= k.</span>
-<span class="n">termination</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;max_iteration&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">max</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">}</span>
+<span class="n">termination</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"max_iteration"</span><span class="p">,</span><span class="w"> </span><span class="n">max</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">}</span>
 <span class="c1"># run it for up to (k*factor) steps until k is reached. useful if k varies between queries.</span>
-<span class="n">termination</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;factor&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">factor</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">}</span>
+<span class="n">termination</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"factor"</span><span class="p">,</span><span class="w"> </span><span class="n">factor</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
 </section>
@@ -741,21 +740,21 @@ paths that are greater than 10% similar.</p>
 <p>For vertex-oriented mapping, all fields are optional.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[mapping]</span>
 <span class="c1"># # this matches incoming points to the nearest vertex in the graph.</span>
-<span class="c1"># spatial_index_type = &quot;vertex&quot;</span>
+<span class="c1"># spatial_index_type = "vertex"</span>
 <span class="c1"># # alternatively, builds the spatial index over edges in the graph.</span>
-<span class="c1"># spatial_index_type = &quot;edge&quot;</span>
+<span class="c1"># spatial_index_type = "edge"</span>
 
-<span class="c1"># # if you don&#39;t have a file with linestring geometries, you can build</span>
+<span class="c1"># # if you don't have a file with linestring geometries, you can build</span>
 <span class="c1"># # simple linestrings from the vertices of each edge list.</span>
-<span class="c1"># geometry = { type = &quot;from_vertices&quot; } </span>
-<span class="c1"># geometry.type = &quot;from_vertices&quot;  # TOML shorthand for above</span>
+<span class="c1"># geometry = { type = "from_vertices" } </span>
+<span class="c1"># geometry.type = "from_vertices"  # TOML shorthand for above</span>
 
 <span class="c1"># # if you can bring your own, the resulting routes will have greater realism.</span>
-<span class="c1"># geometry = { type = &quot;from_linestrings&quot;, input_file = &quot;edges-geometries-enumerated.txt.gz&quot; }</span>
+<span class="c1"># geometry = { type = "from_linestrings", input_file = "edges-geometries-enumerated.txt.gz" }</span>
 
 <span class="c1"># # optional query distance tolerance for map matching.</span>
 <span class="c1"># tolerance.distance = 15.0</span>
-<span class="c1"># tolerance.unit = &quot;meters&quot;</span>
+<span class="c1"># tolerance.unit = "meters"</span>
 
 <span class="c1"># # allow user to submit queries without destinations, such as when</span>
 <span class="c1"># # shortest path trees are the desired result, not routes. true by default.</span>
@@ -764,21 +763,21 @@ paths that are greater than 10% similar.</p>
 <span class="c1"># # the default map input type is a combined strategy that attempts to</span>
 <span class="c1"># # match by Point, otherwise expects the user to pass either a vertex ({origin|destination}_vertex)</span>
 <span class="c1"># # or an edge ({origin|destination}_edge). a more restrictive strategy can be</span>
-<span class="c1"># # specified here with a subset of these values or a single value such as &quot;point&quot;.</span>
-<span class="c1"># matching_type = [&quot;point&quot;, &quot;edge_id&quot;, &quot;vertex_id&quot;]</span>
+<span class="c1"># # specified here with a subset of these values or a single value such as "point".</span>
+<span class="c1"># matching_type = ["point", "edge_id", "vertex_id"]</span>
 </pre></div>
 </div>
 <p>Edge-oriented mapping uses some additional (non-optional) line geometry input and builds a spatial lookup over those lines.</p>
 <p>This model will map coordinates to <code class="docutils literal notranslate"><span class="pre">origin_edge</span></code> or a <code class="docutils literal notranslate"><span class="pre">destination_edge</span></code> into the query.</p>
 <p>As opposed to vertex-oriented mapping, the edge-oriented will additionally apply any constraint model rules to any mapped edges, preventing mapping assignments that are invalid frontiers.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[mapping]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;edge&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"edge"</span>
 <span class="c1"># this can b</span>
-<span class="n">geometry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">input_file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;edges-geometries-enumerated.txt.gz&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="n">geometry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">input_file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"edges-geometries-enumerated.txt.gz"</span><span class="w"> </span><span class="p">}</span>
 
 <span class="c1"># # optional query distance tolerance for map matching.</span>
 <span class="c1"># tolerance.distance = 15.0</span>
-<span class="c1"># tolerance.unit = &quot;meters&quot;</span>
+<span class="c1"># tolerance.unit = "meters"</span>
 
 <span class="c1"># # allow user to submit queries without destinations, such as when</span>
 <span class="c1"># # shortest path trees are the desired result, not routes. true by default.</span>
@@ -787,8 +786,8 @@ paths that are greater than 10% similar.</p>
 <span class="c1"># # the default map input type is a combined strategy that attempts to</span>
 <span class="c1"># # match by Point, otherwise expects the user to pass either a vertex ({origin|destination}_vertex)</span>
 <span class="c1"># # or an edge ({origin|destination}_edge). a more restrictive strategy can be</span>
-<span class="c1"># # specified here with a subset of these values or a single value such as &quot;point&quot;.</span>
-<span class="c1"># matching_type = [&quot;point&quot;, &quot;edge_id&quot;, &quot;vertex_id&quot;]</span>
+<span class="c1"># # specified here with a subset of these values or a single value such as "point".</span>
+<span class="c1"># matching_type = ["point", "edge_id", "vertex_id"]</span>
 </pre></div>
 </div>
 </section>
@@ -801,8 +800,8 @@ Here are the default traversal models that come with the <code class="docutils l
 <h3>Distance<a class="headerlink" href="#distance" title="Link to this heading">#</a></h3>
 <p>The distance traversal model is a very simple model that just uses distance for computing a route, producing the route that has the shortest distance.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[search.traversal.models]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;distance&quot;</span>
-<span class="n">distance_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;miles&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"distance"</span>
+<span class="n">distance_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"miles"</span>
 </pre></div>
 </div>
 </section>
@@ -810,9 +809,9 @@ Here are the default traversal models that come with the <code class="docutils l
 <h3>Speed<a class="headerlink" href="#speed" title="Link to this heading">#</a></h3>
 <p>The speed table traversal model uses a speed lookup table to assign edge speeds.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[search.traversal.models]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;speed&quot;</span>
-<span class="n">speed_table_input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;edges-posted-speed-enumerated.txt.gz&quot;</span>
-<span class="n">speed_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;kph&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"speed"</span>
+<span class="n">speed_table_input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"edges-posted-speed-enumerated.txt.gz"</span>
+<span class="n">speed_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"kph"</span>
 </pre></div>
 </div>
 </section>
@@ -820,8 +819,8 @@ Here are the default traversal models that come with the <code class="docutils l
 <h3>Time<a class="headerlink" href="#time" title="Link to this heading">#</a></h3>
 <p>This simple model computes traversal time based on upstream distance and speed models.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[search.traversal.models]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;time&quot;</span>
-<span class="n">time_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;minutes&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"time"</span>
+<span class="n">time_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"minutes"</span>
 </pre></div>
 </div>
 </section>
@@ -829,9 +828,9 @@ Here are the default traversal models that come with the <code class="docutils l
 <h3>Grade<a class="headerlink" href="#grade" title="Link to this heading">#</a></h3>
 <p>Uses a lookup table to assign grade values.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[search.traversal.models]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;grade&quot;</span>
-<span class="n">grade_input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;edges-grade-enumerated.txt.gz&quot;</span>
-<span class="n">grade_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;decimal&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"grade"</span>
+<span class="n">grade_input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"edges-grade-enumerated.txt.gz"</span>
+<span class="n">grade_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"decimal"</span>
 </pre></div>
 </div>
 </section>
@@ -839,8 +838,8 @@ Here are the default traversal models that come with the <code class="docutils l
 <h3>Elevation<a class="headerlink" href="#elevation" title="Link to this heading">#</a></h3>
 <p>Assigns elevation gain and loss calculated from the grade value and distance.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[search.traversal.models]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;elevation&quot;</span>
-<span class="n">distance_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;feet&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"elevation"</span>
+<span class="n">distance_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"feet"</span>
 </pre></div>
 </div>
 </section>
@@ -848,27 +847,27 @@ Here are the default traversal models that come with the <code class="docutils l
 <h3>Energy<a class="headerlink" href="#energy" title="Link to this heading">#</a></h3>
 <p>The energy model computes energy (with a routee-powertrain vehicle model) and speed over an edge.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[search.traversal.models]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;energy&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"energy"</span>
 
 <span class="c1"># here, we specify which vehicles to make available at query time</span>
 <span class="c1"># if you wanted to add more models, you would make a new [[traversal.models.vehicles]] section.</span>
 <span class="k">[[search.traversal.models.vehicles]]</span>
-<span class="c1"># the name of the model that can be passed in from a query as &quot;model_name&quot;</span>
-<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;2012_Ford_Focus&quot;</span>
+<span class="c1"># the name of the model that can be passed in from a query as "model_name"</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2012_Ford_Focus"</span>
 <span class="c1"># the type of the vehicle, currently either:</span>
-<span class="c1"># - &quot;ice&quot; i.e. Internal Combustion Engine (ICE)</span>
-<span class="c1"># - &quot;bev&quot; i.e. Battery Electric Vehicle (BEV)</span>
-<span class="c1"># - &quot;phev&quot; i.e. Plug-in Hybrid Electric Vehicle (PHEV)</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ice&quot;</span>
+<span class="c1"># - "ice" i.e. Internal Combustion Engine (ICE)</span>
+<span class="c1"># - "bev" i.e. Battery Electric Vehicle (BEV)</span>
+<span class="c1"># - "phev" i.e. Plug-in Hybrid Electric Vehicle (PHEV)</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"ice"</span>
 <span class="c1"># the file for the routee-powertrain model</span>
-<span class="n">model_input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;models/2012_Ford_Focus.bin&quot;</span>
+<span class="n">model_input_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"models/2012_Ford_Focus.bin"</span>
 <span class="c1"># the units of what the routee-powertrain model expects speed to be in</span>
-<span class="n">speed_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;mph&quot;</span>
+<span class="n">speed_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mph"</span>
 <span class="c1"># the units of what the routee-powertrain model expects grade to be in</span>
-<span class="n">grade_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;decimal&quot;</span>
+<span class="n">grade_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"decimal"</span>
 <span class="c1"># the units of what the routee-powertrain model outputs for energy</span>
-<span class="n">energy_rate_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;gallons gasoline/mile&quot;</span>
-<span class="c1"># the &quot;best case&quot; energy rate for this particular vehicle (something like highway mpg) that&#39;s used in the a-star algorithm</span>
+<span class="n">energy_rate_unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"gallons gasoline/mile"</span>
+<span class="c1"># the "best case" energy rate for this particular vehicle (something like highway mpg) that's used in the a-star algorithm</span>
 <span class="n">ideal_energy_rate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.02857143</span>
 <span class="c1"># A real world adjustment factor for things like temperature and auxillary loads</span>
 <span class="n">real_world_energy_adjustment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.166</span>
@@ -876,7 +875,7 @@ Here are the default traversal models that come with the <code class="docutils l
 <span class="c1"># what underlying machine learn framework to use [smartcore | interpolate ]</span>
 <span class="c1"># in this case we use a model that interpolates the underlying model type over a regular grid</span>
 <span class="k">[search.traversal.models.vehicles.model_type.interpolate]</span>
-<span class="n">underlying_model_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;smartcore&quot;</span>
+<span class="n">underlying_model_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"smartcore"</span>
 <span class="n">speed_lower_bound</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
 <span class="n">speed_upper_bound</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span>
 <span class="n">speed_bins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">101</span>
@@ -899,29 +898,29 @@ Both queries and results are valid json objects and so a plugin takes in a json 
 <h3>Grid Search<a class="headerlink" href="#grid-search" title="Link to this heading">#</a></h3>
 <p>The grid search plugin allows you to specify a <code class="docutils literal notranslate"><span class="pre">grid_search</span></code> key in the query and it will generate multiple queries from those parameters. For example, if you had a query:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;origin_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Government Center Station&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;destination_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cannonball Creek Brewery&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;origin_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;origin_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;destination_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;destination_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;model_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2016_TOYOTA_Camry_4cyl_2WD&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;grid_search&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;test_cases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="nt">"origin_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Government Center Station"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"destination_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Cannonball Creek Brewery"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"origin_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"origin_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"destination_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"destination_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"model_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"grid_search"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"test_cases"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">      </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;shortest_time&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;weights&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">&quot;trip_distance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">&quot;trip_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">&quot;trip_energy&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="w">        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shortest_time"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"weights"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"trip_distance"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"trip_time"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"trip_energy"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">      </span><span class="p">},</span>
 <span class="w">      </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;least_energy&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;weights&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">&quot;trip_distance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">&quot;trip_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">&quot;trip_energy&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"least_energy"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"weights"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"trip_distance"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"trip_time"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"trip_energy"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">      </span><span class="p">}</span>
 <span class="w">    </span><span class="p">]</span>
@@ -932,40 +931,40 @@ Both queries and results are valid json objects and so a plugin takes in a json 
 <p>The grid search plugin would take this single query and generate two queries that would be fed into the application:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
 <span class="w">  </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;origin_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Government Center Station&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;destination_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cannonball Creek Brewery&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;origin_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;origin_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;destination_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;destination_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;model_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2016_TOYOTA_Camry_4cyl_2WD&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;shortest_time&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;weights&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;trip_distance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;trip_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;trip_energy&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="w">    </span><span class="nt">"origin_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Government Center Station"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"destination_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Cannonball Creek Brewery"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"origin_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"origin_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"destination_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"destination_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"model_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shortest_time"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"weights"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"trip_distance"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"trip_time"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"trip_energy"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">},</span>
 <span class="w">  </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;origin_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Government Center Station&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;destination_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cannonball Creek Brewery&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;origin_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;origin_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;destination_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;destination_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;least_energy&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;model_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2016_TOYOTA_Camry_4cyl_2WD&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;weights&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;trip_distance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;trip_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;trip_energy&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"origin_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Government Center Station"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"destination_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Cannonball Creek Brewery"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"origin_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"origin_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"destination_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"destination_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"least_energy"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"model_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"weights"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"trip_distance"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"trip_time"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"trip_energy"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">]</span>
 </pre></div>
 </div>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[plugin.input_plugins]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;grid_search&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"grid_search"</span>
 </pre></div>
 </div>
 </section>
@@ -979,35 +978,35 @@ With the load balancer plugin, Compass will identify this and bundle the three s
 </pre></div>
 </div>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[plugin.input_plugins]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;load_balancer&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"load_balancer"</span>
 <span class="c1"># method for estimating query runtime, in this case haversine distance in kilometers.</span>
 <span class="c1"># this heuristic only works for trips with origin/destination pairs.</span>
-<span class="n">weight_heuristic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;haversine&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="n">weight_heuristic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"haversine"</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
 <p>if a user has fields on their queries that can be used directly or mapped to weight values, they may use
 the custom weight heuristic. this numeric example expects a field <code class="docutils literal notranslate"><span class="pre">my_weight_value:</span> <span class="pre">float</span></code> on each query:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[plugin.input_plugins]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;load_balancer&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"load_balancer"</span>
 <span class="k">[plugin.input_plugins.weight_heuristic]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;custom&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"custom"</span>
 <span class="k">[plugin.input_plugins.weight_heuristic.custom_weight_type]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;numeric&quot;</span>
-<span class="n">column_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;my_weight_value&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"numeric"</span>
+<span class="n">column_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"my_weight_value"</span>
 </pre></div>
 </div>
 <p>categorical fields are also supported by providing a mapping. this example expects a <code class="docutils literal notranslate"><span class="pre">mode</span></code> field
 and uses values <code class="docutils literal notranslate"><span class="pre">[walk,</span> <span class="pre">bike,</span> <span class="pre">drive]</span></code> to map to weight values of 1, 10, and 100, for example
 based on observed search sizes for each travel mode.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[plugin.input_plugins]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;load_balancer&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"load_balancer"</span>
 <span class="k">[plugin.input_plugins.weight_heuristic]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;custom&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"custom"</span>
 <span class="k">[plugin.input_plugins.weight_heuristic.custom_weight_type]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;categorical&quot;</span>
-<span class="n">column_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;mode&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"categorical"</span>
+<span class="n">column_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mode"</span>
 <span class="n">default</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
-<span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;walk&quot;</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;bike&quot;</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;drive&quot;</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="p">}</span>
+<span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"walk"</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s2">"bike"</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="s2">"drive"</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
 </section>
@@ -1019,9 +1018,9 @@ based on observed search sizes for each travel mode.</p>
 <h3>Traversal<a class="headerlink" href="#traversal" title="Link to this heading">#</a></h3>
 <p>A plugin that appends various items to the result. It leverages the mapping model for route and tree geometry generation.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[plugin.output_plugins]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;traversal&quot;</span>
-<span class="n">route</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;geo_json&quot;</span>
-<span class="n">tree</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;geo_json&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"traversal"</span>
+<span class="n">route</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"geo_json"</span>
+<span class="n">tree</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"geo_json"</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">route</span></code> key will add route information to the result depending on the type.
@@ -1039,48 +1038,48 @@ The <code class="docutils literal notranslate"><span class="pre">tree</span></co
 <p>Each expression takes inputs, defined as a mapping from <a class="reference external" href="https://goessner.net/articles/JsonPath/">JSONPath</a> (on the right) to a variable name (on the left) to use. The variables, constants, infix operators and mathematical operations can be used in the <code class="docutils literal notranslate"><span class="pre">expr</span></code>. The result of the expression is stored on the <code class="docutils literal notranslate"><span class="pre">output</span></code> JSONPath. Under-the-hood, we use <a class="reference external" href="https://docs.rs/fasteval/latest/fasteval/">fasteval</a> for expression evaluation; see the docs for any restrictions on variable naming.</p>
 <p>For example, to estimate the cost per mile of a trip, we can take the <code class="docutils literal notranslate"><span class="pre">route.cost.total_cost</span></code> and divide it by the <code class="docutils literal notranslate"><span class="pre">route.traversal_summary.trip_time.value</span></code>. Here we assume the time is in minutes:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[plugin.output_plugins]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;eval&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"eval"</span>
 <span class="n">expressions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span>
 <span class="w">  </span><span class="n">inputs</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">cost</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;$.route.cost.total_cost&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">time</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;$.route.traversal_summary.trip_time.value&quot;</span>
+<span class="w">    </span><span class="n">cost</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"$.route.cost.total_cost"</span><span class="p">,</span>
+<span class="w">    </span><span class="n">time</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"$.route.traversal_summary.trip_time.value"</span>
 <span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="n">expr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;cost / (time / 60.0)&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="n">output</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;$.route.cost.cost_per_hour&quot;</span>
+<span class="w">  </span><span class="n">expr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"cost / (time / 60.0)"</span><span class="p">,</span>
+<span class="w">  </span><span class="n">output</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"$.route.cost.cost_per_hour"</span>
 <span class="p">}]</span>
-<span class="n">on_failure</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ignore&quot;</span>
+<span class="n">on_failure</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"ignore"</span>
 </pre></div>
 </div>
 <p>Expressions can be chained to store incremental (and dependent) terms. Here, the recorded distance is assumed in miles:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[plugin.output_plugins]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;eval&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"eval"</span>
 <span class="n">expressions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span>
 <span class="w">  </span><span class="n">inputs</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">cost</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;$.route.cost.total_cost&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">time</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;$.route.traversal_summary.trip_time.value&quot;</span>
+<span class="w">    </span><span class="n">cost</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"$.route.cost.total_cost"</span><span class="p">,</span>
+<span class="w">    </span><span class="n">time</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"$.route.traversal_summary.trip_time.value"</span>
 <span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="n">expr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;cost / (time / 60.0)&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="n">output</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;$.route.cost.cost_per_hour&quot;</span>
+<span class="w">  </span><span class="n">expr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"cost / (time / 60.0)"</span><span class="p">,</span>
+<span class="w">  </span><span class="n">output</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"$.route.cost.cost_per_hour"</span>
 <span class="p">},</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">inputs</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">cost</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;$.route.cost.total_cost&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">dist</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;$.route.traversal_summary.trip_distance.value&quot;</span>
+<span class="w">    </span><span class="n">cost</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"$.route.cost.total_cost"</span><span class="p">,</span>
+<span class="w">    </span><span class="n">dist</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"$.route.traversal_summary.trip_distance.value"</span>
 <span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="n">expr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;cost / (dist * 1.609)&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="n">output</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;$.route.cost.cost_per_km&quot;</span>
+<span class="w">  </span><span class="n">expr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"cost / (dist * 1.609)"</span><span class="p">,</span>
+<span class="w">  </span><span class="n">output</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"$.route.cost.cost_per_km"</span>
 <span class="p">}]</span>
-<span class="n">on_failure</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ignore&quot;</span>
+<span class="n">on_failure</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"ignore"</span>
 </pre></div>
 </div>
 <section id="failure-modes">
 <h4>Failure modes<a class="headerlink" href="#failure-modes" title="Link to this heading">#</a></h4>
 <p>If the evaluation fails, there are three behaviors:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1"># do nothing</span>
-<span class="n">on_failure</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ignore&quot;</span><span class="w"> </span>
+<span class="n">on_failure</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"ignore"</span><span class="w"> </span>
 <span class="c1"># raise an error to the plugin</span>
-<span class="n">on_failure</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;interrupt&quot;</span><span class="w"> </span>
+<span class="n">on_failure</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"interrupt"</span><span class="w"> </span>
 <span class="c1"># write the error to a location on the output</span>
-<span class="n">on_failure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;record&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;$.error&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span>
+<span class="n">on_failure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"record"</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"$.error"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span>
 </pre></div>
 </div>
 </section>
@@ -1200,96 +1199,96 @@ The <code class="docutils literal notranslate"><span class="pre">tree</span></co
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[system]</span>
 <span class="c1"># the default. used in most Python Compass executions to allow Compass to return JSON</span>
 <span class="c1"># result payloads into Python. Also supports Rust code integrations.</span>
-<span class="n">response_persistence_policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;persist_response_in_memory&quot;</span>
+<span class="n">response_persistence_policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"persist_response_in_memory"</span>
 <span class="c1"># use on CLI runs of Compass to prevent memory leaks.</span>
-<span class="n">response_persistence_policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;discard_response_from_memory&quot;</span>
+<span class="n">response_persistence_policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"discard_response_from_memory"</span>
 </pre></div>
 </div>
 <p>Output to JSON:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[system.response_output_policy]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;file&quot;</span>
-<span class="n">filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;result.json&quot;</span>
-<span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;json&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">newline_delimited</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span><span class="w"> </span><span class="p">}</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"file"</span>
+<span class="n">filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"result.json"</span>
+<span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"json"</span><span class="p">,</span><span class="w"> </span><span class="n">newline_delimited</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span><span class="w"> </span><span class="p">}</span>
 
 <span class="c1"># append to an existing file (default)</span>
-<span class="n">write_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;append&quot;</span>
-<span class="c1"># # overwrite an existing file. do not use when running Compass in &quot;chunking&quot; mode.</span>
-<span class="c1"># write_mode = &quot;overwrite&quot;</span>
-<span class="c1"># # throw an error if the file exists. do not use when running Compass in &quot;chunking&quot; mode.</span>
-<span class="c1"># write_mode = &quot;error&quot;</span>
+<span class="n">write_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"append"</span>
+<span class="c1"># # overwrite an existing file. do not use when running Compass in "chunking" mode.</span>
+<span class="c1"># write_mode = "overwrite"</span>
+<span class="c1"># # throw an error if the file exists. do not use when running Compass in "chunking" mode.</span>
+<span class="c1"># write_mode = "error"</span>
 
-<span class="c1"># # optionally set the &quot;flush rate&quot; to force write operations at some interval</span>
+<span class="c1"># # optionally set the "flush rate" to force write operations at some interval</span>
 <span class="c1"># # here, for example, every 100 searches.</span>
 <span class="c1"># file_flush_rate = 100</span>
 </pre></div>
 </div>
 <p>Output to JSON in newline-delimited format:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[system.response_output_policy]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;file&quot;</span>
-<span class="n">filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;result.jsonl&quot;</span>
-<span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;json&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">newline_delimited</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"file"</span>
+<span class="n">filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"result.jsonl"</span>
+<span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"json"</span><span class="p">,</span><span class="w"> </span><span class="n">newline_delimited</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
 <p>Output to CSV. This requires a mapping from JSON path to CSV column.</p>
 <p><em>note: when running Compass in &quot;chunking&quot; mode, always set sorted to <code class="docutils literal notranslate"><span class="pre">true</span></code> so that
 subsequent chunks always share the same CSV header ordering.</em></p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[system.response_output_policy]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;file&quot;</span>
-<span class="n">filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;result.csv&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"file"</span>
+<span class="n">filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"result.csv"</span>
 <span class="k">[system.response_output_policy.format]</span>
 <span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 <span class="k">[system.response_output_policy.format.mapping]</span>
-<span class="n">olon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;request.origin_x&quot;</span>
-<span class="n">olat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;request.origin_y&quot;</span>
-<span class="n">dlon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;request.destination_x&quot;</span>
-<span class="n">dlat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;request.destination_y&quot;</span>
-<span class="n">runtime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;search_app_runtime&quot;</span>
-<span class="n">ram_mb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;search_result_size_mib&quot;</span>
-<span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">optional</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;error&quot;</span><span class="w"> </span><span class="p">}</span>
-<span class="n">time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;route.traversal_summary.trip_time&quot;</span>
-<span class="n">total_cost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;route.cost.total_cost&quot;</span>
+<span class="n">olon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"request.origin_x"</span>
+<span class="n">olat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"request.origin_y"</span>
+<span class="n">dlon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"request.destination_x"</span>
+<span class="n">dlat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"request.destination_y"</span>
+<span class="n">runtime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"search_app_runtime"</span>
+<span class="n">ram_mb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"search_result_size_mib"</span>
+<span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">optional</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"error"</span><span class="w"> </span><span class="p">}</span>
+<span class="n">time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"route.traversal_summary.trip_time"</span>
+<span class="n">total_cost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"route.cost.total_cost"</span>
 </pre></div>
 </div>
 <p>Multiple output files are supported. Here, the complete output as JSON is
 preserved, while a CSV contains a high-level summary. An additional file
 contains any errors.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[system.response_output_policy]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;combined&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"combined"</span>
 
 <span class="k">[[system.response_output_policy.policies]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;file&quot;</span>
-<span class="n">filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;result.jsonl&quot;</span>
-<span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;json&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">newline_delimited</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"file"</span>
+<span class="n">filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"result.jsonl"</span>
+<span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"json"</span><span class="p">,</span><span class="w"> </span><span class="n">newline_delimited</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
 
 <span class="k">[[system.response_output_policy.policies]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;file&quot;</span>
-<span class="n">filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;summary.csv&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"file"</span>
+<span class="n">filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"summary.csv"</span>
 <span class="k">[system.response_output_policy.policies.format]</span>
 <span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 <span class="k">[system.response_output_policy.policies.format.mapping]</span>
-<span class="n">olon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;request.origin_x&quot;</span>
-<span class="n">olat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;request.origin_y&quot;</span>
-<span class="n">dlon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;request.destination_x&quot;</span>
-<span class="n">dlat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;request.destination_y&quot;</span>
-<span class="n">runtime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;search_app_runtime&quot;</span>
-<span class="n">ram_mb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;search_result_size_mib&quot;</span>
-<span class="n">time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;route.traversal_summary.trip_time&quot;</span>
-<span class="n">total_cost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;route.cost.total_cost&quot;</span>
+<span class="n">olon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"request.origin_x"</span>
+<span class="n">olat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"request.origin_y"</span>
+<span class="n">dlon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"request.destination_x"</span>
+<span class="n">dlat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"request.destination_y"</span>
+<span class="n">runtime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"search_app_runtime"</span>
+<span class="n">ram_mb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"search_result_size_mib"</span>
+<span class="n">time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"route.traversal_summary.trip_time"</span>
+<span class="n">total_cost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"route.cost.total_cost"</span>
 <span class="c1"># add other relevant summary columns here</span>
 
 <span class="k">[[system.response_output_policy.policies]]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;file&quot;</span>
-<span class="n">filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;errors.csv&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"file"</span>
+<span class="n">filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"errors.csv"</span>
 <span class="k">[system.response_output_policy.policies.format]</span>
-<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;csv&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"csv"</span>
 <span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 <span class="k">[system.response_output_policy.policies.format.mapping]</span>
-<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;request.name&quot;</span><span class="w">  </span><span class="c1"># any keys on queries are available here</span>
-<span class="n">olon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;request.origin_x&quot;</span>
-<span class="n">olat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;request.origin_y&quot;</span>
-<span class="n">dlon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;request.destination_x&quot;</span>
-<span class="n">dlat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;request.destination_y&quot;</span>
-<span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">optional</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;error&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"request.name"</span><span class="w">  </span><span class="c1"># any keys on queries are available here</span>
+<span class="n">olon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"request.origin_x"</span>
+<span class="n">olat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"request.origin_y"</span>
+<span class="n">dlon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"request.destination_x"</span>
+<span class="n">dlat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"request.destination_y"</span>
+<span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">optional</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"error"</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
 </section>

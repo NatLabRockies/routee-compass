@@ -245,8 +245,7 @@
 <li class="toctree-l1"><a class="reference internal" href="developers/build_the_docs.html">Build The Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developers/contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developers/rust_code_style.html">Rust Code Style</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developers/hpc_build.html">Building on HPC systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developers/troubleshooting_macos_installation.html">Troubleshooting MacOS Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers/troubleshooting.html">Troubleshooting</a></li>
 </ul>
 
     </div>
@@ -512,7 +511,7 @@ query execution. Overrides the value in the config file.</p></li>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompassApp</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">&quot;config.toml&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">"config.toml"</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -539,7 +538,7 @@ query execution. Overrides the value in the config.</p></li>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompassApp</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;parallelism&quot;</span><span class="p">:</span> <span class="mi">2</span> <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">"parallelism"</span><span class="p">:</span> <span class="mi">2</span> <span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -631,7 +630,7 @@ cache_dir. Defaults to False.</p></li>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompassApp</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_place</span><span class="p">(</span><span class="s2">&quot;Denver, Colorado, USA&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_place</span><span class="p">(</span><span class="s2">"Denver, Colorado, USA"</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -792,11 +791,11 @@ the original python methods.</p>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompassApp</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">&quot;config.toml&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">"config.toml"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
-<span class="go">        &quot;trace&quot;: [</span>
-<span class="go">            {&quot;x&quot;: -105.1710052, &quot;y&quot;: 39.7402804},</span>
-<span class="go">            {&quot;x&quot;: -105.1710052, &quot;y&quot;: 39.7402804}</span>
+<span class="go">        "trace": [</span>
+<span class="go">            {"x": -105.1710052, "y": 39.7402804},</span>
+<span class="go">            {"x": -105.1710052, "y": 39.7402804}</span>
 <span class="go">        ]</span>
 <span class="go">    }</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">map_match</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
@@ -824,14 +823,14 @@ the original python methods.</p>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompassApp</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">&quot;config.toml&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">"config.toml"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
-<span class="go">        &quot;origin_name&quot;: &quot;NREL&quot;,</span>
-<span class="go">        &quot;destination_name&quot;: &quot;Comrade Brewing Company&quot;,</span>
-<span class="go">        &quot;origin_x&quot;: -105.1710052,</span>
-<span class="go">        &quot;origin_y&quot;: 39.7402804,</span>
-<span class="go">        &quot;destination_x&quot;: -104.9009913,</span>
-<span class="go">        &quot;destination_y&quot;: 39.6757025</span>
+<span class="go">        "origin_name": "NREL",</span>
+<span class="go">        "destination_name": "Comrade Brewing Company",</span>
+<span class="go">        "origin_x": -105.1710052,</span>
+<span class="go">        "origin_y": 39.7402804,</span>
+<span class="go">        "destination_x": -104.9009913,</span>
+<span class="go">        "destination_y": 39.6757025</span>
 <span class="go">    }</span>
 </pre></div>
 </div>
@@ -860,9 +859,9 @@ the original python methods.</p>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompassApp</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">&quot;config.toml&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">"config.toml"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
-<span class="go">        &quot;path&quot;: [{&quot;edge_id&quot;: 0}, {&quot;edge_id&quot;: 2}],</span>
+<span class="go">        "path": [{"edge_id": 0}, {"edge_id": 2}],</span>
 <span class="go">    }</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">run_calculate_path</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 </pre></div>
@@ -972,8 +971,8 @@ and before the function returns.</p></li>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">osmnx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ox</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">ox</span><span class="o">.</span><span class="n">graph_from_place</span><span class="p">(</span><span class="s2">&quot;Denver, Colorado, USA&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_compass_dataset</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;denver_co&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">ox</span><span class="o">.</span><span class="n">graph_from_place</span><span class="p">(</span><span class="s2">"Denver, Colorado, USA"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_compass_dataset</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"denver_co"</span><span class="p">))</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1039,9 +1038,9 @@ None will use USGS raster elevation tiles</p></li>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">osmnx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ox</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">ox</span><span class="o">.</span><span class="n">graph_from_place</span><span class="p">(</span><span class="s2">&quot;Denver, Colorado, USA&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">ox</span><span class="o">.</span><span class="n">graph_from_place</span><span class="p">(</span><span class="s2">"Denver, Colorado, USA"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">add_grade_to_graph</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">g2</span> <span class="o">=</span> <span class="n">ox</span><span class="o">.</span><span class="n">graph_from_place</span><span class="p">(</span><span class="s2">&quot;Denver, Colorado, USA&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g2</span> <span class="o">=</span> <span class="n">ox</span><span class="o">.</span><span class="n">graph_from_place</span><span class="p">(</span><span class="s2">"Denver, Colorado, USA"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g2</span> <span class="o">=</span> <span class="n">add_grade_to_graph</span><span class="p">(</span><span class="n">g2</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=&lt;</span><span class="n">api_key</span><span class="o">&gt;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1088,7 +1087,7 @@ Defaults to None.</p></li>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompassApp</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass.plot</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_route_folium</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">&quot;config.toml&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">"config.toml"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="p">{</span><span class="n">origin_x</span><span class="p">:</span> <span class="o">-</span><span class="mf">105.1710052</span><span class="p">,</span> <span class="n">origin_y</span><span class="p">:</span> <span class="mf">39.7402804</span><span class="p">,</span> <span class="n">destination_x</span><span class="p">:</span> <span class="o">-</span><span class="mf">104.9009913</span><span class="p">,</span> <span class="n">destination_y</span><span class="p">:</span> <span class="mf">39.6757025</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">coords</span> <span class="o">=</span> <span class="n">result_dict_to_coords</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -1140,7 +1139,7 @@ Defaults to None.</p></li>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompassApp</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass.plot</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_route_folium</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">&quot;config.toml&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">"config.toml"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="p">{</span><span class="n">origin_x</span><span class="p">:</span> <span class="o">-</span><span class="mf">105.1710052</span><span class="p">,</span> <span class="n">origin_y</span><span class="p">:</span> <span class="mf">39.7402804</span><span class="p">,</span> <span class="n">destination_x</span><span class="p">:</span> <span class="o">-</span><span class="mf">104.9009913</span><span class="p">,</span> <span class="n">destination_y</span><span class="p">:</span> <span class="mf">39.6757025</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">plot_route_folium</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
@@ -1174,7 +1173,7 @@ Defaults to None.</p></li>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompassApp</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass.plot</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_results_folium</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">&quot;config.toml&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">"config.toml"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="p">{</span><span class="n">origin_x</span><span class="p">:</span> <span class="o">-</span><span class="mf">105.1710052</span><span class="p">,</span> <span class="n">origin_y</span><span class="p">:</span> <span class="mf">39.7402804</span><span class="p">,</span> <span class="n">destination_x</span><span class="p">:</span> <span class="o">-</span><span class="mf">104.9009913</span><span class="p">,</span> <span class="n">destination_y</span><span class="p">:</span> <span class="mf">39.6757025</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">plot_results_folium</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
@@ -1200,7 +1199,7 @@ Defaults to None.</p></li>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompassApp</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass.plot</span><span class="w"> </span><span class="kn">import</span> <span class="n">result_dict_to_coords</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">&quot;config.toml&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">"config.toml"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="p">{</span><span class="n">origin_x</span><span class="p">:</span> <span class="o">-</span><span class="mf">105.1710052</span><span class="p">,</span> <span class="n">origin_y</span><span class="p">:</span> <span class="mf">39.7402804</span><span class="p">,</span> <span class="n">destination_x</span><span class="p">:</span> <span class="o">-</span><span class="mf">104.9009913</span><span class="p">,</span> <span class="n">destination_y</span><span class="p">:</span> <span class="mf">39.6757025</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">coords</span> <span class="o">=</span> <span class="n">result_dict_to_coords</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>

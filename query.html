@@ -245,8 +245,7 @@
 <li class="toctree-l1"><a class="reference internal" href="developers/build_the_docs.html">Build The Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developers/contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developers/rust_code_style.html">Rust Code Style</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developers/hpc_build.html">Building on HPC systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developers/troubleshooting_macos_installation.html">Troubleshooting MacOS Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers/troubleshooting.html">Troubleshooting</a></li>
 </ul>
 
     </div>
@@ -461,12 +460,12 @@ and is in a json format.</p>
 <h2>Basic<a class="headerlink" href="#basic" title="Link to this heading">#</a></h2>
 <p>Here's a very simple example query:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;origin_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Government Center Station&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;destination_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cannonball Creek Brewery&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;origin_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;origin_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;destination_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;destination_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span>
+<span class="w">  </span><span class="nt">"origin_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Government Center Station"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"destination_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Cannonball Creek Brewery"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"origin_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"origin_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"destination_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"destination_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -487,16 +486,16 @@ You can provide any arbitrary key if you want to pass information through.</p>
 <p>Here's an example:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
 <span class="w">  </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;origin_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;origin_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;destination_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;destination_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span>
+<span class="w">    </span><span class="nt">"origin_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"origin_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"destination_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"destination_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span>
 <span class="w">  </span><span class="p">},</span>
 <span class="w">  </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;origin_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;origin_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;destination_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;destination_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span>
+<span class="w">    </span><span class="nt">"origin_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"origin_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"destination_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"destination_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">]</span>
 </pre></div>
@@ -507,31 +506,31 @@ You can provide any arbitrary key if you want to pass information through.</p>
 <p>If you have the <code class="docutils literal notranslate"><span class="pre">grid_search</span></code> input plugin enabled, you can also provide a <code class="docutils literal notranslate"><span class="pre">grid_search</span></code> key that the plugin will use to generate multiple queries from a single query.</p>
 <p>For example if you had this query:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;origin_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Government Center Station&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;destination_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cannonball Creek Brewery&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;origin_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;origin_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;destination_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;destination_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;model_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2016_TOYOTA_Camry_4cyl_2WD&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;grid_search&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;test_cases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="nt">"origin_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Government Center Station"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"destination_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Cannonball Creek Brewery"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"origin_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"origin_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"destination_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"destination_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"model_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"grid_search"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"test_cases"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">      </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;shortest_time&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;weights&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">&quot;trip_distance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">&quot;trip_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">&quot;trip_energy_liquid&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">&quot;trip_energy_electric&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="w">        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shortest_time"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"weights"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"trip_distance"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"trip_time"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"trip_energy_liquid"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"trip_energy_electric"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">      </span><span class="p">},</span>
 <span class="w">      </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;least_energy&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;weights&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">&quot;trip_distance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">&quot;trip_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">&quot;trip_energy_liquid&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">&quot;trip_energy_electric&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span>
+<span class="w">        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"least_energy"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"weights"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"trip_distance"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"trip_time"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"trip_energy_liquid"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"trip_energy_electric"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">      </span><span class="p">}</span>
 <span class="w">    </span><span class="p">]</span>
@@ -542,35 +541,35 @@ You can provide any arbitrary key if you want to pass information through.</p>
 <p>The grid search plugin would take this single query and generate two queries that would be fed into the application:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
 <span class="w">  </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;origin_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Government Center Station&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;destination_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cannonball Creek Brewery&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;origin_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;origin_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;destination_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;destination_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;model_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2016_TOYOTA_Camry_4cyl_2WD&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;shortest_time&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;weights&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;trip_distance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;trip_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;trip_energy_liquid&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;trip_energy_electric&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="w">    </span><span class="nt">"origin_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Government Center Station"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"destination_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Cannonball Creek Brewery"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"origin_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"origin_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"destination_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"destination_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"model_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shortest_time"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"weights"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"trip_distance"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"trip_time"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"trip_energy_liquid"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"trip_energy_electric"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">},</span>
 <span class="w">  </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;origin_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Government Center Station&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;destination_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cannonball Creek Brewery&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;origin_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;origin_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;destination_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;destination_y&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;model_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2016_TOYOTA_Camry_4cyl_2WD&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;least_energy&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;weights&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;trip_distance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;trip_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;trip_energy_liquid&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;trip_energy_electric&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span>
+<span class="w">    </span><span class="nt">"origin_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Government Center Station"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"destination_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Cannonball Creek Brewery"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"origin_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.200146</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"origin_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"destination_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"destination_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"model_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"least_energy"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"weights"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"trip_distance"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"trip_time"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"trip_energy_liquid"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"trip_energy_electric"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">]</span>

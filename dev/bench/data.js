@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785344724789,
+  "lastUpdate": 1787427067016,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4229,6 +4229,156 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2328179,
             "range": "± 150789",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nreinicke@users.noreply.github.com",
+            "name": "Nicholas Reinicke",
+            "username": "nreinicke"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "58bd70372b433962c0356b9f47d17b43e081a8bb",
+          "message": "Merge pull request #563 from NatLabRockies/ndr/pin-hpc-c-compilers\n\nPin c/c++ compilers for reproducible hpc build",
+          "timestamp": "2026-08-04T16:36:04-06:00",
+          "tree_id": "c5c188b9d1a64f7e89639c90a60cee102d248bd9",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/58bd70372b433962c0356b9f47d17b43e081a8bb"
+        },
+        "date": 1785883640868,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2999764,
+            "range": "± 170673",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3ceb43f317b1899e48a951ebdd29d87d35946454",
+          "message": "Merge pull request #566 from NatLabRockies/dependabot/cargo/rust/ort-eq-2.0.0-rc.13\n\nUpdate ort requirement from =2.0.0-rc.12 to =2.0.0-rc.13 in /rust",
+          "timestamp": "2026-08-11T16:46:15-06:00",
+          "tree_id": "8416699f0877c7f325e9e058ecfe9eee152829d4",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/3ceb43f317b1899e48a951ebdd29d87d35946454"
+        },
+        "date": 1786488896656,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2974609,
+            "range": "± 234038",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3eda7f96c5f3b4d7b6767c54214a7eb31c4c9635",
+          "message": "Merge pull request #567 from NatLabRockies/dependabot/cargo/rust/ninterp-0.9.1\n\nUpdate ninterp requirement from 0.8.0 to 0.9.1 in /rust",
+          "timestamp": "2026-08-11T16:46:44-06:00",
+          "tree_id": "c2560273e97143d5f0e1ced5a65158f90c96e5de",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/3eda7f96c5f3b4d7b6767c54214a7eb31c4c9635"
+        },
+        "date": 1786489041408,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2954949,
+            "range": "± 325870",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "73398481+admrtin@users.noreply.github.com",
+            "name": "Adam Martin",
+            "username": "admrtin"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "021badb0b0b0332379572a85a8d370e890faed5e",
+          "message": "Merge pull request #565 from NatLabRockies/amm/trip_history_fix\n\nTwo hotfixes for TripHistoryTraversalEngine",
+          "timestamp": "2026-08-12T07:52:20-06:00",
+          "tree_id": "f4e1fe7692a19b714875d970188687d5c183aa1f",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/021badb0b0b0332379572a85a8d370e890faed5e"
+        },
+        "date": 1786543026109,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2917900,
+            "range": "± 72035",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35633311+Gaurav890@users.noreply.github.com",
+            "name": "Gaurav Chaulagain",
+            "username": "Gaurav890"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f6326301405c4237b29c71e9249bfe546b29043c",
+          "message": "Fix JSON array response delimiters (#568)",
+          "timestamp": "2026-08-22T13:26:22-06:00",
+          "tree_id": "894b42270f1524cadbdd13f0e900a40a31e37212",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/f6326301405c4237b29c71e9249bfe546b29043c"
+        },
+        "date": 1787427065968,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 3013884,
+            "range": "± 196609",
             "unit": "ns/iter"
           }
         ]

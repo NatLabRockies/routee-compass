@@ -240,8 +240,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../developers/build_the_docs.html">Build The Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../developers/contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../developers/rust_code_style.html">Rust Code Style</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../developers/hpc_build.html">Building on HPC systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../developers/troubleshooting_macos_installation.html">Troubleshooting MacOS Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developers/troubleshooting.html">Troubleshooting</a></li>
 </ul>
 
     </div>
@@ -427,9 +426,9 @@
 <div class="viewcode-block" id="CompassApp">
 <a class="viewcode-back" href="../../../../python_api_docs.html#nrel.routee.compass.compass_app.CompassApp">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CompassApp</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The CompassApp holds everything needed to run a route query.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">_app</span><span class="p">:</span> <span class="n">CompassAppWrapper</span>
 
@@ -441,12 +440,12 @@
 <a class="viewcode-back" href="../../../../python_api_docs.html#nrel.routee.compass.compass_app.CompassApp.get_constructor">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_constructor</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompassAppWrapper</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the underlying constructor for the application.</span>
 <span class="sd">        This allows a child class to inherit the CompassApp python class</span>
 <span class="sd">        and implement its own rust based app constructor, while still using</span>
 <span class="sd">        the original python methods.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">CompassAppWrapper</span></div>
 
 
@@ -458,7 +457,7 @@
         <span class="n">config_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
         <span class="n">parallelism</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompassApp</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Build a CompassApp from a config file</span>
 
 <span class="sd">        Args:</span>
@@ -471,11 +470,11 @@
 
 <span class="sd">        Example:</span>
 <span class="sd">            &gt;&gt;&gt; from nrel.routee.compass import CompassApp</span>
-<span class="sd">            &gt;&gt;&gt; app = CompassApp.from_config_file(&quot;config.toml&quot;)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            &gt;&gt;&gt; app = CompassApp.from_config_file("config.toml")</span>
+<span class="sd">        """</span>
         <span class="n">config_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">config_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Config file </span><span class="si">{</span><span class="n">config_path</span><span class="si">!s}</span><span class="s2"> does not exist&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Config file </span><span class="si">{</span><span class="n">config_path</span><span class="si">!s}</span><span class="s2"> does not exist"</span><span class="p">)</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">toml_config</span> <span class="o">=</span> <span class="n">tomlkit</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
@@ -484,13 +483,13 @@
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_default_config_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">phases</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">GeneratePipelinePhase</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Internal helper to get the default config file name based on the phases.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">POWERTRAIN</span> <span class="ow">in</span> <span class="n">phases</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;osm_default_energy.toml&quot;</span>
+            <span class="k">return</span> <span class="s2">"osm_default_energy.toml"</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;osm_default_speed.toml&quot;</span>
+            <span class="k">return</span> <span class="s2">"osm_default_speed.toml"</span>
 
 <div class="viewcode-block" id="CompassApp.from_dict">
 <a class="viewcode-back" href="../../../../python_api_docs.html#nrel.routee.compass.compass_app.CompassApp.from_dict">[docs]</a>
@@ -501,7 +500,7 @@
         <span class="n">working_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">parallelism</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompassApp</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Build a CompassApp from a configuration object</span>
 
 <span class="sd">        Args:</span>
@@ -515,12 +514,12 @@
 
 <span class="sd">        Example:</span>
 <span class="sd">            &gt;&gt;&gt; from nrel.routee.compass import CompassApp</span>
-<span class="sd">            &gt;&gt;&gt; conf = { &quot;parallelism&quot;: 2 }</span>
+<span class="sd">            &gt;&gt;&gt; conf = { "parallelism": 2 }</span>
 <span class="sd">            &gt;&gt;&gt; app = CompassApp.from_config(conf)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">parallelism</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;parallelism&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parallelism</span>
-        <span class="n">path_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">working_dir</span><span class="o">.</span><span class="n">absolute</span><span class="p">())</span> <span class="k">if</span> <span class="n">working_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">"parallelism"</span><span class="p">]</span> <span class="o">=</span> <span class="n">parallelism</span>
+        <span class="n">path_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">working_dir</span><span class="o">.</span><span class="n">absolute</span><span class="p">())</span> <span class="k">if</span> <span class="n">working_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
         <span class="n">toml_string</span> <span class="o">=</span> <span class="n">tomlkit</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="n">app</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_constructor</span><span class="p">()</span><span class="o">.</span><span class="n">_from_config_toml_string</span><span class="p">(</span><span class="n">toml_string</span><span class="p">,</span> <span class="n">path_str</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span></div>
@@ -544,7 +543,7 @@
         <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">hooks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">DatasetHook</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompassApp</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Build a CompassApp from a networkx graph.</span>
 
 <span class="sd">        Args:</span>
@@ -552,8 +551,8 @@
 <span class="sd">                This is assumed to be the direct output of an osmnx download.</span>
 <span class="sd">            config_file: optional name of the config file to load from the</span>
 <span class="sd">                generated dataset. If not set, it will default to</span>
-<span class="sd">                &#39;osm_default_energy.toml&#39; if the powertrain phase is included,</span>
-<span class="sd">                otherwise &#39;osm_default_speed.toml&#39;.</span>
+<span class="sd">                'osm_default_energy.toml' if the powertrain phase is included,</span>
+<span class="sd">                otherwise 'osm_default_speed.toml'.</span>
 <span class="sd">            cache_dir: optional path to save necessary files to build the</span>
 <span class="sd">                CompassApp. If not set, TemporaryDirectory will be used</span>
 <span class="sd">                instead. Defaults to None.</span>
@@ -573,13 +572,13 @@
 <span class="sd">                or your own custom function. Defaults to numpy.mean.</span>
 <span class="sd">            phases (List[GeneratePipelinePhase]): of the overall generate pipeline,</span>
 <span class="sd">                which phases of the pipeline to run.</span>
-<span class="sd">                Defaults to all ([&quot;graph&quot;, &quot;grade&quot;, &quot;config&quot;, &quot;powertrain&quot;])</span>
+<span class="sd">                Defaults to all (["graph", "grade", "config", "powertrain"])</span>
 <span class="sd">            raster_resolution_arc_seconds: If grade is added, the</span>
 <span class="sd">                resolution (in arc-seconds) of the tiles to download</span>
 <span class="sd">                (either 1 or 1/3). Defaults to 1.</span>
 <span class="sd">            vehicle_models: If provided, only download and configure</span>
 <span class="sd">                the listed vehicle models (by name, e.g.</span>
-<span class="sd">                ``[&quot;2017_CHEVROLET_Bolt&quot;, &quot;2016_TOYOTA_Camry_4cyl_2WD&quot;]``).</span>
+<span class="sd">                ``["2017_CHEVROLET_Bolt", "2016_TOYOTA_Camry_4cyl_2WD"]``).</span>
 <span class="sd">                Use :func:`list_available_vehicle_models` to see valid names.</span>
 <span class="sd">                When ``None`` (the default) all available models are included.</span>
 <span class="sd">            parallelism: optional number of threads to use for parallel</span>
@@ -589,7 +588,7 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            CompassApp: a CompassApp object</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">phases</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">phases</span> <span class="o">=</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">default</span><span class="p">()</span>
 
@@ -605,7 +604,7 @@
         <span class="n">config_path</span> <span class="o">=</span> <span class="n">cache_dir</span> <span class="o">/</span> <span class="n">config_file</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">overwrite</span> <span class="ow">and</span> <span class="n">config_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using existing dataset found in </span><span class="si">{</span><span class="n">cache_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Using existing dataset found in </span><span class="si">{</span><span class="n">cache_dir</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">generate_compass_dataset</span><span class="p">(</span>
                 <span class="n">graph</span><span class="p">,</span>
@@ -622,8 +621,8 @@
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">config_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Config file </span><span class="si">{</span><span class="n">config_file</span><span class="si">}</span><span class="s2"> not found in </span><span class="si">{</span><span class="n">cache_dir</span><span class="si">}</span><span class="s2">. &quot;</span>
-                <span class="s2">&quot;Make sure the requested phases generated this config.&quot;</span>
+                <span class="sa">f</span><span class="s2">"Config file </span><span class="si">{</span><span class="n">config_file</span><span class="si">}</span><span class="s2"> not found in </span><span class="si">{</span><span class="n">cache_dir</span><span class="si">}</span><span class="s2">. "</span>
+                <span class="s2">"Make sure the requested phases generated this config."</span>
             <span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="n">parallelism</span><span class="o">=</span><span class="n">parallelism</span><span class="p">)</span></div>
@@ -635,20 +634,20 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">from_place</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">query</span><span class="p">:</span> <span class="n">OSMNXQuery</span><span class="p">,</span>
-        <span class="n">network_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;drive&quot;</span><span class="p">,</span>
+        <span class="n">network_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"drive"</span><span class="p">,</span>
         <span class="n">parallelism</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">cache_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompassApp</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Build a CompassApp from a place</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            query: the query or queries to geocode to get place boundary</span>
 <span class="sd">                polygon(s)</span>
 <span class="sd">            network_type: what type of street network. Default to drive</span>
-<span class="sd">                List of options: [&quot;all&quot;, &quot;all_public&quot;, &quot;bike&quot;, &quot;drive&quot;, &quot;drive_service&quot;, &quot;walk&quot;]</span>
+<span class="sd">                List of options: ["all", "all_public", "bike", "drive", "drive_service", "walk"]</span>
 <span class="sd">            parallelism: optional number of threads to use for parallel</span>
 <span class="sd">                query execution. Overrides the value in the config file.</span>
 <span class="sd">            cache_dir: optional path to save necessary files to build the</span>
@@ -663,24 +662,24 @@
 
 <span class="sd">        Example:</span>
 <span class="sd">            &gt;&gt;&gt; from nrel.routee.compass import CompassApp</span>
-<span class="sd">            &gt;&gt;&gt; app = CompassApp.from_place(&quot;Denver, Colorado, USA&quot;)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            &gt;&gt;&gt; app = CompassApp.from_place("Denver, Colorado, USA")</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">cache_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cache_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span>
-            <span class="n">config_file</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;config_file&quot;</span><span class="p">)</span>
+            <span class="n">config_file</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"config_file"</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">config_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">phases</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;phases&quot;</span><span class="p">,</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">default</span><span class="p">())</span>
+                <span class="n">phases</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"phases"</span><span class="p">,</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">default</span><span class="p">())</span>
                 <span class="n">config_file</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_default_config_file</span><span class="p">(</span><span class="n">phases</span><span class="p">)</span>
 
             <span class="n">config_path</span> <span class="o">=</span> <span class="n">cache_path</span> <span class="o">/</span> <span class="n">config_file</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">overwrite</span> <span class="ow">and</span> <span class="n">config_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using existing dataset found in </span><span class="si">{</span><span class="n">cache_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Using existing dataset found in </span><span class="si">{</span><span class="n">cache_dir</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
                 <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="n">parallelism</span><span class="o">=</span><span class="n">parallelism</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">import</span><span class="w"> </span><span class="nn">osmnx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ox</span>
         <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;requires osmnx to be installed. Try &#39;pip install osmnx&#39;&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">"requires osmnx to be installed. Try 'pip install osmnx'"</span><span class="p">)</span>
 
         <span class="n">graph</span> <span class="o">=</span> <span class="n">ox</span><span class="o">.</span><span class="n">graph_from_place</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">network_type</span><span class="o">=</span><span class="n">network_type</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_graph</span><span class="p">(</span>
@@ -698,20 +697,20 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">from_polygon</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">polygon</span><span class="p">:</span> <span class="n">Polygon</span> <span class="o">|</span> <span class="n">MultiPolygon</span><span class="p">,</span>
-        <span class="n">network_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;drive&quot;</span><span class="p">,</span>
+        <span class="n">network_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"drive"</span><span class="p">,</span>
         <span class="n">parallelism</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">cache_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompassApp</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Build a CompassApp from a polygon</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            polygon: the shape to get network data within. coordinates</span>
 <span class="sd">                should be in unprojected latitude-longitude degrees</span>
 <span class="sd">            network_type: what type of street network. Default to drive</span>
-<span class="sd">                List of options: [&quot;all&quot;, &quot;all_public&quot;, &quot;bike&quot;, &quot;drive&quot;, &quot;drive_service&quot;, &quot;walk&quot;]</span>
+<span class="sd">                List of options: ["all", "all_public", "bike", "drive", "drive_service", "walk"]</span>
 <span class="sd">            parallelism: optional number of threads to use for parallel</span>
 <span class="sd">                query execution. Overrides the value in the config file.</span>
 <span class="sd">            cache_dir: optional path to save necessary files to build the</span>
@@ -734,23 +733,23 @@
 <span class="sd">            &gt;&gt;&gt; pointList = [p1, p2, p3, p4]</span>
 <span class="sd">            &gt;&gt;&gt; poly = geometry.Polygon(pointList)</span>
 <span class="sd">            &gt;&gt;&gt; app = CompassApp.from_polygon(poly)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">cache_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cache_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span>
-            <span class="n">config_file</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;config_file&quot;</span><span class="p">)</span>
+            <span class="n">config_file</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"config_file"</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">config_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">phases</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;phases&quot;</span><span class="p">,</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">default</span><span class="p">())</span>
+                <span class="n">phases</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"phases"</span><span class="p">,</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">default</span><span class="p">())</span>
                 <span class="n">config_file</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_default_config_file</span><span class="p">(</span><span class="n">phases</span><span class="p">)</span>
 
             <span class="n">config_path</span> <span class="o">=</span> <span class="n">cache_path</span> <span class="o">/</span> <span class="n">config_file</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">overwrite</span> <span class="ow">and</span> <span class="n">config_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using existing dataset found in </span><span class="si">{</span><span class="n">cache_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Using existing dataset found in </span><span class="si">{</span><span class="n">cache_dir</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
                 <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="n">parallelism</span><span class="o">=</span><span class="n">parallelism</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">import</span><span class="w"> </span><span class="nn">osmnx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ox</span>
         <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;requires osmnx to be installed. Try &#39;pip install osmnx&#39;&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">"requires osmnx to be installed. Try 'pip install osmnx'"</span><span class="p">)</span>
 
         <span class="n">graph</span> <span class="o">=</span> <span class="n">ox</span><span class="o">.</span><span class="n">graph_from_polygon</span><span class="p">(</span><span class="n">polygon</span><span class="p">,</span> <span class="n">network_type</span><span class="o">=</span><span class="n">network_type</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_graph</span><span class="p">(</span>
@@ -769,7 +768,7 @@
         <span class="n">query</span><span class="p">:</span> <span class="n">CompassQuery</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">CompassQuery</span><span class="p">],</span>
         <span class="n">config</span><span class="p">:</span> <span class="n">Config</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span> <span class="o">|</span> <span class="n">Results</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Run a query (or multiple queries) against the CompassApp</span>
 
 <span class="sd">        Args:</span>
@@ -781,19 +780,19 @@
 
 <span class="sd">        Example:</span>
 <span class="sd">            &gt;&gt;&gt; from nrel.routee.compass import CompassApp</span>
-<span class="sd">            &gt;&gt;&gt; app = CompassApp.from_config_file(&quot;config.toml&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; app = CompassApp.from_config_file("config.toml")</span>
 <span class="sd">            &gt;&gt;&gt; query = {</span>
-<span class="sd">                    &quot;origin_name&quot;: &quot;NREL&quot;,</span>
-<span class="sd">                    &quot;destination_name&quot;: &quot;Comrade Brewing Company&quot;,</span>
-<span class="sd">                    &quot;origin_x&quot;: -105.1710052,</span>
-<span class="sd">                    &quot;origin_y&quot;: 39.7402804,</span>
-<span class="sd">                    &quot;destination_x&quot;: -104.9009913,</span>
-<span class="sd">                    &quot;destination_y&quot;: 39.6757025</span>
+<span class="sd">                    "origin_name": "NREL",</span>
+<span class="sd">                    "destination_name": "Comrade Brewing Company",</span>
+<span class="sd">                    "origin_x": -105.1710052,</span>
+<span class="sd">                    "origin_y": 39.7402804,</span>
+<span class="sd">                    "destination_x": -104.9009913,</span>
+<span class="sd">                    "destination_y": 39.6757025</span>
 <span class="sd">                }</span>
 
 <span class="sd">            &gt;&gt;&gt; result = app.run(query)</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="n">queries</span> <span class="o">=</span> <span class="p">[</span><span class="n">query</span><span class="p">]</span>
             <span class="n">single_query</span> <span class="o">=</span> <span class="kc">True</span>
@@ -801,7 +800,7 @@
             <span class="n">queries</span> <span class="o">=</span> <span class="n">query</span>
             <span class="n">single_query</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Query must be a dict or list of dicts, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Query must be a dict or list of dicts, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="n">queries_str</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">,</span> <span class="n">queries</span><span class="p">))</span>
         <span class="n">config_str</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
@@ -817,7 +816,7 @@
 <div class="viewcode-block" id="CompassApp.graph_edge_origin">
 <a class="viewcode-back" href="../../../../python_api_docs.html#nrel.routee.compass.compass_app.CompassApp.graph_edge_origin">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">graph_edge_origin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        get the origin vertex id for some edge</span>
 
 <span class="sd">        Args:</span>
@@ -825,14 +824,14 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            vertex_id: the vertex id at the source of the edge</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app</span><span class="o">.</span><span class="n">graph_edge_origin</span><span class="p">(</span><span class="n">edge_id</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="CompassApp.graph_edge_destination">
 <a class="viewcode-back" href="../../../../python_api_docs.html#nrel.routee.compass.compass_app.CompassApp.graph_edge_destination">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">graph_edge_destination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        get the destination vertex id for some edge</span>
 
 <span class="sd">        Args:</span>
@@ -840,7 +839,7 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            vertex_id: the vertex id at the destination of the edge</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app</span><span class="o">.</span><span class="n">graph_edge_destination</span><span class="p">(</span><span class="n">edge_id</span><span class="p">))</span></div>
 
 
@@ -849,7 +848,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">graph_edge_distance</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">edge_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">distance_unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        get the distance for some edge</span>
 
 <span class="sd">        Args:</span>
@@ -858,14 +857,14 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            dist: the distance covered by traversing the edge</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app</span><span class="o">.</span><span class="n">graph_edge_distance</span><span class="p">(</span><span class="n">edge_id</span><span class="p">,</span> <span class="n">distance_unit</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="CompassApp.graph_get_out_edge_ids">
 <a class="viewcode-back" href="../../../../python_api_docs.html#nrel.routee.compass.compass_app.CompassApp.graph_get_out_edge_ids">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">graph_get_out_edge_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        get the list of edge ids that depart from some vertex</span>
 
 <span class="sd">        Args:</span>
@@ -873,14 +872,14 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            edges: the edge ids of edges departing from this vertex</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app</span><span class="o">.</span><span class="n">graph_get_out_edge_ids</span><span class="p">(</span><span class="n">vertex_id</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="CompassApp.graph_get_in_edge_ids">
 <a class="viewcode-back" href="../../../../python_api_docs.html#nrel.routee.compass.compass_app.CompassApp.graph_get_in_edge_ids">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">graph_get_in_edge_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        get the list of edge ids that arrive from some vertex</span>
 
 <span class="sd">        Args:</span>
@@ -888,7 +887,7 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            edges: the edge ids of edges arriving at this vertex</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app</span><span class="o">.</span><span class="n">graph_get_in_edge_ids</span><span class="p">(</span><span class="n">vertex_id</span><span class="p">))</span></div>
 
 
@@ -898,7 +897,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">query</span><span class="p">:</span> <span class="n">CompassQuery</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">CompassQuery</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span> <span class="o">|</span> <span class="n">Results</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Run a map matching query (or multiple queries) against the CompassApp</span>
 
 <span class="sd">        Args:</span>
@@ -909,15 +908,15 @@
 
 <span class="sd">        Example:</span>
 <span class="sd">            &gt;&gt;&gt; from nrel.routee.compass import CompassApp</span>
-<span class="sd">            &gt;&gt;&gt; app = CompassApp.from_config_file(&quot;config.toml&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; app = CompassApp.from_config_file("config.toml")</span>
 <span class="sd">            &gt;&gt;&gt; query = {</span>
-<span class="sd">                    &quot;trace&quot;: [</span>
-<span class="sd">                        {&quot;x&quot;: -105.1710052, &quot;y&quot;: 39.7402804},</span>
-<span class="sd">                        {&quot;x&quot;: -105.1710052, &quot;y&quot;: 39.7402804}</span>
+<span class="sd">                    "trace": [</span>
+<span class="sd">                        {"x": -105.1710052, "y": 39.7402804},</span>
+<span class="sd">                        {"x": -105.1710052, "y": 39.7402804}</span>
 <span class="sd">                    ]</span>
 <span class="sd">                }</span>
 <span class="sd">            &gt;&gt;&gt; result = app.map_match(query)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="n">queries</span> <span class="o">=</span> <span class="p">[</span><span class="n">query</span><span class="p">]</span>
             <span class="n">single_query</span> <span class="o">=</span> <span class="kc">True</span>
@@ -925,7 +924,7 @@
             <span class="n">queries</span> <span class="o">=</span> <span class="n">query</span>
             <span class="n">single_query</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Query must be a dict or list of dicts, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Query must be a dict or list of dicts, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="n">queries_str</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">,</span> <span class="n">queries</span><span class="p">))</span>
         <span class="n">results_json</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app</span><span class="o">.</span><span class="n">_map_match</span><span class="p">(</span><span class="n">queries_str</span><span class="p">)</span>
@@ -943,11 +942,11 @@
         <span class="n">query</span><span class="p">:</span> <span class="n">CompassQuery</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">CompassQuery</span><span class="p">],</span>
         <span class="n">config</span><span class="p">:</span> <span class="n">Config</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span> <span class="o">|</span> <span class="n">Results</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Run a path evaluation query (or multiple queries) against the CompassApp</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            query: A query or list of queries to run. Each query must have &#39;path&#39;.</span>
+<span class="sd">            query: A query or list of queries to run. Each query must have 'path'.</span>
 <span class="sd">            config: optional configuration</span>
 
 <span class="sd">        Returns:</span>
@@ -955,12 +954,12 @@
 
 <span class="sd">        Example:</span>
 <span class="sd">            &gt;&gt;&gt; from nrel.routee.compass import CompassApp</span>
-<span class="sd">            &gt;&gt;&gt; app = CompassApp.from_config_file(&quot;config.toml&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; app = CompassApp.from_config_file("config.toml")</span>
 <span class="sd">            &gt;&gt;&gt; query = {</span>
-<span class="sd">                    &quot;path&quot;: [{&quot;edge_id&quot;: 0}, {&quot;edge_id&quot;: 2}],</span>
+<span class="sd">                    "path": [{"edge_id": 0}, {"edge_id": 2}],</span>
 <span class="sd">                }</span>
 <span class="sd">            &gt;&gt;&gt; result = app.run_calculate_path(query)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="n">queries</span> <span class="o">=</span> <span class="p">[</span><span class="n">query</span><span class="p">]</span>
             <span class="n">single_query</span> <span class="o">=</span> <span class="kc">True</span>
@@ -968,7 +967,7 @@
             <span class="n">queries</span> <span class="o">=</span> <span class="n">query</span>
             <span class="n">single_query</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Query must be a dict or list of dicts, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Query must be a dict or list of dicts, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="n">queries_str</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">,</span> <span class="n">queries</span><span class="p">))</span>
         <span class="n">config_str</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>

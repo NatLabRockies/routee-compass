@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Building on HPC systems &#8212; RouteE Compass</title>
+    <title>Troubleshooting &#8212; RouteE Compass</title>
   
   
   
@@ -60,11 +60,10 @@
     <script async="async" src="../_static/sphinx-thebe.js?v=c100c467"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'developers/hpc_build';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'developers/troubleshooting';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Troubleshooting MacOS Installation" href="troubleshooting_macos_installation.html" />
     <link rel="prev" title="Rust Code Style" href="rust_code_style.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="python"/>
@@ -245,8 +244,7 @@
 <li class="toctree-l1"><a class="reference internal" href="build_the_docs.html">Build The Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rust_code_style.html">Rust Code Style</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Building on HPC systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="troubleshooting_macos_installation.html">Troubleshooting MacOS Installation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Troubleshooting</a></li>
 </ul>
 
     </div>
@@ -323,7 +321,7 @@
       
       
       
-      <li><a href="https://github.com/NREL/routee-compass/issues/new?title=Issue%20on%20page%20%2Fdevelopers/hpc_build.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/NREL/routee-compass/issues/new?title=Issue%20on%20page%20%2Fdevelopers/troubleshooting.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -353,7 +351,7 @@
       
       
       
-      <li><a href="../_sources/developers/hpc_build.md" target="_blank"
+      <li><a href="../_sources/developers/troubleshooting.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -429,7 +427,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Building on HPC systems</h1>
+    <h1>Troubleshooting</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -439,10 +437,19 @@
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-time-setup">One-time setup</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How it works</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#day-to-day-usage-on-hpc">Day-to-day usage on HPC</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#knobs">Knobs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#macos-build-error-ld-symbol-s-not-found-for-architecture-arm64">MacOS build error "ld: symbol(s) not found for architecture arm64"</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#problem">Problem</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fix">Fix</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-compass-without-ort-dependency">Building Compass without ort dependency</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#challenges-building-compass-due-to-ort-dependency">Challenges building Compass due to ort dependency</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#one-time-setup">One-time setup</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How it works</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#day-to-day-usage-on-hpc">Day-to-day usage on HPC</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#knobs">Knobs</a></li>
+</ul>
+</li>
 </ul>
             </nav>
         </div>
@@ -454,19 +461,71 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="building-on-hpc-systems">
-<h1>Building on HPC systems<a class="headerlink" href="#building-on-hpc-systems" title="Link to this heading">#</a></h1>
-<p>Some HPC systems run operating systems with a glibc that is too old for the
-prebuilt ONNX Runtime binaries that the Rust <code class="docutils literal notranslate"><span class="pre">ort</span></code> crate downloads by default
-(they require glibc &gt;= 2.32; e.g. RHEL 8 ships glibc 2.28). On those systems,
-importing the compiled extension fails with an error like:</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="troubleshooting">
+<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h1>
+<p>This page covers some common troubleshooting issues:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#macos-build-error-ld-symbols-not-found-for-architecture-arm64"><span class="xref myst">MacOS build error &quot;ld: symbol(s) not found for architecture arm64&quot;</span></a></p></li>
+<li><p><a class="reference internal" href="#building-compass-without-ort-dependency"><span class="xref myst">Building Compass without ort dependency</span></a></p></li>
+<li><p><a class="reference internal" href="#challenges-building-compass-due-to-ort-dependency"><span class="xref myst">Challenges building Compass due to ort dependency</span></a></p></li>
+</ul>
+<section id="macos-build-error-ld-symbol-s-not-found-for-architecture-arm64">
+<h2>MacOS build error &quot;ld: symbol(s) not found for architecture arm64&quot;<a class="headerlink" href="#macos-build-error-ld-symbol-s-not-found-for-architecture-arm64" title="Link to this heading">#</a></h2>
+<p>If you are having installation problems on MacOS when installing the Rust dependencies for <code class="docutils literal notranslate"><span class="pre">routee-compass</span></code> via <code class="docutils literal notranslate"><span class="pre">cargo</span> <span class="pre">build</span> <span class="pre">--release</span></code>, please read through the following:</p>
+<section id="problem">
+<h3>Problem<a class="headerlink" href="#problem" title="Link to this heading">#</a></h3>
+<p>The MacOS linker can create issues when trying to link Python binaries with Rust's Python wrapper, PyO3. This occurs because PyO3 leaves Python symbols unresolved until runtime, but the macOS linker is incredibly strict and rejects any undefined symbols during compilation.</p>
+<p>E.g., for <code class="docutils literal notranslate"><span class="pre">arm64</span></code>, the build error will look like the following:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ld: symbol(s) not found for architecture arm64
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+error: could not compile `routee-compass-py` (lib) due to 1 previous error
+</pre></div>
+</div>
+</section>
+<section id="fix">
+<h3>Fix<a class="headerlink" href="#fix" title="Link to this heading">#</a></h3>
+<p>You need to tell the macOS linker to allow dynamic lookups for Python symbols at runtime. You can apply this fix globally by creating or editing your user-level Cargo configuration file:</p>
+<ol class="arabic">
+<li><p>Open <code class="docutils literal notranslate"><span class="pre">~/.cargo/config.toml</span></code> in your terminal:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nano<span class="w"> </span>~/.cargo/config.toml
+</pre></div>
+</div>
+</li>
+<li><p>Add the following lines to handle both Apple Silicon (arm64) and Intel (x86_64) Mac architectures:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[target.x86_64-apple-darwin]</span>
+<span class="n">rustflags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">"-C"</span><span class="p">,</span><span class="w"> </span><span class="s2">"link-arg=-undefined"</span><span class="p">,</span><span class="w"> </span><span class="s2">"-C"</span><span class="p">,</span><span class="w"> </span><span class="s2">"link-arg=dynamic_lookup"</span><span class="w"> </span><span class="p">]</span>
+
+<span class="k">[target.aarch64-apple-darwin]</span>
+<span class="n">rustflags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">"-C"</span><span class="p">,</span><span class="w"> </span><span class="s2">"link-arg=-undefined"</span><span class="p">,</span><span class="w"> </span><span class="s2">"-C"</span><span class="p">,</span><span class="w"> </span><span class="s2">"link-arg=dynamic_lookup"</span><span class="w"> </span><span class="p">]</span>
+</pre></div>
+</div>
+</li>
+<li><p>Save the file and rerun your installation command.</p></li>
+</ol>
+</section>
+</section>
+<section id="building-compass-without-ort-dependency">
+<h2>Building Compass without ort dependency<a class="headerlink" href="#building-compass-without-ort-dependency" title="Link to this heading">#</a></h2>
+<p>RouteE Compass has a default feature dependency on the
+routee-compass-powertrain crate, which in turn depends on the <a class="reference external" href="https://crates.io/crates/ort">ort</a> crate for running <a class="reference external" href="https://onnx.ai/">ONNX</a>-based energy estimation models.
+It may be challenging in some environments to build Compass with this dependency (see <a class="reference internal" href="#challenges-building-compass-due-to-ort-dependency"><span class="xref myst">below</span></a>).</p>
+<p>For cases where energy estimation is not required, the routee-compass CLI may be built without the routee-compass-powertrain dependency:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>cargo<span class="w"> </span>build<span class="w"> </span>-r<span class="w"> </span>--no-default-features<span class="w"> </span>-p<span class="w"> </span>routee-compass<span class="w"> </span>--manifest-path<span class="w"> </span>rust/Cargo.toml
+</pre></div>
+</div>
+</section>
+<section id="challenges-building-compass-due-to-ort-dependency">
+<h2>Challenges building Compass due to ort dependency<a class="headerlink" href="#challenges-building-compass-due-to-ort-dependency" title="Link to this heading">#</a></h2>
+<p>Some HPC systems run operating systems with a glibc that is too old for the prebuilt ONNX Runtime binaries that the Rust <code class="docutils literal notranslate"><span class="pre">ort</span></code> crate downloads by default (they require glibc &gt;= 2.32; e.g. RHEL 8 ships glibc 2.28). On those systems, importing the compiled extension fails with an error like:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ne">ImportError</span><span class="p">:</span> <span class="o">.../</span><span class="n">routee_compass_py</span><span class="o">.</span><span class="n">cpython</span><span class="o">-</span><span class="mi">313</span><span class="o">-</span><span class="n">x86_64</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">gnu</span><span class="o">.</span><span class="n">so</span><span class="p">:</span> <span class="n">undefined</span> <span class="n">symbol</span><span class="p">:</span> <span class="n">__libc_single_threaded</span>
 </pre></div>
 </div>
-<p>The fix is to build ONNX Runtime from source on the HPC machine and link
-against it. The pixi <code class="docutils literal notranslate"><span class="pre">hpc</span></code> environment automates this.</p>
+<p>The fix is to build ONNX Runtime from source on the HPC machine and link against it. The pixi <code class="docutils literal notranslate"><span class="pre">hpc</span></code> environment automates this.</p>
+<blockquote>
+<div><p>Note: This is designed for use via the Compass Python API.</p>
+</div></blockquote>
 <section id="one-time-setup">
-<h2>One-time setup<a class="headerlink" href="#one-time-setup" title="Link to this heading">#</a></h2>
+<h3>One-time setup<a class="headerlink" href="#one-time-setup" title="Link to this heading">#</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>run<span class="w"> </span>-e<span class="w"> </span>hpc<span class="w"> </span>build_hpc
 </pre></div>
 </div>
@@ -483,7 +542,7 @@ against it. The pixi <code class="docutils literal notranslate"><span class="pre
 </div>
 </section>
 <section id="how-it-works">
-<h2>How it works<a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
+<h3>How it works<a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">hpc</span></code> pixi feature's activation sets <code class="docutils literal notranslate"><span class="pre">ORT_LIB_PATH</span></code> to the local ONNX
 Runtime build. The <code class="docutils literal notranslate"><span class="pre">ort</span></code> crate's build script prefers <code class="docutils literal notranslate"><span class="pre">ORT_LIB_PATH</span></code> over its
 downloaded binaries, so <em>any</em> build run inside the <code class="docutils literal notranslate"><span class="pre">hpc</span></code> environment —
@@ -491,11 +550,11 @@ downloaded binaries, so <em>any</em> build run inside the <code class="docutils 
 locally-built ONNX Runtime. No special cargo features or flags are needed.</p>
 </section>
 <section id="day-to-day-usage-on-hpc">
-<h2>Day-to-day usage on HPC<a class="headerlink" href="#day-to-day-usage-on-hpc" title="Link to this heading">#</a></h2>
+<h3>Day-to-day usage on HPC<a class="headerlink" href="#day-to-day-usage-on-hpc" title="Link to this heading">#</a></h3>
 <p>Always use the <code class="docutils literal notranslate"><span class="pre">hpc</span></code> environment. The easiest way is to activate it once per
 shell session, after which plain commands work as usual:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>shell<span class="w"> </span>-e<span class="w"> </span>hpc
-python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import nrel.routee.compass&quot;</span><span class="w">   </span><span class="c1"># works</span>
+python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import nrel.routee.compass"</span><span class="w">   </span><span class="c1"># works</span>
 pytest<span class="w"> </span>python/tests/
 </pre></div>
 </div>
@@ -517,7 +576,7 @@ import error.</p>
 </div>
 </section>
 <section id="knobs">
-<h2>Knobs<a class="headerlink" href="#knobs" title="Link to this heading">#</a></h2>
+<h3>Knobs<a class="headerlink" href="#knobs" title="Link to this heading">#</a></h3>
 <p>Environment variables read by the build (defaults set by the <code class="docutils literal notranslate"><span class="pre">hpc</span></code> feature in
 <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>):</p>
 <ul class="simple">
@@ -527,6 +586,7 @@ rebuilding it (e.g. <code class="docutils literal notranslate"><span class="pre"
 <li><p><code class="docutils literal notranslate"><span class="pre">ORT_BUILD_CONFIG</span></code> — CMake build config (default <code class="docutils literal notranslate"><span class="pre">RelWithDebInfo</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">ONNXRUNTIME_DIR</span></code> — where ONNX Runtime is cloned and built.</p></li>
 </ul>
+</section>
 </section>
 </section>
 
@@ -569,15 +629,6 @@ rebuilding it (e.g. <code class="docutils literal notranslate"><span class="pre"
         <p class="prev-next-title">Rust Code Style</p>
       </div>
     </a>
-    <a class="right-next"
-       href="troubleshooting_macos_installation.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Troubleshooting MacOS Installation</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
 </div>
                 </footer>
               
@@ -596,10 +647,19 @@ rebuilding it (e.g. <code class="docutils literal notranslate"><span class="pre"
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-time-setup">One-time setup</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How it works</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#day-to-day-usage-on-hpc">Day-to-day usage on HPC</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#knobs">Knobs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#macos-build-error-ld-symbol-s-not-found-for-architecture-arm64">MacOS build error "ld: symbol(s) not found for architecture arm64"</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#problem">Problem</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fix">Fix</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-compass-without-ort-dependency">Building Compass without ort dependency</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#challenges-building-compass-due-to-ort-dependency">Challenges building Compass due to ort dependency</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#one-time-setup">One-time setup</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How it works</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#day-to-day-usage-on-hpc">Day-to-day usage on HPC</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#knobs">Knobs</a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

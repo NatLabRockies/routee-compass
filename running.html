@@ -245,8 +245,7 @@
 <li class="toctree-l1"><a class="reference internal" href="developers/build_the_docs.html">Build The Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developers/contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developers/rust_code_style.html">Rust Code Style</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developers/hpc_build.html">Building on HPC systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developers/troubleshooting_macos_installation.html">Troubleshooting MacOS Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers/troubleshooting.html">Troubleshooting</a></li>
 </ul>
 
     </div>
@@ -461,15 +460,15 @@
 After following the <a class="reference internal" href="installation.html"><span class="doc std std-doc">installation instructions</span></a>, you can load an application and run queries like this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">nrel.routee.compass</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompassApp</span>
 
-<span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">&quot;path/to/config.toml&quot;</span><span class="p">)</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">"path/to/config.toml"</span><span class="p">)</span>
 
 <span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;origin_name&quot;</span><span class="p">:</span> <span class="s2">&quot;NREL&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;destination_name&quot;</span><span class="p">:</span> <span class="s2">&quot;Comrade Brewing Company&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;origin_x&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">105.1710052</span><span class="p">,</span>
-    <span class="s2">&quot;origin_y&quot;</span><span class="p">:</span> <span class="mf">39.7402804</span><span class="p">,</span>
-    <span class="s2">&quot;destination_x&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">104.9009913</span><span class="p">,</span>
-    <span class="s2">&quot;destination_y&quot;</span><span class="p">:</span> <span class="mf">39.6757025</span><span class="p">,</span>
+    <span class="s2">"origin_name"</span><span class="p">:</span> <span class="s2">"NREL"</span><span class="p">,</span>
+    <span class="s2">"destination_name"</span><span class="p">:</span> <span class="s2">"Comrade Brewing Company"</span><span class="p">,</span>
+    <span class="s2">"origin_x"</span><span class="p">:</span> <span class="o">-</span><span class="mf">105.1710052</span><span class="p">,</span>
+    <span class="s2">"origin_y"</span><span class="p">:</span> <span class="mf">39.7402804</span><span class="p">,</span>
+    <span class="s2">"destination_x"</span><span class="p">:</span> <span class="o">-</span><span class="mf">104.9009913</span><span class="p">,</span>
+    <span class="s2">"destination_y"</span><span class="p">:</span> <span class="mf">39.6757025</span><span class="p">,</span>
 <span class="p">}</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>

@@ -245,8 +245,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../build_the_docs.html">Build The Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../rust_code_style.html">Rust Code Style</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../hpc_build.html">Building on HPC systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../troubleshooting_macos_installation.html">Troubleshooting MacOS Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
 </ul>
 
     </div>
@@ -502,10 +501,10 @@
 <h2>Key Features<a class="headerlink" href="#key-features" title="Link to this heading">#</a></h2>
 <section id="compile-time-os-detection">
 <h3>1. <strong>Compile-time OS Detection</strong><a class="headerlink" href="#compile-time-os-detection" title="Link to this heading">#</a></h3>
-<div class="highlight-rust notranslate"><div class="highlight"><pre><span></span><span class="cp">#[cfg(target_pointer_width = </span><span class="s">&quot;32&quot;</span><span class="cp">)]</span>
+<div class="highlight-rust notranslate"><div class="highlight"><pre><span></span><span class="cp">#[cfg(target_pointer_width = </span><span class="s">"32"</span><span class="cp">)]</span>
 <span class="k">pub</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">OS_ALIGNED_STATE_LEN</span><span class="p">:</span><span class="w"> </span><span class="kt">usize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
 
-<span class="cp">#[cfg(target_pointer_width = </span><span class="s">&quot;64&quot;</span><span class="cp">)]</span>
+<span class="cp">#[cfg(target_pointer_width = </span><span class="s">"64"</span><span class="cp">)]</span>
 <span class="k">pub</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">OS_ALIGNED_STATE_LEN</span><span class="p">:</span><span class="w"> </span><span class="kt">usize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -532,10 +531,10 @@
 <div class="highlight-rust notranslate"><div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">vertex_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">VertexId</span><span class="p">(</span><span class="mi">42</span><span class="p">);</span>
 
 <span class="c1">// This array size is checked at compile time</span>
-<span class="cp">#[cfg(target_pointer_width = </span><span class="s">&quot;32&quot;</span><span class="cp">)]</span>
+<span class="cp">#[cfg(target_pointer_width = </span><span class="s">"32"</span><span class="cp">)]</span>
 <span class="kd">let</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="k">u8</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="k">u8</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="k">u8</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="k">u8</span><span class="p">];</span>
 
-<span class="cp">#[cfg(target_pointer_width = </span><span class="s">&quot;64&quot;</span><span class="cp">)]</span>
+<span class="cp">#[cfg(target_pointer_width = </span><span class="s">"64"</span><span class="cp">)]</span>
 <span class="kd">let</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="k">u8</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="k">u8</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="k">u8</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="k">u8</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="k">u8</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="k">u8</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="k">u8</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="k">u8</span><span class="p">];</span>
 
 <span class="kd">let</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Label</span><span class="p">::</span><span class="n">from_aligned_u8_array</span><span class="p">(</span><span class="n">vertex_id</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">state</span><span class="p">);</span>
@@ -556,7 +555,7 @@
 <section id="immutable-access">
 <h4><strong>Immutable Access</strong><a class="headerlink" href="#immutable-access" title="Link to this heading">#</a></h4>
 <div class="highlight-rust notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="n">state</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">label</span><span class="p">.</span><span class="n">get_u8_state</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="fm">println!</span><span class="p">(</span><span class="s">&quot;State: {:?}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p">);</span>
+<span class="w">    </span><span class="fm">println!</span><span class="p">(</span><span class="s">"State: {:?}"</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </div>

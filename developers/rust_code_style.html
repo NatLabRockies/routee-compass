@@ -64,7 +64,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Building on HPC systems" href="hpc_build.html" />
+    <link rel="next" title="Troubleshooting" href="troubleshooting.html" />
     <link rel="prev" title="Contributing" href="contributing.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="python"/>
@@ -245,8 +245,7 @@
 <li class="toctree-l1"><a class="reference internal" href="build_the_docs.html">Build The Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Rust Code Style</a></li>
-<li class="toctree-l1"><a class="reference internal" href="hpc_build.html">Building on HPC systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="troubleshooting_macos_installation.html">Troubleshooting MacOS Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 </ul>
 
     </div>
@@ -562,7 +561,7 @@ In other words:</p>
 
 <span class="w">  </span><span class="cp">#[test]</span>
 <span class="w">  </span><span class="k">fn</span><span class="w"> </span><span class="nf">test_the_universe</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="fm">assert_ne!</span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;phew, the universe still works&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="fm">assert_ne!</span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s">"phew, the universe still works"</span><span class="p">);</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -576,8 +575,8 @@ Rustdoc is, for the most part, simple markdown, described in <a class="reference
 <span class="w">  </span><span class="c1">// search for the meaning of life and only proceed if it exists</span>
 <span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="n">result</span><span class="p">:</span><span class="w"> </span><span class="nb">Option</span><span class="o">&lt;</span><span class="kt">i64</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="o">..</span><span class="mi">50</span><span class="p">).</span><span class="n">into_iter</span><span class="p">().</span><span class="n">find</span><span class="p">(</span><span class="o">|</span><span class="n">v</span><span class="o">|</span><span class="w"> </span><span class="o">*</span><span class="n">v</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">42</span><span class="p">);</span>
 <span class="w">  </span><span class="k">match</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nb">Some</span><span class="p">(</span><span class="n">meaning_of_life</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="fm">println!</span><span class="p">(</span><span class="s">&quot;found it! it&#39;s {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">meaning_of_life</span><span class="p">),</span>
-<span class="w">    </span><span class="nb">None</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="fm">println!</span><span class="p">(</span><span class="s">&quot;bummer, didn&#39;t find it&quot;</span><span class="p">),</span>
+<span class="w">    </span><span class="nb">Some</span><span class="p">(</span><span class="n">meaning_of_life</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="fm">println!</span><span class="p">(</span><span class="s">"found it! it's {}"</span><span class="p">,</span><span class="w"> </span><span class="n">meaning_of_life</span><span class="p">),</span>
+<span class="w">    </span><span class="nb">None</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="fm">println!</span><span class="p">(</span><span class="s">"bummer, didn't find it"</span><span class="p">),</span>
 <span class="w">  </span><span class="p">};</span>
 <span class="p">}</span>
 </pre></div>
@@ -729,7 +728,7 @@ This adds a few improvements:</p>
 <span class="w">  </span><span class="p">(</span><span class="n">default</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">,</span><span class="w"> </span><span class="n">names</span><span class="p">)</span>
 <span class="p">}</span>
 <span class="kd">let</span><span class="w"> </span><span class="n">data1</span><span class="p">:</span><span class="w"> </span><span class="nc">HashMap</span><span class="o">&lt;</span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="kt">f64</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">HashMap</span><span class="p">::</span><span class="n">new</span><span class="p">();</span>
-<span class="kd">let</span><span class="w"> </span><span class="p">(</span><span class="n">default</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">,</span><span class="w"> </span><span class="n">names</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new_thing</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;food&quot;</span><span class="p">);</span>
+<span class="kd">let</span><span class="w"> </span><span class="p">(</span><span class="n">default</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">,</span><span class="w"> </span><span class="n">names</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new_thing</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span><span class="w"> </span><span class="s">"food"</span><span class="p">);</span>
 
 <span class="c1">// as a struct</span>
 <span class="k">struct</span><span class="w"> </span><span class="nc">Thing</span><span class="w"> </span><span class="p">{</span>
@@ -752,7 +751,7 @@ This adds a few improvements:</p>
 <span class="p">}</span>
 
 <span class="kd">let</span><span class="w"> </span><span class="n">data2</span><span class="p">:</span><span class="w"> </span><span class="nc">HashMap</span><span class="o">&lt;</span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="kt">f64</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">HashMap</span><span class="p">::</span><span class="n">new</span><span class="p">();</span>
-<span class="kd">let</span><span class="w"> </span><span class="n">thing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thing</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">data2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;food&quot;</span><span class="p">);</span>
+<span class="kd">let</span><span class="w"> </span><span class="n">thing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thing</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">data2</span><span class="p">,</span><span class="w"> </span><span class="s">"food"</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -790,7 +789,7 @@ If you are finding that your code has distinct (read: discrete) behavior based o
 <span class="p">}</span>
 
 <span class="kd">let</span><span class="w"> </span><span class="n">data1</span><span class="p">:</span><span class="w"> </span><span class="nc">HashMap</span><span class="o">&lt;</span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="kt">f64</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">HashMap</span><span class="p">::</span><span class="n">new</span><span class="p">();</span>
-<span class="kd">let</span><span class="w"> </span><span class="n">thing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thing</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;food&quot;</span><span class="p">);</span>
+<span class="kd">let</span><span class="w"> </span><span class="n">thing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thing</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span><span class="w"> </span><span class="s">"food"</span><span class="p">);</span>
 
 <span class="kd">let</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">match</span><span class="w"> </span><span class="n">thing</span><span class="p">.</span><span class="n">has_default</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="kc">true</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="n">thing</span><span class="p">.</span><span class="n">default</span><span class="p">),</span>
@@ -826,7 +825,7 @@ If you are finding that your code has distinct (read: discrete) behavior based o
 <span class="p">}</span>
 
 <span class="kd">let</span><span class="w"> </span><span class="n">data2</span><span class="p">:</span><span class="w"> </span><span class="nc">HashMap</span><span class="o">&lt;</span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="kt">f64</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">HashMap</span><span class="p">::</span><span class="n">new</span><span class="p">();</span>
-<span class="kd">let</span><span class="w"> </span><span class="n">thing_enum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ThingEnum</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">data2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;food&quot;</span><span class="p">);</span>
+<span class="kd">let</span><span class="w"> </span><span class="n">thing_enum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ThingEnum</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">data2</span><span class="p">,</span><span class="w"> </span><span class="s">"food"</span><span class="p">);</span>
 
 <span class="kd">let</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">match</span><span class="w"> </span><span class="n">thing_enum</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">ThingEnum</span><span class="p">::</span><span class="n">HasDefault</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">default</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">,</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="n">default</span><span class="p">),</span>
@@ -854,7 +853,7 @@ When constructing the dataset, the <code class="docutils literal notranslate"><s
 <div class="highlight-rust notranslate"><div class="highlight"><pre><span></span><span class="k">use</span><span class="w"> </span><span class="n">std</span><span class="p">::</span><span class="n">path</span><span class="p">::</span><span class="n">Path</span><span class="p">;</span>
 <span class="k">use</span><span class="w"> </span><span class="n">routee_compass_core</span><span class="p">::</span><span class="n">util</span><span class="p">::</span><span class="n">fs</span><span class="p">::</span><span class="n">read_utils</span><span class="p">;</span>
 
-<span class="kd">let</span><span class="w"> </span><span class="n">path</span><span class="p">:</span><span class="w"> </span><span class="nc">Path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Path</span><span class="p">::</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;somewhere/in/the/filesystem/my.csv&quot;</span><span class="p">);</span>
+<span class="kd">let</span><span class="w"> </span><span class="n">path</span><span class="p">:</span><span class="w"> </span><span class="nc">Path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Path</span><span class="p">::</span><span class="n">from</span><span class="p">(</span><span class="s">"somewhere/in/the/filesystem/my.csv"</span><span class="p">);</span>
 <span class="kd">let</span><span class="w"> </span><span class="n">data</span><span class="p">:</span><span class="w"> </span><span class="nb">Vec</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">read_utils</span><span class="p">::</span><span class="n">from_csv</span><span class="p">(</span><span class="o">&amp;</span><span class="n">file_path</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nb">None</span><span class="p">,</span><span class="w"> </span><span class="nb">None</span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
 <span class="kd">let</span><span class="w"> </span><span class="n">output</span><span class="p">:</span><span class="w"> </span><span class="nb">Box</span><span class="o">&lt;</span><span class="p">[</span><span class="n">T</span><span class="p">]</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">into_boxed_slice</span><span class="p">();</span>
 </pre></div>
@@ -909,13 +908,13 @@ The following table illustrates this relationship for the Frontier and Traversal
 <span class="p">};</span>
 <span class="k">use</span><span class="w"> </span><span class="n">routee_compass</span><span class="p">::</span><span class="n">model</span><span class="p">::</span><span class="n">constraint</span><span class="p">::</span><span class="n">default</span><span class="p">::</span><span class="n">road_class</span><span class="p">::</span><span class="n">RoadClassBuilder</span><span class="p">;</span>
 
-<span class="c1">// RouteE Compass passes in the &quot;[traversal]&quot; section of the application configuration </span>
+<span class="c1">// RouteE Compass passes in the "[traversal]" section of the application configuration </span>
 <span class="c1">// here so that it can be used by the selected builder to configure a service.</span>
 <span class="kd">let</span><span class="w"> </span><span class="n">config</span><span class="p">:</span><span class="w"> </span><span class="nc">Value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">json</span><span class="o">!</span><span class="p">();</span><span class="w"> </span>
 <span class="c1">// a single user search query, which may provide additional configuration. in this case, the query</span>
 <span class="c1">// restricts road classes to those that are walk-able OpenStreetMap highway tags.</span>
 <span class="kd">let</span><span class="w"> </span><span class="n">query</span><span class="p">:</span><span class="w"> </span><span class="nc">Value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">json</span><span class="o">!</span><span class="p">({</span>
-<span class="w">  </span><span class="s">&quot;road_class&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;sidewalk&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;living_street&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;service&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;steps&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;track&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;path&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;trailhead&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;pedestrian&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="s">"road_class"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s">"sidewalk"</span><span class="p">,</span><span class="w"> </span><span class="s">"living_street"</span><span class="p">,</span><span class="w"> </span><span class="s">"service"</span><span class="p">,</span><span class="w"> </span><span class="s">"steps"</span><span class="p">,</span><span class="w"> </span><span class="s">"track"</span><span class="p">,</span><span class="w"> </span><span class="s">"path"</span><span class="p">,</span><span class="w"> </span><span class="s">"trailhead"</span><span class="p">,</span><span class="w"> </span><span class="s">"pedestrian"</span><span class="p">]</span>
 <span class="p">});</span><span class="w">  </span>
 <span class="w">    </span>
 <span class="kd">let</span><span class="w"> </span><span class="n">builder</span><span class="p">:</span><span class="w"> </span><span class="nc">Rc</span><span class="o">&lt;</span><span class="k">dyn</span><span class="w"> </span><span class="n">ConstraintModelBuilder</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Box</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">RoadClassBuilder</span><span class="w"> </span><span class="p">{});</span>
@@ -971,11 +970,11 @@ This way, the <strong>service</strong> can be shared across threads so we can bu
       </div>
     </a>
     <a class="right-next"
-       href="hpc_build.html"
+       href="troubleshooting.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Building on HPC systems</p>
+        <p class="prev-next-title">Troubleshooting</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

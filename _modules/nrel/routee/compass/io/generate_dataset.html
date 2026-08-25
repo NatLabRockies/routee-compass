@@ -240,8 +240,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../developers/build_the_docs.html">Build The Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../developers/contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../developers/rust_code_style.html">Rust Code Style</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../developers/hpc_build.html">Building on HPC systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../developers/troubleshooting_macos_installation.html">Troubleshooting MacOS Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../developers/troubleshooting.html">Troubleshooting</a></li>
 </ul>
 
     </div>
@@ -421,7 +420,7 @@
 <span class="n">HIGHWAY_SPEED_MAP</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">[</span><span class="n">HIGHWAY_TYPE</span><span class="p">,</span> <span class="n">KM_PER_HR</span><span class="p">]</span>
 
 <span class="c1"># Parameters annotated with this pass through OSMnx, then GeoPandas, then to Pandas,</span>
-<span class="c1"># this is a best-effort annotation since the upstream doesn&#39;t really have one</span>
+<span class="c1"># this is a best-effort annotation since the upstream doesn't really have one</span>
 <span class="n">AggFunc</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span>
 
 
@@ -429,7 +428,7 @@
 <a class="viewcode-back" href="../../../../../python_api_docs.html#nrel.routee.compass.io.generate_dataset.HookParameters">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">HookParameters</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Parameters passed to hooks registered with generate_compass_dataset.</span>
 
 <span class="sd">    These parameters allow developers to access and modify the road network</span>
@@ -443,7 +442,7 @@
 <span class="sd">            data, including geometries and attributes like distance and speed.</span>
 <span class="sd">        graph (networkx.MultiDiGraph): The processed NetworkX graph object</span>
 <span class="sd">            representing the road network topology and attributes.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">output_directory</span><span class="p">:</span> <span class="n">Path</span>
     <span class="n">vertices</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
@@ -472,13 +471,13 @@
 <div class="viewcode-block" id="list_available_vehicle_models">
 <a class="viewcode-back" href="../../../../../python_api_docs.html#nrel.routee.compass.io.generate_dataset.list_available_vehicle_models">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">list_available_vehicle_models</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the list of all available vehicle model names that can be used</span>
 <span class="sd">    with the ``vehicle_models`` parameter of :func:`generate_compass_dataset`</span>
 <span class="sd">    and :meth:`CompassApp.from_graph`.</span>
 
 <span class="sd">    Each name corresponds to a vehicle configuration JSON shipped with the</span>
-<span class="sd">    package (filename stem, e.g. ``&quot;2017_CHEVROLET_Bolt&quot;``).</span>
+<span class="sd">    package (filename stem, e.g. ``"2017_CHEVROLET_Bolt"``).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        names: sorted list of available vehicle model name strings</span>
@@ -487,11 +486,11 @@
 <span class="sd">        &gt;&gt;&gt; from nrel.routee.compass import list_available_vehicle_models</span>
 <span class="sd">        &gt;&gt;&gt; models = list_available_vehicle_models()</span>
 <span class="sd">        &gt;&gt;&gt; print(models[:3])</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">with</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">path</span><span class="p">(</span>
-        <span class="s2">&quot;nrel.routee.compass.resources&quot;</span><span class="p">,</span> <span class="s2">&quot;vehicles&quot;</span>
+        <span class="s2">"nrel.routee.compass.resources"</span><span class="p">,</span> <span class="s2">"vehicles"</span>
     <span class="p">)</span> <span class="k">as</span> <span class="n">vehicles_dir</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">stem</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">vehicles_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.json&quot;</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">stem</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">vehicles_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.json"</span><span class="p">))</span></div>
 
 
 
@@ -507,12 +506,12 @@
     <span class="n">raster_resolution_arc_seconds</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">default_config</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">requests_kwds</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">afdc_api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;DEMO_KEY&quot;</span><span class="p">,</span>
+    <span class="n">afdc_api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"DEMO_KEY"</span><span class="p">,</span>
     <span class="n">require_charging_stations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">vehicle_models</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">hooks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">DatasetHook</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Processes a graph downloaded via OSMNx, generating the set of input</span>
 <span class="sd">    files required for running RouteE Compass.</span>
 
@@ -532,15 +531,15 @@
 <span class="sd">        agg: Aggregation function to impute missing values from observed values.</span>
 <span class="sd">            The default is numpy.mean, but you might also consider for example</span>
 <span class="sd">            numpy.median, numpy.nanmedian, or your own custom function. Defaults to numpy.mean.</span>
-<span class="sd">        phases (List[GeneratePipelinePhase]): of the overall generate pipeline, which phases of the pipeline to run. Defaults to all ([&quot;graph&quot;, &quot;grade&quot;, &quot;config&quot;, &quot;powertrain&quot;])</span>
+<span class="sd">        phases (List[GeneratePipelinePhase]): of the overall generate pipeline, which phases of the pipeline to run. Defaults to all (["graph", "grade", "config", "powertrain"])</span>
 <span class="sd">        raster_resolution_arc_seconds (str, optional): If grade is added, the resolution (in arc-seconds) of the tiles to download (either 1 or 1/3). Defaults to 1.</span>
 <span class="sd">        default_config (bool, optional): If true, copy default configuration files into the output directory. Defaults to True.</span>
 <span class="sd">        requests_kwds (Optional[Dict], optional): Keyword arguments to pass to the `requests` Python library for HTTP configuration. Defaults to None.</span>
-<span class="sd">        afdc_api_key (str, optional): API key for the AFDC API to download EV charging stations. Defaults to &quot;DEMO_KEY&quot;. See https://developer.nlr.gov/docs/transportation/alt-fuel-stations-v1/all/ for more information.</span>
+<span class="sd">        afdc_api_key (str, optional): API key for the AFDC API to download EV charging stations. Defaults to "DEMO_KEY". See https://developer.nlr.gov/docs/transportation/alt-fuel-stations-v1/all/ for more information.</span>
 <span class="sd">        require_charging_stations: if the CHARGING_STATIONS phase is active, fail when no chargers are found.</span>
 <span class="sd">        vehicle_models (Optional[List[str]]): If provided, only download and</span>
 <span class="sd">            configure the listed vehicle models (by name, e.g.</span>
-<span class="sd">            ``[&quot;2017_CHEVROLET_Bolt&quot;, &quot;2016_TOYOTA_Camry_4cyl_2WD&quot;]``).</span>
+<span class="sd">            ``["2017_CHEVROLET_Bolt", "2016_TOYOTA_Camry_4cyl_2WD"]``).</span>
 <span class="sd">            Use :func:`list_available_vehicle_models` to see valid names.</span>
 <span class="sd">            When ``None`` (the default) all available models are included.</span>
 <span class="sd">        hooks: Optional list of callables that take a ``HookParameters`` object.</span>
@@ -548,13 +547,13 @@
 <span class="sd">            and before the function returns.</span>
 <span class="sd">    Example:</span>
 <span class="sd">        &gt;&gt;&gt; import osmnx as ox</span>
-<span class="sd">        &gt;&gt;&gt; g = ox.graph_from_place(&quot;Denver, Colorado, USA&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; generate_compass_dataset(g, Path(&quot;denver_co&quot;))</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">        &gt;&gt;&gt; g = ox.graph_from_place("Denver, Colorado, USA")</span>
+<span class="sd">        &gt;&gt;&gt; generate_compass_dataset(g, Path("denver_co"))</span>
+<span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">osmnx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ox</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;requires osmnx to be installed. Try &#39;pip install osmnx&#39;&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">"requires osmnx to be installed. Try 'pip install osmnx'"</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">geopandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gpd</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -563,13 +562,13 @@
         <span class="kn">from</span><span class="w"> </span><span class="nn">shapely.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">box</span>
     <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;please install compass with the &#39;osm&#39; feature enabled. </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">"please install compass with the 'osm' feature enabled. </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">phases</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">phases</span> <span class="o">=</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">default</span><span class="p">()</span>
 
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;running pipeline import with phases: [</span><span class="si">{</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">phases</span><span class="p">]</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"running pipeline import with phases: [</span><span class="si">{</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">phases</span><span class="p">]</span><span class="si">}</span><span class="s2">]"</span><span class="p">)</span>
     <span class="n">output_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_directory</span><span class="p">)</span>
     <span class="n">output_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -577,13 +576,13 @@
     <span class="n">agg</span> <span class="o">=</span> <span class="n">agg</span> <span class="k">if</span> <span class="n">agg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span>
 
     <span class="c1"># pre-process the graph</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;processing graph topology and speeds&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"processing graph topology and speeds"</span><span class="p">)</span>
     <span class="n">g1</span> <span class="o">=</span> <span class="n">ox</span><span class="o">.</span><span class="n">truncate</span><span class="o">.</span><span class="n">largest_component</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
     <span class="n">g1</span> <span class="o">=</span> <span class="n">ox</span><span class="o">.</span><span class="n">add_edge_speeds</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">hwy_speeds</span><span class="o">=</span><span class="n">hwy_speeds</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="n">fallback</span><span class="p">,</span> <span class="n">agg</span><span class="o">=</span><span class="n">agg</span><span class="p">)</span>
     <span class="n">g1</span> <span class="o">=</span> <span class="n">ox</span><span class="o">.</span><span class="n">add_edge_bearings</span><span class="p">(</span><span class="n">g1</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">POWERTRAIN</span> <span class="ow">in</span> <span class="n">phases</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;adding grade information&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"adding grade information"</span><span class="p">)</span>
         <span class="n">g1</span> <span class="o">=</span> <span class="n">add_grade_to_graph</span><span class="p">(</span>
             <span class="n">g1</span><span class="p">,</span> <span class="n">resolution_arc_seconds</span><span class="o">=</span><span class="n">raster_resolution_arc_seconds</span>
         <span class="p">)</span>
@@ -591,113 +590,113 @@
     <span class="n">v</span><span class="p">,</span> <span class="n">e</span> <span class="o">=</span> <span class="n">ox</span><span class="o">.</span><span class="n">graph_to_gdfs</span><span class="p">(</span><span class="n">g1</span><span class="p">)</span>
 
     <span class="c1"># process vertices</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;processing vertices&quot;</span><span class="p">)</span>
-    <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;osmid&quot;</span><span class="p">:</span> <span class="s2">&quot;vertex_uuid&quot;</span><span class="p">})</span>
-    <span class="n">v</span><span class="p">[</span><span class="s2">&quot;vertex_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"processing vertices"</span><span class="p">)</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">"osmid"</span><span class="p">:</span> <span class="s2">"vertex_uuid"</span><span class="p">})</span>
+    <span class="n">v</span><span class="p">[</span><span class="s2">"vertex_id"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
 
     <span class="c1"># process edges</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;processing edges&quot;</span><span class="p">)</span>
-    <span class="n">lookup</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;vertex_uuid&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"processing edges"</span><span class="p">)</span>
+    <span class="n">lookup</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"vertex_uuid"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">replace_id</span><span class="p">(</span><span class="n">vertex_uuid</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
         <span class="k">return</span> <span class="n">lookup</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">vertex_uuid</span><span class="p">]</span><span class="o">.</span><span class="n">vertex_id</span>
 
     <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
         <span class="n">columns</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;u&quot;</span><span class="p">:</span> <span class="s2">&quot;src_vertex_uuid&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="s2">&quot;dst_vertex_uuid&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;osmid&quot;</span><span class="p">:</span> <span class="s2">&quot;edge_uuid&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;length&quot;</span><span class="p">:</span> <span class="s2">&quot;distance&quot;</span><span class="p">,</span>
+            <span class="s2">"u"</span><span class="p">:</span> <span class="s2">"src_vertex_uuid"</span><span class="p">,</span>
+            <span class="s2">"v"</span><span class="p">:</span> <span class="s2">"dst_vertex_uuid"</span><span class="p">,</span>
+            <span class="s2">"osmid"</span><span class="p">:</span> <span class="s2">"edge_uuid"</span><span class="p">,</span>
+            <span class="s2">"length"</span><span class="p">:</span> <span class="s2">"distance"</span><span class="p">,</span>
         <span class="p">}</span>
     <span class="p">)</span>
-    <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># take the first entry regardless of what it is (is this ok?)</span>
-    <span class="n">e</span><span class="p">[</span><span class="s2">&quot;edge_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-    <span class="n">e</span><span class="p">[</span><span class="s2">&quot;src_vertex_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">src_vertex_uuid</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">replace_id</span><span class="p">)</span>
-    <span class="n">e</span><span class="p">[</span><span class="s2">&quot;dst_vertex_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">dst_vertex_uuid</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">replace_id</span><span class="p">)</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s2">"key"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># take the first entry regardless of what it is (is this ok?)</span>
+    <span class="n">e</span><span class="p">[</span><span class="s2">"edge_id"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="n">e</span><span class="p">[</span><span class="s2">"src_vertex_id"</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">src_vertex_uuid</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">replace_id</span><span class="p">)</span>
+    <span class="n">e</span><span class="p">[</span><span class="s2">"dst_vertex_id"</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">dst_vertex_uuid</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">replace_id</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">GRAPH</span> <span class="ow">in</span> <span class="n">phases</span><span class="p">:</span>
         <span class="c1">#   vertex tables</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;writing vertex files&quot;</span><span class="p">)</span>
-        <span class="n">v</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;vertices-complete.csv.gz&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">v</span><span class="p">[[</span><span class="s2">&quot;vertex_id&quot;</span><span class="p">,</span> <span class="s2">&quot;vertex_uuid&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
-            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;vertices-mapping.csv.gz&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"writing vertex files"</span><span class="p">)</span>
+        <span class="n">v</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"vertices-complete.csv.gz"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">v</span><span class="p">[[</span><span class="s2">"vertex_id"</span><span class="p">,</span> <span class="s2">"vertex_uuid"</span><span class="p">]]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
+            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"vertices-mapping.csv.gz"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span>
         <span class="p">)</span>
-        <span class="n">v</span><span class="p">[[</span><span class="s2">&quot;vertex_uuid&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
-            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;vertices-uuid-enumerated.txt.gz&quot;</span><span class="p">,</span>
+        <span class="n">v</span><span class="p">[[</span><span class="s2">"vertex_uuid"</span><span class="p">]]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
+            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"vertices-uuid-enumerated.txt.gz"</span><span class="p">,</span>
             <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">header</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">v</span><span class="p">[[</span><span class="s2">&quot;vertex_id&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
-            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;vertices-compass.csv.gz&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span>
+        <span class="n">v</span><span class="p">[[</span><span class="s2">"vertex_id"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">]]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
+            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"vertices-compass.csv.gz"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span>
         <span class="p">)</span>
 
         <span class="c1">#   edge tables (CSV)</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;writing edge files&quot;</span><span class="p">)</span>
-        <span class="n">compass_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;edge_id&quot;</span><span class="p">,</span> <span class="s2">&quot;src_vertex_id&quot;</span><span class="p">,</span> <span class="s2">&quot;dst_vertex_id&quot;</span><span class="p">,</span> <span class="s2">&quot;distance&quot;</span><span class="p">]</span>
-        <span class="n">e</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;edges-complete.csv.gz&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">e</span><span class="p">[</span><span class="n">compass_cols</span><span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;edges-compass.csv.gz&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">e</span><span class="p">[[</span><span class="s2">&quot;edge_id&quot;</span><span class="p">,</span> <span class="s2">&quot;edge_uuid&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
-            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;edges-mapping.csv.gz&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"writing edge files"</span><span class="p">)</span>
+        <span class="n">compass_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"edge_id"</span><span class="p">,</span> <span class="s2">"src_vertex_id"</span><span class="p">,</span> <span class="s2">"dst_vertex_id"</span><span class="p">,</span> <span class="s2">"distance"</span><span class="p">]</span>
+        <span class="n">e</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"edges-complete.csv.gz"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">e</span><span class="p">[</span><span class="n">compass_cols</span><span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"edges-compass.csv.gz"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">e</span><span class="p">[[</span><span class="s2">"edge_id"</span><span class="p">,</span> <span class="s2">"edge_uuid"</span><span class="p">]]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
+            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"edges-mapping.csv.gz"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span>
         <span class="p">)</span>
 
         <span class="c1">#   edge tables (TXT)</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;writing edge attribute files&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"writing edge attribute files"</span><span class="p">)</span>
         <span class="n">e</span><span class="o">.</span><span class="n">edge_uuid</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
-            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;edges-uuid-enumerated.txt.gz&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">False</span>
+            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"edges-uuid-enumerated.txt.gz"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">False</span>
         <span class="p">)</span>
         <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span>
-            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;edges-geometries-enumerated.txt.gz&quot;</span><span class="p">,</span>
+            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"edges-geometries-enumerated.txt.gz"</span><span class="p">,</span>
             <span class="n">e</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span>
-            <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
-        <span class="p">)</span>  <span class="c1"># doesn&#39;t quote LINESTRINGS</span>
+            <span class="n">fmt</span><span class="o">=</span><span class="s2">"</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>  <span class="c1"># doesn't quote LINESTRINGS</span>
         <span class="n">e</span><span class="o">.</span><span class="n">speed_kph</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
-            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;edges-posted-speed-enumerated.txt.gz&quot;</span><span class="p">,</span>
+            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"edges-posted-speed-enumerated.txt.gz"</span><span class="p">,</span>
             <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">header</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">e</span><span class="o">.</span><span class="n">highway</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
-            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;edges-road-class-enumerated.txt.gz&quot;</span><span class="p">,</span>
+            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"edges-road-class-enumerated.txt.gz"</span><span class="p">,</span>
             <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">header</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">headings</span> <span class="o">=</span> <span class="p">[</span><span class="n">utils</span><span class="o">.</span><span class="n">calculate_bearings</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
         <span class="n">headings_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-            <span class="n">headings</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;arrival_heading&quot;</span><span class="p">,</span> <span class="s2">&quot;departure_heading&quot;</span><span class="p">]</span>
+            <span class="n">headings</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"arrival_heading"</span><span class="p">,</span> <span class="s2">"departure_heading"</span><span class="p">]</span>
         <span class="p">)</span>
         <span class="n">headings_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
-            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;edges-headings-enumerated.csv.gz&quot;</span><span class="p">,</span>
+            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"edges-headings-enumerated.csv.gz"</span><span class="p">,</span>
             <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span>
+            <span class="n">compression</span><span class="o">=</span><span class="s2">"gzip"</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">POWERTRAIN</span> <span class="ow">in</span> <span class="n">phases</span><span class="p">:</span>
         <span class="n">e</span><span class="o">.</span><span class="n">grade</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
-            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;edges-grade-enumerated.txt.gz&quot;</span><span class="p">,</span>
+            <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"edges-grade-enumerated.txt.gz"</span><span class="p">,</span>
             <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">header</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="c1"># COPY DEFAULT CONFIGURATION FILES</span>
     <span class="k">if</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">CONFIG</span> <span class="ow">in</span> <span class="n">phases</span> <span class="ow">and</span> <span class="n">default_config</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;copying default configuration TOML files&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"copying default configuration TOML files"</span><span class="p">)</span>
         <span class="n">base_config_files</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s2">&quot;osm_default_distance.toml&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;osm_default_speed.toml&quot;</span><span class="p">,</span>
+            <span class="s2">"osm_default_distance.toml"</span><span class="p">,</span>
+            <span class="s2">"osm_default_speed.toml"</span><span class="p">,</span>
         <span class="p">]</span>
         <span class="k">if</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">POWERTRAIN</span> <span class="ow">in</span> <span class="n">phases</span><span class="p">:</span>
             <span class="n">base_config_files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
                 <span class="p">[</span>
-                    <span class="s2">&quot;osm_default_energy.toml&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;osm_default_temperature.toml&quot;</span><span class="p">,</span>
+                    <span class="s2">"osm_default_energy.toml"</span><span class="p">,</span>
+                    <span class="s2">"osm_default_temperature.toml"</span><span class="p">,</span>
                 <span class="p">]</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">CHARGING_STATIONS</span> <span class="ow">in</span> <span class="n">phases</span><span class="p">:</span>
-            <span class="n">base_config_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;osm_default_charging.toml&quot;</span><span class="p">)</span>
+            <span class="n">base_config_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"osm_default_charging.toml"</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">base_config_files</span><span class="p">:</span>
             <span class="k">with</span> <span class="p">(</span>
                 <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">path</span><span class="p">(</span>
-                    <span class="s2">&quot;nrel.routee.compass.resources&quot;</span><span class="p">,</span> <span class="n">filename</span>
+                    <span class="s2">"nrel.routee.compass.resources"</span><span class="p">,</span> <span class="n">filename</span>
                 <span class="p">)</span> <span class="k">as</span> <span class="n">init_toml_path</span><span class="p">,</span>
                 <span class="n">init_toml_path</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">f</span><span class="p">,</span>
             <span class="p">):</span>
@@ -709,18 +708,18 @@
             <span class="k">if</span> <span class="n">vehicle_models</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">_filter_vehicle_input_files</span><span class="p">(</span><span class="n">init_toml</span><span class="p">,</span> <span class="n">vehicle_models</span><span class="p">)</span>
 
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_directory</span> <span class="o">/</span> <span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_directory</span> <span class="o">/</span> <span class="n">filename</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tomlkit</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">init_toml</span><span class="p">))</span>
 
     <span class="c1"># DOWLOAD ROUTEE ENERGY MODEL CATALOG AND VEHICLE CONFIGS</span>
     <span class="k">if</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">POWERTRAIN</span> <span class="ow">in</span> <span class="n">phases</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;downloading the default RouteE Powertrain models&quot;</span><span class="p">)</span>
-        <span class="n">model_output_directory</span> <span class="o">=</span> <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;models&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"downloading the default RouteE Powertrain models"</span><span class="p">)</span>
+        <span class="n">model_output_directory</span> <span class="o">=</span> <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"models"</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">model_output_directory</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="n">model_output_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">path</span><span class="p">(</span>
-            <span class="s2">&quot;nrel.routee.compass.resources.models&quot;</span><span class="p">,</span> <span class="s2">&quot;download_links.json&quot;</span>
+            <span class="s2">"nrel.routee.compass.resources.models"</span><span class="p">,</span> <span class="s2">"download_links.json"</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">model_link_path</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">model_link_path</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">model_links</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
@@ -738,30 +737,30 @@
                 <span class="n">filtered_links</span> <span class="o">=</span> <span class="n">model_links</span>
 
             <span class="k">for</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">model_link</span> <span class="ow">in</span> <span class="n">filtered_links</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">model_destination</span> <span class="o">=</span> <span class="n">model_output_directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">.bin&quot;</span>
+                <span class="n">model_destination</span> <span class="o">=</span> <span class="n">model_output_directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">.bin"</span>
 
-                <span class="n">cached_model_destination</span> <span class="o">=</span> <span class="n">CACHE_DIR</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">.bin&quot;</span>
+                <span class="n">cached_model_destination</span> <span class="o">=</span> <span class="n">CACHE_DIR</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">.bin"</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">cached_model_destination</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
                     <span class="n">kwds</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
                         <span class="n">requests_kwds</span> <span class="k">if</span> <span class="n">requests_kwds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
                     <span class="p">)</span>
                     <span class="n">download_response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">model_link</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
                     <span class="n">download_response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
-                    <span class="k">with</span> <span class="n">cached_model_destination</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
+                    <span class="k">with</span> <span class="n">cached_model_destination</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"wb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
                         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">download_response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
                 <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">cached_model_destination</span><span class="p">,</span> <span class="n">model_destination</span><span class="p">)</span>
 
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;copying vehicle configuration files&quot;</span><span class="p">)</span>
-        <span class="n">vehicle_output_directory</span> <span class="o">=</span> <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;vehicles&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"copying vehicle configuration files"</span><span class="p">)</span>
+        <span class="n">vehicle_output_directory</span> <span class="o">=</span> <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"vehicles"</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">vehicle_output_directory</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="n">vehicle_output_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">path</span><span class="p">(</span>
-            <span class="s2">&quot;nrel.routee.compass.resources&quot;</span><span class="p">,</span> <span class="s2">&quot;vehicles&quot;</span>
+            <span class="s2">"nrel.routee.compass.resources"</span><span class="p">,</span> <span class="s2">"vehicles"</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">vehicles_dir</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">vehicles_dir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-                <span class="k">for</span> <span class="n">vehicle_file</span> <span class="ow">in</span> <span class="n">vehicles_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.json&quot;</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">vehicle_file</span> <span class="ow">in</span> <span class="n">vehicles_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.json"</span><span class="p">):</span>
                     <span class="k">if</span> <span class="n">vehicle_models</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">vehicle_file</span><span class="o">.</span><span class="n">stem</span> <span class="ow">in</span> <span class="n">vehicle_models</span><span class="p">:</span>
                         <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span>
                             <span class="n">vehicle_file</span><span class="p">,</span>
@@ -769,11 +768,11 @@
                         <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">GeneratePipelinePhase</span><span class="o">.</span><span class="n">CHARGING_STATIONS</span> <span class="ow">in</span> <span class="n">phases</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Downloading EV charging stations for the road network bounding box.&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Downloading EV charging stations for the road network bounding box."</span><span class="p">)</span>
         <span class="n">vertex_gdf</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span>
-            <span class="n">v</span><span class="p">[[</span><span class="s2">&quot;vertex_id&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="n">v</span><span class="p">[[</span><span class="s2">"vertex_id"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
             <span class="n">geometry</span><span class="o">=</span><span class="n">gpd</span><span class="o">.</span><span class="n">points_from_xy</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">y</span><span class="p">),</span>
-            <span class="n">crs</span><span class="o">=</span><span class="s2">&quot;EPSG:4326&quot;</span><span class="p">,</span>
+            <span class="n">crs</span><span class="o">=</span><span class="s2">"EPSG:4326"</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">vertex_bounds</span> <span class="o">=</span> <span class="n">vertex_gdf</span><span class="o">.</span><span class="n">total_bounds</span>
@@ -790,34 +789,34 @@
 
         <span class="k">if</span> <span class="n">charging_gdf</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="n">require_charging_stations</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;No charging stations found in the bounding box for the road network. &quot;</span>
-                <span class="s2">&quot;please re-run without the CHARGING_STATIONS pipeline phase, or if &quot;</span>
-                <span class="s2">&quot;no chargers is acceptable, call this function with `require_charging_stations=False`.&quot;</span>
+                <span class="s2">"No charging stations found in the bounding box for the road network. "</span>
+                <span class="s2">"please re-run without the CHARGING_STATIONS pipeline phase, or if "</span>
+                <span class="s2">"no chargers is acceptable, call this function with `require_charging_stations=False`."</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">charging_gdf</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;No charging stations found in the bounding box for the road network.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">"No charging stations found in the bounding box for the road network."</span>
             <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">out_df</span> <span class="o">=</span> <span class="n">charging_gdf</span><span class="p">[</span>
                 <span class="p">[</span>
-                    <span class="s2">&quot;power_type&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;power_kw&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;cost_per_kwh&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">,</span>
+                    <span class="s2">"power_type"</span><span class="p">,</span>
+                    <span class="s2">"power_kw"</span><span class="p">,</span>
+                    <span class="s2">"cost_per_kwh"</span><span class="p">,</span>
+                    <span class="s2">"x"</span><span class="p">,</span>
+                    <span class="s2">"y"</span><span class="p">,</span>
                 <span class="p">]</span>
             <span class="p">]</span>
 
             <span class="n">out_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
-                <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">&quot;charging-stations.csv.gz&quot;</span><span class="p">,</span>
+                <span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"charging-stations.csv.gz"</span><span class="p">,</span>
                 <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span>
+                <span class="n">compression</span><span class="o">=</span><span class="s2">"gzip"</span><span class="p">,</span>
             <span class="p">)</span>
 
     <span class="c1"># RUN HOOKS</span>
     <span class="k">if</span> <span class="n">hooks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;running </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">hooks</span><span class="p">)</span><span class="si">}</span><span class="s2"> dataset generation hooks&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"running </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">hooks</span><span class="p">)</span><span class="si">}</span><span class="s2"> dataset generation hooks"</span><span class="p">)</span>
         <span class="n">params</span> <span class="o">=</span> <span class="n">HookParameters</span><span class="p">(</span>
             <span class="n">output_directory</span><span class="o">=</span><span class="n">output_directory</span><span class="p">,</span>
             <span class="n">vertices</span><span class="o">=</span><span class="n">v</span><span class="p">,</span>
@@ -830,40 +829,40 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_required_model_bins</span><span class="p">(</span><span class="n">vehicle_models</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Given a list of vehicle model names (JSON file stems), determine the set</span>
 <span class="sd">    of ``.bin`` model names that need to be downloaded.</span>
 
 <span class="sd">    For simple ICE/BEV vehicles, the bin name equals the ``model_input_file``</span>
 <span class="sd">    stem in the JSON.  For PHEVs, there are two bins (Charge_Depleting and</span>
 <span class="sd">    Charge_Sustaining) nested inside the JSON.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">required</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
     <span class="k">with</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">path</span><span class="p">(</span>
-        <span class="s2">&quot;nrel.routee.compass.resources&quot;</span><span class="p">,</span> <span class="s2">&quot;vehicles&quot;</span>
+        <span class="s2">"nrel.routee.compass.resources"</span><span class="p">,</span> <span class="s2">"vehicles"</span>
     <span class="p">)</span> <span class="k">as</span> <span class="n">vehicles_dir</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">vehicle_models</span><span class="p">:</span>
-            <span class="n">vehicle_file</span> <span class="o">=</span> <span class="n">vehicles_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.json&quot;</span>
+            <span class="n">vehicle_file</span> <span class="o">=</span> <span class="n">vehicles_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.json"</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">vehicle_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="n">available</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">stem</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">vehicles_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.json&quot;</span><span class="p">))</span>
+                <span class="n">available</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">stem</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">vehicles_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.json"</span><span class="p">))</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Vehicle model &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; not found. &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;Use list_available_vehicle_models() to see valid names. &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;Available: </span><span class="si">{</span><span class="n">available</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">"Vehicle model '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">' not found. "</span>
+                    <span class="sa">f</span><span class="s2">"Use list_available_vehicle_models() to see valid names. "</span>
+                    <span class="sa">f</span><span class="s2">"Available: </span><span class="si">{</span><span class="n">available</span><span class="si">}</span><span class="s2">"</span>
                 <span class="p">)</span>
             <span class="k">with</span> <span class="n">vehicle_file</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">vehicle_cfg</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
-            <span class="n">vtype</span> <span class="o">=</span> <span class="n">vehicle_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">vtype</span> <span class="o">==</span> <span class="s2">&quot;phev&quot;</span><span class="p">:</span>
+            <span class="n">vtype</span> <span class="o">=</span> <span class="n">vehicle_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">vtype</span> <span class="o">==</span> <span class="s2">"phev"</span><span class="p">:</span>
                 <span class="c1"># PHEV vehicles reference two separate model files</span>
-                <span class="k">for</span> <span class="n">sub_key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;charge_depleting&quot;</span><span class="p">,</span> <span class="s2">&quot;charge_sustaining&quot;</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">sub_key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"charge_depleting"</span><span class="p">,</span> <span class="s2">"charge_sustaining"</span><span class="p">):</span>
                     <span class="n">sub</span> <span class="o">=</span> <span class="n">vehicle_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sub_key</span><span class="p">,</span> <span class="p">{})</span>
-                    <span class="n">model_path</span> <span class="o">=</span> <span class="n">sub</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_input_file&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="n">model_path</span> <span class="o">=</span> <span class="n">sub</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"model_input_file"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">model_path</span><span class="p">:</span>
                         <span class="n">required</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">model_path</span> <span class="o">=</span> <span class="n">vehicle_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_input_file&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="n">model_path</span> <span class="o">=</span> <span class="n">vehicle_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"model_input_file"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">model_path</span><span class="p">:</span>
                     <span class="n">required</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">required</span>
@@ -872,26 +871,26 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_filter_vehicle_input_files</span><span class="p">(</span>
     <span class="n">toml_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">vehicle_models</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Walk through a parsed TOML config and rewrite any</span>
 <span class="sd">    ``vehicle_input_files`` arrays so they only reference vehicle JSON</span>
 <span class="sd">    files present in the *vehicle_models* list.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">vehicle_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">vehicle_models</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_matches</span><span class="p">(</span><span class="n">vehicle_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if the vehicle path stem is in the requested set.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return True if the vehicle path stem is in the requested set."""</span>
         <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">vehicle_path</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span> <span class="ow">in</span> <span class="n">vehicle_set</span>
 
     <span class="c1"># The vehicle_input_files list lives inside [[search.traversal.models]]</span>
-    <span class="c1"># entries with type = &quot;energy&quot;.</span>
-    <span class="n">search</span> <span class="o">=</span> <span class="n">toml_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;search&quot;</span><span class="p">,</span> <span class="p">{})</span>
-    <span class="n">traversal</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;traversal&quot;</span><span class="p">,</span> <span class="p">{})</span>
-    <span class="n">models</span> <span class="o">=</span> <span class="n">traversal</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;models&quot;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="c1"># entries with type = "energy".</span>
+    <span class="n">search</span> <span class="o">=</span> <span class="n">toml_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"search"</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">traversal</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"traversal"</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">models</span> <span class="o">=</span> <span class="n">traversal</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"models"</span><span class="p">,</span> <span class="p">[])</span>
     <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;energy&quot;</span> <span class="ow">and</span> <span class="s2">&quot;vehicle_input_files&quot;</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
-            <span class="n">model</span><span class="p">[</span><span class="s2">&quot;vehicle_input_files&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">model</span><span class="p">[</span><span class="s2">&quot;vehicle_input_files&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">_matches</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"energy"</span> <span class="ow">and</span> <span class="s2">"vehicle_input_files"</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
+            <span class="n">model</span><span class="p">[</span><span class="s2">"vehicle_input_files"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">model</span><span class="p">[</span><span class="s2">"vehicle_input_files"</span><span class="p">]</span> <span class="k">if</span> <span class="n">_matches</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
             <span class="p">]</span>
 </pre></div>
 
