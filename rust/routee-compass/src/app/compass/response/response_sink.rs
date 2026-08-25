@@ -1,12 +1,16 @@
+use ordered_hash_map::OrderedHashMap;
+
 use super::parquet_writer::ParquetPartitionWriter;
 use super::response_output_format::ResponseOutputFormat;
 use super::write_mode::WriteMode;
+use crate::app::compass::response::mapping::file_mapping::FileMapping;
 use crate::app::compass::response::FileState;
 use crate::app::compass::CompassAppError;
 use std::num::NonZeroUsize;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
+/// implements the output policy for a given output location.
 pub enum ResponseSink {
     None,
     File {
@@ -91,6 +95,41 @@ impl ResponseSink {
             iterations_per_flush,
         };
         Ok(result)
+    }
+
+    /// creates a response sink that targets a parquet archive.
+    ///
+    /// note: does not take advantage of parquet partitionings.
+    pub fn new_parquet(
+        path: PathBuf,
+        file_flush_rate: Option<u64>,
+        mapping: Option<OrderedHashMap<String, FileMapping>>,
+    ) -> Result<Self, CompassAppError> {
+        let num_threads = rayon::current_num_threads();
+        let buffer_size = file_flush_rate.unwrap_or(100) as usize;
+        let base_filename = path.to_string_lossy().to_string();
+
+        // create the parent directory if it doesn't exist
+        std::fs::create_dir(&path).map_err(|e| {
+            CompassAppError::InternalError(format!(
+                "failed to create parquet base file {:?}: {}",
+                path, e
+            ))
+        })?;
+
+        let writers = (0..num_threads)
+            .map(|i| {
+                let partname = format!("part_{i}.parquet");
+                let filepath = path.join(partname);
+                let fname = filepath.to_string_lossy().to_string();
+                let writer = ParquetPartitionWriter::new(fname, buffer_size, mapping.clone());
+                Mutex::new(writer)
+            })
+            .collect();
+        Ok(ResponseSink::Parquet {
+            base_filename,
+            writers,
+        })
     }
 
     /// uses a writer to write a RouteE Compass app response to some location.

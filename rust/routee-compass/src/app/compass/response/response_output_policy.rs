@@ -1,10 +1,10 @@
 use super::{
-    parquet_writer::ParquetPartitionWriter, response_output_format::ResponseOutputFormat,
-    response_sink::ResponseSink, write_mode::WriteMode,
+    response_output_format::ResponseOutputFormat, response_sink::ResponseSink,
+    write_mode::WriteMode,
 };
 use crate::app::compass::CompassAppError;
 use serde::{Deserialize, Serialize};
-use std::{num::NonZeroUsize, path::PathBuf, sync::Mutex};
+use std::{num::NonZeroUsize, path::PathBuf};
 
 /// user configuration for the file writing of compass outputs.
 #[derive(Deserialize, Serialize, Clone, Debug, Default)]
@@ -63,34 +63,11 @@ impl ResponseOutputPolicy {
                 file_flush_rate,
                 write_mode,
             } => match format {
-                ResponseOutputFormat::Parquet { mapping } => {
-                    let num_threads = rayon::current_num_threads();
-                    let buffer_size = file_flush_rate.unwrap_or(100) as usize;
-                    let base_filename = path.to_string_lossy().to_string();
-
-                    // create the parent directory if it doesn't exist
-                    std::fs::create_dir(&path).map_err(|e| {
-                        CompassAppError::InternalError(format!(
-                            "failed to create parquet base file {:?}: {}",
-                            path, e
-                        ))
-                    })?;
-
-                    let writers = (0..num_threads)
-                        .map(|i| {
-                            let partname = format!("part_{i}.parquet");
-                            let filepath = path.join(partname);
-                            let fname = filepath.to_string_lossy().to_string();
-                            let writer =
-                                ParquetPartitionWriter::new(fname, buffer_size, mapping.clone());
-                            Mutex::new(writer)
-                        })
-                        .collect();
-                    Ok(ResponseSink::Parquet {
-                        base_filename,
-                        writers,
-                    })
-                }
+                ResponseOutputFormat::Parquet { mapping } => ResponseSink::new_parquet(
+                    path.clone(),
+                    file_flush_rate.clone(),
+                    mapping.clone(),
+                ),
                 _ => ResponseSink::new_file(
                     path.clone(),
                     format.clone(),
