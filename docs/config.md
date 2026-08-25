@@ -693,7 +693,7 @@ Output to JSON:
 ```toml
 [system.response_output_policy]
 type = "file"
-filename = "result.json"
+path = "result.json"
 format = { type = "json", newline_delimited = false }
 
 # append to an existing file (default)
@@ -708,14 +708,20 @@ write_mode = "append"
 # file_flush_rate = 100
 ```
 
+#### JSON files
+
 Output to JSON in newline-delimited format:
 
 ```toml
 [system.response_output_policy]
 type = "file"
-filename = "result.jsonl"
+path = "result.jsonl"
 format = { type = "json", newline_delimited = true }
 ```
+
+or output a valid JSON value with `newline_delimited = false`.
+
+#### CSV files
 
 Output to CSV. This requires a mapping from JSON path to CSV column.
 
@@ -725,8 +731,9 @@ subsequent chunks always share the same CSV header ordering._
 ```toml
 [system.response_output_policy]
 type = "file"
-filename = "result.csv"
+path = "result.csv"
 [system.response_output_policy.format]
+type = "csv"
 sorted = true
 [system.response_output_policy.format.mapping]
 olon = "request.origin_x"
@@ -740,6 +747,51 @@ time = "route.traversal_summary.trip_time"
 total_cost = "route.cost.total_cost"
 ```
 
+#### Parquet files
+
+Similar to CSV, this requires a mapping from JSON path to a parquet column. Provides concurrent write support, useful for large jobs.
+
+_note: does not use Parquet partitioning._
+
+```toml
+[system.response_output_policy]
+type = "file"
+path = "result.parquet"
+[system.response_output_policy.format]
+type = "parquet"
+sorted = true
+[system.response_output_policy.format.mapping]
+olon = "request.origin_x"
+olat = "request.origin_y"
+dlon = "request.destination_x"
+dlat = "request.destination_y"
+runtime = "search_app_runtime"
+ram_mb = "search_result_size_mib"
+error = { optional = "error" }
+time = "route.traversal_summary.trip_time"
+total_cost = "route.cost.total_cost"
+```
+
+#### File pools for CSV/JSON/JSONL
+
+Writing to a pool of flat output files in CSV, JSON, or JSONL format is also possible. Similar to Parquet, concurrent writes are supported, which speeds up runtimes for large runs especially where each result contains a large amount of information.
+
+```toml
+[system.response_output_policy]
+type = "directory"
+path = "output/"
+prefix = "data" # optional, defaults to "part"
+# # sets the number of output file parts.
+# # if not provided, the number of parallel threads used by Compass is used.
+# concurrency = 8
+format = { type = "json", newline_delimited = true }
+# # other optional arguments:
+# file_flush_rate = 50
+# write_mode = "append" 
+```
+
+#### Multiple output locations
+
 Multiple output files are supported. Here, the complete output as JSON is 
 preserved, while a CSV contains a high-level summary. An additional file
 contains any errors.
@@ -750,12 +802,12 @@ type = "combined"
 
 [[system.response_output_policy.policies]]
 type = "file"
-filename = "result.jsonl"
+path = "result.jsonl"
 format = { type = "json", newline_delimited = true }
 
 [[system.response_output_policy.policies]]
 type = "file"
-filename = "summary.csv"
+path = "summary.csv"
 [system.response_output_policy.policies.format]
 sorted = true
 [system.response_output_policy.policies.format.mapping]
@@ -771,7 +823,7 @@ total_cost = "route.cost.total_cost"
 
 [[system.response_output_policy.policies]]
 type = "file"
-filename = "errors.csv"
+path = "errors.csv"
 [system.response_output_policy.policies.format]
 type = "csv"
 sorted = true
