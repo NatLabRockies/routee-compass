@@ -10,6 +10,7 @@ use log::{debug, error, info, warn};
 use routee_compass_core::util::fs::fs_utils;
 use serde_json::{json, Value};
 use std::io::BufRead;
+use std::path::PathBuf;
 use std::time::Instant;
 use std::{fs::File, io::BufReader, path::Path};
 
@@ -240,17 +241,9 @@ fn apply_output_directory_override(
     output_directory: &str,
 ) -> Result<(), CompassAppError> {
     match policy {
-        ResponseOutputPolicy::File { filename, .. } => {
-            let file_path = Path::new(&filename);
-            let file_name = file_path.file_name().ok_or_else(|| {
-                CompassAppError::BuildFailure(format!(
-                    "Could not extract filename from path '{}'",
-                    filename
-                ))
-            })?;
-            let new_path = Path::new(output_directory).join(file_name);
-            *filename = new_path.to_string_lossy().to_string();
-            Ok(())
+        ResponseOutputPolicy::File { path, .. } => override_path(path, Path::new(output_directory)),
+        ResponseOutputPolicy::Directory { path, .. } => {
+            override_path(path, Path::new(output_directory))
         }
         ResponseOutputPolicy::Combined { policies } => {
             for sub_policy in policies.iter_mut() {
@@ -265,6 +258,19 @@ fn apply_output_directory_override(
     }
 }
 
+/// helper to in-place override a PathBuf so that we attach the file/directory name
+/// at the end of a path with a new overriding path-to-name.
+fn override_path(path: &mut PathBuf, override_path: &Path) -> Result<(), CompassAppError> {
+    let dir_name = path.file_name().ok_or_else(|| {
+        CompassAppError::BuildFailure(format!(
+            "Could not extract filename from path '{}'",
+            path.to_string_lossy().to_string()
+        ))
+    })?;
+    *path = override_path.join(dir_name);
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -274,7 +280,7 @@ mod tests {
     #[test]
     fn test_apply_output_directory_override_json() {
         let mut policy = ResponseOutputPolicy::File {
-            filename: "old.json".to_string(),
+            path: Path::new("old.json").to_path_buf(),
             format: ResponseOutputFormat::Json {
                 newline_delimited: false,
             },
@@ -284,7 +290,7 @@ mod tests {
 
         // Should join directory with filename
         assert!(apply_output_directory_override(&mut policy, "new_dir").is_ok());
-        if let ResponseOutputPolicy::File { filename, .. } = policy {
+        if let ResponseOutputPolicy::File { path: filename, .. } = policy {
             assert_eq!(
                 filename,
                 Path::new("new_dir")
@@ -300,7 +306,7 @@ mod tests {
     #[test]
     fn test_apply_output_directory_override_nested_source() {
         let mut policy = ResponseOutputPolicy::File {
-            filename: "some/nested/path/old.json".to_string(),
+            path: Path::new("some/nested/path/old.json").to_path_buf(),
             format: ResponseOutputFormat::Json {
                 newline_delimited: false,
             },
@@ -310,7 +316,7 @@ mod tests {
 
         // Should strip source path and use only filename
         assert!(apply_output_directory_override(&mut policy, "new_dir").is_ok());
-        if let ResponseOutputPolicy::File { filename, .. } = policy {
+        if let ResponseOutputPolicy::File { path: filename, .. } = policy {
             assert_eq!(
                 filename,
                 Path::new("new_dir")
@@ -328,7 +334,7 @@ mod tests {
         let mut policy = ResponseOutputPolicy::Combined {
             policies: vec![
                 Box::new(ResponseOutputPolicy::File {
-                    filename: "file1.json".to_string(),
+                    path: Path::new("file1.json").to_path_buf(),
                     format: ResponseOutputFormat::Json {
                         newline_delimited: false,
                     },
@@ -336,7 +342,7 @@ mod tests {
                     write_mode: None,
                 }),
                 Box::new(ResponseOutputPolicy::File {
-                    filename: "file2.csv".to_string(),
+                    path: Path::new("file2.csv").to_path_buf(),
                     format: ResponseOutputFormat::Csv {
                         mapping: OrderedHashMap::new(),
                         sorted: false,
@@ -351,7 +357,7 @@ mod tests {
 
         if let ResponseOutputPolicy::Combined { policies } = policy {
             // Check first file
-            if let ResponseOutputPolicy::File { filename, .. } = policies[0].as_ref() {
+            if let ResponseOutputPolicy::File { path: filename, .. } = policies[0].as_ref() {
                 assert_eq!(
                     filename,
                     &Path::new("out")
@@ -364,7 +370,7 @@ mod tests {
             }
 
             // Check second file
-            if let ResponseOutputPolicy::File { filename, .. } = policies[1].as_ref() {
+            if let ResponseOutputPolicy::File { path: filename, .. } = policies[1].as_ref() {
                 assert_eq!(
                     filename,
                     &Path::new("out")
@@ -385,7 +391,7 @@ mod tests {
         let mut policy = ResponseOutputPolicy::Combined {
             policies: vec![
                 Box::new(ResponseOutputPolicy::File {
-                    filename: "file1.json".to_string(),
+                    path: Path::new("file1.json").to_path_buf(),
                     format: ResponseOutputFormat::Json {
                         newline_delimited: false,
                     },
@@ -395,7 +401,7 @@ mod tests {
                 Box::new(ResponseOutputPolicy::Combined {
                     policies: vec![
                         Box::new(ResponseOutputPolicy::File {
-                            filename: "file2.csv".to_string(),
+                            path: Path::new("file2.csv").to_path_buf(),
                             format: ResponseOutputFormat::Csv {
                                 mapping: OrderedHashMap::new(),
                                 sorted: false,
@@ -413,7 +419,7 @@ mod tests {
 
         if let ResponseOutputPolicy::Combined { policies } = policy {
             // Check first file
-            if let ResponseOutputPolicy::File { filename, .. } = policies[0].as_ref() {
+            if let ResponseOutputPolicy::File { path: filename, .. } = policies[0].as_ref() {
                 assert_eq!(
                     filename,
                     &Path::new("out")
@@ -425,7 +431,7 @@ mod tests {
 
             // Check nested file
             if let ResponseOutputPolicy::Combined { policies: nested } = policies[1].as_ref() {
-                if let ResponseOutputPolicy::File { filename, .. } = nested[0].as_ref() {
+                if let ResponseOutputPolicy::File { path: filename, .. } = nested[0].as_ref() {
                     assert_eq!(
                         filename,
                         &Path::new("out")
