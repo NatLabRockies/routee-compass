@@ -3,17 +3,13 @@ use super::{
     prediction_model_ops, smartcore::SmartcoreModel, PredictionModel, PredictionModelConfig,
 };
 use crate::model::fieldname;
-use itertools::Itertools;
 use routee_compass_core::model::{
     state::{InputFeature, StateModel, StateVariable},
     traversal::TraversalModelError,
     unit::{EnergyRateUnit, EnergyUnit},
 };
 use std::{str::FromStr, sync::Arc};
-use uom::si::{
-    energy,
-    f64::{Energy, Mass},
-};
+use uom::si::f64::{Energy, Mass};
 
 /// A struct to hold the prediction model and associated metadata
 pub struct PredictionModelRecord {
