@@ -103,12 +103,16 @@ fn get_or_create_file_writer(
     filepath: &Path,
     write_mode: &WriteMode,
 ) -> Result<InternalWriter, CompassAppError> {
-    if filepath.ends_with(".gz") {
-        let OpenResult { file, appending } = write_mode.open_file(filepath)?;
-        let encoder = Box::new(GzEncoder::new(file, Compression::default()));
-        Ok(InternalWriter::GzippedFile { encoder, appending })
-    } else {
-        let OpenResult { file, appending } = write_mode.open_file(filepath)?;
-        Ok(InternalWriter::File { file, appending })
+    let ext_option = filepath.extension();
+    match ext_option {
+        Some(ext) if ext == "gz" => {
+            let OpenResult { file, appending } = write_mode.open_file(filepath)?;
+            let encoder = Box::new(GzEncoder::new(file, Compression::default()));
+            Ok(InternalWriter::GzippedFile { encoder, appending })
+        }
+        _ => {
+            let OpenResult { file, appending } = write_mode.open_file(filepath)?;
+            Ok(InternalWriter::File { file, appending })
+        }
     }
 }
