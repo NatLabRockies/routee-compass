@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use routee_compass_core::model::state::InputFeature;
-use routee_compass_core::model::unit::{DistanceUnit, SpeedUnit, TimeUnit};
+use routee_compass_core::model::unit::{DistanceUnit, RatioUnit, SpeedUnit, TimeUnit};
 /// The minimal set of metadata needed from routee-powertrain v2 to
 /// integrate with Compass's prediction models.
 use serde::{Deserialize, Serialize};
@@ -13,6 +13,7 @@ pub struct Vehicle {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Contract {
     pub feature_set: Vec<Feature>,
+    pub target: Vec<Feature>,
     pub real_world_adjustment_factor: f64,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -64,18 +65,23 @@ impl TryFrom<&Feature> for InputFeature {
 
         if name_lower.contains("distance") {
             Ok(InputFeature::Distance {
-                name: value.name.clone(),
+                name: name_lower,
                 unit: Some(DistanceUnit::from_str(&value.units)?),
             })
         } else if name_lower.contains("speed") {
             Ok(InputFeature::Speed {
-                name: value.name.clone(),
+                name: name_lower,
                 unit: Some(SpeedUnit::from_str(&value.units)?),
             })
         } else if name_lower.contains("time") {
             Ok(InputFeature::Time {
-                name: value.name.clone(),
+                name: name_lower,
                 unit: Some(TimeUnit::from_str(&value.units)?),
+            })
+        } else if name_lower.contains("grade") {
+            Ok(InputFeature::Ratio {
+                name: name_lower,
+                unit: Some(RatioUnit::from_str(&value.units).map_err(|e| e.to_string())?),
             })
         } else {
             Err(format!("Input feature {} not supported.", value.name))

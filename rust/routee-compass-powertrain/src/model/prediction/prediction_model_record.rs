@@ -3,13 +3,17 @@ use super::{
     prediction_model_ops, smartcore::SmartcoreModel, PredictionModel, PredictionModelConfig,
 };
 use crate::model::fieldname;
+use itertools::Itertools;
 use routee_compass_core::model::{
     state::{InputFeature, StateModel, StateVariable},
     traversal::TraversalModelError,
     unit::{EnergyRateUnit, EnergyUnit},
 };
-use std::sync::Arc;
-use uom::si::f64::{Energy, Mass};
+use std::{str::FromStr, sync::Arc};
+use uom::si::{
+    energy,
+    f64::{Energy, Mass},
+};
 
 /// A struct to hold the prediction model and associated metadata
 pub struct PredictionModelRecord {
@@ -94,10 +98,78 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
                     real_world_energy_adjustment,
                 })
             }
-            PredictionModelConfig::PowertrainV2Schema { .. } => {
-                Err(TraversalModelError::BuildError(
-                    "PowertrainV2Schema is not yet supported".to_string(),
-                ))
+            PredictionModelConfig::PowertrainV2Schema {
+                model_key,
+                vehicle,
+                contract,
+                estimator,
+            } => {
+                if contract.feature_set.is_empty() {
+                    return Err(TraversalModelError::BuildError(format!(
+                        "you must supply at least one input feature for vehicle model {}",
+                        model_key
+                    )));
+                }
+
+                if contract.target.is_empty() {
+                    return Err(TraversalModelError::BuildError(format!(
+                        "you must supply at least one target feature for vehicle model {}",
+                        model_key
+                    )));
+                }
+
+                // map powertrain Feature vector to compass InputFeature vector
+                let input_features: Vec<InputFeature> = contract
+                    .feature_set
+                    .iter()
+                    .map(InputFeature::try_from)
+                    .collect::<Result<Vec<_>, _>>()
+                    .map_err(|err| {
+                        TraversalModelError::BuildError(format!(
+                        "{}: couldn't map powertrain features to compass features in vehicle model {}",
+                        err,
+                        model_key
+                    ))
+                    })?;
+
+                let prediction_model: Arc<dyn PredictionModel>;
+                let energy_rate_unit: EnergyRateUnit;
+
+                // Create the prediction model. NOTE: Only support one target feature (the first one specified)
+                if let Some(feature) = contract.target.get(0) {
+                    energy_rate_unit = EnergyRateUnit::from_str(&feature.units).map_err(|err| {
+                        TraversalModelError::BuildError(format!(
+                            "{}: could not determine the energy unit for {} in vehicle model {}.",
+                            err, feature.name, model_key
+                        ))
+                    })?;
+                    prediction_model = Arc::new(OnnxModel::new(
+                        &estimator.model_file,
+                        energy_rate_unit.clone(),
+                    )?);
+                } else {
+                    return Err(TraversalModelError::BuildError(format!(
+                        "the first target was invalid for vehicle model {}",
+                        model_key
+                    )));
+                };
+
+                let a_star_heuristic_energy_rate = prediction_model_ops::find_min_energy_rate(
+                    &prediction_model,
+                    input_features.as_slice(),
+                    &energy_rate_unit,
+                )?;
+
+                Ok(PredictionModelRecord {
+                    name: model_key.to_string(),
+                    prediction_model: prediction_model,
+                    model_type: ModelType::Onnx,
+                    input_features: input_features,
+                    energy_rate_unit: energy_rate_unit,
+                    mass_estimate: Mass::new::<uom::si::mass::pound>(vehicle.mass_lbs),
+                    a_star_heuristic_energy_rate: a_star_heuristic_energy_rate,
+                    real_world_energy_adjustment: contract.real_world_adjustment_factor,
+                })
             }
         }
     }
