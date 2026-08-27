@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787672371504,
+  "lastUpdate": 1787868750916,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4409,6 +4409,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2126406,
             "range": "± 149456",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cf2678a49a346adadd93484b2138d66c7a14e7bb",
+          "message": "Merge pull request #569 from NatLabRockies/dependabot/cargo/rust/topological-sort-0.3.1\n\nUpdate topological-sort requirement from 0.2.2 to 0.3.1 in /rust",
+          "timestamp": "2026-08-27T16:06:14-06:00",
+          "tree_id": "29596f67f4dca7a8200aadfb90bc92d4cc6de4c0",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/cf2678a49a346adadd93484b2138d66c7a14e7bb"
+        },
+        "date": 1787868749811,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2949800,
+            "range": "± 144364",
             "unit": "ns/iter"
           }
         ]
