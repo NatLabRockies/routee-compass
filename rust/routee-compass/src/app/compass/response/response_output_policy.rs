@@ -16,7 +16,7 @@ pub enum ResponseOutputPolicy {
     None,
     /// writes all results to a single file (CSV, JSON, JSONL) or archive (Parquet).
     File {
-        /// destination file. may be a standard file suffix, or, if terminates with '.gz' will be gzip-encrypted.
+        /// destination file. may be a standard file suffix, or, if terminates with '.gz' will be gzip-compressed.
         path: PathBuf,
         /// file format to target
         format: ResponseOutputFormat,
