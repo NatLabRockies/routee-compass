@@ -65,6 +65,12 @@ impl ResponseSink {
         file_flush_rate: Option<u64>,
         write_mode: Option<WriteMode>,
     ) -> Result<Self, CompassAppError> {
+        std::fs::create_dir_all(&directory).map_err(|e| {
+            CompassAppError::InternalError(format!(
+                "failed to create output directory {:?}: {}",
+                directory, e
+            ))
+        })?;
         let n_writers = match n_writers {
             Some(n) => n.into(),
             None => rayon::current_num_threads(),
