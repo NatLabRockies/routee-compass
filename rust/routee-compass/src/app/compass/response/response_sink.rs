@@ -167,7 +167,7 @@ impl ResponseSink {
             } => {
                 // map the current thread to the set of writers, wrapping around the max writer index using modulo
                 // to ensure we are always selecting a valid index, though if the user set max writers as fewer than
-                // max threads, then write operations may be blocked here as they are assigned effectively round-robin.
+                // max threads, then write operations may be blocked here as they are assigned thread-affine.
                 let thread_idx = rayon::current_thread_index().unwrap_or(0);
                 let writer_idx = thread_idx % state.len();
                 let writer_mutex = match state.get(writer_idx) {
