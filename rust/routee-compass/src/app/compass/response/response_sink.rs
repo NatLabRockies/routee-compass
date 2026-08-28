@@ -110,7 +110,7 @@ impl ResponseSink {
         let base_filename = path.to_string_lossy().to_string();
 
         // create the parent directory if it doesn't exist
-        std::fs::create_dir(&path).map_err(|e| {
+        std::fs::create_dir_all(&path).map_err(|e| {
             CompassAppError::InternalError(format!(
                 "failed to create parquet base file {:?}: {}",
                 path, e
