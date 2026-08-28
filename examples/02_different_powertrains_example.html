@@ -245,7 +245,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Developers</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../developers/build_the_docs.html">Build The Docs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../developers/contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developers/rust_code_style.html">Rust Code Style</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developers/troubleshooting.html">Troubleshooting</a></li>
 </ul>
@@ -481,11 +480,11 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>graph edge list 0: /home/runner/work/routee-compass/routee-compass/docs/examples/denver_co/edges-compass.csv.gz: 48880it [00:00, 1694525.38it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>graph edge list 0: /home/runner/work/routee-compass/routee-compass/docs/examples/denver_co/edges-compass.csv.gz: 48880it [00:00, 2125821.50it/s]
 
 
-building adjacencies: 100%|██████████| 48880/48880 [00:00&lt;00:00, 3321369.00it/s]
-building adjacencies: 100%|██████████| 48880/48880 [00:00&lt;00:00, 3315119.75it/s]
+building adjacencies: 100%|██████████| 48880/48880 [00:00&lt;00:00, 4845655.00it/s]
+building adjacencies: 100%|██████████| 48880/48880 [00:00&lt;00:00, 4838795.00it/s]
 </pre></div>
 </div>
 </div>
@@ -633,13 +632,13 @@ By default, the PHEV will run using battery energy exclusively (starting at <cod
 </div>
 <div class="cell_output docutils container">
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
-applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 2250.25it/s]
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 2747.27it/s]
 
-applying input plugin 2: 100%|██████████| 6/6 [00:00&lt;00:00, 63998.63it/s]
+applying input plugin 2: 100%|██████████| 6/6 [00:00&lt;00:00, 81142.48it/s]
 
 
 
-search: 100%|██████████| 6/6 [00:00&lt;00:00, 58.12it/s]
+search: 100%|██████████| 6/6 [00:00&lt;00:00, 80.20it/s]
 </pre></div>
 </div>
 </div>
@@ -652,84 +651,84 @@ search: 100%|██████████| 6/6 [00:00&lt;00:00, 58.12it/s]
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{'edge_time': {'type': 'time',
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{'edge_distance': {'type': 'distance',
   'initial': 0.0,
   'accumulator': False,
-  'output_unit': 'minutes',
+  'output_unit': 'miles',
   'index': 0,
-  'name': 'edge_time'},
- 'edge_speed': {'type': 'speed',
+  'name': 'edge_distance'},
+ 'edge_energy_electric': {'type': 'energy',
   'initial': 0.0,
   'accumulator': False,
-  'output_unit': 'miles/hour',
+  'output_unit': 'kilowatt_hours',
   'index': 1,
-  'name': 'edge_speed'},
+  'name': 'edge_energy_electric'},
  'trip_elevation_gain': {'type': 'distance',
   'initial': 0.0,
   'accumulator': True,
   'output_unit': 'miles',
   'index': 2,
   'name': 'trip_elevation_gain'},
- 'trip_distance': {'type': 'distance',
+ 'trip_elevation_loss': {'type': 'distance',
   'initial': 0.0,
   'accumulator': True,
   'output_unit': 'miles',
   'index': 3,
-  'name': 'trip_distance'},
- 'trip_energy_electric': {'type': 'energy',
+  'name': 'trip_elevation_loss'},
+ 'trip_distance': {'type': 'distance',
   'initial': 0.0,
   'accumulator': True,
-  'output_unit': 'kilowatt_hours',
+  'output_unit': 'miles',
   'index': 4,
-  'name': 'trip_energy_electric'},
- 'edge_grade': {'type': 'ratio',
-  'initial': 0.0,
-  'accumulator': False,
+  'name': 'trip_distance'},
+ 'trip_soc': {'type': 'ratio',
+  'initial': 1.0,
+  'accumulator': True,
   'output_unit': 'decimal',
   'index': 5,
-  'name': 'edge_grade'},
+  'name': 'trip_soc'},
  'edge_turn_delay': {'type': 'time',
   'initial': 0.0,
   'accumulator': False,
   'output_unit': 'seconds',
   'index': 6,
   'name': 'edge_turn_delay'},
- 'trip_time': {'type': 'time',
-  'initial': 0.0,
-  'accumulator': True,
-  'output_unit': 'minutes',
-  'index': 7,
-  'name': 'trip_time'},
- 'trip_soc': {'type': 'ratio',
-  'initial': 1.0,
-  'accumulator': True,
-  'output_unit': 'decimal',
-  'index': 8,
-  'name': 'trip_soc'},
- 'trip_elevation_loss': {'type': 'distance',
-  'initial': 0.0,
-  'accumulator': True,
-  'output_unit': 'miles',
-  'index': 9,
-  'name': 'trip_elevation_loss'},
- 'edge_distance': {'type': 'distance',
-  'initial': 0.0,
-  'accumulator': False,
-  'output_unit': 'miles',
-  'index': 10,
-  'name': 'edge_distance'},
- 'edge_energy_electric': {'type': 'energy',
-  'initial': 0.0,
-  'accumulator': False,
-  'output_unit': 'kilowatt_hours',
-  'index': 11,
-  'name': 'edge_energy_electric'},
  'battery_capacity': {'type': 'energy',
   'initial': 216000000.0,
   'accumulator': False,
   'output_unit': 'kilowatt_hours',
+  'index': 7,
+  'name': 'battery_capacity'},
+ 'edge_time': {'type': 'time',
+  'initial': 0.0,
+  'accumulator': False,
+  'output_unit': 'minutes',
+  'index': 8,
+  'name': 'edge_time'},
+ 'trip_time': {'type': 'time',
+  'initial': 0.0,
+  'accumulator': True,
+  'output_unit': 'minutes',
+  'index': 9,
+  'name': 'trip_time'},
+ 'edge_grade': {'type': 'ratio',
+  'initial': 0.0,
+  'accumulator': False,
+  'output_unit': 'decimal',
+  'index': 10,
+  'name': 'edge_grade'},
+ 'edge_speed': {'type': 'speed',
+  'initial': 0.0,
+  'accumulator': False,
+  'output_unit': 'miles/hour',
+  'index': 11,
+  'name': 'edge_speed'},
+ 'trip_energy_electric': {'type': 'energy',
+  'initial': 0.0,
+  'accumulator': True,
+  'output_unit': 'kilowatt_hours',
   'index': 12,
-  'name': 'battery_capacity'}}
+  'name': 'trip_energy_electric'}}
 </pre></div>
 </div>
 </div>
