@@ -481,20 +481,11 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">ValueError</span><span class="g g-Whitespace">                                </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
-<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">app</span> <span class="o">=</span> <span class="n">CompassApp</span><span class="o">.</span><span class="n">from_config_file</span><span class="p">(</span><span class="s2">"denver_co/osm_default_energy.toml"</span><span class="p">)</span>
-<span class="g g-Whitespace">      </span><span class="mi">2</span> 
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>graph edge list 0: /home/runner/work/routee-compass/routee-compass/docs/examples/denver_co/edges-compass.csv.gz: 48880it [00:00, 1694525.38it/s]
 
-<span class="nn">File /usr/share/miniconda/envs/test/lib/python3.11/site-packages/nrel/routee/compass/compass_app.py:80,</span> in <span class="ni">CompassApp.from_config_file</span><span class="nt">(cls, config_file, parallelism)</span>
-<span class="g g-Whitespace">     </span><span class="mi">78</span> <span class="n">config_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">79</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">config_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-<span class="ne">---&gt; </span><span class="mi">80</span>     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Config file </span><span class="si">{</span><span class="n">config_path</span><span class="si">!s}</span><span class="s2"> does not exist"</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">81</span> <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-<span class="g g-Whitespace">     </span><span class="mi">82</span>     <span class="n">toml_config</span> <span class="o">=</span> <span class="n">tomlkit</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
-<span class="ne">ValueError</span>: Config file denver_co/osm_default_energy.toml does not exist
+building adjacencies: 100%|██████████| 48880/48880 [00:00&lt;00:00, 3321369.00it/s]
+building adjacencies: 100%|██████████| 48880/48880 [00:00&lt;00:00, 3315119.75it/s]
 </pre></div>
 </div>
 </div>
@@ -640,11 +631,105 @@ By default, the PHEV will run using battery energy exclusively (starting at <cod
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
+applying input plugin 1: 100%|██████████| 1/1 [00:00&lt;00:00, 2250.25it/s]
+
+applying input plugin 2: 100%|██████████| 6/6 [00:00&lt;00:00, 63998.63it/s]
+
+
+
+search: 100%|██████████| 6/6 [00:00&lt;00:00, 58.12it/s]
+</pre></div>
+</div>
+</div>
 </div>
 <p>First, let's review the state model to see what energy units we're using.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"route"</span><span class="p">][</span><span class="s2">"state_model"</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{'edge_time': {'type': 'time',
+  'initial': 0.0,
+  'accumulator': False,
+  'output_unit': 'minutes',
+  'index': 0,
+  'name': 'edge_time'},
+ 'edge_speed': {'type': 'speed',
+  'initial': 0.0,
+  'accumulator': False,
+  'output_unit': 'miles/hour',
+  'index': 1,
+  'name': 'edge_speed'},
+ 'trip_elevation_gain': {'type': 'distance',
+  'initial': 0.0,
+  'accumulator': True,
+  'output_unit': 'miles',
+  'index': 2,
+  'name': 'trip_elevation_gain'},
+ 'trip_distance': {'type': 'distance',
+  'initial': 0.0,
+  'accumulator': True,
+  'output_unit': 'miles',
+  'index': 3,
+  'name': 'trip_distance'},
+ 'trip_energy_electric': {'type': 'energy',
+  'initial': 0.0,
+  'accumulator': True,
+  'output_unit': 'kilowatt_hours',
+  'index': 4,
+  'name': 'trip_energy_electric'},
+ 'edge_grade': {'type': 'ratio',
+  'initial': 0.0,
+  'accumulator': False,
+  'output_unit': 'decimal',
+  'index': 5,
+  'name': 'edge_grade'},
+ 'edge_turn_delay': {'type': 'time',
+  'initial': 0.0,
+  'accumulator': False,
+  'output_unit': 'seconds',
+  'index': 6,
+  'name': 'edge_turn_delay'},
+ 'trip_time': {'type': 'time',
+  'initial': 0.0,
+  'accumulator': True,
+  'output_unit': 'minutes',
+  'index': 7,
+  'name': 'trip_time'},
+ 'trip_soc': {'type': 'ratio',
+  'initial': 1.0,
+  'accumulator': True,
+  'output_unit': 'decimal',
+  'index': 8,
+  'name': 'trip_soc'},
+ 'trip_elevation_loss': {'type': 'distance',
+  'initial': 0.0,
+  'accumulator': True,
+  'output_unit': 'miles',
+  'index': 9,
+  'name': 'trip_elevation_loss'},
+ 'edge_distance': {'type': 'distance',
+  'initial': 0.0,
+  'accumulator': False,
+  'output_unit': 'miles',
+  'index': 10,
+  'name': 'edge_distance'},
+ 'edge_energy_electric': {'type': 'energy',
+  'initial': 0.0,
+  'accumulator': False,
+  'output_unit': 'kilowatt_hours',
+  'index': 11,
+  'name': 'edge_energy_electric'},
+ 'battery_capacity': {'type': 'energy',
+  'initial': 216000000.0,
+  'accumulator': False,
+  'output_unit': 'kilowatt_hours',
+  'index': 12,
+  'name': 'battery_capacity'}}
 </pre></div>
 </div>
 </div>
@@ -689,6 +774,12 @@ We'll use gge as our unit and convert the electrical energy using a factor of 33
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/share/miniconda/envs/test/lib/python3.11/site-packages/geopandas/geodataframe.py:1969: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  super().__setitem__(key, value)
+</pre></div>
+</div>
+</div>
 </div>
 <p>Next, we can look at the energy usage versus the route time, broken out by powertrain and route objective</p>
 <div class="cell docutils container">
@@ -702,6 +793,12 @@ We'll use gge as our unit and convert the electrical energy using a factor of 33
 <span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Axes: xlabel='route.traversal_summary.trip_time.value', ylabel='gge'&gt;
+</pre></div>
+</div>
+<img alt="../_images/917ac4180a5cb212fa8057732ad883eda56e867fd4b76c239efd68c3d7b32990.png" src="../_images/917ac4180a5cb212fa8057732ad883eda56e867fd4b76c239efd68c3d7b32990.png" />
 </div>
 </div>
 <p>Here, we see that the BEV and the PHEV use much less energy than the ICE alternative but all powertrains have a route that uses less energy and more time.</p>
@@ -724,6 +821,12 @@ We'll use gge as our unit and convert the electrical energy using a factor of 33
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Axes: xlabel='route.traversal_summary.trip_time.value', ylabel='route.cost.total_cost'&gt;
+</pre></div>
+</div>
+<img alt="../_images/e4a28c43e847d5daa14499c5b6dc679b49336de515eb14110f04629d5700e613.png" src="../_images/e4a28c43e847d5daa14499c5b6dc679b49336de515eb14110f04629d5700e613.png" />
+</div>
 </div>
 <p>Here, we notice that the ICE vehicle has the lowest costs and all powertrains save money on the optimal energy route.
 This would likely change based on our cost assumptions (for example if we assume that charging is done at home for a much lower cost of electricity)</p>
@@ -733,6 +836,12 @@ This would likely change based on our cost assumptions (for example if we assume
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gdf</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">"gge"</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Axes: &gt;
+</pre></div>
+</div>
+<img alt="../_images/1a658388e8368ad74c41914adef283444e5146138770a65415f22052a1e69822.png" src="../_images/1a658388e8368ad74c41914adef283444e5146138770a65415f22052a1e69822.png" />
 </div>
 </div>
 </section>
