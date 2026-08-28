@@ -86,6 +86,11 @@ impl ResponseOutputPolicy {
                     Some(p) => p.clone(),
                     None => "part".to_string(),
                 };
+                if matches!(format, ResponseOutputFormat::Parquet { .. }) {
+                    return Err(CompassAppError::BuildFailure(
+                         "directory response_output_policy does not support parquet; use type=\"file\" with parquet format instead".to_string(),
+                     ));
+                }
                 ResponseSink::new_files(
                     path.clone(),
                     file_prefix,
