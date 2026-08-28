@@ -68,4 +68,8 @@ impl FileState {
 
         Ok(())
     }
+
+    pub fn close(&mut self) -> Result<(), CompassAppError> {
+        self.writer.finish()
+    }
 }

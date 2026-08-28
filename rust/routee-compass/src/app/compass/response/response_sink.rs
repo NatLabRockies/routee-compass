@@ -283,6 +283,7 @@ fn close_file(
     if let Some(final_contents) = format.generate_footer() {
         state_attained.write(&final_contents, None, iterations_per_flush)?;
     }
+    state_attained.close()?;
     Ok(state_attained.filename.clone())
 }
 
