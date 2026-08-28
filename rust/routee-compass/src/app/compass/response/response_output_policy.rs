@@ -63,11 +63,9 @@ impl ResponseOutputPolicy {
                 file_flush_rate,
                 write_mode,
             } => match format {
-                ResponseOutputFormat::Parquet { mapping } => ResponseSink::new_parquet(
-                    path.clone(),
-                    *file_flush_rate,
-                    mapping.clone(),
-                ),
+                ResponseOutputFormat::Parquet { mapping } => {
+                    ResponseSink::new_parquet(path.clone(), *file_flush_rate, mapping.clone())
+                }
                 _ => ResponseSink::new_file(
                     path.clone(),
                     format.clone(),
