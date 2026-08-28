@@ -264,7 +264,7 @@ fn override_path(path: &mut PathBuf, override_path: &Path) -> Result<(), Compass
     let dir_name = path.file_name().ok_or_else(|| {
         CompassAppError::BuildFailure(format!(
             "Could not extract filename from path '{}'",
-            path.to_string_lossy().to_string()
+            path.to_string_lossy()
         ))
     })?;
     *path = override_path.join(dir_name);

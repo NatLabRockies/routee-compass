@@ -219,7 +219,7 @@ impl ResponseSink {
             } => {
                 let state_mut: Mutex<FileState> = Arc::try_unwrap(state)
                     .map_err(|_| {
-                        let msg = format!("calling close on response File writer but it still has more than 1 reference to its smart pointer");
+                        let msg = "calling close on response File writer but it still has more than 1 reference to its smart pointer".to_string();
                         CompassAppError::InternalError(msg)
                     })?;
                 close_file(state_mut, &format, iterations_per_flush)

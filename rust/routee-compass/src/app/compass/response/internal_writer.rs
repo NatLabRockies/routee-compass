@@ -21,7 +21,7 @@ impl InternalWriter {
     /// filename (ends with .gz).
     pub fn new(filepath: &Path, write_mode: Option<WriteMode>) -> Result<Self, CompassAppError> {
         let wm = write_mode.unwrap_or_default();
-        let wrapped_file = get_or_create_file_writer(&filepath, &wm)?;
+        let wrapped_file = get_or_create_file_writer(filepath, &wm)?;
         Ok(wrapped_file)
     }
 

@@ -25,7 +25,7 @@ impl FileState {
         format: &ResponseOutputFormat,
         write_mode: Option<WriteMode>,
     ) -> Result<Self, CompassAppError> {
-        let mut writer = InternalWriter::new(&filepath, write_mode)?;
+        let mut writer = InternalWriter::new(filepath, write_mode)?;
         let filename = filepath.to_string_lossy().to_string();
         writer.write_header(format)?;
         Ok(FileState {
@@ -57,7 +57,7 @@ impl FileState {
             CompassAppError::InternalError(format!("failure writing to {}: {e}", &self.filename))
         })?;
         self.records += 1;
-        if self.records % iterations_per_flush == 0 {
+        if self.records.is_multiple_of(iterations_per_flush) {
             self.writer.flush().map_err(|e| {
                 CompassAppError::InternalError(format!(
                     "failure flushing output to {}: {e}",

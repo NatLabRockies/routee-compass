@@ -65,13 +65,13 @@ impl ResponseOutputPolicy {
             } => match format {
                 ResponseOutputFormat::Parquet { mapping } => ResponseSink::new_parquet(
                     path.clone(),
-                    file_flush_rate.clone(),
+                    *file_flush_rate,
                     mapping.clone(),
                 ),
                 _ => ResponseSink::new_file(
                     path.clone(),
                     format.clone(),
-                    file_flush_rate.clone(),
+                    *file_flush_rate,
                     write_mode.clone(),
                 ),
             },
@@ -92,9 +92,9 @@ impl ResponseOutputPolicy {
                     path.clone(),
                     file_prefix,
                     *gzip,
-                    concurrency.clone(),
+                    *concurrency,
                     format.clone(),
-                    file_flush_rate.clone(),
+                    *file_flush_rate,
                     write_mode.clone(),
                 )
             }
