@@ -1,0 +1,171 @@
+{
+  "vehicle": {
+    "vehicle_description": "2016_Chevrolet_Spark_EV | fastsim 3.1.0 | routee-powertrain 2.0.1",
+    "powertrain_type": "BEV",
+    "make": "chevrolet",
+    "model": "spark",
+    "year": 2016,
+    "variant": "base",
+    "mass_lbs": 3165.829266414313,
+    "fuel_type": "ELECTRICITY",
+    "drivetrain": "FWD",
+    "engine": null,
+    "trim": "EV"
+  },
+  "contract": {
+    "feature_set": [
+      {
+        "name": "speed_mph",
+        "units": "mph",
+        "dtype": "float32",
+        "constraints": {
+          "lower": 0.0,
+          "upper": 120.0
+        }
+      },
+      {
+        "name": "distance_mi",
+        "units": "miles",
+        "dtype": "float32",
+        "constraints": {
+          "lower": 0.0,
+          "upper": null
+        }
+      }
+    ],
+    "distance": {
+      "name": "distance_mi",
+      "units": "miles",
+      "dtype": "float32",
+      "constraints": {
+        "lower": null,
+        "upper": null
+      }
+    },
+    "target": [
+      {
+        "name": "electric_kwh",
+        "units": "kilowatt-hour",
+        "dtype": "float32",
+        "constraints": {
+          "lower": null,
+          "upper": null
+        }
+      }
+    ],
+    "predict_method": "rate",
+    "real_world_adjustment_factor": 1.3958
+  },
+  "estimator": {
+    "estimator_type": "ONNXEstimator",
+    "model_file": "model.onnx",
+    "architecture_tag": "cnn",
+    "input_spec": {
+      "lookback": 5,
+      "grouping_column": "trip_id",
+      "pad_strategy": "zero"
+    },
+    "estimator_sha256": "a48c149dc65855029802c6db3d7a38085a766cc2de2b959ad4eee04b6b040ad2"
+  },
+  "provenance": {
+    "source": {
+      "method": "fastsim_simulation",
+      "fastsim_vehicle_id": "v1/fastsim-3/bev/chevrolet/spark-ev/2016/base/r1",
+      "fastsim_vehicles_ref": "r1",
+      "fastsim_version": "3.1.0",
+      "pipeline_version": "0.1.0",
+      "pipeline_run_id": "train_models_train_and_serialize_42400a77",
+      "pipeline_repo_ref": "d6f5f14cc12c516041324a117963bd07338ecf33",
+      "dataset_run_ids": [
+        "prepare_training_data_validate_training_data_08363275",
+        "prepare_training_data_validate_training_data_09e54c14",
+        "prepare_training_data_validate_training_data_0f00f562",
+        "prepare_training_data_validate_training_data_10e1dd7a",
+        "prepare_training_data_validate_training_data_136a97df",
+        "prepare_training_data_validate_training_data_20848c48",
+        "prepare_training_data_validate_training_data_2367d231",
+        "prepare_training_data_validate_training_data_24f35a9b",
+        "prepare_training_data_validate_training_data_2a80012c",
+        "prepare_training_data_validate_training_data_2c7ac8e0",
+        "prepare_training_data_validate_training_data_3074f1d7",
+        "prepare_training_data_validate_training_data_32489dbf",
+        "prepare_training_data_validate_training_data_33953ffc",
+        "prepare_training_data_validate_training_data_39e2b21d",
+        "prepare_training_data_validate_training_data_44d4698b",
+        "prepare_training_data_validate_training_data_49fdd07e",
+        "prepare_training_data_validate_training_data_60ad26f1",
+        "prepare_training_data_validate_training_data_61dee113",
+        "prepare_training_data_validate_training_data_64c2de0e",
+        "prepare_training_data_validate_training_data_6fdbc16d",
+        "prepare_training_data_validate_training_data_70a115f7",
+        "prepare_training_data_validate_training_data_72750840",
+        "prepare_training_data_validate_training_data_7691adb9",
+        "prepare_training_data_validate_training_data_7707f006",
+        "prepare_training_data_validate_training_data_844a2115",
+        "prepare_training_data_validate_training_data_85c95fe1",
+        "prepare_training_data_validate_training_data_891defaa",
+        "prepare_training_data_validate_training_data_8ac447f0",
+        "prepare_training_data_validate_training_data_8b53f3c2",
+        "prepare_training_data_validate_training_data_8f7d36d6",
+        "prepare_training_data_validate_training_data_90e0b8c1",
+        "prepare_training_data_validate_training_data_91ab1c23",
+        "prepare_training_data_validate_training_data_94d5d451",
+        "prepare_training_data_validate_training_data_a3d6df60",
+        "prepare_training_data_validate_training_data_b1a1f791",
+        "prepare_training_data_validate_training_data_bb4b7112",
+        "prepare_training_data_validate_training_data_bd770c5f",
+        "prepare_training_data_validate_training_data_cc9dfe47",
+        "prepare_training_data_validate_training_data_cfb30e30",
+        "prepare_training_data_validate_training_data_dc9173b8",
+        "prepare_training_data_validate_training_data_e4bff99f",
+        "prepare_training_data_validate_training_data_e7879c91",
+        "prepare_training_data_validate_training_data_e8a73ed0",
+        "prepare_training_data_validate_training_data_f606b75d",
+        "prepare_training_data_validate_training_data_f8bc170f",
+        "prepare_training_data_validate_training_data_fa100c90",
+        "prepare_training_data_validate_training_data_fb88b71d",
+        "prepare_training_data_validate_training_data_fd47d9c9"
+      ],
+      "data_sources": [
+        "wm1"
+      ],
+      "notes": null
+    },
+    "training": {
+      "test_size": 0.2,
+      "validation_size": null,
+      "random_seed": 52,
+      "trip_column": "trip_id",
+      "trained_date": "2026-08-07"
+    }
+  },
+  "errors": {
+    "estimator_errors": {
+      "error_by_target": {
+        "electric_kwh": {
+          "link_root_mean_squared_error": 0.014747567888936962,
+          "link_norm_root_mean_squared_error": 1.647689534542536,
+          "link_weighted_relative_percent_difference": 0.8377765754437585,
+          "net_error": 0.0008296567532394759,
+          "actual_dist_per_energy": 4.982853502738966,
+          "pred_dist_per_energy": 4.978722871685964,
+          "real_world_pred_dist_per_energy": 3.5669314168834827,
+          "trip_relative_percent_difference": 0.0289955361884873,
+          "trip_weighted_relative_percent_difference": 0.07248612648123696,
+          "trip_root_mean_squared_error": 0.06516261670038366,
+          "trip_norm_root_mean_squared_error": 0.2747938624016877,
+          "link_negative_log_likelihood": null,
+          "link_continuous_ranked_probability_score": null,
+          "link_prediction_interval_coverage_probability": null,
+          "trip_negative_log_likelihood": null,
+          "trip_continuous_ranked_probability_score": null,
+          "trip_prediction_interval_coverage_probability": null
+        }
+      }
+    }
+  },
+  "routee_version": "2.0.1",
+  "schema_version": 2,
+  "model_key": "chevrolet/spark_bev/2016/cnn_base_67ae9982",
+  "model_digest": "sha256:4946ef4465350e60673e6d79e048e99bd859ee14ce417a99c9373bab5c112416"
+}

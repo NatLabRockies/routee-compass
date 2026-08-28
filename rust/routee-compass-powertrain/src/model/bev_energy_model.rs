@@ -23,7 +23,6 @@ use uom::{
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
 pub struct BevEnergyModelConfig {
     #[serde(flatten)]
     pub prediction_model: PredictionModelConfig,
