@@ -693,7 +693,7 @@ Output to JSON:
 ```toml
 [system.response_output_policy]
 type = "file"
-path = "result.json"
+filepath = "result.json"
 format = { type = "json", newline_delimited = false }
 
 # append to an existing file (default)
@@ -715,7 +715,7 @@ Output to JSON in newline-delimited format:
 ```toml
 [system.response_output_policy]
 type = "file"
-path = "result.jsonl"
+filepath = "result.jsonl"
 format = { type = "json", newline_delimited = true }
 ```
 
@@ -731,7 +731,7 @@ subsequent chunks always share the same CSV header ordering._
 ```toml
 [system.response_output_policy]
 type = "file"
-path = "result.csv"
+filepath = "result.csv"
 [system.response_output_policy.format]
 type = "csv"
 sorted = true
@@ -756,7 +756,7 @@ _note: does not use Parquet partitioning._
 ```toml
 [system.response_output_policy]
 type = "file"
-path = "result.parquet"
+filepath = "result.parquet"
 [system.response_output_policy.format]
 type = "parquet"
 sorted = true
@@ -772,7 +772,7 @@ time = "route.traversal_summary.trip_time"
 total_cost = "route.cost.total_cost"
 ```
 
-#### File pools for CSV/JSON/JSONL
+#### Multiple file targets for CSV/JSON/JSONL
 
 Writing to a pool of flat output files in CSV, JSON, or JSONL format is also possible. Similar to Parquet, concurrent writes are supported, which speeds up runtimes for large runs especially where each result contains a large amount of information.
 
@@ -790,11 +790,11 @@ format = { type = "json", newline_delimited = true }
 # write_mode = "append" 
 ```
 
-#### Multiple output locations
+#### Multiple output configurations
 
-Multiple output files are supported. Here, the complete output as JSON is 
-preserved, while a CSV contains a high-level summary. An additional file
-contains any errors.
+Multiple output types are supported. Here, the complete output as JSON is 
+preserved, while a CSV contains a high-level summary. An additional CSV file
+contains only errors.
 
 ```toml
 [system.response_output_policy]
