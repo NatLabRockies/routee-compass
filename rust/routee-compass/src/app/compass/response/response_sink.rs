@@ -76,14 +76,10 @@ impl ResponseSink {
             None => rayon::current_num_threads(),
         };
         let suffix = format.file_suffix();
-        let gzip = match gzip {
-            true => ".gz",
-            false => "",
-        };
 
         let mut state = Vec::with_capacity(n_writers);
         for i in 0..n_writers {
-            let filename = format!("{file_prefix}-{i}.{suffix}{gzip}");
+            let filename = pool_filename(&file_prefix, i, &suffix, gzip);
             let filepath = directory.join(filename);
             let file_state = FileState::new(&filepath, &format, write_mode.clone())?;
             state.push(Mutex::new(file_state));
@@ -277,6 +273,15 @@ impl ResponseSink {
     }
 }
 
+/// create a unique filename for an output of the [ResponseSink::Files] variant.
+pub fn pool_filename(file_prefix: &str, i: usize, suffix: &str, gzip: bool) -> String {
+    let gzip = match gzip {
+        true => ".gz",
+        false => "",
+    };
+    format!("{file_prefix}-{i}.{suffix}{gzip}")
+}
+
 /// writes the footer and returns the filename.
 fn close_file(
     state: Mutex<FileState>,
@@ -295,10 +300,13 @@ fn close_file(
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
     use super::*;
     use crate::app::compass::response::{
         response_output_policy::ResponseOutputPolicy, write_mode::WriteMode,
     };
+    use rayon::iter::{IntoParallelIterator, ParallelIterator};
     use serde_json::json;
 
     #[test]
@@ -321,6 +329,59 @@ mod tests {
         let contents = std::fs::read_to_string(output_file.path())?;
         let responses: Vec<serde_json::Value> = serde_json::from_str(&contents)?;
         assert_eq!(responses, vec![json!({"id": 1}), json!({"id": 2})]);
+        Ok(())
+    }
+
+    #[test]
+    fn concurrent_writer() -> Result<(), Box<dyn std::error::Error>> {
+        // configure a directory output with two files, each in JSON format.
+        let output_dir = tempfile::TempDir::new()?;
+        let concurrency = NonZeroUsize::new(2).unwrap();
+        let format = ResponseOutputFormat::Json {
+            newline_delimited: false,
+        };
+        let prefix = "test".to_string();
+        let policy = ResponseOutputPolicy::Directory {
+            path: output_dir.path().to_path_buf(),
+            format: format.clone(),
+            prefix: Some(prefix),
+            concurrency: Some(concurrency),
+            gzip: false,
+            file_flush_rate: None,
+            write_mode: Some(WriteMode::Overwrite),
+        };
+        let sink = policy.build()?;
+
+        // write 4 rows to the files.
+        let _unused: Vec<()> = (0..4)
+            .into_par_iter()
+            .map(|i| sink.write_response(&mut json!({"id": i})))
+            .collect::<Result<Vec<_>, _>>()
+            .expect("failure when writing from threads");
+
+        sink.close()?;
+
+        // collect the values written to each file. verify that each output row has been written
+        // exactly once to one of the files.
+        let mut ids_found = HashSet::new();
+        for i in 0..concurrency.into() {
+            let filename = pool_filename("test", i, format.file_suffix(), false);
+            let filepath = output_dir.path().join(filename);
+            let contents = std::fs::read_to_string(&filepath)?;
+            let responses: Vec<serde_json::Value> = serde_json::from_str(&contents)?;
+            for response in responses.into_iter() {
+                let id = response["id"].as_u64().unwrap();
+                if ids_found.contains(&id) {
+                    panic!("found id {id} multiple times.")
+                }
+                ids_found.insert(id);
+            }
+        }
+
+        // confirm that all rows have been written.
+        for expected in 0..4u64 {
+            assert!(ids_found.contains(&expected));
+        }
         Ok(())
     }
 }
