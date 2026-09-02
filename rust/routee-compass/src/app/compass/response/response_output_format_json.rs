@@ -30,7 +30,7 @@ pub fn format_response(
 
 pub fn delimiter(newline_delimited: bool) -> Option<String> {
     if newline_delimited {
-        None
+        Some(String::from("\n"))
     } else {
         Some(String::from(",\n"))
     }
