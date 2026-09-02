@@ -740,8 +740,8 @@ olon = "request.origin_x"
 olat = "request.origin_y"
 dlon = "request.destination_x"
 dlat = "request.destination_y"
-runtime = "search_app_runtime"
-ram_mb = "search_result_size_mib"
+runtime = "info.runtime.total"
+ram_mb = { optional = "info.ram_mib" }
 error = { optional = "error" }
 time = "route.traversal_summary.trip_time"
 total_cost = "route.cost.total_cost"
@@ -765,8 +765,8 @@ olon = "request.origin_x"
 olat = "request.origin_y"
 dlon = "request.destination_x"
 dlat = "request.destination_y"
-runtime = "search_app_runtime"
-ram_mb = "search_result_size_mib"
+runtime = "info.runtime.total"
+ram_mb = { optional = "info.ram_mib" }
 error = { optional = "error" }
 time = "route.traversal_summary.trip_time"
 total_cost = "route.cost.total_cost"
@@ -815,8 +815,8 @@ olon = "request.origin_x"
 olat = "request.origin_y"
 dlon = "request.destination_x"
 dlat = "request.destination_y"
-runtime = "search_app_runtime"
-ram_mb = "search_result_size_mib"
+runtime = "info.runtime.total"
+ram_mb = { optional = "info.ram_mib" }
 time = "route.traversal_summary.trip_time"
 total_cost = "route.cost.total_cost"
 # add other relevant summary columns here
@@ -829,9 +829,5 @@ type = "csv"
 sorted = true
 [system.response_output_policy.policies.format.mapping]
 name = "request.name"  # any keys on queries are available here
-olon = "request.origin_x"
-olat = "request.origin_y"
-dlon = "request.destination_x"
-dlat = "request.destination_y"
 error = { optional = "error" }
 ```
