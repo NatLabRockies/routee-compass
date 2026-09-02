@@ -305,7 +305,7 @@ mod tests {
     fn json_array_responses_are_comma_delimited() -> Result<(), Box<dyn std::error::Error>> {
         let output_file = tempfile::NamedTempFile::new()?;
         let policy = ResponseOutputPolicy::File {
-            path: output_file.path().to_path_buf(),
+            filepath: output_file.path().to_path_buf(),
             format: ResponseOutputFormat::Json {
                 newline_delimited: false,
             },

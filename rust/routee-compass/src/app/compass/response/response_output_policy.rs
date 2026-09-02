@@ -17,7 +17,7 @@ pub enum ResponseOutputPolicy {
     /// writes all results to a single file (CSV, JSON, JSONL) or archive (Parquet).
     File {
         /// destination file. may be a standard file suffix, or, if terminates with '.gz' will be gzip-compressed.
-        path: PathBuf,
+        filepath: PathBuf,
         /// file format to target
         format: ResponseOutputFormat,
         /// optional argument to specify the frequency (in rows) to flush data to the file
@@ -58,7 +58,7 @@ impl ResponseOutputPolicy {
         match self {
             ResponseOutputPolicy::None => Ok(ResponseSink::None),
             ResponseOutputPolicy::File {
-                path,
+                filepath: path,
                 format,
                 file_flush_rate,
                 write_mode,
