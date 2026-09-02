@@ -79,7 +79,7 @@ impl ResponseSink {
 
         let mut state = Vec::with_capacity(n_writers);
         for i in 0..n_writers {
-            let filename = pool_filename(&file_prefix, i, &suffix, gzip);
+            let filename = pool_filename(&file_prefix, i, suffix, gzip);
             let filepath = directory.join(filename);
             let file_state = FileState::new(&filepath, &format, write_mode.clone())?;
             state.push(Mutex::new(file_state));
