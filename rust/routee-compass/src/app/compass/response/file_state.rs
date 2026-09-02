@@ -14,7 +14,7 @@ pub struct FileState {
     /// file writer, either a raw writer or gzip writer.
     writer: InternalWriter,
     /// number of records written to the file.
-    records: u64,
+    n_records: u64,
 }
 
 impl FileState {
@@ -31,7 +31,7 @@ impl FileState {
         Ok(FileState {
             filename,
             writer,
-            records: 0,
+            n_records: 0,
         })
     }
 
@@ -44,7 +44,7 @@ impl FileState {
         iterations_per_flush: u64,
     ) -> Result<(), CompassAppError> {
         if let Some(delimiter) = delimiter {
-            if self.records > 0 {
+            if self.n_records > 0 {
                 write!(self.writer, "{delimiter}").map_err(|e| {
                     CompassAppError::InternalError(format!(
                         "failure writing delimiter to {}: {e}",
@@ -56,8 +56,8 @@ impl FileState {
         write!(self.writer, "{value}").map_err(|e| {
             CompassAppError::InternalError(format!("failure writing to {}: {e}", &self.filename))
         })?;
-        self.records += 1;
-        if self.records.is_multiple_of(iterations_per_flush) {
+        self.n_records += 1;
+        if self.n_records.is_multiple_of(iterations_per_flush) {
             self.writer.flush().map_err(|e| {
                 CompassAppError::InternalError(format!(
                     "failure flushing output to {}: {e}",
