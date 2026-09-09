@@ -1,8 +1,8 @@
-use super::{
-    interpolation::InterpolationModel, model_type::ModelType, onnx::onnx_model::OnnxModel,
-    prediction_model_ops, smartcore::SmartcoreModel, PredictionModel, PredictionModelConfig,
+use super::{model_type::ModelType, PredictionModel, PredictionModelConfig};
+use crate::model::{
+    fieldname,
+    prediction::{onnx::onnx_model::OnnxModel, prediction_model_ops},
 };
-use crate::model::fieldname;
 use routee_compass_core::model::{
     state::{InputFeature, StateModel, StateVariable},
     traversal::TraversalModelError,
@@ -27,147 +27,72 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
     type Error = TraversalModelError;
 
     fn try_from(config: &PredictionModelConfig) -> Result<Self, Self::Error> {
-        match config {
-            PredictionModelConfig::PowertrainV1Schema {
-                name,
-                model_input_file,
-                model_type,
-                input_features,
-                energy_rate_unit,
-                mass_estimate_lbs,
-                a_star_heuristic_energy_rate,
-                real_world_energy_adjustment,
-            } => {
-                if input_features.is_empty() {
-                    return Err(TraversalModelError::BuildError(format!(
-                        "You must supply at least one input feature for vehicle model {}",
-                        name
-                    )));
-                }
-
-                // build the prediction model from the config
-                let prediction_model: Arc<dyn PredictionModel> = match model_type {
-                    ModelType::Smartcore => {
-                        let model = SmartcoreModel::new(model_input_file, *energy_rate_unit)?;
-                        Arc::new(model)
-                    }
-                    ModelType::Onnx => {
-                        let model = OnnxModel::new(model_input_file, *energy_rate_unit)?;
-                        Arc::new(model)
-                    }
-                    ModelType::Interpolate {
-                        underlying_model_type: underlying_model,
-                        feature_bounds,
-                    } => {
-                        let model = InterpolationModel::new(
-                            model_input_file,
-                            *underlying_model.clone(),
-                            input_features.clone(),
-                            feature_bounds.clone(),
-                            *energy_rate_unit,
-                        )?;
-                        Arc::new(model)
-                    }
-                };
-
-                let a_star_heuristic_energy_rate = match a_star_heuristic_energy_rate {
-                    None => prediction_model_ops::find_min_energy_rate(
-                        &prediction_model,
-                        input_features,
-                        energy_rate_unit,
-                    )?,
-                    Some(rate) => *rate,
-                };
-
-                let real_world_energy_adjustment = real_world_energy_adjustment.unwrap_or(1.0);
-
-                let mass_estimate = Mass::new::<uom::si::mass::pound>(*mass_estimate_lbs);
-
-                Ok(PredictionModelRecord {
-                    name: name.clone(),
-                    prediction_model,
-                    model_type: model_type.clone(),
-                    input_features: input_features.clone(),
-                    energy_rate_unit: *energy_rate_unit,
-                    mass_estimate,
-                    a_star_heuristic_energy_rate,
-                    real_world_energy_adjustment,
-                })
-            }
-            PredictionModelConfig::PowertrainV2Schema {
-                model_key,
-                vehicle,
-                contract,
-                estimator,
-            } => {
-                if contract.feature_set.is_empty() {
-                    return Err(TraversalModelError::BuildError(format!(
-                        "you must supply at least one input feature for vehicle model {}",
-                        model_key
-                    )));
-                }
-
-                if contract.target.is_empty() {
-                    return Err(TraversalModelError::BuildError(format!(
-                        "you must supply at least one target feature for vehicle model {}",
-                        model_key
-                    )));
-                }
-
-                // map powertrain Feature vector to compass InputFeature vector
-                let input_features: Vec<InputFeature> = contract
-                    .feature_set
-                    .iter()
-                    .map(InputFeature::try_from)
-                    .collect::<Result<Vec<_>, _>>()
-                    .map_err(|err| {
-                        TraversalModelError::BuildError(format!(
-                        "{}: couldn't map powertrain features to compass features in vehicle model {}",
-                        err,
-                        model_key
-                    ))
-                    })?;
-
-                let prediction_model: Arc<dyn PredictionModel>;
-                let energy_rate_unit: EnergyRateUnit;
-
-                // Create the prediction model. NOTE: Only support one target feature (the first one specified)
-                if let Some(feature) = contract.target.get(0) {
-                    energy_rate_unit = EnergyRateUnit::from_str(&feature.units).map_err(|err| {
-                        TraversalModelError::BuildError(format!(
-                            "{}: could not determine the energy unit for {} in vehicle model {}.",
-                            err, feature.name, model_key
-                        ))
-                    })?;
-                    prediction_model = Arc::new(OnnxModel::new(
-                        &estimator.model_file,
-                        energy_rate_unit.clone(),
-                    )?);
-                } else {
-                    return Err(TraversalModelError::BuildError(format!(
-                        "the first target was invalid for vehicle model {}",
-                        model_key
-                    )));
-                };
-
-                let a_star_heuristic_energy_rate = prediction_model_ops::find_min_energy_rate(
-                    &prediction_model,
-                    input_features.as_slice(),
-                    &energy_rate_unit,
-                )?;
-
-                Ok(PredictionModelRecord {
-                    name: model_key.to_string(),
-                    prediction_model: prediction_model,
-                    model_type: ModelType::Onnx,
-                    input_features: input_features,
-                    energy_rate_unit: energy_rate_unit,
-                    mass_estimate: Mass::new::<uom::si::mass::pound>(vehicle.mass_lbs),
-                    a_star_heuristic_energy_rate: a_star_heuristic_energy_rate,
-                    real_world_energy_adjustment: contract.real_world_adjustment_factor,
-                })
-            }
+        if config.contract.feature_set.is_empty() {
+            return Err(TraversalModelError::BuildError(format!(
+                "you must supply at least one input feature for vehicle model {}",
+                config.model_key
+            )));
         }
+
+        if config.contract.target.is_empty() {
+            return Err(TraversalModelError::BuildError(format!(
+                "you must supply at least one target feature for vehicle model {}",
+                config.model_key
+            )));
+        }
+
+        // map powertrain Feature vector to compass InputFeature vector
+        let input_features: Vec<InputFeature> = config
+            .contract
+            .feature_set
+            .iter()
+            .map(InputFeature::try_from)
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|err| {
+                TraversalModelError::BuildError(format!(
+                    "{}: couldn't map powertrain features to compass features in vehicle model {}",
+                    err, config.model_key
+                ))
+            })?;
+
+        let prediction_model: Arc<dyn PredictionModel>;
+        let energy_rate_unit: EnergyRateUnit;
+
+        // Create the prediction model. NOTE: Only support one target feature (the first one specified)
+        if let Some(feature) = config.contract.target.get(0) {
+            energy_rate_unit = EnergyRateUnit::from_str(&feature.units).map_err(|err| {
+                TraversalModelError::BuildError(format!(
+                    "{}: could not determine the energy unit for {} in vehicle model {}.",
+                    err, feature.name, config.model_key
+                ))
+            })?;
+            prediction_model = Arc::new(OnnxModel::new(
+                &config.estimator.model_file,
+                energy_rate_unit.clone(),
+            )?);
+        } else {
+            return Err(TraversalModelError::BuildError(format!(
+                "the first target was invalid for vehicle model {}",
+                config.model_key
+            )));
+        };
+
+        let a_star_heuristic_energy_rate = prediction_model_ops::find_min_energy_rate(
+            &prediction_model,
+            input_features.as_slice(),
+            &energy_rate_unit,
+        )?;
+
+        Ok(PredictionModelRecord {
+            name: config.model_key.to_string(),
+            prediction_model: prediction_model,
+            model_type: ModelType::Onnx,
+            input_features: input_features,
+            energy_rate_unit: energy_rate_unit,
+            mass_estimate: Mass::new::<uom::si::mass::pound>(config.vehicle.mass_lbs),
+            a_star_heuristic_energy_rate: a_star_heuristic_energy_rate,
+            real_world_energy_adjustment: config.contract.real_world_adjustment_factor,
+        })
     }
 }
 

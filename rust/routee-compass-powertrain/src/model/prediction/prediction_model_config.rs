@@ -1,6 +1,4 @@
 use super::routee_powertrain_v2_metadata::{Contract, Estimator, Vehicle};
-use super::ModelType;
-use routee_compass_core::model::{state::InputFeature, unit::EnergyRateUnit};
 use serde::{Deserialize, Serialize};
 /// Configuration for a prediction model that estimates energy consumption.
 ///
@@ -21,48 +19,26 @@ use serde::{Deserialize, Serialize};
 ///   If not provided, defaults to the minimum energy rate determined from the model.
 /// * `real_world_energy_adjustment` - Optional multiplier to adjust model predictions to match real-world conditions
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum PredictionModelConfig {
-    PowertrainV1Schema {
-        name: String,
-        model_input_file: String,
-        model_type: ModelType,
-        input_features: Vec<InputFeature>,
-        energy_rate_unit: EnergyRateUnit,
-        mass_estimate_lbs: f64,
-        a_star_heuristic_energy_rate: Option<f64>,
-        real_world_energy_adjustment: Option<f64>,
-    },
-    PowertrainV2Schema {
+pub struct PredictionModelConfig {
+    pub model_key: String,
+    pub vehicle: Vehicle,
+    pub contract: Contract,
+    pub estimator: Estimator,
+}
+
+impl PredictionModelConfig {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
         model_key: String,
         vehicle: Vehicle,
         contract: Contract,
         estimator: Estimator,
-    },
-}
-
-impl PredictionModelConfig {
-    // only generates a v1 model for now
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        name: String,
-        model_input_file: String,
-        model_type: ModelType,
-        input_features: Vec<InputFeature>,
-        energy_rate_unit: EnergyRateUnit,
-        mass_estimate_lbs: f64,
-        a_star_heuristic_energy_rate: Option<f64>,
-        real_world_energy_adjustment: Option<f64>,
     ) -> Self {
-        Self::PowertrainV1Schema {
-            name,
-            model_input_file,
-            model_type,
-            input_features,
-            energy_rate_unit,
-            mass_estimate_lbs,
-            a_star_heuristic_energy_rate,
-            real_world_energy_adjustment,
+        Self {
+            model_key,
+            vehicle,
+            contract,
+            estimator,
         }
     }
 }
@@ -85,7 +61,7 @@ mod test {
         let prediction_model_config: PredictionModelConfig = serde_json::from_value(data).unwrap();
         assert!(matches!(
             prediction_model_config,
-            PredictionModelConfig::PowertrainV2Schema { .. }
+            PredictionModelConfig { .. }
         ));
     }
 }

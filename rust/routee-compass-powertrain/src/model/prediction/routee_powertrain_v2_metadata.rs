@@ -26,7 +26,7 @@ pub struct Feature {
     pub name: String,
     pub units: String,
     pub dtype: String,
-    pub constraints: Constraints, // { lower: Option<f64>, upper: Option<f64> }
+    pub constraints: Constraints,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
