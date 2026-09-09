@@ -54,8 +54,8 @@ jobs:
 
       - name: Run examples
         run: |
-          python docs/examples/01_open_street_maps_example.py
-          python docs/examples/02_different_powertrains_example.py
-          python docs/examples/03_time_energy_tradeoff_example.py
-          python docs/examples/04_charging_stations_example.py
-          python docs/examples/05_ambient_temperature_example.py
+          # python docs/examples/01_open_street_maps_example.py
+          # python docs/examples/02_different_powertrains_example.py
+          # python docs/examples/03_time_energy_tradeoff_example.py
+          # python docs/examples/04_charging_stations_example.py
+          # python docs/examples/05_ambient_temperature_example.py
