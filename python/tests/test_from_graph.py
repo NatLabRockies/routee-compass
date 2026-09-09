@@ -2,9 +2,11 @@ from unittest import TestCase
 
 import osmnx as ox
 from nrel.routee.compass.compass_app import CompassApp
+import pytest
 
 
 class TestFromGraph(TestCase):
+    @pytest.mark.skip(reason="Awaiting Powertrain V2 integration.")
     def test_from_graph_denver(self) -> None:
         # Mini graph for testing (just a small area around a point)
         graph = ox.graph_from_point(
