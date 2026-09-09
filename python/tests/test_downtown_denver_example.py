@@ -124,6 +124,7 @@ class TestDowntownDenverExample(TestCase):
                 weight_results[i - 1]["dist"] - self.EPSILON,
                 f"Distance not increasing as weight p increases from {weight_results[i - 1]['p']} to {weight_results[i]['p']}",
             )
+
     @pytest.mark.skip(reason="Awaiting PowertrainV2 integration.")
     def test_energy(self) -> None:
         app = CompassApp.from_config_file(
