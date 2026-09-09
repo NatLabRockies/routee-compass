@@ -1,7 +1,4 @@
-use super::{
-    interpolation::InterpolationModel, model_type::ModelType, onnx::onnx_model::OnnxModel,
-    prediction_model_ops, smartcore::SmartcoreModel, PredictionModel, PredictionModelConfig,
-};
+use super::{model_type::ModelType, PredictionModel, PredictionModelConfig};
 use crate::model::fieldname;
 use routee_compass_core::model::{
     state::{InputFeature, StateModel, StateVariable},
@@ -26,80 +23,8 @@ pub struct PredictionModelRecord {
 impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
     type Error = TraversalModelError;
 
-    fn try_from(config: &PredictionModelConfig) -> Result<Self, Self::Error> {
-        match config {
-            PredictionModelConfig::PowertrainV1Schema {
-                name,
-                model_input_file,
-                model_type,
-                input_features,
-                energy_rate_unit,
-                mass_estimate_lbs,
-                a_star_heuristic_energy_rate,
-                real_world_energy_adjustment,
-            } => {
-                if input_features.is_empty() {
-                    return Err(TraversalModelError::BuildError(format!(
-                        "You must supply at least one input feature for vehicle model {}",
-                        name
-                    )));
-                }
-
-                // build the prediction model from the config
-                let prediction_model: Arc<dyn PredictionModel> = match model_type {
-                    ModelType::Smartcore => {
-                        let model = SmartcoreModel::new(model_input_file, *energy_rate_unit)?;
-                        Arc::new(model)
-                    }
-                    ModelType::Onnx => {
-                        let model = OnnxModel::new(model_input_file, *energy_rate_unit)?;
-                        Arc::new(model)
-                    }
-                    ModelType::Interpolate {
-                        underlying_model_type: underlying_model,
-                        feature_bounds,
-                    } => {
-                        let model = InterpolationModel::new(
-                            model_input_file,
-                            *underlying_model.clone(),
-                            input_features.clone(),
-                            feature_bounds.clone(),
-                            *energy_rate_unit,
-                        )?;
-                        Arc::new(model)
-                    }
-                };
-
-                let a_star_heuristic_energy_rate = match a_star_heuristic_energy_rate {
-                    None => prediction_model_ops::find_min_energy_rate(
-                        &prediction_model,
-                        input_features,
-                        energy_rate_unit,
-                    )?,
-                    Some(rate) => *rate,
-                };
-
-                let real_world_energy_adjustment = real_world_energy_adjustment.unwrap_or(1.0);
-
-                let mass_estimate = Mass::new::<uom::si::mass::pound>(*mass_estimate_lbs);
-
-                Ok(PredictionModelRecord {
-                    name: name.clone(),
-                    prediction_model,
-                    model_type: model_type.clone(),
-                    input_features: input_features.clone(),
-                    energy_rate_unit: *energy_rate_unit,
-                    mass_estimate,
-                    a_star_heuristic_energy_rate,
-                    real_world_energy_adjustment,
-                })
-            }
-            PredictionModelConfig::PowertrainV2Schema { .. } => {
-                Err(TraversalModelError::BuildError(
-                    "PowertrainV2Schema is not yet supported".to_string(),
-                ))
-            }
-        }
+    fn try_from(_config: &PredictionModelConfig) -> Result<Self, Self::Error> {
+        todo!(); // after data model complete
     }
 }
 
