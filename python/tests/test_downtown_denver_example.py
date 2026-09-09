@@ -2,9 +2,10 @@ import json
 from typing import Any
 from unittest import TestCase
 
+import pytest
 from nrel.routee.compass import package_root
 from nrel.routee.compass.compass_app import CompassApp
-import pytest
+
 
 class TestDowntownDenverExample(TestCase):
     # Define a small epsilon value for floating point comparisons

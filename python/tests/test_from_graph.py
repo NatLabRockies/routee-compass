@@ -1,8 +1,8 @@
 from unittest import TestCase
 
 import osmnx as ox
-from nrel.routee.compass.compass_app import CompassApp
 import pytest
+from nrel.routee.compass.compass_app import CompassApp
 
 
 class TestFromGraph(TestCase):
