@@ -54,6 +54,7 @@ jobs:
 
       - name: Run examples
         run: |
+          # Uncomment when powertrain v2 integration is complete.
           # python docs/examples/01_open_street_maps_example.py
           # python docs/examples/02_different_powertrains_example.py
           # python docs/examples/03_time_energy_tradeoff_example.py
