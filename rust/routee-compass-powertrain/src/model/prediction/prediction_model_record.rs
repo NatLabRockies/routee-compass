@@ -60,7 +60,7 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
 
         // Create the prediction model
         // NOTE: Only supporting one target feature for now (the first one specified)
-        if let Some(feature) = config.contract.target.get(0) {
+        if let Some(feature) = config.contract.target.first() {
             energy_rate_unit = EnergyRateUnit::from_str(&feature.units).map_err(|err| {
                 TraversalModelError::BuildError(format!(
                     "{}: could not determine the energy unit for {} in vehicle model {}.",
@@ -87,12 +87,12 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
 
         Ok(PredictionModelRecord {
             name: config.model_key.to_string(),
-            prediction_model: prediction_model,
+            prediction_model,
             model_type: ModelType::Onnx,
-            input_features: input_features,
-            energy_rate_unit: energy_rate_unit,
+            input_features,
+            energy_rate_unit,
             mass_estimate: Mass::new::<uom::si::mass::pound>(config.vehicle.mass_lbs),
-            a_star_heuristic_energy_rate: a_star_heuristic_energy_rate,
+            a_star_heuristic_energy_rate,
             real_world_energy_adjustment: config.contract.real_world_adjustment_factor,
         })
     }

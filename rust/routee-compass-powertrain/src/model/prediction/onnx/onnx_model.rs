@@ -135,7 +135,7 @@ impl OnnxModel {
 
         // resolve the expected input shape once; dynamic (batch) dims become 1
         let input_shape: Vec<usize> = {
-            let input = session.inputs().into_iter().next().ok_or_else(|| {
+            let input = session.inputs().iter().next().ok_or_else(|| {
                 TraversalModelError::BuildError("ONNX model has no inputs".to_string())
             })?;
             let dtype = input.dtype();
