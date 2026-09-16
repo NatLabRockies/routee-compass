@@ -1,7 +1,9 @@
 use super::PredictionModel;
 use itertools::Itertools;
 use routee_compass_core::model::{
-    state::InputFeature, traversal::TraversalModelError, unit::{DistanceUnit, EnergyRateUnit, RatioUnit, SpeedUnit, TemperatureUnit},
+    state::InputFeature,
+    traversal::TraversalModelError,
+    unit::{DistanceUnit, EnergyRateUnit, RatioUnit, SpeedUnit, TemperatureUnit},
 };
 use std::sync::Arc;
 use uom::si::f64::{Length, Ratio, ThermodynamicTemperature, Velocity};
@@ -30,7 +32,7 @@ pub fn find_min_energy_rate(
                     return Err(TraversalModelError::TraversalModelFailure(format!(
                         "{MIN_ENERGY_ERROR_MESSAGE} Unit must be set for speed input feature {input_feature} but got None"
                     )))
-                } 
+                }
             }
             InputFeature::Speed { name: _, unit } => match unit {
                 Some(speed_unit) => get_speed_sample_values(speed_unit),
