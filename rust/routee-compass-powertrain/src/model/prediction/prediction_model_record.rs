@@ -69,7 +69,7 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
             })?;
             prediction_model = Arc::new(OnnxModel::new(
                 &config.estimator.model_file,
-                energy_rate_unit.clone(),
+                energy_rate_unit,
             )?);
         } else {
             return Err(TraversalModelError::BuildError(format!(
