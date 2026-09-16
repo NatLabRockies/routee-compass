@@ -153,6 +153,7 @@ impl PredictionModelRecord {
             feature_vector.push(state_variable_f64);
         }
 
+        // TODO: Integrate TripHistoryTraversalModel here.
         let (energy_rate, energy_rate_unit) = self.prediction_model.predict(&feature_vector)?;
 
         let energy_rate_real_world = energy_rate * self.real_world_energy_adjustment;
