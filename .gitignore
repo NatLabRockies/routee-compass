@@ -6,6 +6,7 @@ docs/examples/*.ipynb
 docs/examples/denver_metro/
 
 *.onnx
+!rust/routee-compass-powertrain/src/model/prediction/test/model.onnx
 
 .DS_Store
 *.code-workspace
