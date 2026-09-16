@@ -41,7 +41,7 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
             )));
         }
 
-        // map powertrain Feature vector to compass InputFeature vector
+        // Map PowertrainV2 Feature vector to Compass InputFeature vector
         let input_features: Vec<InputFeature> = config
             .contract
             .feature_set
@@ -58,7 +58,8 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
         let prediction_model: Arc<dyn PredictionModel>;
         let energy_rate_unit: EnergyRateUnit;
 
-        // Create the prediction model. NOTE: Only support one target feature (the first one specified)
+        // Create the prediction model
+        // NOTE: Only supporting one target feature for now (the first one specified)
         if let Some(feature) = config.contract.target.get(0) {
             energy_rate_unit = EnergyRateUnit::from_str(&feature.units).map_err(|err| {
                 TraversalModelError::BuildError(format!(
@@ -77,6 +78,7 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
             )));
         };
 
+        // Determine the minimum a star heuristic from the prediction model, input features, and unit
         let a_star_heuristic_energy_rate = prediction_model_ops::find_min_energy_rate(
             &prediction_model,
             input_features.as_slice(),
@@ -180,5 +182,41 @@ impl PredictionModelRecord {
         };
 
         Ok(energy)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::model::prediction::prediction_model_config::PredictionModelConfig;
+    use crate::model::prediction::PredictionModelRecord;
+    use serde_json::Value;
+    use std::fs::File;
+    use std::io::BufReader;
+    #[test]
+    fn test_success_prediction_model_record() {
+        use std::path::PathBuf;
+
+        let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/model/prediction/test");
+
+        let file = File::open(test_dir.join("v2_metadata_example.json")).unwrap();
+        let buf = BufReader::new(file);
+        let data: Value = serde_json::from_reader(buf).unwrap();
+
+        let mut prediction_model_config: PredictionModelConfig =
+            serde_json::from_value(data).unwrap();
+
+        // resolve the bare model filename against the config's directory
+        prediction_model_config.estimator.model_file = test_dir
+            .join(&prediction_model_config.estimator.model_file)
+            .to_string_lossy()
+            .into_owned();
+
+        let prediction_model_record =
+            PredictionModelRecord::try_from(&prediction_model_config).unwrap();
+
+        assert!(matches!(
+            prediction_model_record,
+            PredictionModelRecord { .. }
+        ));
     }
 }

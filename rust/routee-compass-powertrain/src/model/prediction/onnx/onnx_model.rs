@@ -3,7 +3,7 @@ use std::sync::Mutex;
 
 use crate::model::prediction::prediction_model::PredictionModel;
 
-use ndarray::Array2;
+use ndarray::{ArrayD, IxDyn};
 use ort::session::Session;
 use routee_compass_core::model::{traversal::TraversalModelError, unit::EnergyRateUnit};
 
@@ -20,6 +20,8 @@ use routee_compass_core::model::{traversal::TraversalModelError, unit::EnergyRat
 pub struct OnnxModel {
     session: Mutex<Session>,
     energy_rate_unit: EnergyRateUnit,
+    /// expected input shape with dynamic (batch) dims resolved to 1, e.g. [1, lookback, features]
+    input_shape: Vec<usize>,
 }
 
 impl PredictionModel for OnnxModel {
@@ -27,9 +29,27 @@ impl PredictionModel for OnnxModel {
         &self,
         feature_vector: &[f64],
     ) -> Result<(f64, EnergyRateUnit), TraversalModelError> {
-        let input_shape = (1, feature_vector.len());
-        let input_data: Vec<f32> = feature_vector.iter().map(|&v| v as f32).collect();
-        let array = Array2::from_shape_vec(input_shape, input_data).map_err(|e| {
+        let num_features = *self.input_shape.last().ok_or_else(|| {
+            TraversalModelError::TraversalModelFailure(
+                "ONNX model input shape is empty".to_string(),
+            )
+        })?;
+        if num_features != feature_vector.len() {
+            return Err(TraversalModelError::TraversalModelFailure(format!(
+                "ONNX model expects {} features per timestep but got {}",
+                num_features,
+                feature_vector.len()
+            )));
+        }
+
+        // zero-pad the lookback window, placing the current link in the most-recent timestep
+        let total: usize = self.input_shape.iter().product();
+        let mut input_data = vec![0.0f32; total];
+        let start = total - feature_vector.len();
+        for (i, &v) in feature_vector.iter().enumerate() {
+            input_data[start + i] = v as f32;
+        }
+        let array = ArrayD::from_shape_vec(IxDyn(&self.input_shape), input_data).map_err(|e| {
             TraversalModelError::TraversalModelFailure(format!(
                 "Failed to create ndarray from feature vector: {}",
                 e
@@ -113,9 +133,26 @@ impl OnnxModel {
                 ))
             })?;
 
+        // resolve the expected input shape once; dynamic (batch) dims become 1
+        let input_shape: Vec<usize> = {
+            let input = session.inputs().into_iter().next().ok_or_else(|| {
+                TraversalModelError::BuildError("ONNX model has no inputs".to_string())
+            })?;
+            let dtype = input.dtype();
+            let dims = dtype.tensor_shape().ok_or_else(|| {
+                TraversalModelError::BuildError(
+                    "ONNX model input is not a tensor; cannot determine input shape".to_string(),
+                )
+            })?;
+            dims.iter()
+                .map(|&d| if d < 0 { 1usize } else { d as usize })
+                .collect()
+        };
+
         Ok(OnnxModel {
             session: Mutex::new(session),
             energy_rate_unit,
+            input_shape,
         })
     }
 }

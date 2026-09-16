@@ -1,12 +1,10 @@
 use super::PredictionModel;
 use itertools::Itertools;
 use routee_compass_core::model::{
-    state::InputFeature,
-    traversal::TraversalModelError,
-    unit::{EnergyRateUnit, RatioUnit, SpeedUnit, TemperatureUnit},
+    state::InputFeature, traversal::TraversalModelError, unit::{DistanceUnit, EnergyRateUnit, RatioUnit, SpeedUnit, TemperatureUnit},
 };
 use std::sync::Arc;
-use uom::si::f64::{Ratio, ThermodynamicTemperature, Velocity};
+use uom::si::f64::{Length, Ratio, ThermodynamicTemperature, Velocity};
 
 const MIN_ENERGY_ERROR_MESSAGE: &str =
     "Failure while executing grid search for minimum energy rate in prediction model:";
@@ -26,6 +24,14 @@ pub fn find_min_energy_rate(
 
     for input_feature in input_features {
         let values = match input_feature {
+            InputFeature::Distance {name: _, unit} => match unit {
+                Some(distance_unit) => get_distance_sample_values(distance_unit),
+                None => {
+                    return Err(TraversalModelError::TraversalModelFailure(format!(
+                        "{MIN_ENERGY_ERROR_MESSAGE} Unit must be set for speed input feature {input_feature} but got None"
+                    )))
+                } 
+            }
             InputFeature::Speed { name: _, unit } => match unit {
                 Some(speed_unit) => get_speed_sample_values(speed_unit),
                 None => {
@@ -86,6 +92,11 @@ pub fn find_min_energy_rate(
     );
 
     Ok(minimum_energy_rate)
+}
+
+fn get_distance_sample_values(distance_unit: &DistanceUnit) -> Vec<f64> {
+    // vector of 0.1 mi
+    vec![distance_unit.from_uom(Length::new::<uom::si::length::mile>(0.1))]
 }
 
 /// generate Percent Grade values in the range [-20, 0] converted to the target grade unit
