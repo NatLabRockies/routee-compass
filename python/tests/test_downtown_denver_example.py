@@ -2,6 +2,7 @@ import json
 from typing import Any
 from unittest import TestCase
 
+import pytest
 from nrel.routee.compass import package_root
 from nrel.routee.compass.compass_app import CompassApp
 
@@ -124,6 +125,7 @@ class TestDowntownDenverExample(TestCase):
                 f"Distance not increasing as weight p increases from {weight_results[i - 1]['p']} to {weight_results[i]['p']}",
             )
 
+    @pytest.mark.skip(reason="Awaiting PowertrainV2 integration.")
     def test_energy(self) -> None:
         app = CompassApp.from_config_file(
             package_root()

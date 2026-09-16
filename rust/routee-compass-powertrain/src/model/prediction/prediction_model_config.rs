@@ -1,7 +1,5 @@
-use super::ModelType;
-use routee_compass_core::model::{state::InputFeature, unit::EnergyRateUnit};
+use super::routee_powertrain_v2_metadata::{Contract, Estimator, Vehicle};
 use serde::{Deserialize, Serialize};
-
 /// Configuration for a prediction model that estimates energy consumption.
 ///
 /// This struct encapsulates all the necessary information to load and use a machine learning
@@ -21,39 +19,49 @@ use serde::{Deserialize, Serialize};
 ///   If not provided, defaults to the minimum energy rate determined from the model.
 /// * `real_world_energy_adjustment` - Optional multiplier to adjust model predictions to match real-world conditions
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct PredictionModelConfig {
-    pub name: String,
-    pub model_input_file: String,
-    pub model_type: ModelType,
-    pub input_features: Vec<InputFeature>,
-    pub energy_rate_unit: EnergyRateUnit,
-    pub mass_estimate_lbs: f64,
-    pub a_star_heuristic_energy_rate: Option<f64>,
-    pub real_world_energy_adjustment: Option<f64>,
+    model_key: String,
+    vehicle: Vehicle,
+    contract: Contract,
+    estimator: Estimator,
 }
 
 impl PredictionModelConfig {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        name: String,
-        model_input_file: String,
-        model_type: ModelType,
-        input_features: Vec<InputFeature>,
-        energy_rate_unit: EnergyRateUnit,
-        mass_estimate_lbs: f64,
-        a_star_heuristic_energy_rate: Option<f64>,
-        real_world_energy_adjustment: Option<f64>,
+        model_key: String,
+        vehicle: Vehicle,
+        contract: Contract,
+        estimator: Estimator,
     ) -> Self {
         Self {
-            name,
-            model_input_file,
-            model_type,
-            input_features,
-            energy_rate_unit,
-            mass_estimate_lbs,
-            a_star_heuristic_energy_rate,
-            real_world_energy_adjustment,
+            model_key,
+            vehicle,
+            contract,
+            estimator,
         }
+    }
+}
+#[cfg(test)]
+mod test {
+    use super::PredictionModelConfig;
+    use serde_json::Value;
+    use std::fs::File;
+    use std::io::BufReader;
+    #[test]
+    fn test_load_v2_prediction_model_config() {
+        // load the example file
+        let file = File::open("src/model/prediction/test/v2_metadata_example.json").unwrap();
+        let buf = BufReader::new(file);
+
+        // load the data into a serde_json::Value
+        let data: Value = serde_json::from_reader(buf).unwrap();
+
+        // try deserializing the JSON data into a PredictionModelConfig
+        let prediction_model_config: PredictionModelConfig = serde_json::from_value(data).unwrap();
+        assert!(matches!(
+            prediction_model_config,
+            PredictionModelConfig { .. }
+        ));
     }
 }
