@@ -1,19 +1,31 @@
+use ordered_hash_map::OrderedHashMap;
+
 use super::parquet_writer::ParquetPartitionWriter;
 use super::response_output_format::ResponseOutputFormat;
-use crate::app::compass::response::internal_writer::InternalWriter;
+use super::write_mode::WriteMode;
+use crate::app::compass::response::mapping::file_mapping::FileMapping;
+use crate::app::compass::response::FileState;
 use crate::app::compass::CompassAppError;
-use std::io::prelude::*;
+use std::num::NonZeroUsize;
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
+/// implements the output policy for a given output location.
 pub enum ResponseSink {
     None,
     File {
         filename: String,
-        file: Arc<Mutex<InternalWriter>>,
+        state: Arc<Mutex<FileState>>,
         format: ResponseOutputFormat,
         delimiter: Option<String>,
         iterations_per_flush: u64,
-        iterations: Arc<Mutex<u64>>,
+    },
+    Files {
+        directory: String,
+        state: Vec<Mutex<FileState>>,
+        format: ResponseOutputFormat,
+        delimiter: Option<String>,
+        iterations_per_flush: u64,
     },
     Parquet {
         base_filename: String,
@@ -23,66 +35,153 @@ pub enum ResponseSink {
 }
 
 impl ResponseSink {
+    /// creates a response sink for a single file.
+    pub fn new_file(
+        filename: PathBuf,
+        format: ResponseOutputFormat,
+        file_flush_rate: Option<u64>,
+        write_mode: Option<WriteMode>,
+    ) -> Result<Self, CompassAppError> {
+        let state = FileState::new(&filename, &format, write_mode)?;
+        let delimiter = format.delimiter();
+        let iterations_per_flush = file_flush_rate.unwrap_or(1);
+        let filename = filename.to_string_lossy().to_string();
+        Ok(Self::File {
+            filename,
+            state: Arc::new(Mutex::new(state)),
+            format,
+            delimiter,
+            iterations_per_flush,
+        })
+    }
+
+    /// create a response sink backed by a directory of files.
+    pub fn new_files(
+        directory: PathBuf,
+        file_prefix: String,
+        gzip: bool,
+        n_writers: Option<NonZeroUsize>,
+        format: ResponseOutputFormat,
+        file_flush_rate: Option<u64>,
+        write_mode: Option<WriteMode>,
+    ) -> Result<Self, CompassAppError> {
+        std::fs::create_dir_all(&directory).map_err(|e| {
+            CompassAppError::InternalError(format!(
+                "failed to create output directory {:?}: {}",
+                directory, e
+            ))
+        })?;
+        let n_writers = match n_writers {
+            Some(n) => n.into(),
+            None => rayon::current_num_threads(),
+        };
+        let suffix = format.file_suffix();
+
+        let mut state = Vec::with_capacity(n_writers);
+        for i in 0..n_writers {
+            let filename = pool_filename(&file_prefix, i, suffix, gzip);
+            let filepath = directory.join(filename);
+            let file_state = FileState::new(&filepath, &format, write_mode.clone())?;
+            state.push(Mutex::new(file_state));
+        }
+
+        let delimiter = format.delimiter();
+        let iterations_per_flush = file_flush_rate.unwrap_or(1);
+        let directory = directory.to_string_lossy().to_string();
+
+        let result = Self::Files {
+            directory,
+            state,
+            format,
+            delimiter,
+            iterations_per_flush,
+        };
+        Ok(result)
+    }
+
+    /// creates a response sink that targets a parquet archive.
+    ///
+    /// note: does not take advantage of parquet partitionings.
+    pub fn new_parquet(
+        path: PathBuf,
+        file_flush_rate: Option<u64>,
+        mapping: Option<OrderedHashMap<String, FileMapping>>,
+    ) -> Result<Self, CompassAppError> {
+        let num_threads = rayon::current_num_threads();
+        let buffer_size = file_flush_rate.unwrap_or(100) as usize;
+        let base_filename = path.to_string_lossy().to_string();
+
+        // create the parent directory if it doesn't exist
+        std::fs::create_dir_all(&path).map_err(|e| {
+            CompassAppError::InternalError(format!(
+                "failed to create parquet base file {:?}: {}",
+                path, e
+            ))
+        })?;
+
+        let writers = (0..num_threads)
+            .map(|i| {
+                let partname = format!("part_{i}.parquet");
+                let filepath = path.join(partname);
+                let fname = filepath.to_string_lossy().to_string();
+                let writer = ParquetPartitionWriter::new(fname, buffer_size, mapping.clone());
+                Mutex::new(writer)
+            })
+            .collect();
+        Ok(ResponseSink::Parquet {
+            base_filename,
+            writers,
+        })
+    }
+
     /// uses a writer to write a RouteE Compass app response to some location.
     pub fn write_response(&self, response: &mut serde_json::Value) -> Result<(), CompassAppError> {
         match self {
             ResponseSink::None => Ok(()),
             ResponseSink::File {
                 filename,
-                file,
+                state,
                 format,
                 delimiter,
                 iterations_per_flush,
-                iterations,
             } => {
-                let file_ref = Arc::clone(file);
-                let mut file_attained = file_ref.lock().map_err(|e| {
+                let state_clone = state.clone();
+                let mut state_attained = state_clone.lock().map_err(|e| {
                     CompassAppError::ReadOnlyPoisonError(format!(
-                        "Could not aquire lock on output file: {e}"
+                        "Could not aquire lock on output file {filename}: {e}",
                     ))
                 })?;
-                let it_ref = Arc::new(iterations);
-                let mut it_attained = it_ref.lock().map_err(|e| {
-                    CompassAppError::ReadOnlyPoisonError(format!(
-                        "Could not aquire lock on File::iterations: {e}"
-                    ))
-                })?;
-
-                let output_row = format.format_response(response)?;
-                match delimiter {
-                    Some(delimiter) => {
-                        if *it_attained > 0 {
-                            write!(file_attained, "{delimiter}").map_err(|e| {
-                                CompassAppError::InternalError(format!(
-                                    "failure writing delimiter to {filename}: {e}"
-                                ))
-                            })?;
-                        }
-                        write!(file_attained, "{output_row}").map_err(|e| {
-                            CompassAppError::InternalError(format!(
-                                "failure writing to {filename}: {e}"
-                            ))
-                        })?;
-                    }
-                    None => {
-                        writeln!(file_attained, "{output_row}").map_err(|e| {
-                            CompassAppError::InternalError(format!(
-                                "failure writing to {filename}: {e}"
-                            ))
-                        })?;
-                    }
-                }
-                *it_attained += 1;
-                if *it_attained % iterations_per_flush == 0 {
-                    file_attained.flush().map_err(|e| {
-                        CompassAppError::InternalError(format!(
-                            "failure flushing output to {filename}: {e}"
-                        ))
-                    })?;
-                }
-
-                Ok(())
+                let value = format.format_response(response)?;
+                state_attained.write(&value, delimiter.as_deref(), *iterations_per_flush)
             }
+            ResponseSink::Files {
+                state,
+                format,
+                delimiter,
+                iterations_per_flush,
+                directory,
+            } => {
+                // map the current thread to the set of writers, wrapping around the max writer index using modulo
+                // to ensure we are always selecting a valid index, though if the user set max writers as fewer than
+                // max threads, then write operations may be blocked here as they are assigned thread-affine.
+                let thread_idx = rayon::current_thread_index().unwrap_or(0);
+                let writer_idx = thread_idx % state.len();
+                let writer_mutex = match state.get(writer_idx) {
+                    None => {
+                        let msg = format!("during write_response, writer_idx > state.len() where thread_idx={thread_idx}, writer_idx={writer_idx}, state.len()={}", state.len());
+                        return Err(CompassAppError::InternalError(msg));
+                    }
+                    Some(file_state) => file_state,
+                };
+                let mut writer = writer_mutex.lock().map_err(|e| {
+                    CompassAppError::ReadOnlyPoisonError(format!(
+                        "Could not aquire lock on {writer_idx}th output file in '{directory}': {e}"
+                    ))
+                })?;
+                let value = format.format_response(response)?;
+                writer.write(&value, delimiter.as_deref(), *iterations_per_flush)
+            }
+
             ResponseSink::Parquet {
                 base_filename: _,
                 writers,
@@ -107,33 +206,39 @@ impl ResponseSink {
         }
     }
 
-    pub fn close(&self) -> Result<String, CompassAppError> {
+    /// closes the writer. first writing the footer, and then implicitly calling [Drop] on this
+    /// object, dropping the inner file writer in the process. returns the output location where
+    /// the data was written.
+    pub fn close(self) -> Result<String, CompassAppError> {
         match self {
             ResponseSink::None => Ok(String::from("")),
             ResponseSink::File {
-                filename,
-                file,
+                state,
                 format,
-                ..
+                iterations_per_flush,
+                filename: _,
+                delimiter: _,
             } => {
-                let file_ref = Arc::clone(file);
-                let mut file_attained = file_ref.lock().map_err(|e| {
-                    CompassAppError::ReadOnlyPoisonError(format!(
-                        "Could not aquire lock on output file: {e}"
-                    ))
-                })?;
-
-                // write optional footer (depends on format type)
-                if let Some(final_contents) = format.generate_footer() {
-                    writeln!(file_attained, "{final_contents}").map_err(|e| {
-                        CompassAppError::InternalError(format!(
-                            "failure writing final contents to {filename}: {e}"
-                        ))
+                let state_mut: Mutex<FileState> = Arc::try_unwrap(state)
+                    .map_err(|_| {
+                        let msg = "calling close on response File writer but it still has more than 1 reference to its smart pointer".to_string();
+                        CompassAppError::InternalError(msg)
                     })?;
-                }
-                file_attained.finish()?;
-                Ok(filename.clone())
+                close_file(state_mut, &format, iterations_per_flush)
             }
+            ResponseSink::Files {
+                directory,
+                state,
+                format,
+                iterations_per_flush,
+                delimiter: _,
+            } => {
+                for s in state.into_iter() {
+                    close_file(s, &format, iterations_per_flush)?;
+                }
+                Ok(directory)
+            }
+
             ResponseSink::Parquet {
                 base_filename: _,
                 writers,
@@ -168,19 +273,47 @@ impl ResponseSink {
     }
 }
 
+/// create a unique filename for an output of the [ResponseSink::Files] variant.
+pub fn pool_filename(file_prefix: &str, i: usize, suffix: &str, gzip: bool) -> String {
+    let gzip = match gzip {
+        true => ".gz",
+        false => "",
+    };
+    format!("{file_prefix}-{i}.{suffix}{gzip}")
+}
+
+/// writes the footer and returns the filename.
+fn close_file(
+    state: Mutex<FileState>,
+    format: &ResponseOutputFormat,
+    iterations_per_flush: u64,
+) -> Result<String, CompassAppError> {
+    let mut state_attained = state.lock().map_err(|e| {
+        CompassAppError::ReadOnlyPoisonError(format!("Could not aquire lock on output file: {e}",))
+    })?;
+    if let Some(final_contents) = format.generate_footer() {
+        state_attained.write(&final_contents, None, iterations_per_flush)?;
+    }
+    state_attained.close()?;
+    Ok(state_attained.filename.clone())
+}
+
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
     use super::*;
     use crate::app::compass::response::{
         response_output_policy::ResponseOutputPolicy, write_mode::WriteMode,
     };
+    use rayon::iter::{IntoParallelIterator, ParallelIterator};
     use serde_json::json;
 
     #[test]
     fn json_array_responses_are_comma_delimited() -> Result<(), Box<dyn std::error::Error>> {
         let output_file = tempfile::NamedTempFile::new()?;
         let policy = ResponseOutputPolicy::File {
-            filename: output_file.path().to_string_lossy().into_owned(),
+            filepath: output_file.path().to_path_buf(),
             format: ResponseOutputFormat::Json {
                 newline_delimited: false,
             },
@@ -196,6 +329,59 @@ mod tests {
         let contents = std::fs::read_to_string(output_file.path())?;
         let responses: Vec<serde_json::Value> = serde_json::from_str(&contents)?;
         assert_eq!(responses, vec![json!({"id": 1}), json!({"id": 2})]);
+        Ok(())
+    }
+
+    #[test]
+    fn concurrent_writer() -> Result<(), Box<dyn std::error::Error>> {
+        // configure a directory output with two files, each in JSON format.
+        let output_dir = tempfile::TempDir::new()?;
+        let concurrency = NonZeroUsize::new(2).unwrap();
+        let format = ResponseOutputFormat::Json {
+            newline_delimited: false,
+        };
+        let prefix = "test".to_string();
+        let policy = ResponseOutputPolicy::Directory {
+            path: output_dir.path().to_path_buf(),
+            format: format.clone(),
+            prefix: Some(prefix),
+            concurrency: Some(concurrency),
+            gzip: false,
+            file_flush_rate: None,
+            write_mode: Some(WriteMode::Overwrite),
+        };
+        let sink = policy.build()?;
+
+        // write 4 rows to the files.
+        let _unused: Vec<()> = (0..4)
+            .into_par_iter()
+            .map(|i| sink.write_response(&mut json!({"id": i})))
+            .collect::<Result<Vec<_>, _>>()
+            .expect("failure when writing from threads");
+
+        sink.close()?;
+
+        // collect the values written to each file. verify that each output row has been written
+        // exactly once to one of the files.
+        let mut ids_found = HashSet::new();
+        for i in 0..concurrency.into() {
+            let filename = pool_filename("test", i, format.file_suffix(), false);
+            let filepath = output_dir.path().join(filename);
+            let contents = std::fs::read_to_string(&filepath)?;
+            let responses: Vec<serde_json::Value> = serde_json::from_str(&contents)?;
+            for response in responses.into_iter() {
+                let id = response["id"].as_u64().unwrap();
+                if ids_found.contains(&id) {
+                    panic!("found id {id} multiple times.")
+                }
+                ids_found.insert(id);
+            }
+        }
+
+        // confirm that all rows have been written.
+        for expected in 0..4u64 {
+            assert!(ids_found.contains(&expected));
+        }
         Ok(())
     }
 }
