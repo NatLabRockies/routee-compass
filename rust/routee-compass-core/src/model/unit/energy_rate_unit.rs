@@ -50,9 +50,11 @@ impl FromStr for EnergyRateUnit {
             ["kilowatt hour", "kilometer"] => Ok(EnergyRateUnit::KWHPKM),
             ["kWh", "mile"] => Ok(EnergyRateUnit::KWHPM),
             ["kWh", "kilometer"] => Ok(EnergyRateUnit::KWHPKM),
-            // Powertrain V2
-            ["gallons gasoline"] => Ok(EnergyRateUnit::GGPM),
-            ["kilowatt-hour"] => Ok(EnergyRateUnit::KWHPM),
+            // Powertrain V2 just adds an "s" to the unit
+            ["gallons gasoline", "miles"] => Ok(EnergyRateUnit::GGPM),
+            ["gallons diesel", "miles"] => Ok(EnergyRateUnit::GDPM),
+            ["kilowatt-hour", "miles"] => Ok(EnergyRateUnit::KWHPM),
+            ["kilowatt-hour", "kilometers"] => Ok(EnergyRateUnit::KWHPKM),
             _ => Err(format!(
                 "expected energy rate unit in the format '<energy>/<distance>', found: {s}"
             )),

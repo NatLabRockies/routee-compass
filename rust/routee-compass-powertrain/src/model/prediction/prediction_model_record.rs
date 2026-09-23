@@ -1,7 +1,10 @@
 use super::{model_type::ModelType, PredictionModel, PredictionModelConfig};
 use crate::model::{
     fieldname,
-    prediction::{onnx::onnx_model::OnnxModel, prediction_model_ops},
+    prediction::{
+        onnx::onnx_model::OnnxModel, prediction_model_ops,
+        routee_powertrain_v2_metadata::EstimatorType,
+    },
 };
 use routee_compass_core::model::{
     state::{InputFeature, StateModel, StateVariable},
@@ -57,20 +60,37 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
 
         let prediction_model: Arc<dyn PredictionModel>;
         let energy_rate_unit: EnergyRateUnit;
-
+        let distance_units = &config.contract.distance.units;
         // Create the prediction model
         // NOTE: Only supporting one target feature for now (the first one specified)
         if let Some(feature) = config.contract.target.first() {
-            energy_rate_unit = EnergyRateUnit::from_str(&feature.units).map_err(|err| {
+            // append the distance unit to the feature unit. for example:
+            // target feature unit:    "kilowatt-hour"
+            // contract distance unit:  "miles"
+            // becomes                  "killowatt-hour/miles"
+            let mut energy_unit: String = feature.units.clone();
+            energy_unit.push_str("/");
+            energy_unit.push_str(distance_units);
+
+            energy_rate_unit = EnergyRateUnit::from_str(&energy_unit).map_err(|err| {
                 TraversalModelError::BuildError(format!(
                     "{}: could not determine the energy unit for {} in vehicle model {}.",
                     err, feature.name, config.model_key
                 ))
             })?;
-            prediction_model = Arc::new(OnnxModel::new(
-                &config.estimator.model_file,
-                energy_rate_unit,
-            )?);
+            prediction_model = match config.estimator.estimator_type {
+                EstimatorType::ONNXEstimator => Arc::new(OnnxModel::new(
+                    &config.estimator.model_file,
+                    energy_rate_unit,
+                )?),
+                // NGBoost unsupported for now.
+                EstimatorType::NGBoostEstimator => {
+                    return Err(TraversalModelError::BuildError(format!(
+                        "unsupported estimator type NGBoostEstimator for vehicle model {}; only ONNXEstimator is currently supported",
+                        config.model_key
+                    )));
+                }
+            };
         } else {
             return Err(TraversalModelError::BuildError(format!(
                 "the first target was invalid for vehicle model {}",
@@ -82,6 +102,7 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
         let a_star_heuristic_energy_rate = prediction_model_ops::find_min_energy_rate(
             &prediction_model,
             input_features.as_slice(),
+            &config.contract.feature_set,
             &energy_rate_unit,
         )?;
 
@@ -119,6 +140,17 @@ impl PredictionModelRecord {
                         Some(u) => u.from_uom(speed),
                     }
                 }
+                InputFeature::Time { name, unit } => {
+                    let time = state_model.get_time(state, name)?;
+                    match unit {
+                        None => {
+                            return Err(TraversalModelError::TraversalModelFailure(format!(
+                                "Unit must be set for time input feature {input_feature} but got None"
+                            )));
+                        }
+                        Some(u) => u.from_uom(time),
+                    }
+                }
                 InputFeature::Ratio { name, unit } => {
                     let grade = state_model.get_ratio(state, name)?;
                     match unit {
@@ -141,7 +173,7 @@ impl PredictionModelRecord {
                         Some(u) => u.from_uom(temperature),
                     }
                 }
-                InputFeature::Custom { name, unit: _ } => {
+                InputFeature::Custom { name, .. } => {
                     state_model.get_custom_f64(state, name)?
                 }
                 _ => {

@@ -1,12 +1,13 @@
+use super::routee_powertrain_v2_metadata::Feature;
 use super::PredictionModel;
 use itertools::Itertools;
 use routee_compass_core::model::{
     state::InputFeature,
     traversal::TraversalModelError,
-    unit::{DistanceUnit, EnergyRateUnit, RatioUnit, SpeedUnit, TemperatureUnit},
+    unit::{DistanceUnit, EnergyRateUnit, RatioUnit, SpeedUnit, TemperatureUnit, TimeUnit},
 };
 use std::sync::Arc;
-use uom::si::f64::{Length, Ratio, ThermodynamicTemperature, Velocity};
+use uom::si::f64::{Length, Ratio, ThermodynamicTemperature, Time, Velocity};
 
 const MIN_ENERGY_ERROR_MESSAGE: &str =
     "Failure while executing grid search for minimum energy rate in prediction model:";
@@ -15,6 +16,7 @@ const MIN_ENERGY_ERROR_MESSAGE: &str =
 pub fn find_min_energy_rate(
     model: &Arc<dyn PredictionModel>,
     input_features: &[InputFeature],
+    feature_set: &[Feature],
     energy_model_energy_rate_unit: &EnergyRateUnit,
 ) -> Result<f64, TraversalModelError> {
     // sweep a fixed set of speed and grade values to find the minimum energy per mile rate from the incoming rf model
@@ -24,21 +26,30 @@ pub fn find_min_energy_rate(
     // Create vectors of sample values for each feature type
     let mut sample_values: Vec<Vec<f64>> = Vec::new();
 
-    for input_feature in input_features {
+    for (input_feature, feature) in input_features.iter().zip(feature_set) {
         let values = match input_feature {
             InputFeature::Distance {name: _, unit} => match unit {
                 Some(distance_unit) => get_distance_sample_values(distance_unit),
                 None => {
                     return Err(TraversalModelError::TraversalModelFailure(format!(
-                        "{MIN_ENERGY_ERROR_MESSAGE} Unit must be set for speed input feature {input_feature} but got None"
+                        "{MIN_ENERGY_ERROR_MESSAGE} Unit must be set for distance input feature {input_feature} but got None"
                     )))
                 }
-            }
+            },
+
             InputFeature::Speed { name: _, unit } => match unit {
                 Some(speed_unit) => get_speed_sample_values(speed_unit),
                 None => {
                     return Err(TraversalModelError::TraversalModelFailure(format!(
                         "{MIN_ENERGY_ERROR_MESSAGE} Unit must be set for speed input feature {input_feature} but got None"
+                    )))
+                }
+            },
+            InputFeature::Time { name: _, unit } => match unit {
+                Some(time_unit) => get_time_sample_values(time_unit),
+                None => {
+                    return Err(TraversalModelError::TraversalModelFailure(format!(
+                        "{MIN_ENERGY_ERROR_MESSAGE} Unit must be set for time input feature {input_feature} but got None"
                     )))
                 }
             },
@@ -58,6 +69,9 @@ pub fn find_min_energy_rate(
                     )))
                 }
             },
+            InputFeature::Custom { .. } => {
+                get_custom_sample_values(feature.constraints.lower, feature.constraints.upper)
+            }
             _ => {
                 return Err(TraversalModelError::TraversalModelFailure(format!(
                     "{MIN_ENERGY_ERROR_MESSAGE} got an unexpected input feature in the smartcore model prediction {input_feature}"
@@ -121,6 +135,17 @@ fn get_speed_sample_values(speed_unit: &SpeedUnit) -> Vec<f64> {
         .collect()
 }
 
+/// generate link-traversal Time values in the range [1, 116] seconds converted to the target time unit
+fn get_time_sample_values(time_unit: &TimeUnit) -> Vec<f64> {
+    (1..=120)
+        .step_by(5)
+        .map(|i| {
+            let time = Time::new::<uom::si::time::second>(i as f64); // values in range [1, 116] seconds
+            time_unit.from_uom(time)
+        })
+        .collect()
+}
+
 fn get_temperature_sample_values(temperature_unit: &TemperatureUnit) -> Vec<f64> {
     (0..=110)
         .map(|i| {
@@ -130,4 +155,18 @@ fn get_temperature_sample_values(temperature_unit: &TemperatureUnit) -> Vec<f64>
             temperature_unit.from_uom(temp)
         })
         .collect()
+}
+
+/// sweep the custom feature's constraint range, or hold at a single in-domain
+/// value when a bound is unknown
+fn get_custom_sample_values(lower: Option<f64>, upper: Option<f64>) -> Vec<f64> {
+    match (lower, upper) {
+        (Some(lo), Some(hi)) if hi > lo => {
+            let n = 10;
+            (0..n)
+                .map(|i| lo + (hi - lo) * i as f64 / (n - 1) as f64)
+                .collect()
+        }
+        _ => vec![lower.or(upper).unwrap_or(0.0)], // constant 0 by defaults,
+    }
 }
