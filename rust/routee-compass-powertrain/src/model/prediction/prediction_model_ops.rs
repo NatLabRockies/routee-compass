@@ -4,10 +4,10 @@ use itertools::Itertools;
 use routee_compass_core::model::{
     state::InputFeature,
     traversal::TraversalModelError,
-    unit::{DistanceUnit, EnergyRateUnit, RatioUnit, SpeedUnit, TemperatureUnit},
+    unit::{EnergyRateUnit, RatioUnit, SpeedUnit, TemperatureUnit},
 };
 use std::sync::Arc;
-use uom::si::f64::{Length, Ratio, ThermodynamicTemperature, Velocity};
+use uom::si::f64::{Ratio, ThermodynamicTemperature, Velocity};
 
 const MIN_ENERGY_ERROR_MESSAGE: &str =
     "Failure while executing grid search for minimum energy rate in prediction model:";
