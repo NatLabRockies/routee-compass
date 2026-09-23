@@ -1,11 +1,17 @@
 use super::{model_type::ModelType, PredictionModel, PredictionModelConfig};
-use crate::model::fieldname;
+use crate::model::{
+    fieldname,
+    prediction::{
+        onnx::onnx_model::OnnxModel, prediction_model_ops,
+        routee_powertrain_v2_metadata::EstimatorType,
+    },
+};
 use routee_compass_core::model::{
     state::{InputFeature, StateModel, StateVariable},
     traversal::TraversalModelError,
     unit::{EnergyRateUnit, EnergyUnit},
 };
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 use uom::si::f64::{Energy, Mass};
 
 /// A struct to hold the prediction model and associated metadata
@@ -23,8 +29,93 @@ pub struct PredictionModelRecord {
 impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
     type Error = TraversalModelError;
 
-    fn try_from(_config: &PredictionModelConfig) -> Result<Self, Self::Error> {
-        todo!(); // after data model complete
+    fn try_from(config: &PredictionModelConfig) -> Result<Self, Self::Error> {
+        if config.contract.feature_set.is_empty() {
+            return Err(TraversalModelError::BuildError(format!(
+                "you must supply at least one input feature for vehicle model {}",
+                config.model_key
+            )));
+        }
+
+        if config.contract.target.is_empty() {
+            return Err(TraversalModelError::BuildError(format!(
+                "you must supply at least one target feature for vehicle model {}",
+                config.model_key
+            )));
+        }
+
+        // Map PowertrainV2 Feature vector to Compass InputFeature vector
+        let input_features: Vec<InputFeature> = config
+            .contract
+            .feature_set
+            .iter()
+            .map(InputFeature::try_from)
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|err| {
+                TraversalModelError::BuildError(format!(
+                    "{}: couldn't map powertrain features to compass features in vehicle model {}",
+                    err, config.model_key
+                ))
+            })?;
+
+        let prediction_model: Arc<dyn PredictionModel>;
+        let energy_rate_unit: EnergyRateUnit;
+        let distance_units = &config.contract.distance.units;
+        // Create the prediction model
+        // NOTE: Only supporting one target feature for now (the first one specified)
+        if let Some(feature) = config.contract.target.first() {
+            // append the distance unit to the feature unit. for example:
+            // target feature unit:    "kilowatt-hour"
+            // contract distance unit:  "miles"
+            // becomes                  "killowatt-hour/miles"
+            let mut energy_unit: String = feature.units.clone();
+            energy_unit.push('/');
+            energy_unit.push_str(distance_units);
+
+            energy_rate_unit = EnergyRateUnit::from_str(&energy_unit).map_err(|err| {
+                TraversalModelError::BuildError(format!(
+                    "{}: could not determine the energy unit for {} in vehicle model {}.",
+                    err, feature.name, config.model_key
+                ))
+            })?;
+            prediction_model = match config.estimator.estimator_type {
+                EstimatorType::ONNXEstimator => Arc::new(OnnxModel::new(
+                    &config.estimator.model_file,
+                    energy_rate_unit,
+                )?),
+                // NGBoost unsupported for now.
+                EstimatorType::NGBoostEstimator => {
+                    return Err(TraversalModelError::BuildError(format!(
+                        "unsupported estimator type NGBoostEstimator for vehicle model {}; only ONNXEstimator is currently supported",
+                        config.model_key
+                    )));
+                }
+            };
+        } else {
+            return Err(TraversalModelError::BuildError(format!(
+                "the first target was invalid for vehicle model {}",
+                config.model_key
+            )));
+        };
+
+        // Determine the minimum a star heuristic from the prediction model, input features, and unit
+        let a_star_heuristic_energy_rate = prediction_model_ops::find_min_energy_rate(
+            &prediction_model,
+            input_features.as_slice(),
+            &config.contract.feature_set,
+            &energy_rate_unit,
+        )?;
+
+        Ok(PredictionModelRecord {
+            name: config.model_key.to_string(),
+            prediction_model,
+            model_type: ModelType::Onnx,
+            input_features,
+            energy_rate_unit,
+            mass_estimate: Mass::new::<uom::si::mass::pound>(config.vehicle.mass_lbs),
+            a_star_heuristic_energy_rate,
+            real_world_energy_adjustment: config.contract.real_world_adjustment_factor,
+        })
     }
 }
 
@@ -49,6 +140,17 @@ impl PredictionModelRecord {
                         Some(u) => u.from_uom(speed),
                     }
                 }
+                InputFeature::Time { name, unit } => {
+                    let time = state_model.get_time(state, name)?;
+                    match unit {
+                        None => {
+                            return Err(TraversalModelError::TraversalModelFailure(format!(
+                                "Unit must be set for time input feature {input_feature} but got None"
+                            )));
+                        }
+                        Some(u) => u.from_uom(time),
+                    }
+                }
                 InputFeature::Ratio { name, unit } => {
                     let grade = state_model.get_ratio(state, name)?;
                     match unit {
@@ -71,7 +173,7 @@ impl PredictionModelRecord {
                         Some(u) => u.from_uom(temperature),
                     }
                 }
-                InputFeature::Custom { name, unit: _ } => {
+                InputFeature::Custom { name, .. } => {
                     state_model.get_custom_f64(state, name)?
                 }
                 _ => {
@@ -83,6 +185,7 @@ impl PredictionModelRecord {
             feature_vector.push(state_variable_f64);
         }
 
+        // TODO: Integrate TripHistoryTraversalModel here.
         let (energy_rate, energy_rate_unit) = self.prediction_model.predict(&feature_vector)?;
 
         let energy_rate_real_world = energy_rate * self.real_world_energy_adjustment;
@@ -112,5 +215,41 @@ impl PredictionModelRecord {
         };
 
         Ok(energy)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::model::prediction::prediction_model_config::PredictionModelConfig;
+    use crate::model::prediction::PredictionModelRecord;
+    use serde_json::Value;
+    use std::fs::File;
+    use std::io::BufReader;
+    #[test]
+    fn test_success_prediction_model_record() {
+        use std::path::PathBuf;
+
+        let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/model/prediction/test");
+
+        let file = File::open(test_dir.join("v2_metadata_example.json")).unwrap();
+        let buf = BufReader::new(file);
+        let data: Value = serde_json::from_reader(buf).unwrap();
+
+        let mut prediction_model_config: PredictionModelConfig =
+            serde_json::from_value(data).unwrap();
+
+        // resolve the bare model filename against the config's directory
+        prediction_model_config.estimator.model_file = test_dir
+            .join(&prediction_model_config.estimator.model_file)
+            .to_string_lossy()
+            .into_owned();
+
+        let prediction_model_record =
+            PredictionModelRecord::try_from(&prediction_model_config).unwrap();
+
+        assert!(matches!(
+            prediction_model_record,
+            PredictionModelRecord { .. }
+        ));
     }
 }

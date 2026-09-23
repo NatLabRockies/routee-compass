@@ -20,10 +20,10 @@ use serde::{Deserialize, Serialize};
 /// * `real_world_energy_adjustment` - Optional multiplier to adjust model predictions to match real-world conditions
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PredictionModelConfig {
-    model_key: String,
-    vehicle: Vehicle,
-    contract: Contract,
-    estimator: Estimator,
+    pub model_key: String,
+    pub vehicle: Vehicle,
+    pub contract: Contract,
+    pub estimator: Estimator,
 }
 
 impl PredictionModelConfig {

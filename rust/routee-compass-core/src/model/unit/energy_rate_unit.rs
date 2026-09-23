@@ -43,12 +43,18 @@ impl FromStr for EnergyRateUnit {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.split("/").collect_vec()[..] {
+            // Powertrain V1
             ["gallons gasoline", "mile"] => Ok(EnergyRateUnit::GGPM),
             ["gallons diesel", "mile"] => Ok(EnergyRateUnit::GDPM),
             ["kilowatt hour", "mile"] => Ok(EnergyRateUnit::KWHPM),
             ["kilowatt hour", "kilometer"] => Ok(EnergyRateUnit::KWHPKM),
             ["kWh", "mile"] => Ok(EnergyRateUnit::KWHPM),
             ["kWh", "kilometer"] => Ok(EnergyRateUnit::KWHPKM),
+            // Powertrain V2 just adds an "s" to the unit
+            ["gallons gasoline", "miles"] => Ok(EnergyRateUnit::GGPM),
+            ["gallons diesel", "miles"] => Ok(EnergyRateUnit::GDPM),
+            ["kilowatt-hour", "miles"] => Ok(EnergyRateUnit::KWHPM),
+            ["kilowatt-hour", "kilometers"] => Ok(EnergyRateUnit::KWHPKM),
             _ => Err(format!(
                 "expected energy rate unit in the format '<energy>/<distance>', found: {s}"
             )),
