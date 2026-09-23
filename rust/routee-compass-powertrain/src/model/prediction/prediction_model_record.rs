@@ -69,7 +69,7 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
             // contract distance unit:  "miles"
             // becomes                  "killowatt-hour/miles"
             let mut energy_unit: String = feature.units.clone();
-            energy_unit.push_str("/");
+            energy_unit.push('/');
             energy_unit.push_str(distance_units);
 
             energy_rate_unit = EnergyRateUnit::from_str(&energy_unit).map_err(|err| {
