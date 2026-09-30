@@ -30,6 +30,14 @@ pub struct Estimator {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct InputSpec {
     pub lookback: i32,
+    pub pad_strategy: PadStrategy,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PadStrategy {
+    Zero,
+    RepeatFirst,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
