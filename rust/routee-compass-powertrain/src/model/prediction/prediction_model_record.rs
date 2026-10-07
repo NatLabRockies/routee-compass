@@ -17,6 +17,9 @@ use uom::si::f64::{Energy, Mass};
 
 /// A struct to hold the prediction model and associated metadata
 ///
+/// A lookback of zero denotes tabular input: one current feature row, no history
+/// dependencies, and an ONNX shape of `[1, features]` rather than a zero-sized axis.
+///
 /// Sequence models require a `trip_history` traversal providing the model's input
 /// features at depths 1 through `lookback - 1`. Complete leading rows of NaN
 /// sentinels are padded according to `input_spec`; missing state fields are errors.
@@ -128,6 +131,7 @@ impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
         };
 
         // Determine the minimum a star heuristic from the prediction model, input features, and unit
+        // TODO: This will be replaced by
         let a_star_heuristic_energy_rate = if lookback > 1 {
             log::debug!(
                 "Using zero energy-rate heuristic for sequence model {}; the pointwise grid search does not bound history-dependent predictions",
@@ -337,11 +341,18 @@ mod tests {
     use std::io::BufReader;
     use uom::si::f64::{Length, Ratio, Velocity};
     fn model_config() -> PredictionModelConfig {
+        model_config_from_file("v2_metadata_example.json")
+    }
+
+    fn model_config_from_file(metadata_file: &str) -> PredictionModelConfig {
         use std::path::PathBuf;
 
-        let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/model/prediction/test");
+        let metadata_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src/model/prediction/test")
+            .join(metadata_file);
+        let test_dir = metadata_path.parent().unwrap();
 
-        let file = File::open(test_dir.join("v2_metadata_example.json")).unwrap();
+        let file = File::open(&metadata_path).unwrap();
         let buf = BufReader::new(file);
         let data: Value = serde_json::from_reader(buf).unwrap();
 
@@ -530,38 +541,35 @@ mod tests {
     }
 
     #[test]
-    fn test_rf_record_remains_pointwise() {
-        let mut config = model_config();
-        config.estimator.model_file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("src/model/test/Toyota_Camry.onnx")
-            .to_string_lossy()
-            .into_owned();
-        config.estimator.input_spec.lookback = 0;
-        config.contract.feature_set[1].name = "grade_percent".to_string();
-        config.contract.feature_set[1].units = "percent".to_string();
-        config.contract.target[0].units = "gallons gasoline".to_string();
-        let record = PredictionModelRecord::try_from(&config).unwrap();
-        assert_eq!(record.input_features.len(), 2);
+    fn test_2016_camry_ice_rf_record() {
+        let config = model_config_from_file("2016_camry_ice_rf/metadata.json");
+        assert_eq!(config.estimator.input_spec.lookback, 0);
+        assert!(matches!(
+            config.estimator.input_spec.pad_strategy,
+            PadStrategy::RepeatFirst
+        ));
+        let mut record = PredictionModelRecord::try_from(&config).unwrap();
+        record.a_star_heuristic_energy_rate = 0.028;
+        assert_eq!(record.input_spec.lookback, 0);
+        let names: Vec<_> = record
+            .input_features
+            .iter()
+            .map(InputFeature::name)
+            .collect();
+        assert_eq!(names, ["edge_speed", "edge_distance"]);
         let state_model = state_model(&record);
-        let mut state = state_model.initial_state(None).unwrap();
-        state_model
-            .set_speed(
-                &mut state,
-                "edge_speed",
-                &Velocity::new::<uom::si::velocity::mile_per_hour>(50.0),
-            )
-            .unwrap();
-        state_model
-            .set_ratio(
-                &mut state,
-                "edge_grade",
-                &Ratio::new::<uom::si::ratio::percent>(0.0),
-            )
-            .unwrap();
+        let mut state = window_state(&state_model, &[[50.0, 0.5]]);
         assert_features(
             &record.feature_vector(&state, &state_model).unwrap(),
-            &[50.0, 0.0],
+            &[50.0, 0.5],
         );
+        let (rate, unit) = record.prediction_model.predict(&[50.0, 0.5]).unwrap();
+        assert_eq!(unit, EnergyRateUnit::GGPM);
+        let energy = record.predict(&mut state, &state_model).unwrap();
+        let expected = EnergyUnit::GallonsGasolineEquivalent
+            .to_uom(rate * 0.5 * record.real_world_energy_adjustment);
+        assert!(energy.value.is_finite());
+        assert!((energy.value - expected.value).abs() < 1e-9);
         assert!(record.a_star_heuristic_energy_rate.is_finite());
     }
 }
