@@ -541,6 +541,62 @@ mod tests {
     }
 
     #[test]
+    fn test_2016_camry_ice_cnn_record() {
+        let config = model_config_from_file("2016_camry_ice_cnn/metadata.json");
+        assert_eq!(config.estimator.input_spec.lookback, 5);
+        assert!(matches!(
+            config.estimator.input_spec.pad_strategy,
+            PadStrategy::Zero
+        ));
+        let mut record = PredictionModelRecord::try_from(&config).unwrap();
+        record.a_star_heuristic_energy_rate = 0.028;
+        assert_eq!(record.input_spec.lookback, 5);
+        let names: Vec<_> = record
+            .input_features
+            .iter()
+            .map(InputFeature::name)
+            .collect();
+        assert_eq!(
+            names,
+            [
+                "edge_speed_4",
+                "edge_distance_4",
+                "edge_speed_3",
+                "edge_distance_3",
+                "edge_speed_2",
+                "edge_distance_2",
+                "edge_speed_1",
+                "edge_distance_1",
+                "edge_speed",
+                "edge_distance",
+            ]
+        );
+        let state_model = state_model(&record);
+        // inject a link state
+        let rows = [
+            [10.0, 0.1],
+            [20.0, 0.2],
+            [30.0, 0.3],
+            [40.0, 0.4],
+            [50.0, 0.5],
+        ];
+        let mut state = window_state(&state_model, &rows);
+        let features: Vec<f64> = rows.into_iter().flatten().collect();
+        assert_features(
+            &record.feature_vector(&state, &state_model).unwrap(),
+            &features,
+        );
+        let (rate, unit) = record.prediction_model.predict(&features).unwrap();
+        assert_eq!(unit, EnergyRateUnit::GGPM);
+        let energy = record.predict(&mut state, &state_model).unwrap();
+        let expected = EnergyUnit::GallonsGasolineEquivalent
+            .to_uom(rate * 0.5 * record.real_world_energy_adjustment);
+        assert!(energy.value.is_finite());
+        assert!((energy.value - expected.value).abs() < 1e-9);
+        assert!(record.a_star_heuristic_energy_rate.is_finite());
+    }
+
+    #[test]
     fn test_2016_camry_ice_rf_record() {
         let config = model_config_from_file("2016_camry_ice_rf/metadata.json");
         assert_eq!(config.estimator.input_spec.lookback, 0);

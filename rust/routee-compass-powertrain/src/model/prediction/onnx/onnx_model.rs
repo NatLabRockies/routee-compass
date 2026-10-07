@@ -238,6 +238,23 @@ mod test {
     }
 
     #[test]
+    fn test_onnx_model_accepts_v2_cnn_with_lookback() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src/model/prediction/test/2016_camry_ice_cnn/model.onnx");
+        let model = OnnxModel::new(&path, EnergyRateUnit::GGPM).unwrap();
+        assert_eq!(model.input_shape(), &[1, 5, 2]);
+
+        let features = [10.0, 0.1, 20.0, 0.2, 30.0, 0.3, 40.0, 0.4, 50.0, 0.5];
+        let (energy_rate, unit) = model.predict(&features).unwrap();
+        assert!(energy_rate.is_finite());
+        assert_eq!(unit, EnergyRateUnit::GGPM);
+        assert!(model.predict(&[]).is_err());
+        assert!(model.predict(&[50.0, 0.5]).is_err());
+        assert!(model.predict(&features[..9]).is_err());
+        assert!(model.predict(&[0.0; 12]).is_err());
+    }
+
+    #[test]
     fn test_onnx_model_accepts_complete_lookback() {
         let path =
             PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/model/prediction/test/model.onnx");
