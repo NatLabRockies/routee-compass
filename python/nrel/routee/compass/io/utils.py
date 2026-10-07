@@ -47,7 +47,8 @@ def get_usgs_tiles(lat_lon_pairs: list[tuple[float, float]]) -> list[str]:
         if lat < 0 or lon > 0:
             raise ValueError(
                 f"USGS Tiles are not available for point ({lat}, {lon}). "
-                "Consider re-running with `grade=False`."
+                "To generate without elevation, omit both GeneratePipelinePhase.ELEVATION "
+                "and GeneratePipelinePhase.POWERTRAIN from `phases`."
             )
 
         lat_deg = int(lat) + 1
@@ -99,8 +100,9 @@ def _download_tile(
         except requests.exceptions.HTTPError as e:
             raise ValueError(
                 f"Failed to download USGS tile {tile} from {url}. "
-                "If this road network is outside of the US, consider re-running without "
-                "GeneratePipelinePhase.GRADE in the `phases` argument."
+                "Check USGS coverage and connectivity. To generate without elevation, "
+                "omit both GeneratePipelinePhase.ELEVATION and "
+                "GeneratePipelinePhase.POWERTRAIN from `phases`."
             ) from e
 
         destination.parent.mkdir(exist_ok=True)
@@ -113,15 +115,15 @@ def _download_tile(
     return destination
 
 
-def add_grade_to_graph(
+def add_elevation_to_graph(
     g: networkx.MultiDiGraph,
     output_dir: Path = Path("cache"),
     resolution_arc_seconds: str | int = 1,
     api_key: str | None = None,
 ) -> networkx.MultiDiGraph:
     """
-    Adds grade information to the edges of a graph.
-    If using an api_key will try and download the grades from Google API, otherwise
+    Adds node elevations in meters to a graph without computing edge grades.
+    If using an api_key will try and download elevations from Google API, otherwise
     this will download the necessary elevation data from USGS as raster tiles and cache them in the output_dir.
     The resolution of the tiles can be specified with the resolution parameter.
     USGS has elevation data in increasing resolutions of: 1 arc-second and 1/3 arc-second
@@ -131,21 +133,21 @@ def add_grade_to_graph(
     * 1/3 arc-second: 350 MB
 
     Args:
-        g (nx.MultiDiGraph): The networkx graph to add grades to.
+        g (nx.MultiDiGraph): The networkx graph to add elevations to.
         output_dir (Path, optional): The directory to cache the downloaded tiles in. Defaults to Path("cache").
         resolution_arc_seconds (str, optional): The resolution (in arc-seconds) of the tiles to download (either 1 or 1/3). Defaults to 1.
-        api_key: The google API key to pull down grade information. If
+        api_key: The google API key to pull down elevation information. If
             None will use USGS raster elevation tiles
 
     Returns:
-        g: The graph with grade information added to the edges.
+        g: The graph with elevation information added to the nodes.
 
     Example:
         >>> import osmnx as ox
         >>> g = ox.graph_from_place("Denver, Colorado, USA")
-        >>> g = add_grade_to_graph(g)
+        >>> g = add_elevation_to_graph(g)
         >>> g2 = ox.graph_from_place("Denver, Colorado, USA")
-        >>> g2 = add_grade_to_graph(g2, api_key=<api_key>)
+        >>> g2 = add_elevation_to_graph(g2, api_key=<api_key>)
     """
     try:
         import osmnx as ox
@@ -178,8 +180,10 @@ def add_grade_to_graph(
 
         if len(files) == 0:
             raise ValueError(
-                "No USGS tiles were downloaded. "
-                "If this road network is outside of the US, consider re-running without `grade` in your ."
+                "No USGS elevation tiles were found for the graph. "
+                "Check that the graph has nodes within USGS coverage. "
+                "To generate without elevation, omit both GeneratePipelinePhase.ELEVATION "
+                "and GeneratePipelinePhase.POWERTRAIN from `phases`."
             )
         elif len(files) == 1:
             filepath: Path | list[Path] = files[0]  # if only one file, pass it directly
@@ -189,9 +193,33 @@ def add_grade_to_graph(
         g = ox.add_node_elevations_raster(g, filepath)
     else:
         g = ox.add_node_elevations_google(g, api_key=api_key)
-    g = ox.add_edge_grades(g)
 
     return g
+
+
+def add_grade_to_graph(
+    g: networkx.MultiDiGraph,
+    output_dir: Path = Path("cache"),
+    resolution_arc_seconds: str | int = 1,
+    api_key: str | None = None,
+) -> networkx.MultiDiGraph:
+    """Add node elevations and edge grades using :func:`add_elevation_to_graph`.
+
+    Sampling options and cache behavior are the same as the elevation helper.
+    Grades are computed by OSMnx from endpoint elevations and edge lengths.
+    """
+    try:
+        import osmnx as ox
+    except ImportError:
+        raise ImportError("requires osmnx to be installed. Try 'pip install osmnx'")
+
+    g = add_elevation_to_graph(
+        g,
+        output_dir=output_dir,
+        resolution_arc_seconds=resolution_arc_seconds,
+        api_key=api_key,
+    )
+    return ox.add_edge_grades(g)
 
 
 def compass_heading(point1: tuple[float, float], point2: tuple[float, float]) -> float:

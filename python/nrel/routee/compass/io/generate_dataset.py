@@ -15,7 +15,7 @@ from nrel.routee.compass.io import utils
 from nrel.routee.compass.io.charging_station_ops import (
     download_ev_charging_stations_for_polygon,
 )
-from nrel.routee.compass.io.utils import CACHE_DIR, add_grade_to_graph
+from nrel.routee.compass.io.utils import CACHE_DIR, add_elevation_to_graph
 
 if TYPE_CHECKING:
     import geopandas
@@ -66,6 +66,7 @@ class GeneratePipelinePhase(enum.Enum):
     CONFIG = 2
     POWERTRAIN = 3
     CHARGING_STATIONS = 4
+    ELEVATION = 5
 
     @classmethod
     def default(cls) -> list[GeneratePipelinePhase]:
@@ -116,6 +117,12 @@ def generate_compass_dataset(
 
     The input graph is assumed to be the direct output of an osmnx download.
 
+    ELEVATION or POWERTRAIN writes ``vertices-elevations-enumerated.txt.gz``:
+    one finite elevation in meters per retained vertex, in vertex_id order,
+    without a header or index. Missing or invalid elevations raise ValueError
+    before dataset files are written. POWERTRAIN also computes edge grades
+    from these same elevations.
+
     Args:
         g: OSMNx graph used to generate input files
         output_directory: Directory path to use for writing new Compass files.
@@ -130,8 +137,12 @@ def generate_compass_dataset(
         agg: Aggregation function to impute missing values from observed values.
             The default is numpy.mean, but you might also consider for example
             numpy.median, numpy.nanmedian, or your own custom function. Defaults to numpy.mean.
-        phases (List[GeneratePipelinePhase]): of the overall generate pipeline, which phases of the pipeline to run. Defaults to all (["graph", "grade", "config", "powertrain"])
-        raster_resolution_arc_seconds (str, optional): If grade is added, the resolution (in arc-seconds) of the tiles to download (either 1 or 1/3). Defaults to 1.
+        phases: Pipeline phases to run. Defaults to GRAPH, CONFIG, POWERTRAIN.
+            ELEVATION samples and exports node elevations without downloading
+            vehicle models; POWERTRAIN includes this automatically.
+        raster_resolution_arc_seconds: USGS DEM resolution for ELEVATION or
+            POWERTRAIN, either 1 or "1/3" arc-seconds (integer 13 also selects
+            1/3). Defaults to 1. Tiles are reused from the local cache directory.
         default_config (bool, optional): If true, copy default configuration files into the output directory. Defaults to True.
         requests_kwds (Optional[Dict], optional): Keyword arguments to pass to the `requests` Python library for HTTP configuration. Defaults to None.
         afdc_api_key (str, optional): API key for the AFDC API to download EV charging stations. Defaults to "DEMO_KEY". See https://developer.nlr.gov/docs/transportation/alt-fuel-stations-v1/all/ for more information.
@@ -167,6 +178,11 @@ def generate_compass_dataset(
     if phases is None:
         phases = GeneratePipelinePhase.default()
 
+    include_elevation = (
+        GeneratePipelinePhase.ELEVATION in phases
+        or GeneratePipelinePhase.POWERTRAIN in phases
+    )
+
     log.info(f"running pipeline import with phases: [{[p.name for p in phases]}]")
     output_directory = Path(output_directory)
     output_directory.mkdir(parents=True, exist_ok=True)
@@ -180,21 +196,44 @@ def generate_compass_dataset(
     g1 = ox.add_edge_speeds(g1, hwy_speeds=hwy_speeds, fallback=fallback, agg=agg)
     g1 = ox.add_edge_bearings(g1)
 
-    if GeneratePipelinePhase.POWERTRAIN in phases:
-        log.info("adding grade information")
-        g1 = add_grade_to_graph(
+    if include_elevation:
+        log.info("adding elevation information")
+        g1 = add_elevation_to_graph(
             g1, resolution_arc_seconds=raster_resolution_arc_seconds
         )
 
-    v, e = ox.graph_to_gdfs(g1)
+    v = ox.graph_to_gdfs(g1, nodes=True, edges=False)
 
     # process vertices
     log.info("processing vertices")
     v = v.reset_index(drop=False).rename(columns={"osmid": "vertex_uuid"})
     v["vertex_id"] = range(len(v))
 
+    if include_elevation:
+        elevations = pd.to_numeric(
+            v.get("elevation", pd.Series(float("nan"), index=v.index)),
+            errors="coerce",
+        )
+        invalid = ~np.isfinite(elevations)
+        if invalid.any():
+            examples = v.loc[invalid, ["vertex_id", "vertex_uuid"]].head(5)
+            raise ValueError(
+                f"{int(invalid.sum())} vertices have missing or non-finite elevation "
+                f"(expected numeric meters). Examples: {examples.to_dict(orient='records')}. "
+                "Check USGS DEM coverage and cached raster data. To generate without "
+                "elevation, omit both ELEVATION and POWERTRAIN from phases."
+            )
+        v["elevation"] = elevations
+        for vertex_uuid, elevation in zip(v.vertex_uuid, elevations):
+            g1.nodes[vertex_uuid]["elevation"] = elevation
+
+    if GeneratePipelinePhase.POWERTRAIN in phases:
+        log.info("adding grade information")
+        g1 = ox.add_edge_grades(g1)
+
     # process edges
     log.info("processing edges")
+    e = ox.graph_to_gdfs(g1, nodes=False, edges=True)
     lookup = v.set_index("vertex_uuid")
 
     def replace_id(vertex_uuid: pd.Index) -> pd.Series[int]:
@@ -267,6 +306,13 @@ def generate_compass_dataset(
             output_directory / "edges-headings-enumerated.csv.gz",
             index=False,
             compression="gzip",
+        )
+
+    if include_elevation:
+        v.elevation.to_csv(
+            output_directory / "vertices-elevations-enumerated.txt.gz",
+            index=False,
+            header=False,
         )
 
     if GeneratePipelinePhase.POWERTRAIN in phases:
