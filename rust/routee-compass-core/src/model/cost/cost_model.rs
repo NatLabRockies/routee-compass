@@ -7,6 +7,7 @@ use crate::model::cost::CostModelError;
 use crate::model::state::StateModel;
 use crate::model::state::StateVariable;
 use crate::model::traversal::EdgeFrontierContext;
+use crate::model::unit::Cost;
 use indexmap::IndexMap;
 use itertools::Itertools;
 use serde_json::json;
@@ -103,10 +104,16 @@ impl CostModel {
         &self,
         ctx: &EdgeFrontierContext,
         previous_state: &[StateVariable],
+        #[allow(unused)] prev_cost: Cost,
         current_state: &[StateVariable],
         state_model: &StateModel,
     ) -> Result<TraversalCost, CostModelError> {
         let mut result = TraversalCost::empty();
+        #[cfg(feature = "accumulated_cost")]
+        {
+            result = TraversalCost::with_accumulated_cost(prev_cost);
+        }
+
         for (name, feature) in self.features.iter() {
             let v_cost = if feature.is_accumulator {
                 let current_cost =
@@ -421,7 +428,13 @@ mod test {
         let ctx = EdgeFrontierContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
-            .traversal_cost(&ctx, &previous_state, &current_state, &state_model)
+            .traversal_cost(
+                &ctx,
+                &previous_state,
+                Cost::ZERO,
+                &current_state,
+                &state_model,
+            )
             .expect("Failed to compute traversal cost");
 
         // For accumulators, we compute the delta
@@ -481,7 +494,13 @@ mod test {
         let ctx = EdgeFrontierContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
-            .traversal_cost(&ctx, &previous_state, &current_state, &state_model)
+            .traversal_cost(
+                &ctx,
+                &previous_state,
+                Cost::ZERO,
+                &current_state,
+                &state_model,
+            )
             .expect("Failed to compute traversal cost");
 
         // For non-accumulators, we use the current value: 25.0
@@ -582,7 +601,13 @@ mod test {
         let ctx = EdgeFrontierContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
-            .traversal_cost(&ctx, &previous_state, &current_state, &state_model)
+            .traversal_cost(
+                &ctx,
+                &previous_state,
+                Cost::ZERO,
+                &current_state,
+                &state_model,
+            )
             .expect("Failed to compute traversal cost");
 
         // Verify we got a non-zero cost (actual values depend on unit conversions)
@@ -655,7 +680,13 @@ mod test {
         let ctx = EdgeFrontierContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
-            .traversal_cost(&ctx, &previous_state, &current_state, &state_model)
+            .traversal_cost(
+                &ctx,
+                &previous_state,
+                Cost::ZERO,
+                &current_state,
+                &state_model,
+            )
             .expect("Failed to compute traversal cost");
 
         // For accumulators: vehicle cost should be the delta
@@ -822,7 +853,13 @@ mod test {
         let ctx = EdgeFrontierContext::new(&l, &v1, &e, &v2, &tree);
 
         let result = cost_model
-            .traversal_cost(&ctx, &previous_state, &current_state, &state_model)
+            .traversal_cost(
+                &ctx,
+                &previous_state,
+                Cost::ZERO,
+                &current_state,
+                &state_model,
+            )
             .expect("Failed to compute traversal cost");
 
         // Network cost is vertex lookup (based on source vertex)
@@ -904,11 +941,23 @@ mod test {
         let ctx = EdgeFrontierContext::new(&l, &v1, &e, &v2, &tree);
 
         let result_acc = cost_model_acc
-            .traversal_cost(&ctx, &previous_state, &current_state, &state_model_acc)
+            .traversal_cost(
+                &ctx,
+                &previous_state,
+                Cost::ZERO,
+                &current_state,
+                &state_model_acc,
+            )
             .expect("Failed to compute accumulator cost");
 
         let result_non_acc = cost_model_non_acc
-            .traversal_cost(&ctx, &previous_state, &current_state, &state_model_non_acc)
+            .traversal_cost(
+                &ctx,
+                &previous_state,
+                Cost::ZERO,
+                &current_state,
+                &state_model_non_acc,
+            )
             .expect("Failed to compute non-accumulator cost");
 
         // For accumulator: cost = current - previous = 150.0 - 100.0 = 50.0
