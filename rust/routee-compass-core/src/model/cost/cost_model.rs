@@ -108,11 +108,10 @@ impl CostModel {
         current_state: &[StateVariable],
         state_model: &StateModel,
     ) -> Result<TraversalCost, CostModelError> {
-        let mut result = TraversalCost::empty();
         #[cfg(feature = "accumulated_cost")]
-        {
-            result = TraversalCost::with_accumulated_cost(prev_cost);
-        }
+        let mut result = TraversalCost::with_accumulated_cost(prev_cost);
+        #[cfg(not(feature = "accumulated_cost"))]
+        let mut result = TraversalCost::empty();
 
         for (name, feature) in self.features.iter() {
             let v_cost = if feature.is_accumulator {
