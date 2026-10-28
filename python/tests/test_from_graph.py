@@ -1,10 +1,10 @@
 from pathlib import Path
 from unittest import TestCase
 
-from nrel.routee.compass.io.generate_dataset import GeneratePipelinePhase
 import osmnx as ox
 import pytest
 from nrel.routee.compass.compass_app import CompassApp
+from nrel.routee.compass.io.generate_dataset import GeneratePipelinePhase
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "denver_sample.graphml.gz"
 
@@ -43,12 +43,9 @@ class TestFromGraph(TestCase):
 
         # Test with specific config
         app = CompassApp.from_graph(
-            graph, 
+            graph,
             config_file="osm_default_speed.toml",
-            phases=[
-                GeneratePipelinePhase.GRAPH,
-                GeneratePipelinePhase.CONFIG
-            ]
+            phases=[GeneratePipelinePhase.GRAPH, GeneratePipelinePhase.CONFIG],
         )
 
         self.assertIsNotNone(app)
