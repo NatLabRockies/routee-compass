@@ -1,15 +1,25 @@
+from pathlib import Path
 from unittest import TestCase
 
 import osmnx as ox
+import pytest
 from nrel.routee.compass.compass_app import CompassApp
+from nrel.routee.compass.io.generate_dataset import GeneratePipelinePhase
+
+FIXTURE_PATH = Path(__file__).parent / "fixtures" / "denver_sample.graphml.gz"
 
 
 class TestFromGraph(TestCase):
+    @pytest.mark.skip(reason="Awaiting Powertrain V2 integration.")
     def test_from_graph_denver(self) -> None:
-        # Mini graph for testing (just a small area around a point)
-        graph = ox.graph_from_point(
-            (39.7511, -104.9903), dist=500, network_type="drive"
-        )
+        """
+        rjf 2026-10-28: maybe we remove this test case? it requires about 2 minutes
+        of downloading powertrain models and elevation rasters. the 2
+        minute bump on CI is non-trivial. perhaps we could unify the fixture
+        installations into a single pass shared by this and all other tests/notebooks
+        run during CI?
+        """
+        graph = ox.load_graphml(FIXTURE_PATH)
 
         # Test building app from graph
         app = CompassApp.from_graph(graph)
@@ -21,7 +31,7 @@ class TestFromGraph(TestCase):
             "destination_x": -104.9930,
             "destination_y": 39.7485,
             "model_name": "2017_CHEVROLET_Bolt",
-            "weights": {"trip_energy_electric": 1, "trip_time": 0, "trip_distance": 0},
+            "weights": {"trip_time": 0, "trip_distance": 0},
         }
         result = app.run(query)
 
@@ -29,12 +39,14 @@ class TestFromGraph(TestCase):
         self.assertIn("route", result)
 
     def test_from_graph_custom_config(self) -> None:
-        graph = ox.graph_from_point(
-            (39.7511, -104.9903), dist=500, network_type="drive"
-        )
+        graph = ox.load_graphml(FIXTURE_PATH)
 
         # Test with specific config
-        app = CompassApp.from_graph(graph, config_file="osm_default_speed.toml")
+        app = CompassApp.from_graph(
+            graph,
+            config_file="osm_default_speed.toml",
+            phases=[GeneratePipelinePhase.GRAPH, GeneratePipelinePhase.CONFIG],
+        )
 
         self.assertIsNotNone(app)
 

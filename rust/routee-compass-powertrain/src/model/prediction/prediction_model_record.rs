@@ -1,9 +1,5 @@
+use super::{model_type::ModelType, PredictionModel, PredictionModelConfig};
 use crate::model::fieldname;
-
-use super::{
-    interpolation::InterpolationModel, model_type::ModelType, onnx::onnx_model::OnnxModel,
-    prediction_model_ops, smartcore::SmartcoreModel, PredictionModel, PredictionModelConfig,
-};
 use routee_compass_core::model::{
     state::{InputFeature, StateModel, StateVariable},
     traversal::TraversalModelError,
@@ -27,60 +23,8 @@ pub struct PredictionModelRecord {
 impl TryFrom<&PredictionModelConfig> for PredictionModelRecord {
     type Error = TraversalModelError;
 
-    fn try_from(config: &PredictionModelConfig) -> Result<Self, Self::Error> {
-        if config.input_features.is_empty() {
-            return Err(TraversalModelError::BuildError(format!(
-                "You must supply at least one input feature for vehicle model {}",
-                config.name
-            )));
-        }
-        let prediction_model: Arc<dyn PredictionModel> = match &config.model_type {
-            ModelType::Smartcore => {
-                let model = SmartcoreModel::new(&config.model_input_file, config.energy_rate_unit)?;
-                Arc::new(model)
-            }
-            ModelType::Onnx => {
-                let model = OnnxModel::new(&config.model_input_file, config.energy_rate_unit)?;
-                Arc::new(model)
-            }
-            ModelType::Interpolate {
-                underlying_model_type: underlying_model,
-                feature_bounds,
-            } => {
-                let model = InterpolationModel::new(
-                    &config.model_input_file,
-                    *underlying_model.clone(),
-                    config.input_features.clone(),
-                    feature_bounds.clone(),
-                    config.energy_rate_unit,
-                )?;
-                Arc::new(model)
-            }
-        };
-
-        let a_star_heuristic_energy_rate = match config.a_star_heuristic_energy_rate {
-            None => prediction_model_ops::find_min_energy_rate(
-                &prediction_model,
-                &config.input_features,
-                &config.energy_rate_unit,
-            )?,
-            Some(rate) => rate,
-        };
-
-        let real_world_energy_adjustment = config.real_world_energy_adjustment.unwrap_or(1.0);
-
-        let mass_estimate = Mass::new::<uom::si::mass::pound>(config.mass_estimate_lbs);
-
-        Ok(PredictionModelRecord {
-            name: config.name.clone(),
-            prediction_model,
-            model_type: config.model_type.clone(),
-            input_features: config.input_features.clone(),
-            energy_rate_unit: config.energy_rate_unit,
-            mass_estimate,
-            a_star_heuristic_energy_rate,
-            real_world_energy_adjustment,
-        })
+    fn try_from(_config: &PredictionModelConfig) -> Result<Self, Self::Error> {
+        todo!(); // after data model complete
     }
 }
 

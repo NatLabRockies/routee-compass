@@ -13,6 +13,7 @@ documentation = "https://docs.rs/routee-compass"
 [features]
 default = []
 detailed_costs = []
+accumulated_cost = []
 
 [dependencies]
 allocative = { workspace = true }

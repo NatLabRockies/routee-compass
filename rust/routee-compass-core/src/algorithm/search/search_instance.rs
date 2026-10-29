@@ -9,6 +9,7 @@ use crate::{
         state::StateModel,
         termination::TerminationModel,
         traversal::{EdgeFrontierContext, TraversalModel},
+        unit::Cost,
     },
 };
 use std::sync::Arc;
@@ -125,6 +126,7 @@ impl SearchInstance {
             let traversal = EdgeTraversal::new_local(
                 &ctx,
                 &current_state,
+                Cost::ZERO,
                 &self.state_model,
                 tm.as_ref(),
                 &self.cost_model,
