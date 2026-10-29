@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789571898376,
+  "lastUpdate": 1793287183720,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4499,6 +4499,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2960239,
             "range": "± 115634",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bb28eaed3d3d0d585293c8dcd034e9daba075d73",
+          "message": "Merge pull request #593 from NatLabRockies/rjf/accumulated-cost\n\nsupport accumulated costs in TraversalCost record",
+          "timestamp": "2026-10-29T09:15:50-06:00",
+          "tree_id": "e8a57628f91ec8663b8e63f1349404a792352b4b",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/bb28eaed3d3d0d585293c8dcd034e9daba075d73"
+        },
+        "date": 1793287182420,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2318133,
+            "range": "± 106266",
             "unit": "ns/iter"
           }
         ]
