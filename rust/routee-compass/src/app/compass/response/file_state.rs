@@ -72,4 +72,24 @@ impl FileState {
     pub fn close(&mut self) -> Result<(), CompassAppError> {
         self.writer.finish()
     }
+
+    pub fn write_footer(&mut self, format: &ResponseOutputFormat) -> Result<(), CompassAppError> {
+        if let Some(footer) = format.generate_footer() {
+            let should_write = match format {
+                ResponseOutputFormat::Json {
+                    newline_delimited: false,
+                } => true,
+                _ => self.n_records > 0,
+            };
+            if should_write {
+                write!(self.writer, "{footer}").map_err(|e| {
+                    CompassAppError::InternalError(format!(
+                        "failure writing footer to {}: {e}",
+                        &self.filename
+                    ))
+                })?;
+            }
+        }
+        Ok(())
+    }
 }

@@ -215,7 +215,7 @@ impl ResponseSink {
             ResponseSink::File {
                 state,
                 format,
-                iterations_per_flush,
+                iterations_per_flush: _,
                 filename: _,
                 delimiter: _,
             } => {
@@ -224,17 +224,17 @@ impl ResponseSink {
                         let msg = "calling close on response File writer but it still has more than 1 reference to its smart pointer".to_string();
                         CompassAppError::InternalError(msg)
                     })?;
-                close_file(state_mut, &format, iterations_per_flush)
+                close_file(state_mut, &format)
             }
             ResponseSink::Files {
                 directory,
                 state,
                 format,
-                iterations_per_flush,
+                iterations_per_flush: _,
                 delimiter: _,
             } => {
                 for s in state.into_iter() {
-                    close_file(s, &format, iterations_per_flush)?;
+                    close_file(s, &format)?;
                 }
                 Ok(directory)
             }
@@ -286,14 +286,11 @@ pub fn pool_filename(file_prefix: &str, i: usize, suffix: &str, gzip: bool) -> S
 fn close_file(
     state: Mutex<FileState>,
     format: &ResponseOutputFormat,
-    iterations_per_flush: u64,
 ) -> Result<String, CompassAppError> {
     let mut state_attained = state.lock().map_err(|e| {
         CompassAppError::ReadOnlyPoisonError(format!("Could not aquire lock on output file: {e}",))
     })?;
-    if let Some(final_contents) = format.generate_footer() {
-        state_attained.write(&final_contents, None, iterations_per_flush)?;
-    }
+    state_attained.write_footer(format)?;
     state_attained.close()?;
     Ok(state_attained.filename.clone())
 }
@@ -382,6 +379,59 @@ mod tests {
         for expected in 0..4u64 {
             assert!(ids_found.contains(&expected));
         }
+        Ok(())
+    }
+
+    #[test]
+    fn csv_and_jsonl_append_and_trailing_newlines() -> Result<(), Box<dyn std::error::Error>> {
+        let mut mapping = OrderedHashMap::new();
+        mapping.insert("id".to_string(), FileMapping::Path("id".to_string()));
+        let csv_format = ResponseOutputFormat::Csv {
+            mapping,
+            sorted: false,
+        };
+        let jsonl_format = ResponseOutputFormat::Json {
+            newline_delimited: true,
+        };
+
+        // Test CSV across two appended batches
+        let csv_file = tempfile::NamedTempFile::new()?;
+        let csv_policy = ResponseOutputPolicy::File {
+            filepath: csv_file.path().to_path_buf(),
+            format: csv_format,
+            file_flush_rate: None,
+            write_mode: Some(WriteMode::Append),
+        };
+        for batch in [vec![1, 2], vec![3, 4]] {
+            let sink = csv_policy.build()?;
+            for id in batch {
+                sink.write_response(&mut json!({"id": id}))?;
+            }
+            sink.close()?;
+        }
+        let csv_contents = std::fs::read_to_string(csv_file.path())?;
+        assert_eq!(csv_contents, "id\n1\n2\n3\n4\n");
+
+        // Test JSONL across two appended batches (including an empty batch)
+        let jsonl_file = tempfile::NamedTempFile::new()?;
+        let jsonl_policy = ResponseOutputPolicy::File {
+            filepath: jsonl_file.path().to_path_buf(),
+            format: jsonl_format,
+            file_flush_rate: None,
+            write_mode: Some(WriteMode::Append),
+        };
+        for batch in [vec![1, 2], vec![], vec![3, 4]] {
+            let sink = jsonl_policy.build()?;
+            for id in batch {
+                sink.write_response(&mut json!({"id": id}))?;
+            }
+            sink.close()?;
+        }
+        let jsonl_contents = std::fs::read_to_string(jsonl_file.path())?;
+        assert_eq!(
+            jsonl_contents,
+            "{\"id\":1}\n{\"id\":2}\n{\"id\":3}\n{\"id\":4}\n"
+        );
         Ok(())
     }
 }

@@ -59,7 +59,7 @@ impl ResponseOutputFormat {
             ResponseOutputFormat::Json { newline_delimited } => {
                 json_ops::final_file_contents(*newline_delimited)
             }
-            ResponseOutputFormat::Csv { .. } => None,
+            ResponseOutputFormat::Csv { .. } => Some(String::from("\n")),
             ResponseOutputFormat::Parquet { .. } => None,
         }
     }
