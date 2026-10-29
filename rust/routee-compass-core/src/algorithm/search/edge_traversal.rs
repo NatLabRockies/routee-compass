@@ -4,6 +4,7 @@ use crate::model::cost::{CostModel, TraversalCost};
 use crate::model::network::{EdgeId, EdgeListId};
 use crate::model::state::{StateModel, StateVariable};
 use crate::model::traversal::{EdgeFrontierContext, TraversalModel};
+use crate::model::unit::Cost;
 use allocative::Allocative;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
@@ -53,6 +54,7 @@ impl EdgeTraversal {
     pub fn new(
         ctx: &EdgeFrontierContext,
         prev_state: &[StateVariable],
+        prev_score: Cost,
         si: &SearchInstance,
     ) -> Result<EdgeTraversal, SearchError> {
         // find this traversal in the graph
@@ -60,6 +62,7 @@ impl EdgeTraversal {
         Self::new_local(
             ctx,
             prev_state,
+            prev_score,
             &si.state_model.clone(),
             tm.clone().as_ref(),
             &si.cost_model.clone(),
@@ -74,6 +77,7 @@ impl EdgeTraversal {
     pub fn new_local(
         ctx: &EdgeFrontierContext,
         prev_state: &[StateVariable],
+        prev_cost: Cost,
         state_model: &StateModel,
         traversal_model: &dyn TraversalModel,
         cost_model: &CostModel,
@@ -81,7 +85,8 @@ impl EdgeTraversal {
         let mut result_state = state_model.initial_state(Some(prev_state))?;
         traversal_model.traverse_edge(ctx, &mut result_state, state_model)?;
 
-        let cost = cost_model.traversal_cost(ctx, prev_state, &result_state, state_model)?;
+        let cost =
+            cost_model.traversal_cost(ctx, prev_state, prev_cost, &result_state, state_model)?;
 
         let result = EdgeTraversal {
             edge_list_id: ctx.edge.edge_list_id,

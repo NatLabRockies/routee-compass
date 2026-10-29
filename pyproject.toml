@@ -7,7 +7,7 @@ name = "nrel_routee_compass"
 version = "0.19.5"
 description = "An eco-routing tool build upon RouteE-Powertrain"
 readme = "README.md"
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.11,<3.15"
 authors = [{ name = "National Laboratory of the Rockies" }]
 license = { text = "BSD 3-Clause License Copyright (c) 2023, Alliance for Energy Innovation, LLC" }
 classifiers = [
@@ -83,9 +83,6 @@ platforms = ["osx-arm64", "linux-64"]
 [tool.pixi.dependencies]
 rust = ">=1.96.1,<1.97"
 
-[tool.pixi.feature.py310]
-dependencies = { python = "3.10.*" }
-
 [tool.pixi.feature.py311]
 dependencies = { python = "3.11.*" }
 
@@ -94,6 +91,9 @@ dependencies = { python = "3.12.*" }
 
 [tool.pixi.feature.py313]
 dependencies = { python = "3.13.*" }
+
+[tool.pixi.feature.py314]
+dependencies = { python = "3.14.*" }
 
 [tool.pixi.feature.osm.dependencies]
 rasterio = ">=1.3.0,<2.0"
@@ -121,10 +121,10 @@ minimal    = { features = ["package"], solve-group = "default" }
 dev        = { features = ["dev", "package"], solve-group = "default" }
 osm        = { features = ["osm", "package"], solve-group = "default" }
 hpc        = { features = ["dev", "osm", "hpc"], solve-group = "default" }
-test-py310 = { features = ["py310", "dev", "osm", "package"], solve-group = "py310" }
 test-py311 = { features = ["py311", "dev", "osm", "package"], solve-group = "py311" }
 test-py312 = { features = ["py312", "dev", "osm", "package"], solve-group = "py312" }
 test-py313 = { features = ["py313", "dev", "osm", "package"], solve-group = "py313" }
+test-py314 = { features = ["py314", "dev", "osm", "package"], solve-group = "py314" }
 
 [tool.pixi.tasks]
 build_py = "maturin develop --uv"

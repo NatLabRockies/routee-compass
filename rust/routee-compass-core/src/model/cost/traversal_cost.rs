@@ -13,6 +13,12 @@ use crate::{
 pub struct TraversalCost {
     /// the cost components with user-defined weighting objectives applied
     pub objective_cost: Cost,
+    #[cfg(feature = "accumulated_cost")]
+    /// the total cost of the trip including this edge. when the accumulated_cost feature
+    /// is enabled, this value is cached as part of the TravesalCost allowing downstream
+    /// developers to have access to it in _O(1)_ time for hot loop algorithms dependent
+    /// on the total cost.
+    pub total_cost: Cost,
     /// the cost of traversing this edge
     pub edge_cost: Cost,
     #[cfg(feature = "detailed_costs")]
@@ -39,6 +45,21 @@ impl TraversalCost {
         TraversalCost {
             edge_cost: Cost::ZERO,
             objective_cost: Cost::ZERO,
+            #[cfg(feature = "accumulated_cost")]
+            total_cost: Cost::ZERO,
+            #[cfg(feature = "detailed_costs")]
+            cost_component: std::collections::HashMap::new(),
+        }
+    }
+
+    /// constructor available when building new TraversalCost instances from the
+    /// existing accumulated cost from previous edge traversals.
+    #[cfg(feature = "accumulated_cost")]
+    pub fn with_accumulated_cost(accumulated_cost: Cost) -> Self {
+        Self {
+            objective_cost: Cost::ZERO,
+            total_cost: accumulated_cost,
+            edge_cost: Cost::ZERO,
             #[cfg(feature = "detailed_costs")]
             cost_component: std::collections::HashMap::new(),
         }
@@ -67,8 +88,13 @@ impl TraversalCost {
             CostConstraint::StrictlyPositive => Cost::enforce_strictly_positive(cost),
             CostConstraint::Unconstrained => cost,
         };
+        let objective_cost = insert_cost * weight;
         self.edge_cost += insert_cost;
-        self.objective_cost += insert_cost * weight;
+        self.objective_cost += objective_cost;
+        #[cfg(feature = "accumulated_cost")]
+        {
+            self.total_cost += objective_cost;
+        }
         #[cfg(feature = "detailed_costs")]
         {
             self.cost_component
@@ -85,6 +111,8 @@ impl TraversalCost {
         TraversalCost {
             edge_cost,
             objective_cost,
+            #[cfg(feature = "accumulated_cost")]
+            total_cost: objective_cost,
             #[cfg(feature = "detailed_costs")]
             cost_component: std::collections::HashMap::new(),
         }
