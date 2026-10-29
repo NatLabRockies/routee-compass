@@ -2,7 +2,7 @@
 # response_persistence_policy = "discard_response_from_memory"
 # [system.response_output_policy]
 # type = "file"
-# path = "output.json"
+# filepath = "output.json"
 # format = { type = "json", newline_delimited = true }
 
 # [graph]
