@@ -1,6 +1,6 @@
 use super::{map_error::MapError, spatial_index_ops as ops};
 use crate::model::network::{Vertex, VertexId};
-use geo::{coord, Point};
+use geo::Point;
 use rstar::{PointDistance, RTreeObject, AABB};
 use uom::si::f64::Length;
 
@@ -8,11 +8,11 @@ use uom::si::f64::Length;
 #[derive(Clone)]
 pub struct MapVertexRTreeObject {
     pub vertex_id: VertexId,
-    pub envelope: AABB<Point<f32>>,
+    pub envelope: AABB<(f32, f32)>,
 }
 
 impl PointDistance for MapVertexRTreeObject {
-    fn distance_2(&self, point: &Point<f32>) -> f32 {
+    fn distance_2(&self, point: &(f32, f32)) -> f32 {
         self.envelope.distance_2(point)
     }
 }
@@ -21,10 +21,7 @@ impl MapVertexRTreeObject {
     pub fn new(vertex: &Vertex) -> MapVertexRTreeObject {
         MapVertexRTreeObject {
             vertex_id: vertex.vertex_id,
-            envelope: AABB::from_corners(
-                geo::Point(coord! {x: vertex.x(), y: vertex.y()}),
-                geo::Point(coord! {x: vertex.x(), y: vertex.y()}),
-            ),
+            envelope: AABB::from_point((vertex.x(), vertex.y())),
         }
     }
 
@@ -52,7 +49,7 @@ impl MapVertexRTreeObject {
 }
 
 impl RTreeObject for MapVertexRTreeObject {
-    type Envelope = AABB<Point<f32>>;
+    type Envelope = AABB<(f32, f32)>;
 
     fn envelope(&self) -> Self::Envelope {
         self.envelope
