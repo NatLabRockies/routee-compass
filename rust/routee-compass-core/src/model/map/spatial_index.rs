@@ -72,14 +72,14 @@ impl SpatialIndex {
     pub fn nearest_graph_id(&self, point: &Point<f32>) -> Result<NearestSearchResult, MapError> {
         match self {
             SpatialIndex::VertexOrientedIndex { rtree, tolerance } => {
-                let nearest = rtree.nearest_neighbor(point).ok_or_else(|| {
+                let nearest = rtree.nearest_neighbor(point.x_y()).ok_or_else(|| {
                     MapError::MapMatchError(String::from("no map vertices exist for matching"))
                 })?;
                 nearest.within_distance_threshold(point, tolerance)?;
                 Ok(NearestSearchResult::NearestVertex(nearest.vertex_id))
             }
             SpatialIndex::EdgeOrientedIndex { rtree, tolerance } => {
-                let nearest = rtree.nearest_neighbor(point).ok_or_else(|| {
+                let nearest = rtree.nearest_neighbor(point.x_y()).ok_or_else(|| {
                     MapError::MapMatchError(String::from("no map vertices exist for matching"))
                 })?;
                 nearest.within_distance_threshold(point, tolerance)?;
@@ -100,7 +100,7 @@ impl SpatialIndex {
         match self {
             SpatialIndex::VertexOrientedIndex { rtree, tolerance } => {
                 let iter = rtree
-                    .nearest_neighbor_iter_with_distance_2(point)
+                    .nearest_neighbor_iter_with_distance_2(point.x_y())
                     .map_while(|(obj, _)| {
                         let valid = match obj.test_threshold(point, tolerance) {
                             Ok(v) => v,
@@ -116,7 +116,7 @@ impl SpatialIndex {
             }
             SpatialIndex::EdgeOrientedIndex { rtree, tolerance } => {
                 let iter = rtree
-                    .nearest_neighbor_iter_with_distance_2(point)
+                    .nearest_neighbor_iter_with_distance_2(point.x_y())
                     .map_while(|(obj, _)| {
                         let valid = match obj.test_threshold(point, tolerance) {
                             Ok(v) => v,

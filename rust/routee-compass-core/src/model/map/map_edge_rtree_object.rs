@@ -1,6 +1,6 @@
 use super::{map_error::MapError, spatial_index_ops as ops};
 use crate::model::network::{Edge, EdgeId, EdgeListId};
-use geo::{LineString, Point};
+use geo::{BoundingRect, LineString, Point};
 use rstar::{PointDistance, RTreeObject, AABB};
 use uom::si::f64::Length;
 
@@ -9,15 +9,19 @@ use uom::si::f64::Length;
 pub struct MapEdgeRTreeObject {
     pub edge_list_id: EdgeListId,
     pub edge_id: EdgeId,
-    pub envelope: AABB<Point<f32>>,
+    pub envelope: AABB<(f32, f32)>,
 }
 
 impl MapEdgeRTreeObject {
     pub fn new(edge: &Edge, linestring: &LineString<f32>) -> MapEdgeRTreeObject {
+        let envelope = match linestring.bounding_rect() {
+            Some(rect) => AABB::from_corners(rect.min().x_y(), rect.max().x_y()),
+            None => AABB::from_corners((f32::MIN, f32::MIN), (f32::MAX, f32::MAX)),
+        };
         MapEdgeRTreeObject {
             edge_list_id: edge.edge_list_id,
             edge_id: edge.edge_id,
-            envelope: linestring.envelope(),
+            envelope,
         }
     }
 
@@ -45,7 +49,7 @@ impl MapEdgeRTreeObject {
 }
 
 impl RTreeObject for MapEdgeRTreeObject {
-    type Envelope = AABB<Point<f32>>;
+    type Envelope = AABB<(f32, f32)>;
 
     fn envelope(&self) -> Self::Envelope {
         self.envelope
@@ -53,7 +57,41 @@ impl RTreeObject for MapEdgeRTreeObject {
 }
 
 impl PointDistance for MapEdgeRTreeObject {
-    fn distance_2(&self, point: &Point<f32>) -> f32 {
+    fn distance_2(&self, point: &(f32, f32)) -> f32 {
         self.envelope.distance_2(point)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use geo::line_string;
+    use uom::si::length::meter;
+
+    fn mock_edge() -> Edge {
+        Edge::new(0, 1, 0, 1, Length::new::<meter>(100.0))
+    }
+
+    #[test]
+    fn test_envelope_from_linestring() {
+        let edge = mock_edge();
+        let ls: LineString<f32> = line_string![
+            (x: 2.0, y: 5.0),
+            (x: -1.0, y: 1.0),
+            (x: 4.0, y: 3.0),
+        ];
+        let obj = MapEdgeRTreeObject::new(&edge, &ls);
+        assert_eq!(obj.envelope().lower(), (-1.0, 1.0));
+        assert_eq!(obj.envelope().upper(), (4.0, 5.0));
+        assert_eq!(obj.distance_2(&(0.0, 0.0)), 1.0);
+    }
+
+    #[test]
+    fn test_envelope_from_empty_linestring() {
+        let edge = mock_edge();
+        let ls: LineString<f32> = LineString::new(vec![]);
+        let obj = MapEdgeRTreeObject::new(&edge, &ls);
+        assert_eq!(obj.envelope().lower(), (f32::MIN, f32::MIN));
+        assert_eq!(obj.envelope().upper(), (f32::MAX, f32::MAX));
     }
 }
