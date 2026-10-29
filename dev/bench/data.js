@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787926182387,
+  "lastUpdate": 1793302768128,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4469,6 +4469,186 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 3009890,
             "range": "± 205508",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "73398481+admrtin@users.noreply.github.com",
+            "name": "Adam Martin",
+            "username": "admrtin"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "310252e64688a8700366602850216570d12ee25a",
+          "message": "Merge pull request #571 from NatLabRockies/amm/prediction-model-config-v2\n\n`PredictionModelConfig` For PowertrainV2",
+          "timestamp": "2026-09-16T09:13:35-06:00",
+          "tree_id": "eaaef9ba86e29750ae4b55cee93791077bf95ccb",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/310252e64688a8700366602850216570d12ee25a"
+        },
+        "date": 1789571897278,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2960239,
+            "range": "± 115634",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bb28eaed3d3d0d585293c8dcd034e9daba075d73",
+          "message": "Merge pull request #593 from NatLabRockies/rjf/accumulated-cost\n\nsupport accumulated costs in TraversalCost record",
+          "timestamp": "2026-10-29T09:15:50-06:00",
+          "tree_id": "e8a57628f91ec8663b8e63f1349404a792352b4b",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/bb28eaed3d3d0d585293c8dcd034e9daba075d73"
+        },
+        "date": 1793287182420,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2318133,
+            "range": "± 106266",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5077eb8f3a7774c9641edc9b032071765f25ef6e",
+          "message": "Merge pull request #594 from NatLabRockies/rjf/flakey-tests\n\nRjf/flakey tests",
+          "timestamp": "2026-10-29T09:58:13-06:00",
+          "tree_id": "d5f9f2c697c1ba4af1bdd26a60175d11f16dc611",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/5077eb8f3a7774c9641edc9b032071765f25ef6e"
+        },
+        "date": 1793289787742,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2931230,
+            "range": "± 118468",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "66ffe59dd80b8433bc622b1a6e249bf085ac02e5",
+          "message": "Merge pull request #582 from NatLabRockies/dependabot/github_actions/benchmark-action/github-action-benchmark-1.22.2\n\nBump benchmark-action/github-action-benchmark from 1.22.1 to 1.22.2",
+          "timestamp": "2026-10-29T10:01:34-06:00",
+          "tree_id": "ee8abbe0fb7ac47641f88c34d106449f7300d24b",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/66ffe59dd80b8433bc622b1a6e249bf085ac02e5"
+        },
+        "date": 1793290083223,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2948007,
+            "range": "± 176853",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b959234b986affdcf0228ebb9d5747bc35290554",
+          "message": "Merge pull request #584 from NatLabRockies/dependabot/cargo/rust/parquet-60.0.0\n\nUpdate parquet requirement from 59.0.0 to 60.0.0 in /rust",
+          "timestamp": "2026-10-29T11:24:07-06:00",
+          "tree_id": "5ce77bfc15cbb99056b90fb393e52d4d0e6af92c",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/b959234b986affdcf0228ebb9d5747bc35290554"
+        },
+        "date": 1793295845727,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 3017463,
+            "range": "± 125248",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dfadc4629fef3ba5df716da9a90cbcfdd4ce06b5",
+          "message": "Merge pull request #576 from NatLabRockies/rjf/concurrent-writer\n\nRjf/concurrent writer",
+          "timestamp": "2026-10-29T13:35:23-06:00",
+          "tree_id": "e6465044d98230c31b13d755d9aaf27fa03af810",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/dfadc4629fef3ba5df716da9a90cbcfdd4ce06b5"
+        },
+        "date": 1793302767057,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2307969,
+            "range": "± 53273",
             "unit": "ns/iter"
           }
         ]

@@ -1,0 +1,149 @@
+Traceback (most recent call last):
+  File "/usr/share/miniconda/envs/test/lib/python3.11/site-packages/jupyter_cache/executors/utils.py", line 58, in single_nb_execution
+    executenb(
+  File "/usr/share/miniconda/envs/test/lib/python3.11/site-packages/nbclient/client.py", line 1323, in execute
+    return NotebookClient(nb=nb, resources=resources, km=km, **kwargs).execute()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/share/miniconda/envs/test/lib/python3.11/site-packages/jupyter_core/utils/__init__.py", line 165, in wrapped
+    return loop.run_until_complete(inner)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/share/miniconda/envs/test/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/usr/share/miniconda/envs/test/lib/python3.11/site-packages/nbclient/client.py", line 709, in async_execute
+    await self.async_execute_cell(
+  File "/usr/share/miniconda/envs/test/lib/python3.11/site-packages/nbclient/client.py", line 1062, in async_execute_cell
+    await self._check_raise_for_error(cell, cell_index, exec_reply)
+  File "/usr/share/miniconda/envs/test/lib/python3.11/site-packages/nbclient/client.py", line 918, in _check_raise_for_error
+    raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
+nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
+------------------
+
+g = ox.graph_from_place("Denver, Colorado, USA", network_type="drive")
+
+
+------------------
+
+
+[31m---------------------------------------------------------------------------[39m
+[31mJSONDecodeError[39m                           Traceback (most recent call last)
+[36mFile [39m[32m/usr/share/miniconda/envs/test/lib/python3.11/site-packages/requests/models.py:1116[39m, in [36mResponse.json[39m[34m(self, **kwargs)[39m
+[32m   1115[39m [38;5;28;01mtry[39;00m:
+[32m-> [39m[32m1116[39m     [38;5;28;01mreturn[39;00m [30;43mcomplexjson[39;49m[30;43m.[39;49m[30;43mloads[39;49m[30;43m([39;49m[30;43mself[39;49m[30;43m.[39;49m[30;43mtext[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43m*[39;49m[30;43m*[39;49m[30;43mkwargs[39;49m[30;43m)[39;49m
+[32m   1117[39m [38;5;28;01mexcept[39;00m JSONDecodeError [38;5;28;01mas[39;00m e:
+[32m   1118[39m     [38;5;66;03m# Catch JSON-related errors and raise as requests.JSONDecodeError[39;00m
+[32m   1119[39m     [38;5;66;03m# This aliases json.JSONDecodeError and simplejson.JSONDecodeError[39;00m
+
+[36mFile [39m[32m/usr/share/miniconda/envs/test/lib/python3.11/site-packages/simplejson/__init__.py:517[39m, in [36mloads[39m[34m(s, encoding, cls, object_hook, parse_float, parse_int, parse_constant, object_pairs_hook, use_decimal, allow_nan, array_hook, **kw)[39m
+[32m    512[39m [38;5;28;01mif[39;00m ([38;5;28mcls[39m [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m [38;5;129;01mand[39;00m encoding [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m [38;5;129;01mand[39;00m object_hook [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m [38;5;129;01mand[39;00m
+[32m    513[39m         parse_int [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m [38;5;129;01mand[39;00m parse_float [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m [38;5;129;01mand[39;00m
+[32m    514[39m         parse_constant [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m [38;5;129;01mand[39;00m object_pairs_hook [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m
+[32m    515[39m         [38;5;129;01mand[39;00m array_hook [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m
+[32m    516[39m         [38;5;129;01mand[39;00m [38;5;129;01mnot[39;00m use_decimal [38;5;129;01mand[39;00m [38;5;129;01mnot[39;00m allow_nan [38;5;129;01mand[39;00m [38;5;129;01mnot[39;00m kw):
+[32m--> [39m[32m517[39m     [38;5;28;01mreturn[39;00m [30;43m_default_decoder[39;49m[30;43m.[39;49m[30;43mdecode[39;49m[30;43m([39;49m[30;43ms[39;49m[30;43m)[39;49m
+[32m    518[39m [38;5;28;01mif[39;00m [38;5;28mcls[39m [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m:
+
+[36mFile [39m[32m/usr/share/miniconda/envs/test/lib/python3.11/site-packages/simplejson/decoder.py:398[39m, in [36mJSONDecoder.decode[39m[34m(self, s, _w, _PY3)[39m
+[32m    397[39m     s = [38;5;28mstr[39m(s, [38;5;28mself[39m.encoding)
+[32m--> [39m[32m398[39m obj, end = [30;43mself[39;49m[30;43m.[39;49m[30;43mraw_decode[39;49m[30;43m([39;49m[30;43ms[39;49m[30;43m)[39;49m
+[32m    399[39m end = _w(s, end).end()
+
+[36mFile [39m[32m/usr/share/miniconda/envs/test/lib/python3.11/site-packages/simplejson/decoder.py:428[39m, in [36mJSONDecoder.raw_decode[39m[34m(self, s, idx, _w, _PY3)[39m
+[32m    427[39m         idx += [32m3[39m
+[32m--> [39m[32m428[39m [38;5;28;01mreturn[39;00m [30;43mself[39;49m[30;43m.[39;49m[30;43mscan_once[39;49m[30;43m([39;49m[30;43ms[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43midx[39;49m[30;43m=[39;49m[30;43m_w[39;49m[30;43m([39;49m[30;43ms[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43midx[39;49m[30;43m)[39;49m[30;43m.[39;49m[30;43mend[39;49m[30;43m([39;49m[30;43m)[39;49m[30;43m)[39;49m
+
+[31mJSONDecodeError[39m: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+
+[31mJSONDecodeError[39m                           Traceback (most recent call last)
+[36mFile [39m[32m/usr/share/miniconda/envs/test/lib/python3.11/site-packages/osmnx/_http.py:314[39m, in [36m_parse_response[39m[34m(response)[39m
+[32m    313[39m [38;5;28;01mtry[39;00m:
+[32m--> [39m[32m314[39m     response_json: [38;5;28mdict[39m[[38;5;28mstr[39m, Any] | [38;5;28mlist[39m[[38;5;28mdict[39m[[38;5;28mstr[39m, Any]] = [30;43mresponse[39;49m[30;43m.[39;49m[30;43mjson[39;49m[30;43m([39;49m[30;43m)[39;49m
+[32m    315[39m [38;5;28;01mexcept[39;00m JSONDecodeError [38;5;28;01mas[39;00m e:  [38;5;66;03m# pragma: no cover[39;00m
+
+[36mFile [39m[32m/usr/share/miniconda/envs/test/lib/python3.11/site-packages/requests/models.py:1120[39m, in [36mResponse.json[39m[34m(self, **kwargs)[39m
+[32m   1117[39m [38;5;28;01mexcept[39;00m JSONDecodeError [38;5;28;01mas[39;00m e:
+[32m   1118[39m     [38;5;66;03m# Catch JSON-related errors and raise as requests.JSONDecodeError[39;00m
+[32m   1119[39m     [38;5;66;03m# This aliases json.JSONDecodeError and simplejson.JSONDecodeError[39;00m
+[32m-> [39m[32m1120[39m     [38;5;28;01mraise[39;00m RequestsJSONDecodeError(e.msg, e.doc, e.pos)
+
+[31mJSONDecodeError[39m: Expecting value: line 1 column 1 (char 0)
+
+The above exception was the direct cause of the following exception:
+
+[31mResponseStatusCodeError[39m                   Traceback (most recent call last)
+[36mCell[39m[36m [39m[32mIn[2][39m[32m, line 1[39m
+[32m----> [39m[32m1[39m g = ox.graph_from_place([33m"Denver, Colorado, USA"[39m, network_type=[33m"drive"[39m)
+[32m      2[39m 
+
+[36mFile [39m[32m/usr/share/miniconda/envs/test/lib/python3.11/site-packages/osmnx/graph.py:396[39m, in [36mgraph_from_place[39m[34m(query, network_type, simplify, retain_all, truncate_by_edge, which_result, custom_filter)[39m
+[32m    393[39m utils.log(msg, level=lg.INFO)
+[32m    395[39m [38;5;66;03m# create graph using this polygon(s) geometry[39;00m
+[32m--> [39m[32m396[39m G = [30;43mgraph_from_polygon[39;49m[30;43m([39;49m
+[32m    397[39m [30;43m    [39;49m[30;43mpolygon[39;49m[30;43m,[39;49m
+[32m    398[39m [30;43m    [39;49m[30;43mnetwork_type[39;49m[30;43m=[39;49m[30;43mnetwork_type[39;49m[30;43m,[39;49m
+[32m    399[39m [30;43m    [39;49m[30;43msimplify[39;49m[30;43m=[39;49m[30;43msimplify[39;49m[30;43m,[39;49m
+[32m    400[39m [30;43m    [39;49m[30;43mretain_all[39;49m[30;43m=[39;49m[30;43mretain_all[39;49m[30;43m,[39;49m
+[32m    401[39m [30;43m    [39;49m[30;43mtruncate_by_edge[39;49m[30;43m=[39;49m[30;43mtruncate_by_edge[39;49m[30;43m,[39;49m
+[32m    402[39m [30;43m    [39;49m[30;43mcustom_filter[39;49m[30;43m=[39;49m[30;43mcustom_filter[39;49m[30;43m,[39;49m
+[32m    403[39m [30;43m[39;49m[30;43m)[39;49m
+[32m    405[39m msg = [33mf[39m[33m"[39m[33mgraph_from_place returned graph with [39m[38;5;132;01m{[39;00m[38;5;28mlen[39m(G)[38;5;132;01m:[39;00m[33m,[39m[38;5;132;01m}[39;00m[33m nodes and [39m[38;5;132;01m{[39;00m[38;5;28mlen[39m(G.edges)[38;5;132;01m:[39;00m[33m,[39m[38;5;132;01m}[39;00m[33m edges[39m[33m"[39m
+[32m    406[39m utils.log(msg, level=lg.INFO)
+
+[36mFile [39m[32m/usr/share/miniconda/envs/test/lib/python3.11/site-packages/osmnx/graph.py:496[39m, in [36mgraph_from_polygon[39m[34m(polygon, network_type, simplify, retain_all, truncate_by_edge, custom_filter)[39m
+[32m    494[39m [38;5;66;03m# create buffered graph from the downloaded data[39;00m
+[32m    495[39m bidirectional = network_type [38;5;129;01min[39;00m settings.bidirectional_network_types
+[32m--> [39m[32m496[39m G_buff = [30;43m_create_graph[39;49m[30;43m([39;49m[30;43mresponse_jsons[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mbidirectional[39;49m[30;43m)[39;49m
+[32m    498[39m [38;5;66;03m# truncate buffered graph to the buffered polygon and retain_all for[39;00m
+[32m    499[39m [38;5;66;03m# now. needed because overpass returns entire ways that also include[39;00m
+[32m    500[39m [38;5;66;03m# nodes outside the poly if the way (that is, a way with a single OSM[39;00m
+[32m    501[39m [38;5;66;03m# ID) has a node inside the poly at some point.[39;00m
+[32m    502[39m G_buff = truncate.truncate_graph_polygon(G_buff, poly_buff, truncate_by_edge=truncate_by_edge)
+
+[36mFile [39m[32m/usr/share/miniconda/envs/test/lib/python3.11/site-packages/osmnx/graph.py:625[39m, in [36m_create_graph[39m[34m(response_jsons, bidirectional)[39m
+[32m    621[39m [38;5;66;03m# consume response_jsons generator to download data from server. if[39;00m
+[32m    622[39m [38;5;66;03m# cache_only_mode, just consume response_jsons then continue next loop.[39;00m
+[32m    623[39m [38;5;66;03m# otherwise, extract nodes and paths from the downloaded OSM data.[39;00m
+[32m    624[39m response_count = [32m0[39m
+[32m--> [39m[32m625[39m [30;43m[39;49m[30;43;01mfor[39;49;00m[30;43m [39;49m[30;43mresponse_json[39;49m[30;43m [39;49m[30;43;01min[39;49;00m[30;43m [39;49m[30;43mresponse_jsons[39;49m[30;43m:[39;49m
+[32m    626[39m [30;43m    [39;49m[30;43mresponse_count[39;49m[30;43m [39;49m[30;43m+[39;49m[30;43m=[39;49m[30;43m [39;49m[30;43m1[39;49m
+[32m    627[39m [30;43m    [39;49m[30;43;01mif[39;49;00m[30;43m [39;49m[30;43;01mnot[39;49;00m[30;43m [39;49m[30;43msettings[39;49m[30;43m.[39;49m[30;43mcache_only_mode[39;49m[30;43m:[39;49m
+
+[36mFile [39m[32m/usr/share/miniconda/envs/test/lib/python3.11/site-packages/osmnx/_overpass.py:402[39m, in [36m_download_overpass_network[39m[34m(polygon, network_type, custom_filter)[39m
+[32m    400[39m [38;5;28;01mfor[39;00m way_filter [38;5;129;01min[39;00m way_filters:
+[32m    401[39m     query_str = [33mf[39m[33m"[39m[38;5;132;01m{[39;00moverpass_settings[38;5;132;01m}[39;00m[33m;(way[39m[38;5;132;01m{[39;00mway_filter[38;5;132;01m}[39;00m[33m(poly:[39m[38;5;132;01m{[39;00mpolygon_coord_str[38;5;132;01m!r}[39;00m[33m);>;);out;[39m[33m"[39m
+[32m--> [39m[32m402[39m     [38;5;28;01myield[39;00m [30;43m_overpass_request[39;49m[30;43m([39;49m[30;43mOrderedDict[39;49m[30;43m([39;49m[30;43mdata[39;49m[30;43m=[39;49m[30;43mquery_str[39;49m[30;43m)[39;49m[30;43m)[39;49m
+
+[36mFile [39m[32m/usr/share/miniconda/envs/test/lib/python3.11/site-packages/osmnx/_overpass.py:488[39m, in [36m_overpass_request[39m[34m(data)[39m
+[32m    485[39m     time.sleep(error_pause)
+[32m    486[39m     [38;5;28;01mreturn[39;00m _overpass_request(data)
+[32m--> [39m[32m488[39m response_json = [30;43m_http[39;49m[30;43m.[39;49m[30;43m_parse_response[39;49m[30;43m([39;49m[30;43mresponse[39;49m[30;43m)[39;49m
+[32m    489[39m [38;5;28;01mif[39;00m [38;5;129;01mnot[39;00m [38;5;28misinstance[39m(response_json, [38;5;28mdict[39m):  [38;5;66;03m# pragma: no cover[39;00m
+[32m    490[39m     msg = [33m"[39m[33mOverpass API did not return a dict of results.[39m[33m"[39m
+
+[36mFile [39m[32m/usr/share/miniconda/envs/test/lib/python3.11/site-packages/osmnx/_http.py:320[39m, in [36m_parse_response[39m[34m(response)[39m
+[32m    318[39m     [38;5;28;01mif[39;00m response.ok:
+[32m    319[39m         [38;5;28;01mraise[39;00m InsufficientResponseError(msg) [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01me[39;00m
+[32m--> [39m[32m320[39m     [38;5;28;01mraise[39;00m ResponseStatusCodeError(msg) [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01me[39;00m
+[32m    322[39m [38;5;66;03m# log any remarks if they exist[39;00m
+[32m    323[39m [38;5;28;01mif[39;00m [38;5;28misinstance[39m(response_json, [38;5;28mdict[39m) [38;5;129;01mand[39;00m [33m"[39m[33mremark[39m[33m"[39m [38;5;129;01min[39;00m response_json:  [38;5;66;03m# pragma: no cover[39;00m
+
+[31mResponseStatusCodeError[39m: 'overpass-api.de' responded: 502 Bad Gateway # 502 Gateway Timeout
+
+This Overpass API server is currently at capacity. All query workers are busy
+and the request queue is full.
+
+## What to do
+
+Retry your request using exponential backoff: wait a short interval, then retry.
+If the request fails again, double the wait time and retry again.
+
+## For heavy or automated use
+
+This public endpoint is intended for browser-based and human-operated tools.
+For automated or high-volume use, run a local Overpass API instance:
+
+https://github.com/b1tw153/Overpass-API/blob/main/README.md
+
+
