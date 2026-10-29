@@ -61,3 +61,37 @@ impl PointDistance for MapEdgeRTreeObject {
         self.envelope.distance_2(point)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use geo::line_string;
+    use uom::si::length::meter;
+
+    fn mock_edge() -> Edge {
+        Edge::new(0, 1, 0, 1, Length::new::<meter>(100.0))
+    }
+
+    #[test]
+    fn test_envelope_from_linestring() {
+        let edge = mock_edge();
+        let ls: LineString<f32> = line_string![
+            (x: 2.0, y: 5.0),
+            (x: -1.0, y: 1.0),
+            (x: 4.0, y: 3.0),
+        ];
+        let obj = MapEdgeRTreeObject::new(&edge, &ls);
+        assert_eq!(obj.envelope().lower(), (-1.0, 1.0));
+        assert_eq!(obj.envelope().upper(), (4.0, 5.0));
+        assert_eq!(obj.distance_2(&(0.0, 0.0)), 1.0);
+    }
+
+    #[test]
+    fn test_envelope_from_empty_linestring() {
+        let edge = mock_edge();
+        let ls: LineString<f32> = LineString::new(vec![]);
+        let obj = MapEdgeRTreeObject::new(&edge, &ls);
+        assert_eq!(obj.envelope().lower(), (f32::MIN, f32::MIN));
+        assert_eq!(obj.envelope().upper(), (f32::MAX, f32::MAX));
+    }
+}
