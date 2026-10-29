@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793287183720,
+  "lastUpdate": 1793289788738,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4529,6 +4529,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2318133,
             "range": "± 106266",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5077eb8f3a7774c9641edc9b032071765f25ef6e",
+          "message": "Merge pull request #594 from NatLabRockies/rjf/flakey-tests\n\nRjf/flakey tests",
+          "timestamp": "2026-10-29T09:58:13-06:00",
+          "tree_id": "d5f9f2c697c1ba4af1bdd26a60175d11f16dc611",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/5077eb8f3a7774c9641edc9b032071765f25ef6e"
+        },
+        "date": 1793289787742,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2931230,
+            "range": "± 118468",
             "unit": "ns/iter"
           }
         ]
