@@ -18,19 +18,32 @@ pub enum WriteMode {
     Error,
 }
 
+pub struct OpenResult {
+    pub file: File,
+    pub appending: bool,
+}
+
 impl WriteMode {
-    pub fn open_file(&self, path: &Path) -> Result<File, CompassAppError> {
+    /// opens a file in the given [WriteMode], returning the file and informing whether
+    /// the file is being opened in append mode.
+    pub fn open_file(&self, path: &Path) -> Result<OpenResult, CompassAppError> {
         match self {
             WriteMode::Append => {
-                if !path.exists() {
+                let appending = path.exists();
+                if !appending {
                     create_file(path)?;
                 }
-                open_append(path)
+                let file = open_append(path)?;
+                Ok(OpenResult { file, appending })
             }
             WriteMode::Overwrite => {
                 remove_if_exists(path)?;
                 create_file(path)?;
-                open_append(path)
+                let file = open_append(path)?;
+                Ok(OpenResult {
+                    file,
+                    appending: false,
+                })
             }
             WriteMode::Error => {
                 if path.exists() {
@@ -42,7 +55,11 @@ impl WriteMode {
                     ))?
                 }
                 create_file(path)?;
-                open_append(path)
+                let file = open_append(path)?;
+                Ok(OpenResult {
+                    file,
+                    appending: false,
+                })
             }
         }
     }
