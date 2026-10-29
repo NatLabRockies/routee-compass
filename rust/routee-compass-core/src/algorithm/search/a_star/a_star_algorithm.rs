@@ -120,7 +120,7 @@ pub fn run_vertex_oriented(
             }
 
             // perform an edge traversal, running the TraversalModel.
-            let et = EdgeTraversal::new(&ctx, &f.prev_state, si)?;
+            let et = EdgeTraversal::new(&ctx, &f.prev_state, prev_gscore, si)?;
             let key_label = si.label_model.label_from_state(
                 key_vertex_id,
                 &et.result_state,

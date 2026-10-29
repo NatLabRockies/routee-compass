@@ -380,12 +380,7 @@ mod tests {
         }
         // when creating the tree, it will create a root node, so len() will be mock_tree's size + 1
         for idx in 0..(size - 1) {
-            let cost = TraversalCost {
-                objective_cost: Cost::MIN_COST,
-                edge_cost: Cost::MIN_COST,
-                #[cfg(feature = "detailed_costs")]
-                cost_component: std::collections::HashMap::new(),
-            };
+            let cost = TraversalCost::mock(Cost::MIN_COST, Cost::MIN_COST);
             let edge_traversal = EdgeTraversal {
                 edge_list_id: EdgeListId(0),
                 edge_id: EdgeId(idx),
