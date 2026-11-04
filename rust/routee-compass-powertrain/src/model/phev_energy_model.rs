@@ -62,7 +62,7 @@ impl PhevEnergyModel {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct PhevEnergyModelConfig {
-    pub name: String,
+    pub model_key: String,
     pub charge_sustaining: PredictionModelConfig,
     pub charge_depleting: PredictionModelConfig,
     pub battery_capacity: f64,
@@ -581,7 +581,7 @@ mod test {
     }
     #[ignore = "temporarily disabled during migration to Powertrain V2 models"]
     fn mock_prediction_model(
-        _model_name: &str,
+        _model_key: &str,
         _energy_rate_unit: EnergyRateUnit,
     ) -> Arc<PredictionModelRecord> {
         todo!(); // fix below with powertrain v2 prediction model record
@@ -589,7 +589,7 @@ mod test {
                      .join("src")
                      .join("model")
                      .join("test")
-                     .join(format!("{}.bin", &model_name));
+                     .join(format!("{}.bin", &model_key));
                  let model_filename = model_file_path.to_str().expect("test invariant failed");
 
                  let feature_bounds = HashMap::from([

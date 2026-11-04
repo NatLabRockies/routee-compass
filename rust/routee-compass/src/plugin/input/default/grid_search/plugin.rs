@@ -193,7 +193,7 @@ mod test {
         let input = serde_json::json!({
             "abc": 123,
             "grid_search":{
-                "model_name": ["2016_TOYOTA_Camry_4cyl_2WD","2017_CHEVROLET_Bolt"],
+                "model_key": ["2016_TOYOTA_Camry_4cyl_2WD","2017_CHEVROLET_Bolt"],
                 "_ignore":[
                     { "name":"d1", "weights": { "distance":1, "time":0, "energy_electric":0 } },
                     { "name":"t1", "weights": { "distance":0, "time":1, "energy_electric":0 } },
@@ -209,12 +209,12 @@ mod test {
         };
 
         let expected = vec![
-            json![{"abc":123,"model_name":"2016_TOYOTA_Camry_4cyl_2WD","name":"d1","weights":{"distance":1,"time":0,"energy_electric":0}}],
-            json![{"abc":123,"model_name":"2017_CHEVROLET_Bolt","name":"d1","weights":{"distance":1,"time":0,"energy_electric":0}}],
-            json![{"abc":123,"model_name":"2016_TOYOTA_Camry_4cyl_2WD","name":"t1","weights":{"distance":0,"time":1,"energy_electric":0}}],
-            json![{"abc":123,"model_name":"2017_CHEVROLET_Bolt","name":"t1","weights":{"distance":0,"time":1,"energy_electric":0}}],
-            json![{"abc":123,"model_name":"2016_TOYOTA_Camry_4cyl_2WD","name":"e1","weights":{"distance":0,"time":0,"energy_electric":1}}],
-            json![{"abc":123,"model_name":"2017_CHEVROLET_Bolt","name":"e1","weights":{"distance":0,"time":0,"energy_electric":1}}],
+            json![{"abc":123,"model_key":"2016_TOYOTA_Camry_4cyl_2WD","name":"d1","weights":{"distance":1,"time":0,"energy_electric":0}}],
+            json![{"abc":123,"model_key":"2017_CHEVROLET_Bolt","name":"d1","weights":{"distance":1,"time":0,"energy_electric":0}}],
+            json![{"abc":123,"model_key":"2016_TOYOTA_Camry_4cyl_2WD","name":"t1","weights":{"distance":0,"time":1,"energy_electric":0}}],
+            json![{"abc":123,"model_key":"2017_CHEVROLET_Bolt","name":"t1","weights":{"distance":0,"time":1,"energy_electric":0}}],
+            json![{"abc":123,"model_key":"2016_TOYOTA_Camry_4cyl_2WD","name":"e1","weights":{"distance":0,"time":0,"energy_electric":1}}],
+            json![{"abc":123,"model_key":"2017_CHEVROLET_Bolt","name":"e1","weights":{"distance":0,"time":0,"energy_electric":1}}],
         ];
 
         assert_eq!(result, expected)
