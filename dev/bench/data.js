@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793302768128,
+  "lastUpdate": 1793896595345,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4649,6 +4649,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2307969,
             "range": "± 53273",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "73398481+admrtin@users.noreply.github.com",
+            "name": "Adam Martin",
+            "username": "admrtin"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1c38c0e9dc8c589b6c2874f758757789a2a11645",
+          "message": "Merge pull request #580 from NatLabRockies/amm/prediction_model_record_v2\n\n`PredictionModelRecord` for PowertrainV2",
+          "timestamp": "2026-11-05T09:31:35-07:00",
+          "tree_id": "0d2908316a0a5d0557d8e85ee10b3fb66b6ade63",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/1c38c0e9dc8c589b6c2874f758757789a2a11645"
+        },
+        "date": 1793896594827,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2681332,
+            "range": "± 119852",
             "unit": "ns/iter"
           }
         ]
