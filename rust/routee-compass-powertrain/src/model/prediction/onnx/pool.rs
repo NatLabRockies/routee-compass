@@ -52,18 +52,18 @@ pub enum SessionPoolError {
     #[error("Failed to create ONNX SessionBuilder for {key}: {error}")]
     SessionBuilder {
         key: ModelIdentifier,
-        error: ort::Error,
+        error: Box<ort::Error>,
     },
     #[error("Failed to commit ONNX model {key} from memory: {error}")]
     CommitFromMemory {
         key: ModelIdentifier,
-        error: ort::Error,
+        error: Box<ort::Error>,
     },
     #[error("Failed to commit ONNX model {key} from file location {}: {error}", path.display())]
     CommitFromFile {
         key: ModelIdentifier,
         path: PathBuf,
-        error: ort::Error,
+        error: Box<ort::Error>,
     },
 }
 
@@ -209,16 +209,16 @@ impl SessionPool {
                 let mut builder =
                     Session::builder().map_err(|e| SessionPoolError::SessionBuilder {
                         key: key.clone(),
-                        error: e,
+                        error: Box::new(e),
                     })?;
 
                 match commit_from {
                     CommitFromSource::File { path } => {
-                        builder.commit_from_file(path).map_err(|error| {
+                        builder.commit_from_file(path).map_err(|e| {
                             SessionPoolError::CommitFromFile {
                                 key: key.clone(),
                                 path: path.to_path_buf(),
-                                error,
+                                error: Box::new(e),
                             }
                         })
                     }
@@ -226,7 +226,7 @@ impl SessionPool {
                         .commit_from_memory(bytes)
                         .map_err(|e| SessionPoolError::CommitFromMemory {
                             key: key.clone(),
-                            error: e,
+                            error: Box::new(e),
                         }),
                 }
             }
