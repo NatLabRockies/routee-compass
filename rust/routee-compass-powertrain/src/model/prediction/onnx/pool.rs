@@ -51,19 +51,19 @@ impl Default for SessionPoolConfig {
 pub enum SessionPoolError {
     #[error("Failed to create ONNX SessionBuilder for {key}: {error}")]
     SessionBuilder {
-        key: ModelIdentifier,
-        error: Box<ort::Error>,
+        key: Box<ModelIdentifier>,
+        error: ort::Error,
     },
     #[error("Failed to commit ONNX model {key} from memory: {error}")]
     CommitFromMemory {
-        key: ModelIdentifier,
-        error: Box<ort::Error>,
+        key: Box<ModelIdentifier>,
+        error: ort::Error,
     },
     #[error("Failed to commit ONNX model {key} from file location {}: {error}", path.display())]
     CommitFromFile {
-        key: ModelIdentifier,
+        key: Box<ModelIdentifier>,
         path: PathBuf,
-        error: Box<ort::Error>,
+        error: ort::Error,
     },
 }
 
@@ -208,25 +208,25 @@ impl SessionPool {
                 // Cache miss: build a new Session.
                 let mut builder =
                     Session::builder().map_err(|e| SessionPoolError::SessionBuilder {
-                        key: key.clone(),
-                        error: Box::new(e),
+                        key: Box::new(key.clone()),
+                        error: e,
                     })?;
 
                 match commit_from {
                     CommitFromSource::File { path } => {
-                        builder.commit_from_file(path).map_err(|e| {
+                        builder.commit_from_file(path).map_err(|error| {
                             SessionPoolError::CommitFromFile {
-                                key: key.clone(),
+                                key: Box::new(key.clone()),
                                 path: path.to_path_buf(),
-                                error: Box::new(e),
+                                error,
                             }
                         })
                     }
                     CommitFromSource::Memory { bytes } => builder
                         .commit_from_memory(bytes)
                         .map_err(|e| SessionPoolError::CommitFromMemory {
-                            key: key.clone(),
-                            error: Box::new(e),
+                            key: Box::new(key.clone()),
+                            error: e,
                         }),
                 }
             }
