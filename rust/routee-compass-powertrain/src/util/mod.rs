@@ -1,3 +1,3 @@
 mod lru_pool;
 
-pub use lru_pool::LruResourcePool;
+pub use lru_pool::{CheckinOutcome, LruResourcePool};
