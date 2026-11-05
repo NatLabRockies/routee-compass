@@ -59,7 +59,7 @@ pub enum SessionPoolError {
         key: ModelIdentifier,
         error: ort::Error,
     },
-    #[error("Failed to commit ONNX model {key} from file location {path}: {error}")]
+    #[error("Failed to commit ONNX model {key} from file location {}: {error}", path.display())]
     CommitFromFile {
         key: ModelIdentifier,
         path: PathBuf,
@@ -200,5 +200,159 @@ impl From<SessionPoolConfig> for SessionPool {
 impl From<&SessionPoolConfig> for SessionPool {
     fn from(value: &SessionPoolConfig) -> Self {
         Self::new(value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ndarray::arr2;
+    use routee_compass_core::model::traversal::TraversalModelError;
+
+    fn camry_model_path() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src")
+            .join("model")
+            .join("test")
+            .join("Toyota_Camry.onnx")
+    }
+
+    fn sample_key(name: &str) -> ModelIdentifier {
+        ModelIdentifier::FullyQualifiedId(name.to_string())
+    }
+
+    fn run_camry_inference(lease: &SessionLease) -> f32 {
+        lease
+            .with_session(|session| {
+                let input = ort::value::Value::from_array(arr2(&[[50.0f32, 0.0f32]]))
+                    .map_err(|e| TraversalModelError::TraversalModelFailure(e.to_string()))?;
+                let outputs = session
+                    .run(ort::inputs!["input" => input])
+                    .map_err(|e| TraversalModelError::TraversalModelFailure(e.to_string()))?;
+                let (_name, tensor) = outputs.iter().next().unwrap();
+                let data = tensor
+                    .try_extract_tensor::<f32>()
+                    .map_err(|e| TraversalModelError::TraversalModelFailure(e.to_string()))?;
+                Ok(data.1[0])
+            })
+            .unwrap()
+    }
+
+    #[test]
+    fn test_global_pool_acquire_drop_and_reuse() {
+        let pool = SessionPool::new(&SessionPoolConfig::Global { max_sessions: 2 });
+        let key = sample_key("toyota/camry/2016");
+        let source = CommitFromSource::File {
+            path: camry_model_path(),
+        };
+
+        // Initially empty
+        assert!(pool.checkout(&key).is_none());
+
+        // Acquire builds a new session on cache miss
+        let lease = pool.acquire(&key, &source).unwrap();
+        let rate = run_camry_inference(&lease);
+        assert!(rate > 0.0 && rate.is_finite());
+
+        // While lease is held, pool has no idle session
+        assert!(pool.checkout(&key).is_none());
+
+        // Dropping the lease checks the session back into the pool
+        drop(lease);
+
+        let reused_session = pool.checkout(&key);
+        assert!(reused_session.is_some());
+        assert!(pool.checkout(&key).is_none());
+    }
+
+    #[test]
+    fn test_acquire_from_memory_source() {
+        let pool = SessionPool::new(&SessionPoolConfig::Global { max_sessions: 1 });
+        let key = sample_key("toyota/camry_mem/2016");
+        let bytes = std::fs::read(camry_model_path()).unwrap();
+        let source = CommitFromSource::Memory { bytes };
+
+        let lease = pool.acquire(&key, &source).unwrap();
+        let rate = run_camry_inference(&lease);
+        assert!(rate > 0.0 && rate.is_finite());
+    }
+
+    #[test]
+    fn test_acquire_invalid_path_returns_error() {
+        let pool = SessionPool::new(&SessionPoolConfig::Global { max_sessions: 1 });
+        let key = sample_key("invalid/model/2020");
+        let source = CommitFromSource::File {
+            path: PathBuf::from("non_existent_model.onnx"),
+        };
+
+        let result = pool.acquire(&key, &source);
+        assert!(matches!(
+            result,
+            Err(SessionPoolError::CommitFromFile { .. })
+        ));
+    }
+
+    #[test]
+    fn test_thread_local_pool_isolation() {
+        let pool = SessionPool::new(&SessionPoolConfig::ThreadLocal {
+            max_sessions_per_thread: 2,
+        });
+        let key = sample_key("toyota/camry_tl/2016");
+        let source = CommitFromSource::File {
+            path: camry_model_path(),
+        };
+
+        // Acquire and drop on main thread
+        let lease = pool.acquire(&key, &source).unwrap();
+        drop(lease);
+
+        // Another thread should not see main thread's cached session
+        let pool_clone = pool.clone();
+        let key_clone = key.clone();
+        let other_thread_hit =
+            std::thread::spawn(move || pool_clone.checkout(&key_clone).is_some())
+                .join()
+                .unwrap();
+        assert!(!other_thread_hit);
+
+        // Main thread still has its cached session
+        assert!(pool.checkout(&key).is_some());
+    }
+
+    #[test]
+    fn test_concurrent_global_pool_contention() {
+        let max_sessions = 3;
+        let pool = SessionPool::new(&SessionPoolConfig::Global { max_sessions });
+        let key = sample_key("toyota/camry_concurrent/2016");
+        let source = Arc::new(CommitFromSource::File {
+            path: camry_model_path(),
+        });
+
+        let handles: Vec<_> = (0..6)
+            .map(|_| {
+                let pool_clone = pool.clone();
+                let key_clone = key.clone();
+                let source_clone = Arc::clone(&source);
+                std::thread::spawn(move || {
+                    for _ in 0..5 {
+                        let lease = pool_clone.acquire(&key_clone, &source_clone).unwrap();
+                        let rate = run_camry_inference(&lease);
+                        assert!(rate > 0.0);
+                    }
+                })
+            })
+            .collect();
+
+        for h in handles {
+            h.join().unwrap();
+        }
+
+        if let SessionPool::Global { pool: inner } = &pool {
+            let guard = inner.lock().unwrap();
+            assert!(guard.len() <= max_sessions);
+            assert!(!guard.is_empty());
+        } else {
+            panic!("Expected Global pool");
+        }
     }
 }
