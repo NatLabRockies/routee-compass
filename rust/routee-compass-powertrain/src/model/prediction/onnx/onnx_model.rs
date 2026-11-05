@@ -3,7 +3,7 @@ use std::sync::Mutex;
 
 use crate::model::prediction::prediction_model::PredictionModel;
 
-use ndarray::Array2;
+use ndarray::{ArrayD, IxDyn};
 use ort::session::Session;
 use routee_compass_core::model::{traversal::TraversalModelError, unit::EnergyRateUnit};
 
@@ -12,14 +12,15 @@ use routee_compass_core::model::{traversal::TraversalModelError, unit::EnergyRat
 /// Because [`Session::run`] requires `&mut self` while the [`PredictionModel`] trait requires
 /// `Send + Sync` with an immutable `&self` receiver, the session is wrapped in a [`Mutex`].
 ///
-/// This model is currently only used as a feeder to build the interpolation grid in
-/// [`InterpolationModel`](crate::model::prediction::interpolation::InterpolationModel).
-/// It is not intended for direct use in parallel search. If used with a large number of
-/// threads, the single mutex-guarded session will serialize all inference calls and may
-/// cause performance issues.
+/// Inputs are flattened tensors in timestep-major order, with the current
+/// link last if lookback is used.
+///
+/// The caller is responsible for assembling and padding lookback windows.s
 pub struct OnnxModel {
     session: Mutex<Session>,
     energy_rate_unit: EnergyRateUnit,
+    /// expected input shape with dynamic (batch) dims resolved to 1, e.g. [1, lookback, features]
+    input_shape: Vec<usize>,
 }
 
 impl PredictionModel for OnnxModel {
@@ -27,9 +28,18 @@ impl PredictionModel for OnnxModel {
         &self,
         feature_vector: &[f64],
     ) -> Result<(f64, EnergyRateUnit), TraversalModelError> {
-        let input_shape = (1, feature_vector.len());
-        let input_data: Vec<f32> = feature_vector.iter().map(|&v| v as f32).collect();
-        let array = Array2::from_shape_vec(input_shape, input_data).map_err(|e| {
+        let total: usize = self.input_shape.iter().product();
+        if total != feature_vector.len() {
+            return Err(TraversalModelError::TraversalModelFailure(format!(
+                "ONNX model expects {} values for input shape {:?} but got {}",
+                total,
+                self.input_shape,
+                feature_vector.len()
+            )));
+        }
+
+        let input_data = feature_vector.iter().map(|&value| value as f32).collect();
+        let array = ArrayD::from_shape_vec(IxDyn(&self.input_shape), input_data).map_err(|e| {
             TraversalModelError::TraversalModelFailure(format!(
                 "Failed to create ndarray from feature vector: {}",
                 e
@@ -78,6 +88,10 @@ impl PredictionModel for OnnxModel {
 }
 
 impl OnnxModel {
+    pub(crate) fn input_shape(&self) -> &[usize] {
+        &self.input_shape
+    }
+
     pub fn new<P: AsRef<Path>>(
         routee_model_path: &P,
         energy_rate_unit: EnergyRateUnit,
@@ -113,9 +127,47 @@ impl OnnxModel {
                 ))
             })?;
 
+        // resolve the expected input shape once; dynamic (batch) dims become 1
+        let input_shape: Vec<usize> = {
+            let input = session.inputs().iter().next().ok_or_else(|| {
+                TraversalModelError::BuildError("ONNX model has no inputs".to_string())
+            })?;
+            let dtype = input.dtype();
+            let dims = dtype.tensor_shape().ok_or_else(|| {
+                TraversalModelError::BuildError(
+                    "ONNX model input is not a tensor; cannot determine input shape".to_string(),
+                )
+            })?;
+
+            // Ensure the dimensions of the tensor align with supported shape
+            if !(2..=3).contains(&dims.len())
+                || dims[0] == 0
+                || dims[0] > 1
+                || dims[1..].iter().any(|&dim| dim <= 0)
+            {
+                return Err(TraversalModelError::BuildError(format!(
+                    "ONNX model requires [batch, features] or [batch, lookback, features] with batch 1 or dynamic and positive fixed remaining dimensions, got {dims:?}"
+                )));
+            }
+
+            dims.iter()
+                .map(|&d| if d < 0 { 1usize } else { d as usize })
+                .collect()
+        };
+        if input_shape
+            .iter()
+            .try_fold(1usize, |total, &dim| total.checked_mul(dim))
+            .is_none()
+        {
+            return Err(TraversalModelError::BuildError(
+                "ONNX model input shape is too large".to_string(),
+            ));
+        }
+
         Ok(OnnxModel {
             session: Mutex::new(session),
             energy_rate_unit,
+            input_shape,
         })
     }
 }
@@ -169,6 +221,70 @@ mod test {
             uphill_rate,
             flat_rate,
         );
+    }
+
+    #[test]
+    fn test_onnx_model_accepts_v2_rf_without_lookback() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src/model/prediction/test/2016_camry_ice_rf/model.onnx");
+        let model = OnnxModel::new(&path, EnergyRateUnit::GGPM).unwrap();
+        assert_eq!(model.input_shape(), &[1, 2]);
+
+        let (energy_rate, unit) = model.predict(&[50.0, 0.5]).unwrap();
+        assert!(energy_rate.is_finite());
+        assert_eq!(unit, EnergyRateUnit::GGPM);
+        assert!(model.predict(&[]).is_err());
+        assert!(model.predict(&[40.0, 0.4, 50.0, 0.5]).is_err());
+    }
+
+    #[test]
+    fn test_onnx_model_accepts_v2_cnn_with_lookback() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src/model/prediction/test/2016_camry_ice_cnn/model.onnx");
+        let model = OnnxModel::new(&path, EnergyRateUnit::GGPM).unwrap();
+        assert_eq!(model.input_shape(), &[1, 5, 2]);
+
+        let features = [10.0, 0.1, 20.0, 0.2, 30.0, 0.3, 40.0, 0.4, 50.0, 0.5];
+        let (energy_rate, unit) = model.predict(&features).unwrap();
+        assert!(energy_rate.is_finite());
+        assert_eq!(unit, EnergyRateUnit::GGPM);
+        assert!(model.predict(&[]).is_err());
+        assert!(model.predict(&[50.0, 0.5]).is_err());
+        assert!(model.predict(&features[..9]).is_err());
+        assert!(model.predict(&[0.0; 12]).is_err());
+    }
+
+    #[test]
+    fn test_onnx_model_accepts_complete_lookback() {
+        let path =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/model/prediction/test/model.onnx");
+        let model = OnnxModel::new(&path, EnergyRateUnit::KWHPM).unwrap();
+        assert_eq!(model.input_shape(), &[1, 5, 2]);
+
+        let features = [10.0, 0.1, 20.0, 0.2, 30.0, 0.3, 40.0, 0.4, 50.0, 0.5];
+        let (energy_rate, unit) = model.predict(&features).unwrap();
+        assert!(energy_rate.is_finite());
+        assert_eq!(unit, EnergyRateUnit::KWHPM);
+
+        // the tensor as an array with lookback
+        let array = ndarray::arr3(&[[
+            [10.0f32, 0.1],
+            [20.0, 0.2],
+            [30.0, 0.3],
+            [40.0, 0.4],
+            [50.0, 0.5],
+        ]]);
+        let tensor = ort::value::Value::from_array(array).unwrap();
+        let mut session = model.session.lock().unwrap();
+        let outputs = session.run(ort::inputs!["input" => tensor]).unwrap();
+        let expected = outputs[0].try_extract_tensor::<f32>().unwrap().1[0] as f64;
+        assert_eq!(energy_rate, expected);
+
+        for invalid in [&features[..2], &features[..9], &features[..0]] {
+            let error = model.predict(invalid).unwrap_err();
+            assert!(error.to_string().contains("expects 10 values"));
+        }
+        assert!(model.predict(&[0.0; 12]).is_err());
     }
 
     #[test]

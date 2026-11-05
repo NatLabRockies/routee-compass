@@ -7,20 +7,20 @@ use std::str::FromStr;
 
 use crate::model::model_identifier::ModelIdentifier::FullyQualifiedId;
 
-/// The `ModelIdentifier` is an `enum` deserialized from a RouteE Powertrain .json file's "name" field,
+/// The `ModelIdentifier` is an `enum` deserialized from a RouteE Powertrain metadata.json file's "model_key" field,
 /// and details the vehicle energy model.
 ///
 /// The variants are either a `String` detailing the `FullyQualifiedID`:
 /// ```json
 /// {
-///     "name": "BMW/328d_4cyl_2WD/2016",
+///     "model_key": "BMW/328d_4cyl_2WD/2016",
 /// }
 /// ```
 ///
 /// or a structured json object detailing the `StructuredID`:
 /// ```json
 /// {
-///     "name": {
+///     "model_key": {
 ///         "make": "BMW",
 ///         "model": "328d_4cyl_2WD",
 ///         "year": 2016,
@@ -167,11 +167,11 @@ mod tests {
     use super::*;
     use routee_compass_core::model::traversal::TraversalModelError;
 
-    // Testing deserialization of vehicle_json["name"] into ModelIdentifier::StructuredID
+    // Testing deserialization of vehicle_json["model_key"] into ModelIdentifier::StructuredID
     #[test]
     fn test_model_identifier_structured() -> Result<(), TraversalModelError> {
         let vehicle_json_as_str = r#"{
-            "name": {
+            "model_key": {
                 "make": "Ford",
                 "model": "Quadricycle",
                 "year": 1896
@@ -198,14 +198,14 @@ mod tests {
                 ))
             })?;
         let name_field = vehicle_json
-            .get("name")
+            .get("model_key")
             .ok_or(TraversalModelError::BuildError(
-                "vehicle_json does not have field `name`".to_string(),
+                "vehicle_json does not have field `model_key`".to_string(),
             ))?;
         let model_identifier: ModelIdentifier =
             ModelIdentifier::deserialize(name_field).map_err(|e| {
                 TraversalModelError::BuildError(format!(
-                    "Could not deserialize `name` field into ModelIdentifier because of {e}"
+                    "Could not deserialize `model_key` field into ModelIdentifier because of {e}"
                 ))
             })?;
 
@@ -223,11 +223,11 @@ mod tests {
         Ok(())
     }
 
-    // Tests deserializing vehicle_json["name"] into ModelIdentifier::FullyQualifiedID
+    // Tests deserializing vehicle_json["model_key"] into ModelIdentifier::FullyQualifiedID
     #[test]
     fn test_model_identifier_fully_qualified() -> Result<(), TraversalModelError> {
         let vehicle_json_as_str = r#"{
-            "name": "1896_Ford_Quadricycle",
+            "model_key": "1896_Ford_Quadricycle",
             "type": "ice",
             "mass_estimate_lbs": 500,
             "model_input_file": "ford_quad_1896.bin",
@@ -250,14 +250,14 @@ mod tests {
                 ))
             })?;
         let name_field = vehicle_json
-            .get("name")
+            .get("model_key")
             .ok_or(TraversalModelError::BuildError(
-                "vehicle_json does not have field `name`".to_string(),
+                "vehicle_json does not have field `model_key`".to_string(),
             ))?;
         let model_identifier: ModelIdentifier =
             ModelIdentifier::deserialize(name_field).map_err(|e| {
                 TraversalModelError::BuildError(format!(
-                    "Could not deserialize `name` field into ModelIdentifier because of {e}"
+                    "Could not deserialize `model_key` field into ModelIdentifier because of {e}"
                 ))
             })?;
 
@@ -280,7 +280,7 @@ mod tests {
     #[test]
     fn test_display_structured() -> Result<(), TraversalModelError> {
         let vehicle_json_as_str = r#"{
-            "name": {
+            "model_key": {
                 "make": "Ford",
                 "model": "Quadricycle",
                 "year": 1896
@@ -307,14 +307,14 @@ mod tests {
                 ))
             })?;
         let name_field = vehicle_json
-            .get("name")
+            .get("model_key")
             .ok_or(TraversalModelError::BuildError(
-                "vehicle_json does not have field `name`".to_string(),
+                "vehicle_json does not have field `model_key`".to_string(),
             ))?;
         let model_identifier: ModelIdentifier =
             ModelIdentifier::deserialize(name_field).map_err(|e| {
                 TraversalModelError::BuildError(format!(
-                    "Could not deserialize `name` field into ModelIdentifier because of {e}"
+                    "Could not deserialize `model_key` field into ModelIdentifier because of {e}"
                 ))
             })?;
 
@@ -330,7 +330,7 @@ mod tests {
     #[test]
     fn test_display_fully_qualified() -> Result<(), TraversalModelError> {
         let vehicle_json_as_str = r#"{
-            "name": "Ford/Quadricycle/1896",
+            "model_key": "Ford/Quadricycle/1896",
             "type": "ice",
             "mass_estimate_lbs": 500,
             "model_input_file": "ford_quad_1896.bin",
@@ -353,14 +353,14 @@ mod tests {
                 ))
             })?;
         let name_field = vehicle_json
-            .get("name")
+            .get("model_key")
             .ok_or(TraversalModelError::BuildError(
-                "vehicle_json does not have field `name`".to_string(),
+                "vehicle_json does not have field `model_key`".to_string(),
             ))?;
         let model_identifier: ModelIdentifier =
             ModelIdentifier::deserialize(name_field).map_err(|e| {
                 TraversalModelError::BuildError(format!(
-                    "Could not deserialize `name` field into ModelIdentifier because of {e}"
+                    "Could not deserialize `model_key` field into ModelIdentifier because of {e}"
                 ))
             })?;
 
