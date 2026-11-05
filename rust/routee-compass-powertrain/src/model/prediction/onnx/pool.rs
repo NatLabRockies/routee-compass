@@ -1,3 +1,13 @@
+//! a session pool for hydraded ort model sessions.
+//!
+//! the user is intended to use this as follows in EnergyModelService:
+//!   1. retrieve model_key from query
+//!   2. use another service to ensure we have the model downloaded to disk. this becomes the path of a [CommitFromSource::File] instance.
+//!   3. call SessionPool::acquire with the key and the fallback CommitFromSource value, receiving a [SessionLease].
+//!   4. pass the [SessionLease] to the TraversalModel.
+//!   5. traversal model uses the session via `self.lease.with_session(|s| s.run(...))`.
+//!   6. when the TraversalModel is Dropped, the lease is [Drop]ped, which returns the Session to the pool.
+//!
 use crate::model::model_identifier::ModelIdentifier;
 use crate::model::prediction::onnx::SessionLease;
 use crate::util::LruResourcePool;
@@ -5,7 +15,7 @@ use ort::session::Session;
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -138,7 +148,7 @@ impl SessionPool {
     /// Acquires a [`SessionLease`] for the duration of a query.
     /// On a cache hit, reuses an idle [`Session`] from the pool.
     /// On a cache miss, builds a new [`Session`] from `model_path` outside the pool lock.
-    pub fn acquire<P: AsRef<Path>>(
+    pub fn acquire(
         &self,
         key: &ModelIdentifier,
         commit_from: &CommitFromSource,
