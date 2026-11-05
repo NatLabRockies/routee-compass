@@ -17,7 +17,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Weak};
 
 /// Configures how model sessions are pooled and scheduled across threads.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -76,16 +76,45 @@ pub enum SessionPool {
     },
     ThreadLocal {
         pool_id: usize,
+        token: Arc<ThreadLocalPoolToken>,
         max_sessions_per_thread: usize,
     },
+}
+
+/// Shared ownership token tracking the lifetime of a `ThreadLocal` [`SessionPool`].
+/// When the last handle (and lease) for a pool is dropped, this token cleans up the
+/// current thread's entry immediately and causes all other worker threads' `Weak`
+/// references to expire so they are pruned on next access.
+///
+/// in reality, this won't be a problem for CLI runs, but without this, a thread-local
+/// SessionPool would leak resources if the user initializes Compass/Bambam multiple times
+/// in Python because of how Rayon manages a global thread pool.
+#[derive(Debug)]
+pub struct ThreadLocalPoolToken {
+    pool_id: usize,
+}
+
+impl Drop for ThreadLocalPoolToken {
+    fn drop(&mut self) {
+        let _ = THREAD_POOLS.try_with(|pools| {
+            if let Ok(mut map) = pools.try_borrow_mut() {
+                map.remove(&self.pool_id);
+            }
+        });
+    }
+}
+
+struct ThreadLocalPoolEntry {
+    token: Weak<ThreadLocalPoolToken>,
+    pool: LruResourcePool<ModelIdentifier, ort::session::Session>,
 }
 
 /// identifiers used across threads for the id of a thread-local session pool.
 static NEXT_POOL_ID: AtomicUsize = AtomicUsize::new(0);
 
 thread_local! {
-    /// Per-thread storage keyed by pool_id -> LruResourcePool
-    static THREAD_POOLS: RefCell<HashMap<usize, LruResourcePool<ModelIdentifier, ort::session::Session>>> =
+    /// Per-thread storage keyed by pool_id -> ThreadLocalPoolEntry
+    static THREAD_POOLS: RefCell<HashMap<usize, ThreadLocalPoolEntry>> =
         RefCell::new(HashMap::new());
 }
 
@@ -98,11 +127,25 @@ impl SessionPool {
             },
             SessionPoolConfig::ThreadLocal {
                 max_sessions_per_thread,
-            } => Self::ThreadLocal {
-                pool_id: NEXT_POOL_ID.fetch_add(1, Ordering::Relaxed),
-                max_sessions_per_thread: *max_sessions_per_thread,
-            },
+            } => {
+                let pool_id = NEXT_POOL_ID.fetch_add(1, Ordering::Relaxed);
+                Self::ThreadLocal {
+                    pool_id,
+                    token: Arc::new(ThreadLocalPoolToken { pool_id }),
+                    max_sessions_per_thread: *max_sessions_per_thread,
+                }
+            }
         }
+    }
+
+    /// Removes any thread-local session pools on the current worker thread whose
+    /// [`SessionPool`] handles have all been dropped.
+    pub fn prune_expired_thread_local_pools() {
+        THREAD_POOLS.with(|pools| {
+            pools
+                .borrow_mut()
+                .retain(|_, entry| entry.token.strong_count() > 0);
+        });
     }
 
     /// retrieve an instance of a Session for some key from the pool. if none are available, returns None.
@@ -111,13 +154,16 @@ impl SessionPool {
             Self::Global { pool } => pool.lock().ok()?.checkout(key),
             Self::ThreadLocal {
                 pool_id,
+                token,
                 max_sessions_per_thread,
             } => THREAD_POOLS.with(|pools| {
                 let mut map = pools.borrow_mut();
-                let table = map
-                    .entry(*pool_id)
-                    .or_insert_with(|| LruResourcePool::new(*max_sessions_per_thread));
-                table.checkout(key)
+                map.retain(|_, entry| entry.token.strong_count() > 0);
+                let entry = map.entry(*pool_id).or_insert_with(|| ThreadLocalPoolEntry {
+                    token: Arc::downgrade(token),
+                    pool: LruResourcePool::new(*max_sessions_per_thread),
+                });
+                entry.pool.checkout(key)
             }),
         }
     }
@@ -132,14 +178,17 @@ impl SessionPool {
             }
             Self::ThreadLocal {
                 pool_id,
+                token,
                 max_sessions_per_thread,
             } => {
                 THREAD_POOLS.with(|pools| {
                     let mut map = pools.borrow_mut();
-                    let table = map
-                        .entry(*pool_id)
-                        .or_insert_with(|| LruResourcePool::new(*max_sessions_per_thread));
-                    table.checkin(key, session);
+                    map.retain(|_, entry| entry.token.strong_count() > 0);
+                    let entry = map.entry(*pool_id).or_insert_with(|| ThreadLocalPoolEntry {
+                        token: Arc::downgrade(token),
+                        pool: LruResourcePool::new(*max_sessions_per_thread),
+                    });
+                    entry.pool.checkin(key, session);
                 });
             }
         }
@@ -317,6 +366,77 @@ mod tests {
 
         // Main thread still has its cached session
         assert!(pool.checkout(&key).is_some());
+    }
+
+    #[test]
+    fn test_thread_local_pool_cleanup_on_drop() {
+        let key = sample_key("toyota/camry_tl_cleanup/2016");
+        let source = CommitFromSource::File {
+            path: camry_model_path(),
+        };
+
+        let pool_1 = SessionPool::new(&SessionPoolConfig::ThreadLocal {
+            max_sessions_per_thread: 2,
+        });
+        let pool_1_id = match &pool_1 {
+            SessionPool::ThreadLocal { pool_id, .. } => *pool_id,
+            _ => panic!("Expected ThreadLocal pool"),
+        };
+
+        // Populate pool_1 on main thread
+        let lease = pool_1.acquire(&key, &source).unwrap();
+        drop(lease);
+        assert!(THREAD_POOLS.with(|pools| pools.borrow().contains_key(&pool_1_id)));
+
+        // Dropping the last handle on the current thread removes its entry immediately
+        drop(pool_1);
+        assert!(!THREAD_POOLS.with(|pools| pools.borrow().contains_key(&pool_1_id)));
+
+        // Test cross-thread expiration: worker populates an entry, main thread drops the pool,
+        // and the worker prunes the expired entry on next pool access.
+        let pool_2 = SessionPool::new(&SessionPoolConfig::ThreadLocal {
+            max_sessions_per_thread: 2,
+        });
+        let pool_2_id = match &pool_2 {
+            SessionPool::ThreadLocal { pool_id, .. } => *pool_id,
+            _ => panic!("Expected ThreadLocal pool"),
+        };
+        let pool_3 = SessionPool::new(&SessionPoolConfig::ThreadLocal {
+            max_sessions_per_thread: 2,
+        });
+        let pool_3_id = match &pool_3 {
+            SessionPool::ThreadLocal { pool_id, .. } => *pool_id,
+            _ => panic!("Expected ThreadLocal pool"),
+        };
+
+        let (tx_populated, rx_populated) = std::sync::mpsc::channel();
+        let (tx_dropped, rx_dropped) = std::sync::mpsc::channel();
+
+        let pool_2_worker = pool_2.clone();
+        let pool_3_worker = pool_3.clone();
+        let key_worker = key.clone();
+        let source_worker = source.clone();
+
+        let worker = std::thread::spawn(move || {
+            let lease = pool_2_worker.acquire(&key_worker, &source_worker).unwrap();
+            drop(lease);
+            drop(pool_2_worker);
+            assert!(THREAD_POOLS.with(|pools| pools.borrow().contains_key(&pool_2_id)));
+            tx_populated.send(()).unwrap();
+
+            // Wait for main thread to drop its last handle to pool_2
+            rx_dropped.recv().unwrap();
+
+            // Accessing another pool on this worker should prune the expired pool_2 entry
+            let _ = pool_3_worker.checkout(&key_worker);
+            assert!(!THREAD_POOLS.with(|pools| pools.borrow().contains_key(&pool_2_id)));
+            assert!(THREAD_POOLS.with(|pools| pools.borrow().contains_key(&pool_3_id)));
+        });
+
+        rx_populated.recv().unwrap();
+        drop(pool_2);
+        tx_dropped.send(()).unwrap();
+        worker.join().unwrap();
     }
 
     #[test]
