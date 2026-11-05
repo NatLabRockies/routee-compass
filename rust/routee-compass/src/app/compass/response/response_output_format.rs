@@ -25,6 +25,16 @@ pub enum ResponseOutputFormat {
 }
 
 impl ResponseOutputFormat {
+    /// file suffix to apply to the filename
+    pub fn file_suffix(&self) -> &'static str {
+        match self {
+            ResponseOutputFormat::Json { newline_delimited } if *newline_delimited => "jsonl",
+            ResponseOutputFormat::Json { .. } => "json",
+            ResponseOutputFormat::Csv { .. } => "csv",
+            ResponseOutputFormat::Parquet { .. } => "parquet",
+        }
+    }
+
     /// generates the output header content, if it exists for this format.
     pub fn generate_header(&self) -> Option<String> {
         match self {
@@ -49,7 +59,7 @@ impl ResponseOutputFormat {
             ResponseOutputFormat::Json { newline_delimited } => {
                 json_ops::final_file_contents(*newline_delimited)
             }
-            ResponseOutputFormat::Csv { .. } => None,
+            ResponseOutputFormat::Csv { .. } => Some(String::from("\n")),
             ResponseOutputFormat::Parquet { .. } => None,
         }
     }

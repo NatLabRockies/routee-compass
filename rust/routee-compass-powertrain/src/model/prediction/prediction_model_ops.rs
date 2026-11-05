@@ -1,3 +1,4 @@
+use super::routee_powertrain_v2_metadata::Feature;
 use super::PredictionModel;
 use itertools::Itertools;
 use routee_compass_core::model::{
@@ -15,6 +16,7 @@ const MIN_ENERGY_ERROR_MESSAGE: &str =
 pub fn find_min_energy_rate(
     model: &Arc<dyn PredictionModel>,
     input_features: &[InputFeature],
+    feature_set: &[Feature],
     energy_model_energy_rate_unit: &EnergyRateUnit,
 ) -> Result<f64, TraversalModelError> {
     // sweep a fixed set of speed and grade values to find the minimum energy per mile rate from the incoming rf model
@@ -24,8 +26,10 @@ pub fn find_min_energy_rate(
     // Create vectors of sample values for each feature type
     let mut sample_values: Vec<Vec<f64>> = Vec::new();
 
-    for input_feature in input_features {
+    for (input_feature, feature) in input_features.iter().zip(feature_set) {
         let values = match input_feature {
+            InputFeature::Distance {..} => get_fixed_sample_value(feature),
+
             InputFeature::Speed { name: _, unit } => match unit {
                 Some(speed_unit) => get_speed_sample_values(speed_unit),
                 None => {
@@ -34,6 +38,8 @@ pub fn find_min_energy_rate(
                     )))
                 }
             },
+            // time is not treated as an energy-rate driver; hold at a single in-domain value
+            InputFeature::Time { .. } => get_fixed_sample_value(feature),
             InputFeature::Ratio { name: _, unit } => match unit {
                 Some(grade_unit) => get_grade_sample_values(grade_unit),
                 None => {
@@ -50,6 +56,8 @@ pub fn find_min_energy_rate(
                     )))
                 }
             },
+            // custom features have no verifiable range; hold at a single in-domain value
+            InputFeature::Custom { .. } => get_fixed_sample_value(feature),
             _ => {
                 return Err(TraversalModelError::TraversalModelFailure(format!(
                     "{MIN_ENERGY_ERROR_MESSAGE} got an unexpected input feature in the smartcore model prediction {input_feature}"
@@ -117,4 +125,16 @@ fn get_temperature_sample_values(temperature_unit: &TemperatureUnit) -> Vec<f64>
             temperature_unit.from_uom(temp)
         })
         .collect()
+}
+
+/// non-contributing features (time, custom) are held at one in-domain value — the
+/// lower constraint when known — to preserve model input arity without expanding the
+/// search grid or assuming a value range we cannot verify
+fn get_fixed_sample_value(feature: &Feature) -> Vec<f64> {
+    let value = feature
+        .constraints
+        .lower
+        .or(feature.constraints.upper)
+        .unwrap_or(0.0);
+    vec![value]
 }
