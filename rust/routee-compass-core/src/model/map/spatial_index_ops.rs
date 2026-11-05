@@ -5,16 +5,16 @@ use rstar::AABB;
 use uom::si::f64::Length;
 
 pub fn test_threshold(
-    envelope: &AABB<Point<f32>>,
+    envelope: &AABB<(f32, f32)>,
     other: &Point<f32>,
     tolerance_distance: Length,
 ) -> Result<bool, MapError> {
-    let min = envelope.lower().0;
-    let max = envelope.upper().0;
+    let min = envelope.lower();
+    let max = envelope.upper();
     let p = other.0;
 
-    let clamped_x = p.x.max(min.x).min(max.x);
-    let clamped_y = p.y.max(min.y).min(max.y);
+    let clamped_x = p.x.max(min.0).min(max.0);
+    let clamped_y = p.y.max(min.1).min(max.1);
     let closest_point_on_aabb = Coord {
         x: clamped_x,
         y: clamped_y,
@@ -26,16 +26,16 @@ pub fn test_threshold(
 }
 
 pub fn within_threshold(
-    envelope: &AABB<Point<f32>>,
+    envelope: &AABB<(f32, f32)>,
     other: &Point<f32>,
     tolerance_distance: Length,
 ) -> Result<(), MapError> {
-    let min = envelope.lower().0;
-    let max = envelope.upper().0;
+    let min = envelope.lower();
+    let max = envelope.upper();
     let p = other.0;
 
-    let clamped_x = p.x.max(min.x).min(max.x);
-    let clamped_y = p.y.max(min.y).min(max.y);
+    let clamped_x = p.x.max(min.0).min(max.0);
+    let clamped_y = p.y.max(min.1).min(max.1);
     let closest_point_on_aabb = Coord {
         x: clamped_x,
         y: clamped_y,
@@ -70,10 +70,7 @@ mod test {
 
     #[test]
     fn test_threshold_upper_corner() {
-        let envelope = AABB::from_corners(
-            Point(coord! { x: 0.0, y: 0.0 }),
-            Point(coord! { x: 1.0, y: 1.0 }),
-        );
+        let envelope = AABB::from_corners((0.0, 0.0), (1.0, 1.0));
         let query_point = Point(coord! { x: 1.0, y: 1.0 });
         let tolerance = Length::new::<meter>(1.0);
 
@@ -83,10 +80,7 @@ mod test {
 
     #[test]
     fn test_within_threshold_upper_corner() {
-        let envelope = AABB::from_corners(
-            Point(coord! { x: 0.0, y: 0.0 }),
-            Point(coord! { x: 1.0, y: 1.0 }),
-        );
+        let envelope = AABB::from_corners((0.0, 0.0), (1.0, 1.0));
         let query_point = Point(coord! { x: 1.0, y: 1.0 });
         let tolerance = Length::new::<meter>(1.0);
 

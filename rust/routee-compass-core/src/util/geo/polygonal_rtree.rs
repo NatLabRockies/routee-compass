@@ -55,7 +55,7 @@ where
         let query = rect_from_geometry(g)?;
         let iter = self
             .0
-            .locate_in_envelope_intersecting(&query.envelope())
+            .locate_in_envelope_intersecting(query.envelope())
             .filter(|node| node.geometry.intersects(g));
         Ok(Box::new(iter))
     }
