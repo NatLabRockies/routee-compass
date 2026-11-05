@@ -570,8 +570,8 @@ We added some annotations to describe the different sections:</p>
 <span class="c1"># here, we specify which vehicles to make available at query time</span>
 <span class="c1"># if you wanted to add more models, you would make a new [[search.traversal.models.vehicles]] section.</span>
 <span class="k">[[search.traversal.models.vehicles]]</span>
-<span class="c1"># the name of the model that can be passed in from a query as "model_name"</span>
-<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2012_Ford_Focus"</span>
+<span class="c1"># the key that selects this model from a query's "model_key" field</span>
+<span class="n">model_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2012_Ford_Focus"</span>
 <span class="c1"># the type of the vehicle, currently either:</span>
 <span class="c1"># - "ice" i.e. Internal Combustion Engine (ICE)</span>
 <span class="c1"># - "bev" i.e. Battery Electric Vehicle (BEV)</span>
@@ -858,8 +858,8 @@ Here are the default traversal models that come with the <code class="docutils l
 <span class="c1"># here, we specify which vehicles to make available at query time</span>
 <span class="c1"># if you wanted to add more models, you would make a new [[traversal.models.vehicles]] section.</span>
 <span class="k">[[search.traversal.models.vehicles]]</span>
-<span class="c1"># the name of the model that can be passed in from a query as "model_name"</span>
-<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2012_Ford_Focus"</span>
+<span class="c1"># the key that selects this model from a query's "model_key" field</span>
+<span class="n">model_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2012_Ford_Focus"</span>
 <span class="c1"># the type of the vehicle, currently either:</span>
 <span class="c1"># - "ice" i.e. Internal Combustion Engine (ICE)</span>
 <span class="c1"># - "bev" i.e. Battery Electric Vehicle (BEV)</span>
@@ -910,7 +910,7 @@ Both queries and results are valid json objects and so a plugin takes in a json 
 <span class="w">  </span><span class="nt">"origin_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"destination_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"destination_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"model_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"model_key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"grid_search"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">"test_cases"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">      </span><span class="p">{</span>
@@ -943,7 +943,7 @@ Both queries and results are valid json objects and so a plugin takes in a json 
 <span class="w">    </span><span class="nt">"origin_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"destination_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"destination_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"model_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"model_key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shortest_time"</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"weights"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="nt">"trip_distance"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
@@ -959,7 +959,7 @@ Both queries and results are valid json objects and so a plugin takes in a json 
 <span class="w">    </span><span class="nt">"destination_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"destination_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"least_energy"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"model_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"model_key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"weights"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="nt">"trip_distance"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
 <span class="w">      </span><span class="nt">"trip_time"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>

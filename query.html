@@ -478,6 +478,8 @@ You can provide any arbitrary key if you want to pass information through.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">destination_x</span></code>: The longitude of the origin coordinate</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">destination_y</span></code>: The latitude of the origin coordinate</p></li>
 </ul>
+<p>If your configuration includes an <code class="docutils literal notranslate"><span class="pre">energy</span></code> traversal model, you must also provide a <code class="docutils literal notranslate"><span class="pre">model_key</span></code> that selects which vehicle model to use.
+This must match the <code class="docutils literal notranslate"><span class="pre">model_key</span></code> field of a RouteE Powertrain V2 <code class="docutils literal notranslate"><span class="pre">metadata.json</span></code> file listed in the energy model's <code class="docutils literal notranslate"><span class="pre">vehicle_input_files</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;model_key&quot;:</span> <span class="pre">&quot;toyota/camry_ice/2016/rf_base_67ae9982&quot;</span></code>.</p>
 </section>
 <section id="multiple-queries">
 <h2>Multiple Queries<a class="headerlink" href="#multiple-queries" title="Link to this heading">#</a></h2>
@@ -511,7 +513,7 @@ You can provide any arbitrary key if you want to pass information through.</p>
 <span class="w">  </span><span class="nt">"origin_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"destination_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"destination_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"model_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"model_key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"grid_search"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">"test_cases"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">      </span><span class="p">{</span>
@@ -546,7 +548,7 @@ You can provide any arbitrary key if you want to pass information through.</p>
 <span class="w">    </span><span class="nt">"origin_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"destination_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"destination_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"model_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"model_key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shortest_time"</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"weights"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="nt">"trip_distance"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
@@ -562,7 +564,7 @@ You can provide any arbitrary key if you want to pass information through.</p>
 <span class="w">    </span><span class="nt">"origin_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.72657</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"destination_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">-105.234964</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"destination_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">39.768477</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"model_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"model_key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016_TOYOTA_Camry_4cyl_2WD"</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"least_energy"</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"weights"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="nt">"trip_distance"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>

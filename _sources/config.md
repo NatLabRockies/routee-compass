@@ -78,8 +78,8 @@ type = "energy"
 # here, we specify which vehicles to make available at query time
 # if you wanted to add more models, you would make a new [[search.traversal.models.vehicles]] section.
 [[search.traversal.models.vehicles]]
-# the name of the model that can be passed in from a query as "model_name"
-name = "2012_Ford_Focus"
+# the key that selects this model from a query's "model_key" field
+model_key = "2012_Ford_Focus"
 # the type of the vehicle, currently either:
 # - "ice" i.e. Internal Combustion Engine (ICE)
 # - "bev" i.e. Battery Electric Vehicle (BEV)
@@ -383,8 +383,8 @@ type = "energy"
 # here, we specify which vehicles to make available at query time
 # if you wanted to add more models, you would make a new [[traversal.models.vehicles]] section.
 [[search.traversal.models.vehicles]]
-# the name of the model that can be passed in from a query as "model_name"
-name = "2012_Ford_Focus"
+# the key that selects this model from a query's "model_key" field
+model_key = "2012_Ford_Focus"
 # the type of the vehicle, currently either:
 # - "ice" i.e. Internal Combustion Engine (ICE)
 # - "bev" i.e. Battery Electric Vehicle (BEV)
@@ -436,7 +436,7 @@ The grid search plugin allows you to specify a `grid_search` key in the query an
   "origin_y": 39.72657,
   "destination_x": -105.234964,
   "destination_y": 39.768477,
-  "model_name": "2016_TOYOTA_Camry_4cyl_2WD",
+  "model_key": "2016_TOYOTA_Camry_4cyl_2WD",
   "grid_search": {
     "test_cases": [
       {
@@ -471,7 +471,7 @@ The grid search plugin would take this single query and generate two queries tha
     "origin_y": 39.72657,
     "destination_x": -105.234964,
     "destination_y": 39.768477,
-    "model_name": "2016_TOYOTA_Camry_4cyl_2WD",
+    "model_key": "2016_TOYOTA_Camry_4cyl_2WD",
     "name": "shortest_time",
     "weights": {
       "trip_distance": 0.0,
@@ -487,7 +487,7 @@ The grid search plugin would take this single query and generate two queries tha
     "destination_x": -105.234964,
     "destination_y": 39.768477,
     "name": "least_energy",
-    "model_name": "2016_TOYOTA_Camry_4cyl_2WD",
+    "model_key": "2016_TOYOTA_Camry_4cyl_2WD",
     "weights": {
       "trip_distance": 0.0,
       "trip_time": 0.0,
