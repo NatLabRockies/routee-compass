@@ -5,6 +5,7 @@ use ort::session::Session;
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -20,6 +21,16 @@ pub enum SessionPoolConfig {
     ThreadLocal { max_sessions_per_thread: usize },
 }
 
+/// when a cache miss happens, we can build a Session instance from this source.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum CommitFromSource {
+    /// we have a path to a local .onnx file.
+    File { path: PathBuf },
+    /// we have the onnx file stored as bytes in memory for quick rehydration.
+    Memory { bytes: Vec<u8> },
+}
+
 impl Default for SessionPoolConfig {
     fn default() -> Self {
         Self::Global { max_sessions: 128 }
@@ -28,10 +39,22 @@ impl Default for SessionPoolConfig {
 
 #[derive(thiserror::Error, Debug)]
 pub enum SessionPoolError {
-    #[error("Failed to create ONNX SessionBuilder for {key}: {e}")]
-    SessionBuilder { key: ModelIdentifier, e: ort::Error },
-    #[error("Failed to commit ONNX model {key} from memory: {e}")]
-    CommitFromMemory { key: ModelIdentifier, e: ort::Error },
+    #[error("Failed to create ONNX SessionBuilder for {key}: {error}")]
+    SessionBuilder {
+        key: ModelIdentifier,
+        error: ort::Error,
+    },
+    #[error("Failed to commit ONNX model {key} from memory: {error}")]
+    CommitFromMemory {
+        key: ModelIdentifier,
+        error: ort::Error,
+    },
+    #[error("Failed to commit ONNX model {key} from file location {path}: {error}")]
+    CommitFromFile {
+        key: ModelIdentifier,
+        path: PathBuf,
+        error: ort::Error,
+    },
 }
 
 /// lightweight handle for a pool of onnx Session instances that can be used.
@@ -114,28 +137,41 @@ impl SessionPool {
 
     /// Acquires a [`SessionLease`] for the duration of a query.
     /// On a cache hit, reuses an idle [`Session`] from the pool.
-    /// On a cache miss, builds a new [`Session`] from `onnx_bytes` outside the pool lock.
-    pub fn acquire(
+    /// On a cache miss, builds a new [`Session`] from `model_path` outside the pool lock.
+    pub fn acquire<P: AsRef<Path>>(
         &self,
         key: &ModelIdentifier,
-        onnx_bytes: &[u8],
+        commit_from: &CommitFromSource,
     ) -> Result<SessionLease, SessionPoolError> {
         let session = match self.checkout(key) {
-            Some(cached_session) => cached_session,
+            Some(cached_session) => Ok(cached_session),
             None => {
-                // Cache miss: build a new Session from the in-memory ONNX bytes
-                Session::builder()
-                    .map_err(|e| SessionPoolError::SessionBuilder {
+                // Cache miss: build a new Session.
+                let mut builder =
+                    Session::builder().map_err(|e| SessionPoolError::SessionBuilder {
                         key: key.clone(),
-                        e,
-                    })?
-                    .commit_from_memory(onnx_bytes)
-                    .map_err(|e| SessionPoolError::CommitFromMemory {
-                        key: key.clone(),
-                        e,
-                    })?
+                        error: e,
+                    })?;
+
+                match commit_from {
+                    CommitFromSource::File { path } => {
+                        builder.commit_from_file(path).map_err(|error| {
+                            SessionPoolError::CommitFromFile {
+                                key: key.clone(),
+                                path: path.to_path_buf(),
+                                error,
+                            }
+                        })
+                    }
+                    CommitFromSource::Memory { bytes } => builder
+                        .commit_from_memory(bytes)
+                        .map_err(|e| SessionPoolError::CommitFromMemory {
+                            key: key.clone(),
+                            error: e,
+                        }),
+                }
             }
-        };
+        }?;
 
         Ok(SessionLease::new(
             key.clone(),
