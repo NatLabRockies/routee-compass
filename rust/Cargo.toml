@@ -54,7 +54,7 @@ routee-compass = { path = "routee-compass", version = "0.19.5", default-features
 routee-compass-core = { path = "routee-compass-core", version = "0.19.5" }
 routee-compass-macros = { path = "routee-compass-macros", version = "0.19.5" }
 routee-compass-powertrain = { path = "routee-compass-powertrain", version = "0.19.5" }
-rstar = "0.12.2"
+rstar = "0.13.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.145", features = ["preserve_order"] }
 serde_json_path = "0.7.2"
