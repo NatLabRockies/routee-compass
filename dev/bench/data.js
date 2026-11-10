@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793896595345,
+  "lastUpdate": 1794346790705,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4679,6 +4679,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2681332,
             "range": "± 119852",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2eed2bd6083ff447ed04ffcc1f1e53b459b0a8f6",
+          "message": "Merge pull request #604 from bhaskargurram-ai/fix/489-deterministic-state-order\n\nMake state model ordering and JSON output deterministic",
+          "timestamp": "2026-11-10T14:23:08-07:00",
+          "tree_id": "9a46ad81cd4c7756f34d2fa68633c0e1bef5d724",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/2eed2bd6083ff447ed04ffcc1f1e53b459b0a8f6"
+        },
+        "date": 1794346789679,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2169853,
+            "range": "± 89332",
             "unit": "ns/iter"
           }
         ]
