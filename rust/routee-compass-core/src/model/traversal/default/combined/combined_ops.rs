@@ -59,13 +59,24 @@ pub fn topological_dependency_sort(
     }
 
     // apply topological sort to the models.
-    // the correct order we want is the opposite of the popped result
+    // the correct order we want is the opposite of the popped result.
+    // TopologicalSort is backed by a HashMap, so models without a dependency between them
+    // are popped in an arbitrary order. we pop one layer at a time and break ties by the
+    // configured model index (descending here, ascending after the reversal) so that the
+    // model order, and therefore the state model built from it, is deterministic.
     let mut result = vec![];
-    while let Some(m_idx) = sort.pop() {
-        let model = models.get(m_idx).ok_or_else(|| {
-            TraversalModelError::BuildError(format!("internal error: sort has model index {m_idx} which is not found in the model collection"))
-        })?;
-        result.push(model.clone());
+    loop {
+        let mut layer: Vec<usize> = sort.pop_batch();
+        if layer.is_empty() {
+            break;
+        }
+        layer.sort_unstable_by(|a, b| b.cmp(a));
+        for m_idx in layer {
+            let model = models.get(m_idx).ok_or_else(|| {
+                TraversalModelError::BuildError(format!("internal error: sort has model index {m_idx} which is not found in the model collection"))
+            })?;
+            result.push(model.clone());
+        }
     }
     result.reverse();
 
@@ -160,8 +171,8 @@ mod test {
             })
             .collect_vec();
 
-        // validate that the dependencies are honored. the algorithm makes no guarantees about
-        // tiebreaking usize values so we cannot expect a deterministic output here.
+        // validate that the dependencies are honored. the exact ordering is covered by
+        // test_sort_is_deterministic.
         let mut distance_seen = false;
         let mut speed_seen = false;
         let mut grade_seen = false;
@@ -243,8 +254,8 @@ mod test {
             })
             .collect_vec();
 
-        // validate that the dependencies are honored. the algorithm makes no guarantees about
-        // tiebreaking usize values so we cannot expect a deterministic output here.
+        // validate that the dependencies are honored. the exact ordering is covered by
+        // test_sort_is_deterministic.
         let mut distance_seen = false;
         let mut speed_seen = false;
         let mut grade_seen = false;
@@ -260,6 +271,65 @@ mod test {
                 "grade->elevation" => assert!(grade_seen),
                 other => panic!("unexpected key: '{other}'"),
             }
+        }
+    }
+
+    /// tests that models without a dependency between them are always sorted the same way,
+    /// so that the state model built from the sorted models is deterministic.
+    #[test]
+    fn test_sort_is_deterministic() {
+        init_test_logger();
+
+        let distance_feature = InputFeature::Distance {
+            name: "distance".to_string(),
+            unit: None,
+        };
+        let speed_feature = InputFeature::Speed {
+            name: "speed".to_string(),
+            unit: None,
+        };
+        let grade_feature = InputFeature::Ratio {
+            name: "grade".to_string(),
+            unit: None,
+        };
+
+        let build_models = || -> Vec<Arc<dyn TraversalModel>> {
+            let distance = MockModel::new(vec![], vec!["distance"]);
+            let speed = MockModel::new(vec![], vec!["speed"]);
+            let time = MockModel::new(
+                vec![distance_feature.clone(), speed_feature.clone()],
+                vec!["time"],
+            );
+            let grade = MockModel::new(vec![], vec!["grade"]);
+            let elevation = MockModel::new(vec![grade_feature.clone()], vec!["elevation"]);
+            let energy = MockModel::new(
+                vec![
+                    distance_feature.clone(),
+                    speed_feature.clone(),
+                    grade_feature.clone(),
+                ],
+                vec!["energy"],
+            );
+            vec![energy, elevation, time, grade, speed, distance]
+                .into_iter()
+                .map(|m| {
+                    let am: Arc<dyn TraversalModel> = Arc::new(m);
+                    am
+                })
+                .collect_vec()
+        };
+
+        // each sort builds a new hash-based collection with its own random state, so
+        // repeating the sort exercises different internal iteration orders.
+        let expected = vec!["grade", "speed", "distance", "energy", "elevation", "time"];
+        for _ in 0..32 {
+            let sorted =
+                topological_dependency_sort(&build_models()).expect("failure during sort function");
+            let output_names = sorted
+                .iter()
+                .map(|m| m.output_features().iter().map(|(n, _)| n).join(""))
+                .collect_vec();
+            assert_eq!(output_names, expected);
         }
     }
 

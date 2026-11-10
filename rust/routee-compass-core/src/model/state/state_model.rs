@@ -13,7 +13,6 @@ use indexmap::IndexMap;
 // use crate::util::compact_ordered_hash_map::IndexedEntry;
 use itertools::Itertools;
 use serde_json::json;
-use std::collections::HashMap;
 use std::iter::Enumerate;
 
 use uom::si::f64::*;
@@ -30,9 +29,7 @@ type IndexedFeatureIterator<'a> =
 
 impl StateModel {
     pub fn new(features: Vec<(String, StateVariableConfig)>) -> StateModel {
-        let deduped = deduplicate(&features);
-        let map = IndexMap::from_iter(deduped);
-        StateModel(map)
+        StateModel(deduplicate(&features))
     }
 
     pub fn empty() -> StateModel {
@@ -577,10 +574,10 @@ impl StateModel {
             .filter(|((_, feature), _)| !accumulators_only || feature.is_accumulator())
             .map(|((name, feature), state_var)| {
                 let serialized = feature.serialize_variable(state_var)?;
-                Ok((name, serialized))
+                Ok((name.clone(), serialized))
             })
-            .collect::<Result<HashMap<_, _>, StateModelError>>()?;
-        Ok(json![output])
+            .collect::<Result<serde_json::Map<_, _>, StateModelError>>()?;
+        Ok(serde_json::Value::Object(output))
     }
 
     /// uses the built-in serialization codec to output the state model representation as a JSON object
@@ -659,8 +656,13 @@ impl StateModel {
 /// tests if multiple traversal models are outputting to the same state variable feature
 /// and if so, retains only the configuration that sets an output unit for this type.
 /// if multiple are found, a warning is logged.
-fn deduplicate(features: &[(String, StateVariableConfig)]) -> HashMap<String, StateVariableConfig> {
-    let mut map: HashMap<String, StateVariableConfig> = HashMap::new();
+///
+/// features keep the position of their first occurrence so that the resulting state
+/// vector indices are deterministic across runs.
+fn deduplicate(
+    features: &[(String, StateVariableConfig)],
+) -> IndexMap<String, StateVariableConfig> {
+    let mut map: IndexMap<String, StateVariableConfig> = IndexMap::new();
     for (name, next) in features.iter() {
         map.entry(name.clone())
             .and_modify(|prev| {
@@ -799,3 +801,92 @@ impl<'a> TryFrom<&'a serde_json::Value> for StateModel {
 //         }
 //     }
 // }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use uom::ConstZero;
+
+    /// builds distance features whose names are deliberately not in sorted order, enough
+    /// of them that a hash-based ordering would be very unlikely to match by accident.
+    fn unsorted_distance_features() -> Vec<(String, StateVariableConfig)> {
+        [
+            "trip_time",
+            "edge_speed",
+            "trip_distance",
+            "edge_time",
+            "trip_energy",
+            "edge_distance",
+            "trip_soc",
+            "edge_grade",
+            "zeta",
+            "alpha",
+        ]
+        .iter()
+        .map(|name| {
+            (
+                name.to_string(),
+                StateVariableConfig::Distance {
+                    initial: Length::ZERO,
+                    accumulator: true,
+                    output_unit: None,
+                },
+            )
+        })
+        .collect_vec()
+    }
+
+    #[test]
+    fn test_new_preserves_feature_order() {
+        let features = unsorted_distance_features();
+        let expected = features.iter().map(|(n, _)| n.clone()).collect_vec();
+        let state_model = StateModel::new(features);
+        let names = state_model.keys().cloned().collect_vec();
+        assert_eq!(names, expected);
+    }
+
+    #[test]
+    fn test_new_deduplicate_keeps_first_position() {
+        let mut features = unsorted_distance_features();
+        let expected = features.iter().map(|(n, _)| n.clone()).collect_vec();
+        // re-declaring an existing feature with an output unit replaces its configuration
+        // but must not move it to a different state vector index.
+        features.push((
+            String::from("trip_distance"),
+            StateVariableConfig::Distance {
+                initial: Length::ZERO,
+                accumulator: true,
+                output_unit: Some(DistanceUnit::Miles),
+            },
+        ));
+        let state_model = StateModel::new(features);
+        let names = state_model.keys().cloned().collect_vec();
+        assert_eq!(names, expected);
+        let feature = state_model
+            .get_feature("trip_distance")
+            .expect("trip_distance should exist");
+        assert_eq!(
+            feature.get_unit_name(),
+            Some(DistanceUnit::Miles.to_string())
+        );
+    }
+
+    #[test]
+    fn test_serialize_state_preserves_feature_order() {
+        let state_model = StateModel::new(unsorted_distance_features());
+        let state = state_model
+            .initial_state(None)
+            .expect("should build initial state");
+        let serialized = state_model
+            .serialize_state(&state, false)
+            .expect("should serialize state");
+        let keys = serialized
+            .as_object()
+            .expect("serialized state should be a JSON object")
+            .keys()
+            .cloned()
+            .collect_vec();
+        let expected = state_model.keys().cloned().collect_vec();
+        assert_eq!(keys, expected);
+    }
+}
