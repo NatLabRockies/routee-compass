@@ -45,6 +45,7 @@ flate2 = { workspace = true }
 geo = { workspace = true }
 geo-types = { workspace = true }
 geojson = { workspace = true }
+indexmap = { workspace = true, features = ["serde"] }
 indoc = { workspace = true }
 inventory = { workspace = true }
 itertools = { workspace = true }
