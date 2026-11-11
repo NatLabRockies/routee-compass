@@ -1,6 +1,6 @@
 use super::{feature_bounds::FeatureBounds, utils::linspace};
 use crate::model::prediction::{
-    model_type::ModelType, onnx::onnx_model::OnnxModel, prediction_model::PredictionModel,
+    model_type::ModelType, onnx::OnnxModel, prediction_model::PredictionModel,
     smartcore::SmartcoreModel,
 };
 use itertools::Itertools;

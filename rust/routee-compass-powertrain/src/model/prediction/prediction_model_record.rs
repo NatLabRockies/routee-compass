@@ -2,7 +2,7 @@ use super::{model_type::ModelType, PredictionModel, PredictionModelConfig};
 use crate::model::{
     fieldname,
     prediction::{
-        onnx::onnx_model::OnnxModel,
+        onnx::OnnxModel,
         prediction_model_ops,
         routee_powertrain_v2_metadata::{EstimatorType, InputSpec, PadStrategy},
     },
