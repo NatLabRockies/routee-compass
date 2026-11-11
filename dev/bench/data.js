@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794427259847,
+  "lastUpdate": 1794427457524,
   "repoUrl": "https://github.com/NatLabRockies/routee-compass",
   "entries": {
     "Rust Benchmark": [
@@ -4769,6 +4769,36 @@ window.BENCHMARK_DATA = {
             "name": "routee-compass/downtown denver example",
             "value": 2832222,
             "range": "± 171070",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robfitzgerald@gmail.com",
+            "name": "Rob Fitzgerald",
+            "username": "robfitzgerald"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4a77375b0c3f11d91116c0799672550070949ddb",
+          "message": "Merge pull request #603 from NatLabRockies/dependabot/cargo/rust/rstar-0.14.0\n\nUpdate rstar requirement from 0.13.0 to 0.14.0 in /rust",
+          "timestamp": "2026-11-11T12:56:23-07:00",
+          "tree_id": "0bd55b194328595d0f81798baffa7e05bbbacafa",
+          "url": "https://github.com/NatLabRockies/routee-compass/commit/4a77375b0c3f11d91116c0799672550070949ddb"
+        },
+        "date": 1794427456451,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "routee-compass/downtown denver example",
+            "value": 2202753,
+            "range": "± 83839",
             "unit": "ns/iter"
           }
         ]
