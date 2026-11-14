@@ -33,7 +33,7 @@ jobs:
 
     runs-on: ${{ format('{0}-latest', matrix.os) }}
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7.0.1
 
       - name: set up python
         uses: actions/setup-python@v6
