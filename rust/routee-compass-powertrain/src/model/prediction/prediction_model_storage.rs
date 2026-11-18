@@ -106,7 +106,7 @@ impl TryFrom<&ModelIdentifier> for LibraryPath {
         // identifiers are user input, so keep them from escaping the library directory
         if segments
             .iter()
-            .any(|s| s.is_empty() || s == "." || s == ".." || s.contains(['/', '\\']))
+            .any(|s| s.is_empty() || s == "." || s == ".." || s.contains(['/', '\\', ':']))
         {
             return Err(invalid("path segments must be non-empty file names"));
         }
