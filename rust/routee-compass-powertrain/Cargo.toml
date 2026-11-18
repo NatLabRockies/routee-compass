@@ -27,3 +27,6 @@ serde_json = { workspace = true }
 smartcore = { workspace = true }
 thiserror = { workspace = true }
 uom = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
