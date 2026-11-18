@@ -14,5 +14,5 @@ pub use prediction_model::PredictionModel;
 pub use prediction_model_config::PredictionModelConfig;
 pub use prediction_model_record::PredictionModelRecord;
 pub use prediction_model_storage::{
-    get_model_path, PredictionModelStorage, PredictionModelStorageError,
+    find_model_metadata_path, PredictionModelStorage, PredictionModelStorageError,
 };

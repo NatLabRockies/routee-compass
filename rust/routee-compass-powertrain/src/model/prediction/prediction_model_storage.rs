@@ -40,8 +40,8 @@ pub enum PredictionModelStorageError {
 }
 
 /// returns the path to the model's `metadata.json` from the first storage location containing it.
-/// if the identifier has no version, the latest version in that location is used.
-pub fn get_model_path(
+/// if the identifier has no version, the *latest* version in that location is used.
+pub fn find_model_metadata_path(
     identifier: &ModelIdentifier,
     storages: &[PredictionModelStorage],
 ) -> Result<PathBuf, PredictionModelStorageError> {
@@ -230,25 +230,25 @@ mod tests {
     }
 
     #[test]
-    fn test_get_model_path_selects_version() {
+    fn test_find_model_metadata_path_selects_version() {
         let dir = local_library(&[1, 2, 10]);
         // an incomplete version directory without metadata.json is skipped
         let incomplete = metadata_path(&dir, 11).with_file_name("model.onnx"); // replace v11/metadata.json with v11/model.onnx
         std::fs::create_dir_all(incomplete.parent().unwrap()).unwrap();
         std::fs::write(incomplete, "").unwrap();
         let storages = [local(&dir)];
-        let latest = get_model_path(&fq(CONFIG), &storages).unwrap();
+        let latest = find_model_metadata_path(&fq(CONFIG), &storages).unwrap();
         assert_eq!(
             latest,
             metadata_path(&dir, 10),
             "incomplete v11 directory should be skipped"
         );
-        let pinned = get_model_path(&fq(&format!("{CONFIG}/v2")), &storages).unwrap();
+        let pinned = find_model_metadata_path(&fq(&format!("{CONFIG}/v2")), &storages).unwrap();
         assert_eq!(pinned, metadata_path(&dir, 2));
     }
 
     #[test]
-    fn test_get_model_path_searches_storage_in_order() {
+    fn test_find_model_metadata_path_searches_storage_in_order() {
         let (empty, first, second) = (local_library(&[]), local_library(&[1]), local_library(&[2]));
         let hugging_face = PredictionModelStorage::HuggingFace {
             repo_id: None,
@@ -256,14 +256,14 @@ mod tests {
             cache_dir: None,
         };
         let storages = [hugging_face, local(&empty), local(&first), local(&second)];
-        let path = get_model_path(&fq(CONFIG), &storages).unwrap();
+        let path = find_model_metadata_path(&fq(CONFIG), &storages).unwrap();
         assert_eq!(path, metadata_path(&first, 1));
     }
 
     #[test]
-    fn test_get_model_path_not_found() {
+    fn test_find_model_metadata_path_not_found() {
         let dir = local_library(&[1]);
-        match get_model_path(&fq(&format!("{CONFIG}/v2")), &[local(&dir)]) {
+        match find_model_metadata_path(&fq(&format!("{CONFIG}/v2")), &[local(&dir)]) {
             Err(PredictionModelStorageError::NotFound { searched, .. }) => {
                 assert_eq!(searched.len(), 1)
             }
