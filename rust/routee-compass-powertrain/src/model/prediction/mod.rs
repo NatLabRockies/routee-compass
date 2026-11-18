@@ -5,6 +5,7 @@ mod prediction_model;
 mod prediction_model_config;
 pub mod prediction_model_ops;
 mod prediction_model_record;
+mod prediction_model_storage;
 pub mod routee_powertrain_v2_metadata;
 pub mod smartcore;
 
@@ -12,3 +13,6 @@ pub use model_type::ModelType;
 pub use prediction_model::PredictionModel;
 pub use prediction_model_config::PredictionModelConfig;
 pub use prediction_model_record::PredictionModelRecord;
+pub use prediction_model_storage::{
+    find_model_metadata_path, PredictionModelStorage, PredictionModelStorageError,
+};
