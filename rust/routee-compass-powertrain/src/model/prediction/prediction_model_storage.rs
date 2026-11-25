@@ -1,9 +1,9 @@
-//! Locates RouteE Powertrain V2 model files. Assumes that any storage directory mirrors the scaffolding in
+//! Locates RouteE Powertrain V2 model files. Assumes that any `repository_directory` mirrors the scaffolding in
 //! [model library](https://huggingface.co/NatLabRockies/routee-powertrain-model-library):
 //! `<repository_directory>/v2/<make>/<vehicle_slug>/<year>/<config_slug>/v<N>/metadata.json`
 use crate::model::model_identifier::ModelIdentifier;
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 const LIBRARY_ROOT: &str = "v2";
 const METADATA_FILE: &str = "metadata.json";
@@ -45,14 +45,17 @@ pub fn find_model_metadata_path(
     identifier: &ModelIdentifier,
     storages: &[PredictionModelStorage],
 ) -> Result<PathBuf, PredictionModelStorageError> {
-    let library_path = LibraryPath::try_from(identifier)?;
+    let relative_model_path = RelativeModelPath::try_from(identifier)?;
     let mut searched = vec![];
+
     for storage in storages {
         match storage {
             PredictionModelStorage::Local {
                 repository_directory,
             } => {
-                if let Some(path) = find_local(&library_path, Path::new(repository_directory))? {
+                if let Some(path) =
+                    find_local(Path::new(repository_directory), &relative_model_path)?
+                {
                     return Ok(path);
                 }
                 searched.push(format!("local '{repository_directory}'"));
@@ -72,74 +75,96 @@ pub fn find_model_metadata_path(
 }
 
 /// a model's location relative to the `v2/` library root
-struct LibraryPath {
-    /// make, vehicle_slug, year, config_slug
-    segments: [String; 4],
-    version: Option<u64>,
+struct RelativeModelPath {
+    to_config_slug: PathBuf, // `<make>/<vehicle_slug>/<year>/<config_slug>`
+    version: Option<u64>, // the `<to_config_slug>/v<N>` directory. `None` selects the latest version
 }
 
-impl TryFrom<&ModelIdentifier> for LibraryPath {
+impl TryFrom<&ModelIdentifier> for RelativeModelPath {
     type Error = PredictionModelStorageError;
 
     fn try_from(identifier: &ModelIdentifier) -> Result<Self, Self::Error> {
-        let invalid = |msg: &str| {
-            PredictionModelStorageError::InvalidIdentifier(identifier.to_string(), msg.to_string())
-        };
-        let (segments, version) = match identifier {
-            ModelIdentifier::FullyQualifiedId(id) => {
-                let mut parts: Vec<String> = id.split('/').map(String::from).collect();
-                let version = if parts.len() == 5 { parts.pop() } else { None };
-                (parts, version)
-            }
-            ModelIdentifier::StructuredId {
-                make,
-                model,
-                year,
-                variant,
-                version,
-            } => {
-                let variant = variant.clone().ok_or_else(|| invalid("missing variant"))?;
-                let segments = vec![make.clone(), model.clone(), year.to_string(), variant];
-                (segments, version.clone())
+        // convert the identifier to its `FullyQualifiedId` representation & then to a PathBuf.
+        let path = match identifier.to_fully_qualified().map_err(|e| {
+            PredictionModelStorageError::InvalidIdentifier(identifier.to_string(), e.to_string())
+        })? {
+            ModelIdentifier::FullyQualifiedId(id) => PathBuf::from(id),
+            ModelIdentifier::StructuredId { .. } => {
+                return Err(PredictionModelStorageError::InvalidIdentifier(
+                    identifier.to_string(),
+                    "could not convert to a fully qualified id".to_string(),
+                ))
             }
         };
-        // identifiers are user input, so keep them from escaping the library directory
-        if segments
-            .iter()
-            .any(|s| s.is_empty() || s == "." || s == ".." || s.contains(['/', '\\', ':']))
-        {
-            return Err(invalid("path segments must be non-empty file names"));
+
+        if !path.components().all(|c| matches!(c, Component::Normal(_))) {
+            return Err(PredictionModelStorageError::InvalidIdentifier(
+                identifier.to_string(),
+                "must be a relative path of file names".to_string(),
+            ));
         }
-        let segments = segments
-            .try_into()
-            .map_err(|_| invalid("expected 'make/vehicle_slug/year/config_slug[/v<N>]'"))?;
+
+        let (path, version) = match path.components().count() {
+            4 => (path.as_path(), None), // no version specified
+            5 => (
+                path.parent().unwrap_or(&path),
+                path.file_name().and_then(|name| name.to_str()),
+            ), // version specified
+            _ => {
+                return Err(PredictionModelStorageError::InvalidIdentifier(
+                    identifier.to_string(),
+                    "expected 'make/vehicle_slug/year/config_slug[/v<N>]'".to_string(),
+                ))
+            }
+        };
+
         let version = version
-            .map(|v| v.strip_prefix('v').unwrap_or(&v).parse().ok())
-            .map(|v| v.ok_or_else(|| invalid("version must be 'v<N>' or '<N>'")))
+            .map(|v| {
+                v.strip_prefix('v').unwrap_or(v).parse().map_err(|_| {
+                    PredictionModelStorageError::InvalidIdentifier(
+                        identifier.to_string(),
+                        "version must be 'v<N>' or '<N>'".to_string(),
+                    )
+                })
+            })
             .transpose()?;
-        Ok(LibraryPath { segments, version })
+
+        Ok(RelativeModelPath {
+            to_config_slug: path.to_path_buf(),
+            version,
+        })
     }
 }
 
+/// returns the model's `metadata.json` path within a local storage, or `None` if it is not present.
 fn find_local(
-    library_path: &LibraryPath,
-    repository_directory: &Path,
+    repository_directory: &Path, // The root of a `Local` storage; the directory containing `v2/<to_config_slug>/<vN>`
+    relative_model_path: &RelativeModelPath, // model location relative to `v2/`
 ) -> Result<Option<PathBuf>, PredictionModelStorageError> {
-    let mut config_dir = repository_directory.join(LIBRARY_ROOT);
-    config_dir.extend(&library_path.segments);
-    let metadata_path = |version: u64| config_dir.join(format!("v{version}")).join(METADATA_FILE);
+    let config_slug_dir = repository_directory
+        .join(LIBRARY_ROOT) // .../v2/
+        .join(&relative_model_path.to_config_slug); // .../<to_config_slug>
 
-    if let Some(version) = library_path.version {
+    let metadata_path = |version: u64| {
+        config_slug_dir
+            .join(format!("v{version}"))
+            .join(METADATA_FILE)
+    };
+
+    if let Some(version) = relative_model_path.version {
         let path = metadata_path(version);
-        return Ok(path.is_file().then_some(path));
+        return Ok(path.is_file().then_some(path)); // return Ok(None) if the path to the version folder isn't found, and proceed to other storages.
     }
-    let entries = match std::fs::read_dir(&config_dir) {
+
+    // check which version folders are available in the config_slug_dir
+    let entries = match std::fs::read_dir(&config_slug_dir) {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
         result => result.map_err(|source| PredictionModelStorageError::Io {
-            path: config_dir.clone(),
+            path: config_slug_dir.clone(),
             source,
         })?,
     };
+
     let latest = entries
         .filter_map(|e| {
             e.ok()?
@@ -150,7 +175,8 @@ fn find_local(
                 .ok()
         })
         .filter(|version| metadata_path(*version).is_file())
-        .max();
+        .max(); // max takes the latest.
+
     Ok(latest.map(metadata_path))
 }
 
@@ -193,32 +219,34 @@ mod tests {
     }
 
     #[test]
-    fn test_library_path_from_identifier() {
+    fn test_relative_model_path_from_identifier() {
         let structured = ModelIdentifier::StructuredId {
             make: "toyota".to_string(),
-            model: "camry_ice".to_string(),
+            vehicle_slug: "camry_ice".to_string(),
             year: NonZeroU64::new(2016).unwrap(),
-            variant: Some("rf_base_67ae9982".to_string()),
+            config_slug: "rf_base_67ae9982".to_string(),
             version: Some("3".to_string()),
         };
         for (identifier, version) in [(fq(&format!("{CONFIG}/v2")), 2), (structured, 3)] {
-            let path = LibraryPath::try_from(&identifier).unwrap();
+            let path = RelativeModelPath::try_from(&identifier).unwrap();
             assert_eq!(
-                (path.segments.join("/"), path.version),
-                (CONFIG.to_string(), Some(version))
+                (path.to_config_slug, path.version),
+                (PathBuf::from(CONFIG), Some(version))
             );
         }
     }
 
     #[test]
-    fn test_library_path_rejects_invalid_identifiers() {
+    fn test_relative_model_path_rejects_invalid_identifiers() {
         for id in [
             "toyota/camry_ice/2016",
             "toyota/../2016/rf_base_67ae9982",
+            &format!("{CONFIG}/.."),
+            &format!("/{CONFIG}"),
             &format!("{CONFIG}/latest"),
             &format!("{CONFIG}/v1/extra"),
         ] {
-            let result = LibraryPath::try_from(&fq(id));
+            let result = RelativeModelPath::try_from(&fq(id));
             assert!(
                 matches!(
                     result,
