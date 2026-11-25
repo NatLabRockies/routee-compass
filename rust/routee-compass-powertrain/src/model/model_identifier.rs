@@ -13,16 +13,16 @@ use crate::model::model_identifier::ModelIdentifier::FullyQualifiedId;
 /// The variants are either a `String` detailing the `FullyQualifiedID`:
 /// ```json
 /// {
-///     "model_key": "BMW/328d_4cyl_2WD/2016",
+///     "model_identifier": "BMW/328d_4cyl_2WD/2016",
 /// }
 /// ```
 ///
 /// or a structured json object detailing the `StructuredID`:
 /// ```json
 /// {
-///     "model_key": {
+///     "model_identifier": {
 ///         "make": "BMW",
-///         "model": "328d_4cyl_2WD",
+///         "vehicle_slug": "328d_4cyl_2WD",
 ///         "year": 2016,
 ///     },
 /// }
@@ -36,9 +36,9 @@ pub enum ModelIdentifier {
     FullyQualifiedId(String),
     StructuredId {
         make: String,
-        model: String,
+        vehicle_slug: String,
         year: NonZeroU64,
-        variant: Option<String>,
+        config_slug: String,
         version: Option<String>,
     },
 }
@@ -46,7 +46,9 @@ pub enum ModelIdentifier {
 /// `ModelIdentifierError` variants
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum ModelIdentifierError {
-    #[error("fully qualified id '{0}' must have at least make/model/year fields")]
+    #[error(
+        "fully qualified id '{0}' must have at least make/vehicle_slug/year/config_slug fields"
+    )]
     MissingFields(String),
     #[error("invalid year '{0}' in fully qualified id")]
     InvalidYear(String),
@@ -61,39 +63,28 @@ impl ModelIdentifier {
         match self {
             Self::StructuredId { .. } => Ok(self.clone()),
             Self::FullyQualifiedId(id) => {
-                let mut attributes = id.split('/').map(|s| s.to_string());
+                let mut id_fields = id.split('/').map(|s| s.to_string());
 
-                let (make, model, year) =
-                    match (attributes.next(), attributes.next(), attributes.next()) {
-                        (Some(a), Some(b), Some(c)) => (a, b, c),
-                        _ => return Err(ModelIdentifierError::MissingFields(id.clone())),
-                    };
+                let (make, vehicle_slug, year, config_slug) = match (
+                    id_fields.next(),
+                    id_fields.next(),
+                    id_fields.next(),
+                    id_fields.next(),
+                ) {
+                    (Some(a), Some(b), Some(c), Some(d)) => (a, b, c, d),
+                    _ => return Err(ModelIdentifierError::MissingFields(id.clone())),
+                };
 
                 let year = NonZeroU64::from_str(&year)
                     .map_err(|_| ModelIdentifierError::InvalidYear(year))?;
 
-                let (variant, version) = match (attributes.next(), attributes.next()) {
-                    (Some(var), Some(ver)) => (Some(var), Some(ver)),
-                    (Some(var), None) => {
-                        return Err(ModelIdentifierError::OneOfVariantOrVersion(
-                            "variant".to_string(),
-                            var.to_string(),
-                        ))
-                    }
-                    (None, Some(ver)) => {
-                        return Err(ModelIdentifierError::OneOfVariantOrVersion(
-                            "version".to_string(),
-                            ver.to_string(),
-                        ))
-                    }
-                    (None, None) => (None, None),
-                };
+                let version = id_fields.next();
 
                 Ok(ModelIdentifier::StructuredId {
                     make,
-                    model,
+                    vehicle_slug,
                     year,
-                    variant,
+                    config_slug,
                     version,
                 })
             }
@@ -106,24 +97,19 @@ impl ModelIdentifier {
         match self {
             Self::StructuredId {
                 make,
-                model,
+                vehicle_slug,
                 year,
-                variant,
+                config_slug,
                 version,
-            } => match (variant, version) {
-                (Some(var), Some(ver)) => Ok(FullyQualifiedId(format!(
+            } => match version {
+                Some(ver) => Ok(FullyQualifiedId(format!(
                     "{}/{}/{}/{}/{}",
-                    make, model, year, var, ver
+                    make, vehicle_slug, year, config_slug, ver
                 ))),
-                (Some(var), None) => Err(ModelIdentifierError::OneOfVariantOrVersion(
-                    "variant".to_string(),
-                    var.to_string(),
-                )),
-                (None, Some(ver)) => Err(ModelIdentifierError::OneOfVariantOrVersion(
-                    "version".to_string(),
-                    ver.to_string(),
-                )),
-                (None, None) => Ok(FullyQualifiedId(format!("{}/{}/{}", make, model, year))),
+                None => Ok(FullyQualifiedId(format!(
+                    "{}/{}/{}/{}",
+                    make, vehicle_slug, year, config_slug
+                ))),
             },
             Self::FullyQualifiedId(_) => Ok(self.clone()),
         }
@@ -138,9 +124,9 @@ impl Display for ModelIdentifier {
             ModelIdentifier::FullyQualifiedId(id) => write!(f, "{id}"),
             ModelIdentifier::StructuredId {
                 make,
-                model,
+                vehicle_slug,
                 year,
-                variant,
+                config_slug,
                 version,
             } => {
                 // if the variant or version are None type, prints "none"
@@ -150,9 +136,9 @@ impl Display for ModelIdentifier {
 
                 let obj = json!({
                     "make": make,
-                    "model": model,
+                    "vehicle_slug": vehicle_slug,
                     "year": year,
-                    "variant": opt_to_val(variant),
+                    "config_slug": config_slug,
                     "version": opt_to_val(version),
                 });
 
@@ -173,8 +159,9 @@ mod tests {
         let vehicle_json_as_str = r#"{
             "model_key": {
                 "make": "Ford",
-                "model": "Quadricycle",
-                "year": 1896
+                "vehicle_slug": "Quadricycle",
+                "year": 1896,
+                "config_slug": "ffffffff"
             },
             "type": "ice",
             "mass_estimate_lbs": 500,
@@ -213,9 +200,9 @@ mod tests {
             model_identifier,
             ModelIdentifier::StructuredId {
                 make: "Ford".to_string(),
-                model: "Quadricycle".to_string(),
+                vehicle_slug: "Quadricycle".to_string(),
                 year: NonZeroU64::new(1896).unwrap(),
-                variant: None,
+                config_slug: "ffffffff".to_string(),
                 version: None
             },
         );
@@ -227,7 +214,7 @@ mod tests {
     #[test]
     fn test_model_identifier_fully_qualified() -> Result<(), TraversalModelError> {
         let vehicle_json_as_str = r#"{
-            "model_key": "1896_Ford_Quadricycle",
+            "model_key": "1896_Ford_Quadricycle_ffffffff",
             "type": "ice",
             "mass_estimate_lbs": 500,
             "model_input_file": "ford_quad_1896.bin",
@@ -263,7 +250,7 @@ mod tests {
 
         assert_eq!(
             model_identifier,
-            ModelIdentifier::FullyQualifiedId("1896_Ford_Quadricycle".to_string())
+            ModelIdentifier::FullyQualifiedId("1896_Ford_Quadricycle_ffffffff".to_string())
         );
 
         Ok(())
@@ -282,8 +269,9 @@ mod tests {
         let vehicle_json_as_str = r#"{
             "model_key": {
                 "make": "Ford",
-                "model": "Quadricycle",
-                "year": 1896
+                "vehicle_slug": "Quadricycle",
+                "year": 1896,
+                "config_slug": "ffffffff"
             },
             "type": "ice",
             "mass_estimate_lbs": 500,
@@ -319,7 +307,7 @@ mod tests {
             })?;
 
         assert_eq!(
-            r#"{"make":"Ford","model":"Quadricycle","year":1896,"variant":"none","version":"none"}"#,
+            r#"{"make":"Ford","vehicle_slug":"Quadricycle","year":1896,"config_slug":"ffffffff","version":"none"}"#,
             format!("{}", model_identifier)
         );
 
@@ -330,7 +318,7 @@ mod tests {
     #[test]
     fn test_display_fully_qualified() -> Result<(), TraversalModelError> {
         let vehicle_json_as_str = r#"{
-            "model_key": "Ford/Quadricycle/1896",
+            "model_key": "Ford/Quadricycle/1896/ffffffff",
             "type": "ice",
             "mass_estimate_lbs": 500,
             "model_input_file": "ford_quad_1896.bin",
@@ -364,7 +352,10 @@ mod tests {
                 ))
             })?;
 
-        assert_eq!(r#"Ford/Quadricycle/1896"#, format!("{}", model_identifier));
+        assert_eq!(
+            r#"Ford/Quadricycle/1896/ffffffff"#,
+            format!("{}", model_identifier)
+        );
 
         Ok(())
     }
