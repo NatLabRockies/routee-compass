@@ -1,9 +1,9 @@
+mod builder;
 mod config;
-mod distance_traversal_builder;
-mod distance_traversal_model;
-mod distance_traversal_service;
+mod model;
+mod service;
 
+pub use builder::DistanceTraversalBuilder;
 pub use config::DistanceTraversalConfig;
-pub use distance_traversal_builder::DistanceTraversalBuilder;
-pub use distance_traversal_model::DistanceTraversalModel;
-pub use distance_traversal_service::DistanceTraversalService;
+pub use model::DistanceTraversalModel;
+pub use service::DistanceTraversalService;

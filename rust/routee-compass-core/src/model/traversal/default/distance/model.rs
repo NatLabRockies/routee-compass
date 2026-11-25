@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use uom::si::f64::Length;
 use uom::ConstZero;
 
@@ -6,23 +8,27 @@ use crate::model::network::Vertex;
 use crate::model::state::StateModel;
 use crate::model::state::StateVariable;
 use crate::model::state::{InputFeature, StateVariableConfig};
+use crate::model::traversal::default::distance::DistanceTraversalConfig;
 use crate::model::traversal::default::fieldname;
 use crate::model::traversal::error::TraversalModelError;
 use crate::model::traversal::model::TraversalModel;
-use crate::model::unit::DistanceUnit;
 use crate::util::geo::haversine;
 
 /// a model for traversing edges based on distance.
 pub struct DistanceTraversalModel {
-    pub distance_unit: DistanceUnit,
-    pub include_trip_distance: bool,
+    pub config: Arc<DistanceTraversalConfig>,
 }
 
 impl DistanceTraversalModel {
-    pub fn new(distance_unit: DistanceUnit, include_trip_distance: bool) -> DistanceTraversalModel {
+    pub fn new(config: Arc<DistanceTraversalConfig>) -> DistanceTraversalModel {
+        Self { config }
+    }
+}
+
+impl Default for DistanceTraversalModel {
+    fn default() -> Self {
         Self {
-            distance_unit,
-            include_trip_distance,
+            config: Arc::new(Default::default()),
         }
     }
 }
@@ -41,9 +47,9 @@ impl TraversalModel for DistanceTraversalModel {
         state: &mut Vec<StateVariable>,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
-        state_model.add_distance(state, fieldname::EDGE_DISTANCE, &ctx.edge.distance)?;
-        if self.include_trip_distance {
-            state_model.add_distance(state, fieldname::TRIP_DISTANCE, &ctx.edge.distance)?;
+        state_model.add_distance(state, &self.config.distance_name, &ctx.edge.distance)?;
+        if self.config.include_trip_distance {
+            state_model.add_distance(state, &self.config.trip_distance_name, &ctx.edge.distance)?;
         }
         Ok(())
     }
@@ -63,10 +69,10 @@ impl TraversalModel for DistanceTraversalModel {
                     "could not compute haversine distance between {src} and {dst}: {e}"
                 ))
             })?;
-        if self.include_trip_distance {
-            state_model.add_distance(state, fieldname::TRIP_DISTANCE, &distance)?;
+        state_model.add_distance(state, &self.config.distance_name, &distance)?;
+        if self.config.include_trip_distance {
+            state_model.add_distance(state, &self.config.trip_distance_name, &distance)?;
         }
-        state_model.add_distance(state, fieldname::EDGE_DISTANCE, &distance)?;
         Ok(())
     }
 
@@ -80,16 +86,16 @@ impl TraversalModel for DistanceTraversalModel {
             StateVariableConfig::Distance {
                 initial: Length::ZERO,
                 accumulator: false,
-                output_unit: Some(self.distance_unit),
+                output_unit: Some(self.config.distance_unit),
             },
         )];
-        if self.include_trip_distance {
+        if self.config.include_trip_distance {
             features.push((
                 String::from(fieldname::TRIP_DISTANCE),
                 StateVariableConfig::Distance {
                     initial: Length::ZERO,
                     accumulator: true,
-                    output_unit: Some(self.distance_unit),
+                    output_unit: Some(self.config.distance_unit),
                 },
             ));
         }

@@ -16,12 +16,8 @@ impl TraversalModelBuilder for DistanceTraversalBuilder {
             serde_json::from_value(parameters.clone()).map_err(|e| {
                 TraversalModelError::BuildError(format!("while reading distance config, {e}"))
             })?;
-        let distance_unit = config.distance_unit.unwrap_or_default();
-        let include_trip_distance = config.include_trip_distance.unwrap_or(true);
-        let m: Arc<dyn TraversalModelService> = Arc::new(DistanceTraversalService::new(
-            distance_unit,
-            include_trip_distance,
-        ));
+
+        let m: Arc<dyn TraversalModelService> = Arc::new(DistanceTraversalService::new(config));
         Ok(m)
     }
 }
