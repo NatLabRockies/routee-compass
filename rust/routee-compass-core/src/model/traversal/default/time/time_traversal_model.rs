@@ -9,8 +9,8 @@ use crate::{
         network::Vertex,
         state::{InputFeature, StateModel, StateVariable, StateVariableConfig},
         traversal::{
-            default::{fieldname, time::TimeTraversalConfig},
-            TraversalModel, TraversalModelError, TraversalModelService,
+            default::time::TimeTraversalConfig, TraversalModel, TraversalModelError,
+            TraversalModelService,
         },
     },
     util::geo::haversine,
@@ -44,11 +44,11 @@ impl TraversalModel for TimeTraversalModel {
     fn input_features(&self) -> Vec<InputFeature> {
         vec![
             InputFeature::Distance {
-                name: String::from(fieldname::EDGE_DISTANCE),
+                name: self.config.distance_name.clone(),
                 unit: None,
             },
             InputFeature::Speed {
-                name: String::from(fieldname::EDGE_SPEED),
+                name: self.config.speed_name.clone(),
                 unit: None,
             },
         ]
@@ -56,7 +56,7 @@ impl TraversalModel for TimeTraversalModel {
 
     fn output_features(&self) -> Vec<(String, StateVariableConfig)> {
         let mut features = vec![(
-            String::from(fieldname::EDGE_TIME),
+            self.config.time_name.clone(),
             StateVariableConfig::Time {
                 initial: Time::ZERO,
                 accumulator: false,
@@ -65,7 +65,7 @@ impl TraversalModel for TimeTraversalModel {
         )];
         if self.config.include_trip_time.unwrap_or(true) {
             features.push((
-                String::from(fieldname::TRIP_TIME),
+                self.config.trip_time_name.clone(),
                 StateVariableConfig::Time {
                     initial: Time::ZERO,
                     accumulator: true,
@@ -82,15 +82,15 @@ impl TraversalModel for TimeTraversalModel {
         state: &mut Vec<StateVariable>,
         state_model: &StateModel,
     ) -> Result<(), TraversalModelError> {
-        let distance: Length = state_model.get_distance(state, fieldname::EDGE_DISTANCE)?;
-        let speed: Velocity = state_model.get_speed(state, fieldname::EDGE_SPEED)?;
+        let distance: Length = state_model.get_distance(state, &self.config.distance_name)?;
+        let speed: Velocity = state_model.get_speed(state, &self.config.speed_name)?;
 
         let edge_time = distance / speed;
 
         if self.config.include_trip_time.unwrap_or(true) {
-            state_model.add_time(state, fieldname::TRIP_TIME, &edge_time)?;
+            state_model.add_time(state, &self.config.trip_time_name, &edge_time)?;
         }
-        state_model.add_time(state, fieldname::EDGE_TIME, &edge_time)?;
+        state_model.add_time(state, &self.config.time_name, &edge_time)?;
 
         Ok(())
     }
@@ -113,13 +113,13 @@ impl TraversalModel for TimeTraversalModel {
         if distance == Length::ZERO {
             return Ok(());
         }
-        let speed = state_model.get_speed(state, fieldname::EDGE_SPEED)?;
+        let speed = state_model.get_speed(state, &self.config.speed_name)?;
         let time = distance / speed;
 
         if self.config.include_trip_time.unwrap_or(true) {
-            state_model.add_time(state, fieldname::TRIP_TIME, &time)?;
+            state_model.add_time(state, &self.config.trip_time_name, &time)?;
         }
-        state_model.add_time(state, fieldname::EDGE_TIME, &time)?;
+        state_model.add_time(state, &self.config.time_name, &time)?;
 
         Ok(())
     }
