@@ -46,7 +46,9 @@ pub enum ModelIdentifier {
 /// `ModelIdentifierError` variants
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum ModelIdentifierError {
-    #[error("fully qualified id '{0}' must have at least make/vehicle_slug/year/config_slug fields")]
+    #[error(
+        "fully qualified id '{0}' must have at least make/vehicle_slug/year/config_slug fields"
+    )]
     MissingFields(String),
     #[error("invalid year '{0}' in fully qualified id")]
     InvalidYear(String),
