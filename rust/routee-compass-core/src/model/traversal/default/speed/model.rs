@@ -1,13 +1,12 @@
 use uom::si::f64::Velocity;
 use uom::ConstZero;
 
-use super::speed_traversal_engine::SpeedTraversalEngine;
+use super::engine::SpeedTraversalEngine;
 use crate::algorithm::search::SearchTree;
 use crate::model::network::{EdgeId, Vertex};
 use crate::model::state::StateModel;
 use crate::model::state::StateVariable;
 use crate::model::state::{InputFeature, StateVariableConfig};
-use crate::model::traversal::default::fieldname;
 use crate::model::traversal::error::TraversalModelError;
 use crate::model::traversal::model::TraversalModel;
 use crate::model::unit::SpeedUnit;
@@ -43,14 +42,14 @@ impl TraversalModel for SpeedTraversalModel {
     }
     fn input_features(&self) -> Vec<InputFeature> {
         vec![InputFeature::Distance {
-            name: fieldname::EDGE_DISTANCE.to_string(),
+            name: self.engine.config.distance_name.clone(),
             unit: None,
         }]
     }
 
     fn output_features(&self) -> Vec<(String, StateVariableConfig)> {
         vec![(
-            String::from(fieldname::EDGE_SPEED),
+            self.engine.config.speed_name.clone(),
             StateVariableConfig::Speed {
                 initial: Velocity::ZERO,
                 accumulator: false,
@@ -68,7 +67,7 @@ impl TraversalModel for SpeedTraversalModel {
     ) -> Result<(), TraversalModelError> {
         let lookup_speed = get_speed(&self.engine.speed_table, ctx.edge.edge_id)?;
         let speed = apply_speed_limit(lookup_speed, self.speed_limit);
-        state_model.set_speed(state, fieldname::EDGE_SPEED, &speed)?;
+        state_model.set_speed(state, &self.engine.config.speed_name, &speed)?;
         Ok(())
     }
 
@@ -84,7 +83,7 @@ impl TraversalModel for SpeedTraversalModel {
             Some(speed_limit) => speed_limit,
             None => self.engine.max_speed,
         };
-        state_model.set_speed(state, fieldname::EDGE_SPEED, &speed)?;
+        state_model.set_speed(state, &self.engine.config.speed_name, &speed)?;
         Ok(())
     }
 }
@@ -120,12 +119,13 @@ mod tests {
     use super::*;
     use crate::model::label::Label;
     use crate::model::network::{Edge, EdgeId, EdgeListId, Vertex, VertexId};
+    use crate::model::traversal::default::speed::SpeedModelConfig;
     use crate::model::traversal::EdgeFrontierContext;
-    use crate::model::unit::SpeedUnit;
     use crate::testing::mock::traversal_model::TestTraversalModel;
     use crate::util::geo::InternalCoord;
     use approx::relative_eq;
     use geo::coord;
+    use serde_json::json;
     use std::path::PathBuf;
     use uom::si::f64::Length;
 
@@ -144,7 +144,7 @@ mod tests {
             distance: Length::new::<uom::si::length::meter>(100.0),
         }
     }
-    fn filepath() -> PathBuf {
+    fn filepath() -> String {
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("src")
             .join("model")
@@ -152,6 +152,16 @@ mod tests {
             .join("default")
             .join("test")
             .join("velocities.txt")
+            .to_string_lossy()
+            .to_string()
+    }
+
+    fn config() -> SpeedModelConfig {
+        serde_json::from_value(json!({
+            "speed_table_input_file": filepath(),
+            "speed_unit": "kph"
+        }))
+        .expect("failure creating default config")
     }
 
     // save in case we develop test cases that may leverage this
@@ -167,9 +177,8 @@ mod tests {
 
     #[test]
     fn test_speed_traversal() {
-        let file: PathBuf = filepath();
-        let engine =
-            SpeedTraversalEngine::new(&file, SpeedUnit::KPH).expect("test invariant failed");
+        let config = config();
+        let engine = SpeedTraversalEngine::new(config).expect("test invariant failed");
         let speed_model =
             SpeedTraversalModel::new(Arc::new(engine), None).expect("test invariant failed");
         let test_model =
@@ -204,11 +213,8 @@ mod tests {
     fn test_speed_limit_enforcement() {
         // We know from the test data that edge 0 has a speed of 10 kph, so set a limit of 5 kph
         let speed_limit = Velocity::new::<uom::si::velocity::kilometer_per_hour>(5.0);
-
-        let file: PathBuf = filepath();
-        let engine = Arc::new(
-            SpeedTraversalEngine::new(&file, SpeedUnit::KPH).expect("test invariant failed"),
-        );
+        let config = config();
+        let engine = Arc::new(SpeedTraversalEngine::new(config).expect("test invariant failed"));
 
         let regular_model =
             SpeedTraversalModel::new(engine.clone(), None).expect("test invariant failed");
