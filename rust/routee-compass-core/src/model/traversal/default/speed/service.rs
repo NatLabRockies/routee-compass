@@ -1,6 +1,4 @@
-use super::{
-    speed_traversal_engine::SpeedTraversalEngine, speed_traversal_model::SpeedTraversalModel,
-};
+use super::{engine::SpeedTraversalEngine, model::SpeedTraversalModel};
 use crate::model::{
     traversal::{
         error::TraversalModelError, model::TraversalModel, service::TraversalModelService,

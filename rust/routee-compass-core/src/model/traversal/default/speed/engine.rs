@@ -1,4 +1,4 @@
-use crate::model::unit::SpeedUnit;
+use crate::model::traversal::default::speed::SpeedModelConfig;
 use crate::util::fs::read_decoders;
 use crate::{model::traversal::TraversalModelError, util::fs::read_utils};
 use kdam::Bar;
@@ -9,15 +9,15 @@ use uom::ConstZero;
 pub struct SpeedTraversalEngine {
     pub speed_table: Box<[Velocity]>,
     pub max_speed: Velocity,
+    pub config: SpeedModelConfig,
 }
 
 impl SpeedTraversalEngine {
-    pub fn new<P: AsRef<Path>>(
-        speed_table_path: &P,
-        speed_unit: SpeedUnit,
-    ) -> Result<SpeedTraversalEngine, TraversalModelError> {
+    /// reads speeds from a file in some speed unit.
+    pub fn new(config: SpeedModelConfig) -> Result<SpeedTraversalEngine, TraversalModelError> {
+        let speed_table_input_path = Path::new(&config.speed_table_input_file);
         let speed_table: Box<[Velocity]> = read_utils::read_raw_file(
-            speed_table_path,
+            speed_table_input_path,
             read_decoders::f64,
             Some(Bar::builder().desc("link speeds")),
             None,
@@ -25,18 +25,18 @@ impl SpeedTraversalEngine {
         .map_err(|e| {
             TraversalModelError::BuildError(format!(
                 "cannot read {} due to {}",
-                speed_table_path.as_ref().to_str().unwrap_or_default(),
-                e,
+                config.speed_table_input_file, e,
             ))
         })?
         .iter()
-        .map(|&s| speed_unit.to_uom(s))
+        .map(|&s| config.speed_unit.to_uom(s))
         .collect::<Vec<Velocity>>()
         .into_boxed_slice();
         let max_speed = get_max_speed(&speed_table)?;
         let model = SpeedTraversalEngine {
             speed_table,
             max_speed,
+            config,
         };
         Ok(model)
     }
