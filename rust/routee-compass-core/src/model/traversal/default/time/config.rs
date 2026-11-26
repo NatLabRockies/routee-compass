@@ -27,9 +27,9 @@ pub struct TimeTraversalConfig {
     /// time unit for values written to the state vector.
     pub time_unit: TimeUnit,
 
-    /// if true, write [fieldname::TRIP_TIME] values to the state vector (default is FALSE).
-    #[serde(default)]
-    pub include_trip_time: Option<bool>,
+    /// if true, write [fieldname::TRIP_TIME] values to the state vector (default is TRUE).
+    #[serde(default = "default_include_trip_time")]
+    pub include_trip_time: bool,
 }
 
 fn default_distance_name() -> String {
@@ -46,4 +46,8 @@ fn default_time_name() -> String {
 
 fn default_trip_time_name() -> String {
     fieldname::TRIP_TIME.to_string()
+}
+
+fn default_include_trip_time() -> bool {
+    true
 }

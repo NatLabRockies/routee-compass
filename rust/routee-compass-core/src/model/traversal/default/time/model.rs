@@ -63,7 +63,7 @@ impl TraversalModel for TimeTraversalModel {
                 output_unit: Some(self.config.time_unit),
             },
         )];
-        if self.config.include_trip_time.unwrap_or(true) {
+        if self.config.include_trip_time {
             features.push((
                 self.config.trip_time_name.clone(),
                 StateVariableConfig::Time {
@@ -87,7 +87,7 @@ impl TraversalModel for TimeTraversalModel {
 
         let edge_time = distance / speed;
 
-        if self.config.include_trip_time.unwrap_or(true) {
+        if self.config.include_trip_time {
             state_model.add_time(state, &self.config.trip_time_name, &edge_time)?;
         }
         state_model.add_time(state, &self.config.time_name, &edge_time)?;
@@ -116,7 +116,7 @@ impl TraversalModel for TimeTraversalModel {
         let speed = state_model.get_speed(state, &self.config.speed_name)?;
         let time = distance / speed;
 
-        if self.config.include_trip_time.unwrap_or(true) {
+        if self.config.include_trip_time {
             state_model.add_time(state, &self.config.trip_time_name, &time)?;
         }
         state_model.add_time(state, &self.config.time_name, &time)?;
